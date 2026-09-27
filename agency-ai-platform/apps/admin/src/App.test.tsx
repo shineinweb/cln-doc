@@ -10,6 +10,7 @@ import {
   PLACEHOLDER_LEADS,
   PLACEHOLDER_PRODUCTS,
   PLACEHOLDER_TICKETS,
+  PLACEHOLDER_TODAY_DASHBOARD,
 } from "./data/placeholders";
 
 describe("admin CRM and billing routes catalog", () => {
@@ -45,5 +46,36 @@ describe("admin CRM and billing routes catalog", () => {
       "/admin/ai/security-events",
     );
     expect(PLACEHOLDER_AI_SECURITY_EVENTS.some((e) => e.kind === "forbidden_path")).toBe(true);
+  });
+
+  it("exposes TODAY dashboard metrics and pipeline sections", () => {
+    expect(PLACEHOLDER_TODAY_DASHBOARD.today.map((row) => row.label)).toEqual([
+      "Revenue",
+      "MRR",
+      "Customers",
+      "Open Projects",
+      "Open Tickets",
+      "Domains",
+      "Hosting Accounts",
+    ]);
+    expect(PLACEHOLDER_TODAY_DASHBOARD.salesPipeline.map((s) => s.label)).toEqual([
+      "New Leads",
+      "Quotes",
+      "Won",
+    ]);
+    expect(PLACEHOLDER_TODAY_DASHBOARD.projects.map((s) => s.label)).toEqual([
+      "Design",
+      "Development",
+      "Customer Review",
+      "Launch",
+    ]);
+    expect(PLACEHOLDER_TODAY_DASHBOARD.hosting.map((s) => s.label)).toContain("Alerts");
+    expect(PLACEHOLDER_TODAY_DASHBOARD.ai.map((s) => s.label)).toEqual([
+      "Conversations",
+      "Resolved",
+      "Escalated",
+      "Approvals",
+      "Cost",
+    ]);
   });
 });

@@ -25,6 +25,44 @@ export const ADMIN_NAV = [
   { to: "/admin/webhooks", label: "Webhooks" },
 ] as const;
 
+/** Admin TODAY dashboard PLACEHOLDER — ops snapshot for staff home. */
+export const PLACEHOLDER_TODAY_DASHBOARD = {
+  today: [
+    { label: "Revenue", value: "$48,250", to: "/admin/invoices" },
+    { label: "MRR", value: "$12,480", to: "/admin/subscriptions" },
+    { label: "Customers", value: "142", to: "/admin/customers" },
+    { label: "Open Projects", value: "18", to: "/admin" },
+    { label: "Open Tickets", value: "9", to: "/admin/tickets" },
+    { label: "Domains", value: "286", to: "/admin" },
+    { label: "Hosting Accounts", value: "94", to: "/admin" },
+  ],
+  salesPipeline: [
+    { label: "New Leads", value: 24, to: "/admin/leads" },
+    { label: "Quotes", value: 11, to: "/admin/quotes" },
+    { label: "Won", value: 4, to: "/admin/customers" },
+  ],
+  projects: [
+    { label: "Design", value: 5 },
+    { label: "Development", value: 7 },
+    { label: "Customer Review", value: 4 },
+    { label: "Launch", value: 2 },
+  ],
+  hosting: [
+    { label: "Servers", value: "6" },
+    { label: "Disk", value: "68%" },
+    { label: "CPU", value: "41%" },
+    { label: "Memory", value: "57%" },
+    { label: "Alerts", value: "2" },
+  ],
+  ai: [
+    { label: "Conversations", value: "186", to: "/admin/ai/conversations" },
+    { label: "Resolved", value: "142", to: "/admin/ai" },
+    { label: "Escalated", value: "18", to: "/admin/tickets" },
+    { label: "Approvals", value: "3", to: "/admin/ai/approvals" },
+    { label: "Cost", value: "$156.75", to: "/admin/ai/costs" },
+  ],
+} as const;
+
 export const PLACEHOLDER_PRODUCTS = [
   {
     id: "prod_ui_ux",
