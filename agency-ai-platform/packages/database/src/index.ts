@@ -12,9 +12,14 @@ export {
   SubtaskStatus,
   ProjectMemberRole,
   ProjectActivityType,
+  ProductType,
+  PriceInterval,
   InvoiceStatus,
   SubscriptionStatus,
   SubscriptionInterval,
+  PaymentStatus,
+  RefundStatus,
+  WebhookEventStatus,
   Prisma,
   PrismaClient,
 } from "@prisma/client";
@@ -45,10 +50,17 @@ export type {
   TimeEntry,
   ProjectMember,
   ProjectActivity,
+  Product,
+  Price,
   Invoice,
   InvoiceLineItem,
   Subscription,
   SubscriptionItem,
+  Payment,
+  Refund,
+  PaymentMethod,
+  BillingCustomer,
+  WebhookEvent,
 } from "@prisma/client";
 
 export { createPrismaClient, prisma } from "./client";

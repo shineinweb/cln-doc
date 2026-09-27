@@ -112,15 +112,19 @@ model Organization {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  members       OrganizationMember[]
-  customer      Customer?
-  auditLogs     AuditLog[]
-  leads         Lead[]
-  opportunities Opportunity[]
-  quotes        Quote[]
-  projects      Project[]
-  invoices      Invoice[]
-  subscriptions Subscription[]
+  members          OrganizationMember[]
+  customer         Customer?
+  auditLogs        AuditLog[]
+  leads            Lead[]
+  opportunities    Opportunity[]
+  quotes           Quote[]
+  projects         Project[]
+  invoices         Invoice[]
+  subscriptions    Subscription[]
+  payments         Payment[]
+  refunds          Refund[]
+  paymentMethods   PaymentMethod[]
+  billingCustomer  BillingCustomer?
 
   @@index([createdAt])
   @@map("organizations")
@@ -207,11 +211,13 @@ model Customer {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  contacts     CustomerContact[]
-  projects     Project[]
-  invoices     Invoice[]
+  organization  Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts      CustomerContact[]
+  projects      Project[]
+  invoices      Invoice[]
   subscriptions Subscription[]
+  payments      Payment[]
+  refunds       Refund[]
 
   @@index([status, createdAt])
   @@map("customers")
@@ -731,6 +737,66 @@ model ProjectActivity {
   @@map("project_activities")
 }
 
+// ---------------------------------------------------------------------------
+// Billing — Products · Prices · Invoices · Subscriptions · Payments · Refunds · Webhooks
+// ---------------------------------------------------------------------------
+
+enum ProductType {
+  ONE_TIME
+  RECURRING
+  SERVICE
+}
+
+model Product {
+  id          String      @id @default(uuid()) @db.Char(36)
+  key         String      @unique @db.VarChar(100)
+  name        String      @db.VarChar(200)
+  description String?     @db.Text
+  type        ProductType @default(SERVICE)
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  deletedAt   DateTime?   @map("deleted_at")
+
+  prices            Price[]
+  invoiceLineItems  InvoiceLineItem[]
+  subscriptionItems SubscriptionItem[]
+
+  @@index([active, type])
+  @@map("products")
+}
+
+enum PriceInterval {
+  ONE_TIME
+  MONTHLY
+  YEARLY
+}
+
+model Price {
+  id          String        @id @default(uuid()) @db.Char(36)
+  productId   String        @map("product_id") @db.Char(36)
+  key         String        @unique @db.VarChar(100)
+  nickname    String?       @db.VarChar(200)
+  currency    String        @default("USD") @db.Char(3)
+  unitCents   Int           @map("unit_cents")
+  interval    PriceInterval @default(ONE_TIME)
+  active      Boolean       @default(true)
+  provider    String?       @db.VarChar(40)
+  externalId  String?       @map("external_id") @db.VarChar(120)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  deletedAt   DateTime?     @map("deleted_at")
+
+  product           Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  invoiceLineItems  InvoiceLineItem[]
+  subscriptionItems SubscriptionItem[]
+
+  @@unique([provider, externalId])
+  @@index([productId, active])
+  @@index([interval])
+  @@map("prices")
+}
+
 enum InvoiceStatus {
   DRAFT
   SENT
@@ -741,32 +807,37 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id             String        @id @default(uuid()) @db.Char(36)
-  organizationId String        @map("organization_id") @db.Char(36)
-  customerId     String?       @map("customer_id") @db.Char(36)
-  projectId      String?       @map("project_id") @db.Char(36)
-  quoteId        String?       @map("quote_id") @db.Char(36)
-  number         String        @unique @db.VarChar(40)
-  status         InvoiceStatus @default(DRAFT)
-  currency       String        @default("USD") @db.Char(3)
-  subtotalCents  Int           @default(0) @map("subtotal_cents")
-  taxCents       Int           @default(0) @map("tax_cents")
-  totalCents     Int           @default(0) @map("total_cents")
-  amountPaidCents Int          @default(0) @map("amount_paid_cents")
-  issuedAt       DateTime?     @map("issued_at")
-  dueAt          DateTime?     @map("due_at")
-  paidAt         DateTime?     @map("paid_at")
-  notes          String?       @db.Text
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
-  deletedAt      DateTime?     @map("deleted_at")
+  id              String        @id @default(uuid()) @db.Char(36)
+  organizationId  String        @map("organization_id") @db.Char(36)
+  customerId      String?       @map("customer_id") @db.Char(36)
+  projectId       String?       @map("project_id") @db.Char(36)
+  quoteId         String?       @map("quote_id") @db.Char(36)
+  number          String        @unique @db.VarChar(40)
+  status          InvoiceStatus @default(DRAFT)
+  currency        String        @default("USD") @db.Char(3)
+  subtotalCents   Int           @default(0) @map("subtotal_cents")
+  taxCents        Int           @default(0) @map("tax_cents")
+  totalCents      Int           @default(0) @map("total_cents")
+  amountPaidCents Int           @default(0) @map("amount_paid_cents")
+  provider        String?       @db.VarChar(40)
+  externalId      String?       @map("external_id") @db.VarChar(120)
+  issuedAt        DateTime?     @map("issued_at")
+  dueAt           DateTime?     @map("due_at")
+  paidAt          DateTime?     @map("paid_at")
+  notes           String?       @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  customer     Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  quote        Quote?           @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  project      Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  quote        Quote?            @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   lineItems    InvoiceLineItem[]
+  payments     Payment[]
+  refunds      Refund[]
 
+  @@unique([provider, externalId])
   @@index([organizationId, createdAt])
   @@index([status, createdAt])
   @@index([customerId])
@@ -778,6 +849,8 @@ model Invoice {
 model InvoiceLineItem {
   id          String   @id @default(uuid()) @db.Char(36)
   invoiceId   String   @map("invoice_id") @db.Char(36)
+  productId   String?  @map("product_id") @db.Char(36)
+  priceId     String?  @map("price_id") @db.Char(36)
   sortOrder   Int      @default(0) @map("sort_order")
   description String   @db.VarChar(500)
   quantity    Decimal  @default(1) @db.Decimal(12, 2)
@@ -786,9 +859,13 @@ model InvoiceLineItem {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  price   Price?   @relation(fields: [priceId], references: [id], onDelete: SetNull)
 
   @@index([invoiceId, sortOrder])
+  @@index([productId])
+  @@index([priceId])
   @@map("invoice_line_items")
 }
 
@@ -807,30 +884,34 @@ enum SubscriptionInterval {
 }
 
 model Subscription {
-  id               String               @id @default(uuid()) @db.Char(36)
-  organizationId   String               @map("organization_id") @db.Char(36)
-  customerId       String?              @map("customer_id") @db.Char(36)
-  projectId        String?              @map("project_id") @db.Char(36)
-  quoteId          String?              @map("quote_id") @db.Char(36)
-  name             String               @db.VarChar(200)
-  status           SubscriptionStatus   @default(TRIALING)
-  interval         SubscriptionInterval @default(MONTHLY)
-  amountCents      Int                  @map("amount_cents")
-  currency         String               @default("USD") @db.Char(3)
-  currentPeriodStart DateTime?          @map("current_period_start")
-  currentPeriodEnd   DateTime?          @map("current_period_end")
-  cancelAt         DateTime?            @map("cancel_at")
-  canceledAt       DateTime?            @map("canceled_at")
-  createdAt        DateTime             @default(now()) @map("created_at")
-  updatedAt        DateTime             @updatedAt @map("updated_at")
-  deletedAt        DateTime?            @map("deleted_at")
+  id                 String               @id @default(uuid()) @db.Char(36)
+  organizationId     String               @map("organization_id") @db.Char(36)
+  customerId         String?              @map("customer_id") @db.Char(36)
+  projectId          String?              @map("project_id") @db.Char(36)
+  quoteId            String?              @map("quote_id") @db.Char(36)
+  name               String               @db.VarChar(200)
+  status             SubscriptionStatus   @default(TRIALING)
+  interval           SubscriptionInterval @default(MONTHLY)
+  amountCents        Int                  @map("amount_cents")
+  currency           String               @default("USD") @db.Char(3)
+  provider           String?              @db.VarChar(40)
+  externalId         String?              @map("external_id") @db.VarChar(120)
+  currentPeriodStart DateTime?            @map("current_period_start")
+  currentPeriodEnd   DateTime?            @map("current_period_end")
+  cancelAt           DateTime?            @map("cancel_at")
+  canceledAt         DateTime?            @map("canceled_at")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  deletedAt          DateTime?            @map("deleted_at")
 
   organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   customer     Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
   project      Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
   quote        Quote?             @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   items        SubscriptionItem[]
+  payments     Payment[]
 
+  @@unique([provider, externalId])
   @@index([organizationId, createdAt])
   @@index([status, createdAt])
   @@index([customerId])
@@ -842,6 +923,8 @@ model Subscription {
 model SubscriptionItem {
   id             String   @id @default(uuid()) @db.Char(36)
   subscriptionId String   @map("subscription_id") @db.Char(36)
+  productId      String?  @map("product_id") @db.Char(36)
+  priceId        String?  @map("price_id") @db.Char(36)
   sortOrder      Int      @default(0) @map("sort_order")
   description    String   @db.VarChar(500)
   quantity       Decimal  @default(1) @db.Decimal(12, 2)
@@ -850,7 +933,159 @@ model SubscriptionItem {
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  price        Price?       @relation(fields: [priceId], references: [id], onDelete: SetNull)
 
   @@index([subscriptionId, sortOrder])
+  @@index([productId])
+  @@index([priceId])
   @@map("subscription_items")
+}
+
+enum PaymentStatus {
+  PENDING
+  REQUIRES_ACTION
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Char(36)
+  organizationId String        @map("organization_id") @db.Char(36)
+  customerId     String?       @map("customer_id") @db.Char(36)
+  invoiceId      String?       @map("invoice_id") @db.Char(36)
+  subscriptionId String?       @map("subscription_id") @db.Char(36)
+  amountCents    Int           @map("amount_cents")
+  currency       String        @default("USD") @db.Char(3)
+  status         PaymentStatus @default(PENDING)
+  provider       String        @db.VarChar(40)
+  externalId     String?       @map("external_id") @db.VarChar(120)
+  failureCode    String?       @map("failure_code") @db.VarChar(80)
+  failureMessage String?       @map("failure_message") @db.VarChar(500)
+  paidAt         DateTime?     @map("paid_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  invoice      Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  refunds      Refund[]
+
+  @@unique([provider, externalId])
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([invoiceId])
+  @@index([subscriptionId])
+  @@index([customerId])
+  @@map("payments")
+}
+
+/// Refund workflow:
+/// Requested → Pending approval → Approved → Processing → Succeeded
+///                                  ↘ Denied / Failed / Canceled
+enum RefundStatus {
+  REQUESTED
+  PENDING_APPROVAL
+  APPROVED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  DENIED
+  CANCELED
+}
+
+model Refund {
+  id              String       @id @default(uuid()) @db.Char(36)
+  organizationId  String       @map("organization_id") @db.Char(36)
+  customerId      String?      @map("customer_id") @db.Char(36)
+  paymentId       String       @map("payment_id") @db.Char(36)
+  invoiceId       String?      @map("invoice_id") @db.Char(36)
+  amountCents     Int          @map("amount_cents")
+  currency        String       @default("USD") @db.Char(3)
+  status          RefundStatus @default(REQUESTED)
+  reason          String?      @db.VarChar(500)
+  provider        String?      @db.VarChar(40)
+  externalId      String?      @map("external_id") @db.VarChar(120)
+  requestedAt     DateTime     @default(now()) @map("requested_at")
+  approvedAt      DateTime?    @map("approved_at")
+  processedAt     DateTime?    @map("processed_at")
+  failedAt        DateTime?    @map("failed_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  payment      Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoice      Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, externalId])
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@map("refunds")
+}
+
+model PaymentMethod {
+  id             String    @id @default(uuid()) @db.Char(36)
+  organizationId String    @map("organization_id") @db.Char(36)
+  provider       String    @db.VarChar(40)
+  externalId     String    @map("external_id") @db.VarChar(120)
+  brand          String?   @db.VarChar(40)
+  last4          String?   @db.Char(4)
+  expMonth       Int?      @map("exp_month")
+  expYear        Int?      @map("exp_year")
+  isDefault      Boolean   @default(false) @map("is_default")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@index([organizationId, isDefault])
+  @@map("payment_methods")
+}
+
+model BillingCustomer {
+  id             String   @id @default(uuid()) @db.Char(36)
+  organizationId String   @unique @map("organization_id") @db.Char(36)
+  provider       String   @db.VarChar(40)
+  externalId     String   @map("external_id") @db.VarChar(120)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@map("billing_customers")
+}
+
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+model WebhookEvent {
+  id           String             @id @default(uuid()) @db.Char(36)
+  provider     String             @db.VarChar(40)
+  eventType    String             @map("event_type") @db.VarChar(120)
+  externalId   String             @map("external_id") @db.VarChar(190)
+  status       WebhookEventStatus @default(RECEIVED)
+  payloadJson  Json               @map("payload_json")
+  errorMessage String?            @map("error_message") @db.VarChar(500)
+  receivedAt   DateTime           @default(now()) @map("received_at")
+  processedAt  DateTime?          @map("processed_at")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  @@unique([provider, externalId])
+  @@index([status, receivedAt])
+  @@index([eventType, receivedAt])
+  @@map("webhook_events")
 }

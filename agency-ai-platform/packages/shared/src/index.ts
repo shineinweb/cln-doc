@@ -55,3 +55,11 @@ export {
   nextQuoteStatusAfterAction,
 } from "./quotes";
 export type { QuoteCustomerAction, QuoteStatusValue } from "./quotes";
+
+export {
+  BILLING_DOMAIN_MODELS,
+  REFUND_WORKFLOW,
+  REFUND_WORKFLOW_STAGES,
+  isRefundWorkflowStage,
+} from "./billing";
+export type { BillingDomainModel, RefundWorkflowStage } from "./billing";

@@ -89,12 +89,16 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 ## Phase 4 — Billing (Stripe)
 
+**Domain:** Products · Prices · Invoices · Subscriptions · Payments · Refund workflow · Webhooks
+
 **Outcomes**
 
-- `PaymentProvider` + Stripe adapter
+- [x] Prisma models for Product, Price, Payment, Refund, PaymentMethod, BillingCustomer, WebhookEvent (+ Invoice/Subscription provider refs)
+- [x] `PaymentProvider` interface in `@agency/billing` (+ refund workflow constants)
+- Stripe adapter implementing `PaymentProvider`
 - Invoices, payments, customer portal pay flow
 - Subscriptions (hosting/maintenance retainers)
-- Webhook inbox + idempotency
+- Webhook inbox processing + idempotency
 - Admin billing ops (refunds permissioned)
 
 **Exit criteria:** test-mode Stripe checkout settles an invoice and activates a subscription record.

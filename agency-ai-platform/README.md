@@ -107,6 +107,8 @@ Project delivery: Project → Milestone → Task → Subtask, plus Comment, Atta
 
 Project pipeline: New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance.
 
+Billing domain: Products · Prices · Invoices · Subscriptions · Payments · Refund workflow · Webhooks (`PaymentProvider` in `@agency/billing`).
+
 ## Authentication
 
 NestJS auth under `/api/v1/auth/*` with Argon2id passwords, HttpOnly `agency_session` cookies, RBAC guards, rate limiting, validation, and audit logs.

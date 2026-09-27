@@ -139,16 +139,33 @@ Other statuses/priorities are Prisma enums (`MilestoneStatus`, `TaskStatus`, `Ta
 
 ## 6. Billing
 
-| Model              | Purpose                                             |
-| ------------------ | --------------------------------------------------- |
-| `Invoice`          | Invoice header                                      |
-| `InvoiceLineItem`  | Lines                                               |
-| `Payment`          | Successful/failed payment attempts                  |
-| `Subscription`     | Recurring product (hosting, maintenance, retainers) |
-| `SubscriptionItem` | Items within a subscription                         |
-| `PaymentMethod`    | Tokenized PM references (no raw PAN)                |
-| `BillingCustomer`  | Mapping org → `PaymentProvider` customer id         |
-| `WebhookEvent`     | Idempotent provider webhook inbox                   |
+```text
+Products · Prices · Invoices · Subscriptions · Payments · Refund workflow · Webhooks
+```
+
+Shared: `@agency/shared` `BILLING_DOMAIN_MODELS`, `REFUND_WORKFLOW`.  
+Provider interface: `@agency/billing` `PaymentProvider`.
+
+| Model              | Purpose                                                |
+| ------------------ | ------------------------------------------------------ |
+| `Product`          | Sellable catalog item (one-time / recurring / service) |
+| `Price`            | Priced SKU for a product (interval + unit cents)       |
+| `Invoice`          | Invoice header                                         |
+| `InvoiceLineItem`  | Lines (optional `productId` / `priceId`)               |
+| `Subscription`     | Recurring product (hosting, maintenance, retainers)    |
+| `SubscriptionItem` | Items within a subscription                            |
+| `Payment`          | Payment attempts against invoice/subscription          |
+| `Refund`           | Refund workflow tied to a payment                      |
+| `PaymentMethod`    | Tokenized PM references (no raw PAN)                   |
+| `BillingCustomer`  | Mapping org → `PaymentProvider` customer id            |
+| `WebhookEvent`     | Idempotent provider webhook inbox                      |
+
+**Refund workflow** (`RefundStatus`):
+
+```text
+Requested → Pending approval → Approved → Processing → Succeeded
+                               ↘ Denied / Failed / Canceled
+```
 
 **Stripe** is an adapter behind `PaymentProvider`. Domain tables stay provider-agnostic via `provider` + `externalId` fields.
 

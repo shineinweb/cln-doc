@@ -9,10 +9,14 @@ import {
   PROJECT_STATUS_PIPELINE,
   PROJECT_STATUS_STAGES,
   WEBSITE_DEVELOPMENT_PACKAGE,
+  BILLING_DOMAIN_MODELS,
   QUOTE_CUSTOMER_ACTIONS,
+  REFUND_WORKFLOW,
+  REFUND_WORKFLOW_STAGES,
   canPerformQuoteAction,
   formatUsdFromCents,
   isProjectStatusStage,
+  isRefundWorkflowStage,
   nextQuoteStatusAfterAction,
 } from "./index";
 
@@ -132,5 +136,24 @@ describe("QUOTE_CUSTOMER_ACTIONS", () => {
     expect(nextQuoteStatusAfterAction("accept")).toBe("ACCEPTED");
     expect(nextQuoteStatusAfterAction("reject")).toBe("REJECTED");
     expect(nextQuoteStatusAfterAction("request_changes")).toBe("CHANGES_REQUESTED");
+  });
+});
+
+describe("BILLING_DOMAIN", () => {
+  it("lists Products through Webhooks and refund workflow", () => {
+    expect(BILLING_DOMAIN_MODELS).toEqual([
+      "Product",
+      "Price",
+      "Invoice",
+      "Subscription",
+      "Payment",
+      "Refund",
+      "WebhookEvent",
+    ]);
+    expect(REFUND_WORKFLOW_STAGES[0]).toBe("REQUESTED");
+    expect(REFUND_WORKFLOW_STAGES).toContain("SUCCEEDED");
+    expect(REFUND_WORKFLOW.map((step) => step.label)).toContain("Pending approval");
+    expect(isRefundWorkflowStage("APPROVED")).toBe(true);
+    expect(isRefundWorkflowStage("PAID")).toBe(false);
   });
 });

@@ -3,12 +3,14 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { Prisma } from "@prisma/client";
 import {
+  BILLING_DOMAIN_MODELS,
   COMMERCIAL_LIFECYCLE,
   COMMERCIAL_LIFECYCLE_STAGES,
   PROJECT_DELIVERY_MODELS,
   PROJECT_STATUS_STAGES,
   QUOTE_CUSTOMER_ACTIONS,
   QUOTE_STATUSES,
+  REFUND_WORKFLOW_STAGES,
 } from "@agency/shared";
 
 const schemaPath = path.resolve(__dirname, "../prisma/schema.prisma");
@@ -52,6 +54,18 @@ const DELIVERY_MODELS = [
   "ProjectActivity",
 ] as const;
 
+const BILLING_MODELS = [
+  "Product",
+  "Price",
+  "Invoice",
+  "Subscription",
+  "Payment",
+  "Refund",
+  "PaymentMethod",
+  "BillingCustomer",
+  "WebhookEvent",
+] as const;
+
 describe("Prisma MariaDB schema", () => {
   const schema = readFileSync(schemaPath, "utf8");
 
@@ -62,8 +76,13 @@ describe("Prisma MariaDB schema", () => {
     expect(schema).not.toMatch(/pgvector/i);
   });
 
-  it("declares identity, lifecycle, and delivery models", () => {
-    for (const model of [...IDENTITY_MODELS, ...LIFECYCLE_MODELS, ...DELIVERY_MODELS]) {
+  it("declares identity, lifecycle, delivery, and billing models", () => {
+    for (const model of [
+      ...IDENTITY_MODELS,
+      ...LIFECYCLE_MODELS,
+      ...DELIVERY_MODELS,
+      ...BILLING_MODELS,
+    ]) {
       expect(schema).toContain(`model ${model}`);
     }
   });
@@ -139,10 +158,32 @@ describe("Prisma MariaDB schema", () => {
     ]);
   });
 
+  it("documents billing domain Products through Webhooks and refund workflow", () => {
+    expect(schema).toContain(
+      "Products · Prices · Invoices · Subscriptions · Payments · Refunds · Webhooks",
+    );
+    expect(schema).toContain("Requested → Pending approval → Approved → Processing → Succeeded");
+    expect(BILLING_DOMAIN_MODELS).toEqual([
+      "Product",
+      "Price",
+      "Invoice",
+      "Subscription",
+      "Payment",
+      "Refund",
+      "WebhookEvent",
+    ]);
+    expect(REFUND_WORKFLOW_STAGES).toContain("PENDING_APPROVAL");
+  });
+
   it("exposes generated model delegates on Prisma client DMMF", () => {
     const modelNames = Prisma.dmmf.datamodel.models.map((model) => model.name);
     expect(modelNames).toEqual(
-      expect.arrayContaining([...IDENTITY_MODELS, ...LIFECYCLE_MODELS, ...DELIVERY_MODELS]),
+      expect.arrayContaining([
+        ...IDENTITY_MODELS,
+        ...LIFECYCLE_MODELS,
+        ...DELIVERY_MODELS,
+        ...BILLING_MODELS,
+      ]),
     );
   });
 });

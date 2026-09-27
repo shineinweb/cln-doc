@@ -204,7 +204,7 @@ Nest modules map to business capabilities (illustrative):
 | `CatalogModule`       | Services, hosting plans, pricing                                                                                        |
 | `SalesModule`         | Quotes, contracts                                                                                                       |
 | `ProjectsModule`      | Project → Milestone → Task → Subtask; status pipeline New → Maintenance; comments, attachments, time, members, activity |
-| `BillingModule`       | Invoices, payments, subscriptions                                                                                       |
+| `BillingModule`       | Products, Prices, Invoices, Subscriptions, Payments, Refund workflow, Webhooks via `PaymentProvider`                    |
 | `DomainsModule`       | Domains, DNS                                                                                                            |
 | `HostingModule`       | Hosting accounts, servers, sync jobs                                                                                    |
 | `SupportModule`       | Tickets, KB articles                                                                                                    |

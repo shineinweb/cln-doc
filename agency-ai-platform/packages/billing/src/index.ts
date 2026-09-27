@@ -1,4 +1,4 @@
-/** Billing package — plans, invoices, payment adapters. */
+/** Billing package — catalog helpers, invoices, PaymentProvider adapters. */
 export type PlanId = "starter" | "growth" | "scale";
 
 export type Plan = {
@@ -16,3 +16,14 @@ export const PLANS: Plan[] = [
 export function getPlan(id: PlanId): Plan | undefined {
   return PLANS.find((plan) => plan.id === id);
 }
+
+export type {
+  CreateCheckoutInput,
+  CreateCheckoutResult,
+  CreateRefundInput,
+  CreateRefundResult,
+  Money,
+  ParsedWebhook,
+  PaymentProvider,
+  ProviderRef,
+} from "./payment-provider";
