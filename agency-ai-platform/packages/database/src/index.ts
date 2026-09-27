@@ -1,8 +1,16 @@
-/** Database package — Prisma client & schema will live here. */
-export type DatabaseClient = {
-  ready: boolean;
-};
+export { OrganizationMemberRole, Prisma, PrismaClient } from "@prisma/client";
+export type {
+  User,
+  Session,
+  Organization,
+  OrganizationMember,
+  Role,
+  Permission,
+  RolePermission,
+  Customer,
+  CustomerContact,
+  AuditLog,
+} from "@prisma/client";
 
-export function createDatabaseClient(): DatabaseClient {
-  return { ready: false };
-}
+export { createPrismaClient, prisma } from "./client";
+export type { AgencyPrismaClient } from "./client";

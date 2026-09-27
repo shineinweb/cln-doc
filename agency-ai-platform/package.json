@@ -25,7 +25,12 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:ps": "docker compose ps",
-    "docker:logs": "docker compose logs -f mariadb redis"
+    "docker:logs": "docker compose logs -f mariadb redis",
+    "db:generate": "pnpm --filter @agency/database db:generate",
+    "db:validate": "pnpm --filter @agency/database db:validate",
+    "db:migrate:dev": "pnpm --filter @agency/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @agency/database db:migrate:deploy",
+    "db:seed": "pnpm --filter @agency/database db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
@@ -45,7 +50,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "@nestjs/core"
+      "@nestjs/core",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines"
     ]
   }
 }

@@ -87,6 +87,20 @@ docker compose down -v
 
 Apps should use `DATABASE_URL` and `REDIS_URL` from `.env` — never embed passwords in source.
 
+## Database (Prisma + MariaDB)
+
+Schema and migrations live in `packages/database` (`provider = "mysql"`, `DATABASE_URL`).
+
+```bash
+# with Docker MariaDB running and .env configured
+pnpm db:validate
+pnpm db:generate
+pnpm db:migrate:deploy   # or pnpm db:migrate:dev while iterating
+pnpm db:seed
+```
+
+Initial models: User, Session, Organization, OrganizationMember, Role, Permission, RolePermission, Customer, CustomerContact, AuditLog.
+
 ## Application quick start
 
 ```bash

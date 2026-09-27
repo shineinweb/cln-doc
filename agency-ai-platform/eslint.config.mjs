@@ -80,4 +80,10 @@ export default tseslint.config(
       globals: { ...globals.node },
     },
   },
+  {
+    files: ["**/prisma/seed.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
 );

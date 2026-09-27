@@ -25,7 +25,7 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 - [x] Architecture documentation set (this folder)
 - [x] Docker Compose local infra (MariaDB + Redis, volumes, healthchecks)
 - [ ] Docker Compose app/worker/Nginx services — _later_
-- [ ] `@agency/database` Prisma MariaDB schema baseline
+- [x] `@agency/database` Prisma MariaDB schema baseline (User/Session/Org/RBAC/Customer/AuditLog)
 - [x] Shared lint/test/CI pipeline for the monorepo (ESLint, Prettier, Vitest, typecheck, build)
 
 **Exit criteria:** developers can run empty API + MariaDB + Redis locally from documented commands.
