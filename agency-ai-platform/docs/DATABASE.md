@@ -79,19 +79,19 @@ Lead → Opportunity → Quote → Customer → Project → Invoice → Recurrin
 
 This is the **system-of-record path** for acquisition through ongoing revenue. Shared constants live in `@agency/shared` (`COMMERCIAL_LIFECYCLE`).
 
-| Stage              | Model              | Purpose                                     |
-| ------------------ | ------------------ | ------------------------------------------- |
-| Lead               | `Lead`             | Unqualified / inbound interest              |
-|                    | `LeadActivity`     | Calls, emails, notes, status changes        |
-| Opportunity        | `Opportunity`      | Qualified deal in the sales pipeline        |
-| Quote              | `Quote`            | Formal quote                                |
-|                    | `QuoteLineItem`    | Line items (description, qty, unit cents)   |
-| Customer           | `Customer`         | Profile projection linked to `Organization` |
-| Project            | `Project`          | Delivery container after quote acceptance   |
-| Invoice            | `Invoice`          | One-time / project billing                  |
-|                    | `InvoiceLineItem`  | Invoice lines                               |
-| Recurring Services | `Subscription`     | Hosting, retainers, maintenance             |
-|                    | `SubscriptionItem` | Recurring line items                        |
+| Stage              | Model              | Purpose                                                 |
+| ------------------ | ------------------ | ------------------------------------------------------- |
+| Lead               | `Lead`             | Unqualified / inbound interest                          |
+|                    | `LeadActivity`     | Calls, emails, notes, status changes                    |
+| Opportunity        | `Opportunity`      | Qualified deal in the sales pipeline                    |
+| Quote              | `Quote`            | Formal quote — View / Accept / Reject / Request changes |
+|                    | `QuoteLineItem`    | Line items (description, qty, unit cents)               |
+| Customer           | `Customer`         | Profile projection linked to `Organization`             |
+| Project            | `Project`          | Delivery container after quote acceptance               |
+| Invoice            | `Invoice`          | One-time / project billing                              |
+|                    | `InvoiceLineItem`  | Invoice lines                                           |
+| Recurring Services | `Subscription`     | Hosting, retainers, maintenance                         |
+|                    | `SubscriptionItem` | Recurring line items                                    |
 
 **Planned (not in schema yet):** `Contract` / `ContractVersion`, `ServiceCatalogItem`, `HostingPlan`, dedicated `PipelineStage` table (stages are enums on `Opportunity` for v1).
 

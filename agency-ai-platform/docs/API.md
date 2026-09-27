@@ -118,24 +118,24 @@ All routes under `/portal` require authenticated org membership.
 
 ### 5.1 Core
 
-| Area          | Endpoints (representative)                                                              |
-| ------------- | --------------------------------------------------------------------------------------- |
-| Dashboard     | `GET /portal/dashboard`                                                                 |
-| Profile       | `GET/PATCH /portal/profile`, `POST /portal/security/password`, MFA routes               |
-| Notifications | `GET /portal/notifications`, `POST /portal/notifications/:id/read`                      |
-| Projects      | `GET/POST /portal/projects`, `GET /portal/projects/:id`                                 |
-| Tasks         | `GET /portal/projects/:id/tasks`, `PATCH /portal/tasks/:id` (limited fields)            |
-| Files         | `GET/POST /portal/projects/:id/files`, signed upload via `StorageProvider`              |
-| Quotes        | `GET /portal/quotes`, `GET /portal/quotes/:id`, `POST /portal/quotes/:id/accept`        |
-| Contracts     | `GET /portal/contracts`, `POST /portal/contracts/:id/sign`                              |
-| Invoices      | `GET /portal/invoices`, `GET /portal/invoices/:id`                                      |
-| Payments      | `POST /portal/invoices/:id/pay`, `GET /portal/payment-methods`                          |
-| Subscriptions | `GET /portal/subscriptions`, `POST /portal/subscriptions/:id/cancel`                    |
-| Domains       | `GET /portal/domains`, `POST /portal/domains/orders`                                    |
-| DNS           | `GET/POST/PATCH/DELETE /portal/domains/:id/dns/records`                                 |
-| Hosting       | `GET /portal/hosting`, `POST /portal/hosting/:id/actions` (e.g. password reset request) |
-| Tickets       | `GET/POST /portal/tickets`, `GET/POST /portal/tickets/:id/messages`                     |
-| AI assistant  | `POST /portal/ai/conversations`, `POST /portal/ai/conversations/:id/messages`           |
+| Area          | Endpoints (representative)                                                                                                                                           |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard     | `GET /portal/dashboard`                                                                                                                                              |
+| Profile       | `GET/PATCH /portal/profile`, `POST /portal/security/password`, MFA routes                                                                                            |
+| Notifications | `GET /portal/notifications`, `POST /portal/notifications/:id/read`                                                                                                   |
+| Projects      | `GET/POST /portal/projects`, `GET /portal/projects/:id`                                                                                                              |
+| Tasks         | `GET /portal/projects/:id/tasks`, `PATCH /portal/tasks/:id` (limited fields)                                                                                         |
+| Files         | `GET/POST /portal/projects/:id/files`, signed upload via `StorageProvider`                                                                                           |
+| Quotes        | `GET /portal/quotes`, `GET /portal/quotes/:id` (View), `POST /portal/quotes/:id/accept`, `POST /portal/quotes/:id/reject`, `POST /portal/quotes/:id/request-changes` |
+| Contracts     | `GET /portal/contracts`, `POST /portal/contracts/:id/sign`                                                                                                           |
+| Invoices      | `GET /portal/invoices`, `GET /portal/invoices/:id`                                                                                                                   |
+| Payments      | `POST /portal/invoices/:id/pay`, `GET /portal/payment-methods`                                                                                                       |
+| Subscriptions | `GET /portal/subscriptions`, `POST /portal/subscriptions/:id/cancel`                                                                                                 |
+| Domains       | `GET /portal/domains`, `POST /portal/domains/orders`                                                                                                                 |
+| DNS           | `GET/POST/PATCH/DELETE /portal/domains/:id/dns/records`                                                                                                              |
+| Hosting       | `GET /portal/hosting`, `POST /portal/hosting/:id/actions` (e.g. password reset request)                                                                              |
+| Tickets       | `GET/POST /portal/tickets`, `GET/POST /portal/tickets/:id/messages`                                                                                                  |
+| AI assistant  | `POST /portal/ai/conversations`, `POST /portal/ai/conversations/:id/messages`                                                                                        |
 
 Customer task updates are restricted (comment, attach, mark done if policy allows)—no reassignment of staff.
 

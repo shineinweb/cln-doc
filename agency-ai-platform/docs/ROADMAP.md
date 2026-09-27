@@ -59,7 +59,7 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 - Leads, activities, conversion → organization / customer
 - Opportunities pipeline APIs + admin UI
 - Service catalog + hosting plans (content)
-- Quotes + line items; send/accept flow
+- Quotes + line items; send + customer actions (View / Accept / Reject / Request changes)
 - Contracts + e-sign (simple) + PDF via storage
 - Admin CRM + sales views; portal quote/contract views
 

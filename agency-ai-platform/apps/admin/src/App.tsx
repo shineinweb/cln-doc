@@ -6,6 +6,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { LeadsPage } from "@/pages/LeadsPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { OpportunitiesPage } from "@/pages/OpportunitiesPage";
+import { QuoteDetailPage } from "@/pages/QuoteDetailPage";
 import { QuotesPage } from "@/pages/QuotesPage";
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
             <Route path="customers" element={<CustomersPage />} />
             <Route path="opportunities" element={<OpportunitiesPage />} />
             <Route path="quotes" element={<QuotesPage />} />
+            <Route path="quotes/:quoteId" element={<QuoteDetailPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>

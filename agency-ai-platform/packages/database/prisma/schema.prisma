@@ -369,33 +369,39 @@ model Opportunity {
   @@map("opportunities")
 }
 
+/// Quote lifecycle. Customer actions while SENT / CHANGES_REQUESTED:
+/// View · Accept · Reject · Request changes
 enum QuoteStatus {
   DRAFT
   SENT
+  CHANGES_REQUESTED
   ACCEPTED
   REJECTED
   EXPIRED
 }
 
 model Quote {
-  id             String      @id @default(uuid()) @db.Char(36)
-  opportunityId  String?     @map("opportunity_id") @db.Char(36)
-  organizationId String?     @map("organization_id") @db.Char(36)
-  number         String      @unique @db.VarChar(40)
-  title          String      @db.VarChar(200)
-  status         QuoteStatus @default(DRAFT)
-  currency       String      @default("USD") @db.Char(3)
-  subtotalCents  Int         @default(0) @map("subtotal_cents")
-  taxCents       Int         @default(0) @map("tax_cents")
-  totalCents     Int         @default(0) @map("total_cents")
-  validUntil     DateTime?   @map("valid_until")
-  sentAt         DateTime?   @map("sent_at")
-  acceptedAt     DateTime?   @map("accepted_at")
-  rejectedAt     DateTime?   @map("rejected_at")
-  notes          String?     @db.Text
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
-  deletedAt      DateTime?   @map("deleted_at")
+  id                  String      @id @default(uuid()) @db.Char(36)
+  opportunityId       String?     @map("opportunity_id") @db.Char(36)
+  organizationId      String?     @map("organization_id") @db.Char(36)
+  number              String      @unique @db.VarChar(40)
+  title               String      @db.VarChar(200)
+  status              QuoteStatus @default(DRAFT)
+  currency            String      @default("USD") @db.Char(3)
+  subtotalCents       Int         @default(0) @map("subtotal_cents")
+  taxCents            Int         @default(0) @map("tax_cents")
+  totalCents          Int         @default(0) @map("total_cents")
+  validUntil          DateTime?   @map("valid_until")
+  sentAt              DateTime?   @map("sent_at")
+  viewedAt            DateTime?   @map("viewed_at")
+  acceptedAt          DateTime?   @map("accepted_at")
+  rejectedAt          DateTime?   @map("rejected_at")
+  changesRequestedAt  DateTime?   @map("changes_requested_at")
+  customerMessage     String?     @map("customer_message") @db.Text
+  notes               String?     @db.Text
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  deletedAt           DateTime?   @map("deleted_at")
 
   opportunity  Opportunity?  @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)

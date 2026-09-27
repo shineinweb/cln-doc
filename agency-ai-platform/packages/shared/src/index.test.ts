@@ -9,8 +9,11 @@ import {
   PROJECT_STATUS_PIPELINE,
   PROJECT_STATUS_STAGES,
   WEBSITE_DEVELOPMENT_PACKAGE,
+  QUOTE_CUSTOMER_ACTIONS,
+  canPerformQuoteAction,
   formatUsdFromCents,
   isProjectStatusStage,
+  nextQuoteStatusAfterAction,
 } from "./index";
 
 describe("APP_NAMES", () => {
@@ -112,5 +115,22 @@ describe("WEBSITE_DEVELOPMENT_PACKAGE", () => {
     expect(WEBSITE_DEVELOPMENT_PACKAGE.monthlyTotalCents).toBe(monthly);
     expect(formatUsdFromCents(950_000)).toBe("$9,500");
     expect(formatUsdFromCents(24_800, { monthly: true })).toBe("$248/mo");
+  });
+});
+
+describe("QUOTE_CUSTOMER_ACTIONS", () => {
+  it("exposes View, Accept, Reject, Request changes", () => {
+    expect(QUOTE_CUSTOMER_ACTIONS.map((item) => item.label)).toEqual([
+      "View",
+      "Accept",
+      "Reject",
+      "Request changes",
+    ]);
+    expect(canPerformQuoteAction("SENT", "accept")).toBe(true);
+    expect(canPerformQuoteAction("DRAFT", "accept")).toBe(false);
+    expect(canPerformQuoteAction("SENT", "view")).toBe(true);
+    expect(nextQuoteStatusAfterAction("accept")).toBe("ACCEPTED");
+    expect(nextQuoteStatusAfterAction("reject")).toBe("REJECTED");
+    expect(nextQuoteStatusAfterAction("request_changes")).toBe("CHANGES_REQUESTED");
   });
 });

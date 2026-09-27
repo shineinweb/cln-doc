@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PlaceholderBadge } from "@/components/ui/PlaceholderBadge";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -8,7 +9,7 @@ export function QuotesPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader
         title="Quotes"
-        description="Formal proposals with line items. Target API: GET /api/v1/admin/quotes"
+        description="Formal proposals with line items. Customer actions: View · Accept · Reject · Request changes."
       />
       <PlaceholderBadge />
       <div className="surface animate-rise overflow-x-auto rounded-2xl">
@@ -21,7 +22,7 @@ export function QuotesPage() {
               <th className="px-4 py-3 font-semibold">Status</th>
               <th className="px-4 py-3 font-semibold">Project total</th>
               <th className="px-4 py-3 font-semibold">Monthly</th>
-              <th className="px-4 py-3 font-semibold">Valid until</th>
+              <th className="px-4 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -44,7 +45,14 @@ export function QuotesPage() {
                     ? `${formatMoney(quote.monthlyCents, quote.currency)}/mo`
                     : "—"}
                 </td>
-                <td className="px-4 py-3 text-[var(--fg-muted)]">{quote.validUntil}</td>
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/admin/quotes/${quote.id}`}
+                    className="font-semibold text-[var(--color-accent)] no-underline hover:underline"
+                  >
+                    View
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

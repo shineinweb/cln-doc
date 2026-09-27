@@ -7,6 +7,8 @@ import {
   COMMERCIAL_LIFECYCLE_STAGES,
   PROJECT_DELIVERY_MODELS,
   PROJECT_STATUS_STAGES,
+  QUOTE_CUSTOMER_ACTIONS,
+  QUOTE_STATUSES,
 } from "@agency/shared";
 
 const schemaPath = path.resolve(__dirname, "../prisma/schema.prisma");
@@ -121,6 +123,20 @@ describe("Prisma MariaDB schema", () => {
       "MAINTENANCE",
     ]);
     expect(schema).toMatch(/status\s+ProjectStatus\s+@default\(NEW\)/);
+  });
+
+  it("documents quote customer actions View · Accept · Reject · Request changes", () => {
+    expect(schema).toContain("View · Accept · Reject · Request changes");
+    expect(schema).toContain("CHANGES_REQUESTED");
+    expect(schema).toContain("viewedAt");
+    expect(schema).toContain("changesRequestedAt");
+    expect(QUOTE_STATUSES).toContain("CHANGES_REQUESTED");
+    expect(QUOTE_CUSTOMER_ACTIONS.map((item) => item.label)).toEqual([
+      "View",
+      "Accept",
+      "Reject",
+      "Request changes",
+    ]);
   });
 
   it("exposes generated model delegates on Prisma client DMMF", () => {
