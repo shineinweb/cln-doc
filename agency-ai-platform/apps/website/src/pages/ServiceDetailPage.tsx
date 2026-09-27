@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom";
+import { WEBSITE_DEVELOPMENT_PACKAGE, formatUsdFromCents } from "@agency/shared";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { PageHero } from "@/components/marketing/PageHero";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -69,10 +70,10 @@ export function ServiceDetailPage({ slug }: { slug: keyof typeof DETAILS }) {
           </>
         }
       />
-      <Container className="py-12">
+      <Container className="space-y-6 py-12">
         <PlaceholderBadge />
         <Reveal>
-          <ul className="surface mt-6 grid gap-3 rounded-2xl p-6 text-sm sm:grid-cols-2">
+          <ul className="surface grid gap-3 rounded-2xl p-6 text-sm sm:grid-cols-2">
             {detail.points.map((point) => (
               <li key={point} className="leading-relaxed">
                 • {point}
@@ -80,6 +81,30 @@ export function ServiceDetailPage({ slug }: { slug: keyof typeof DETAILS }) {
             ))}
           </ul>
         </Reveal>
+        {slug === "web-development" ? (
+          <Reveal delayMs={80}>
+            <div className="surface rounded-2xl p-6">
+              <p className="text-xs font-bold tracking-[0.12em] text-[var(--color-accent)] uppercase">
+                Sample package
+              </p>
+              <h2 className="font-display mt-2 text-2xl font-bold">
+                {WEBSITE_DEVELOPMENT_PACKAGE.name}
+              </h2>
+              <p className="mt-3 text-lg font-semibold tabular-nums">
+                {formatUsdFromCents(WEBSITE_DEVELOPMENT_PACKAGE.projectTotalCents)} project ·{" "}
+                {formatUsdFromCents(WEBSITE_DEVELOPMENT_PACKAGE.monthlyTotalCents, {
+                  monthly: true,
+                })}
+              </p>
+              <p className="text-muted mt-2 text-sm">
+                UI/UX Design, Development, SEO Setup + Hosting & Maintenance.
+              </p>
+              <div className="mt-5">
+                <ButtonLink to="/pricing">View pricing breakdown</ButtonLink>
+              </div>
+            </div>
+          </Reveal>
+        ) : null}
       </Container>
     </>
   );

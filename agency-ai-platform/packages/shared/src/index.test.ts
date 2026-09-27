@@ -8,6 +8,8 @@ import {
   PROJECT_DELIVERY_MODELS,
   PROJECT_STATUS_PIPELINE,
   PROJECT_STATUS_STAGES,
+  WEBSITE_DEVELOPMENT_PACKAGE,
+  formatUsdFromCents,
   isProjectStatusStage,
 } from "./index";
 
@@ -91,5 +93,24 @@ describe("PROJECT_STATUS_PIPELINE", () => {
     ]);
     expect(isProjectStatusStage("QA")).toBe(true);
     expect(isProjectStatusStage("ACTIVE")).toBe(false);
+  });
+});
+
+describe("WEBSITE_DEVELOPMENT_PACKAGE", () => {
+  it("totals one-time and monthly line items correctly", () => {
+    const oneTime = WEBSITE_DEVELOPMENT_PACKAGE.oneTimeLines.reduce(
+      (sum, line) => sum + line.amountCents,
+      0,
+    );
+    const monthly = WEBSITE_DEVELOPMENT_PACKAGE.monthlyLines.reduce(
+      (sum, line) => sum + line.amountCents,
+      0,
+    );
+    expect(oneTime).toBe(950_000);
+    expect(monthly).toBe(24_800);
+    expect(WEBSITE_DEVELOPMENT_PACKAGE.projectTotalCents).toBe(oneTime);
+    expect(WEBSITE_DEVELOPMENT_PACKAGE.monthlyTotalCents).toBe(monthly);
+    expect(formatUsdFromCents(950_000)).toBe("$9,500");
+    expect(formatUsdFromCents(24_800, { monthly: true })).toBe("$248/mo");
   });
 });

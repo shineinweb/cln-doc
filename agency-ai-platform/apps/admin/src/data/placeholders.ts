@@ -76,14 +76,34 @@ export const PLACEHOLDER_OPPORTUNITIES = [
 
 export const PLACEHOLDER_QUOTES = [
   {
+    id: "quote_dev_000",
+    number: "Q-2026-015",
+    title: "Website Development",
+    status: "SENT",
+    totalCents: 950_000,
+    monthlyCents: 24_800,
+    currency: "USD",
+    organization: "Sample prospect",
+    validUntil: "2026-04-30",
+    lines: [
+      "UI/UX Design — $2,500",
+      "Development — $6,000",
+      "SEO Setup — $1,000",
+      "Hosting — $49/mo",
+      "Maintenance — $199/mo",
+    ],
+  },
+  {
     id: "quote_dev_001",
     number: "Q-2026-014",
     title: "Harbor AI Assist — Phase 1",
     status: "SENT",
     totalCents: 2400000,
+    monthlyCents: null,
     currency: "USD",
     organization: "Harbor Clinics",
     validUntil: "2026-04-12",
+    lines: [] as string[],
   },
   {
     id: "quote_dev_002",
@@ -91,9 +111,11 @@ export const PLACEHOLDER_QUOTES = [
     title: "Northline Commerce Rebuild",
     status: "DRAFT",
     totalCents: 4800000,
+    monthlyCents: null,
     currency: "USD",
     organization: "Northline Retail",
     validUntil: "2026-04-20",
+    lines: [] as string[],
   },
   {
     id: "quote_dev_003",
@@ -101,9 +123,11 @@ export const PLACEHOLDER_QUOTES = [
     title: "Atelier Brand System",
     status: "ACCEPTED",
     totalCents: 1850000,
+    monthlyCents: null,
     currency: "USD",
     organization: "Atelier Goods",
     validUntil: "2026-03-01",
+    lines: [] as string[],
   },
 ] as const;
 

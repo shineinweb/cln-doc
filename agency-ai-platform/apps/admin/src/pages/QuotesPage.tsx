@@ -19,7 +19,8 @@ export function QuotesPage() {
               <th className="px-4 py-3 font-semibold">Title</th>
               <th className="px-4 py-3 font-semibold">Organization</th>
               <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold">Total</th>
+              <th className="px-4 py-3 font-semibold">Project total</th>
+              <th className="px-4 py-3 font-semibold">Monthly</th>
               <th className="px-4 py-3 font-semibold">Valid until</th>
             </tr>
           </thead>
@@ -27,12 +28,22 @@ export function QuotesPage() {
             {PLACEHOLDER_QUOTES.map((quote) => (
               <tr key={quote.id} className="border-b border-[var(--border)] last:border-0">
                 <td className="px-4 py-3 font-semibold">{quote.number}</td>
-                <td className="px-4 py-3">{quote.title}</td>
+                <td className="px-4 py-3">
+                  <p className="font-semibold">{quote.title}</p>
+                  {"lines" in quote && quote.lines.length > 0 ? (
+                    <p className="text-muted mt-1 text-xs">{quote.lines.join(" · ")}</p>
+                  ) : null}
+                </td>
                 <td className="px-4 py-3">{quote.organization}</td>
                 <td className="px-4 py-3">
                   <StatusPill label={quote.status} />
                 </td>
                 <td className="px-4 py-3">{formatMoney(quote.totalCents, quote.currency)}</td>
+                <td className="px-4 py-3 text-[var(--fg-muted)]">
+                  {quote.monthlyCents != null
+                    ? `${formatMoney(quote.monthlyCents, quote.currency)}/mo`
+                    : "—"}
+                </td>
                 <td className="px-4 py-3 text-[var(--fg-muted)]">{quote.validUntil}</td>
               </tr>
             ))}

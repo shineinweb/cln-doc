@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { PlaceholderBadge } from "@/components/ui/PlaceholderBadge";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { WEBSITE_DEVELOPMENT_PACKAGE, formatUsdFromCents } from "@agency/shared";
 import { COMPANY, HOSTING_PLANS, PORTFOLIO, SERVICES } from "@/data/placeholders";
 
 export function HomePage() {
@@ -104,6 +105,35 @@ export function HomePage() {
             <ButtonLink to="/portfolio" variant="ghost">
               View portfolio
             </ButtonLink>
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-16 sm:py-20">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              eyebrow="Pricing"
+              title="Website Development, priced in plain numbers."
+              description={`${formatUsdFromCents(WEBSITE_DEVELOPMENT_PACKAGE.projectTotalCents)} project · ${formatUsdFromCents(WEBSITE_DEVELOPMENT_PACKAGE.monthlyTotalCents, { monthly: true })} hosting + maintenance.`}
+            />
+          </Reveal>
+          <Reveal delayMs={60}>
+            <div className="surface mt-8 grid gap-4 rounded-2xl p-6 sm:grid-cols-3">
+              {WEBSITE_DEVELOPMENT_PACKAGE.oneTimeLines.map((line) => (
+                <div key={line.key}>
+                  <p className="text-muted text-xs font-bold tracking-[0.12em] uppercase">
+                    {line.label}
+                  </p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums">
+                    {formatUsdFromCents(line.amountCents)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+          <div className="mt-8">
+            <ButtonLink to="/pricing">See full pricing</ButtonLink>
           </div>
         </Container>
       </section>
