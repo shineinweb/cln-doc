@@ -4,6 +4,8 @@ Instructions for AI coding agents and human contributors working in this reposit
 
 You are implementing a **production-grade SaaS platform** for a digital agency (web, design, branding, SEO, domains, hosting, maintenance, custom AI, support). Act as a careful senior full-stack engineer: follow the architecture contracts, prefer small correct changes, and do not invent parallel stacks.
 
+> **Mandatory:** Before architectural changes, read **[DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md)** (stack, DB, security, AI, feature workflow).
+
 ---
 
 ## 1. Current phase
@@ -24,6 +26,7 @@ When asked to implement, follow the roadmap order and the docs below.
 
 | Order | Doc | Why |
 | --- | --- | --- |
+| 0 | [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md) | Binding engineering / security / AI / workflow rules |
 | 1 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Surfaces, packages, runtime, providers |
 | 2 | [docs/DATABASE.md](./docs/DATABASE.md) | MariaDB + Prisma model |
 | 3 | [docs/API.md](./docs/API.md) | REST / WebSocket contracts |
@@ -31,7 +34,7 @@ When asked to implement, follow the roadmap order and the docs below.
 | 5 | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) | Agents, RAG, tools, approvals |
 | 6 | [docs/ROADMAP.md](./docs/ROADMAP.md) | What to build next |
 
-Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/).
+Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/) (includes `development.mdc`).
 
 ---
 
@@ -183,11 +186,13 @@ When building AI features:
 
 ## 11. How to take a task
 
-1. Identify the roadmap phase and surface (public / portal / admin / API / AI).
-2. Read the relevant architecture doc section.
-3. Implement behind package boundaries + provider interfaces.
-4. Add/adjust Prisma schema only in `@agency/database` with migrations.
-5. Typecheck/lint affected packages; add tests for authZ and tenancy where applicable.
+Follow the full workflow in [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md):
+
+1. Inspect existing code → read docs → **explain the plan** (DB, API, security).
+2. Implement behind package boundaries + provider interfaces.
+3. Add/adjust Prisma schema only in `@agency/database` with migrations.
+4. Add tests; run **lint → typecheck → tests → build**; fix failures.
+5. Report what changed. **Never ignore failing tests.**
 6. Keep PRs focused; do not drive-by refactor unrelated apps.
 
 ---

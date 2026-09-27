@@ -26,8 +26,10 @@ pnpm dev:website   # http://localhost:5173
 pnpm dev:api       # http://localhost:3000
 ```
 
-See [AGENTS.md](./AGENTS.md) for monorepo conventions.
+**Start here**
 
-**Architecture (start here):** [docs/README.md](./docs/README.md) — `ARCHITECTURE`, `DATABASE`, `API`, `SECURITY`, `AI_ARCHITECTURE`, `ROADMAP`.
+1. [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md) — binding engineering, DB, security, AI, and workflow rules  
+2. [AGENTS.md](./AGENTS.md) — monorepo agent guide  
+3. [docs/README.md](./docs/README.md) — architecture contracts  
 
 Application implementation has not started yet; docs define the contract.

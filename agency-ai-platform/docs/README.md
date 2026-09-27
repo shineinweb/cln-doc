@@ -2,6 +2,8 @@
 
 Architecture contracts for the Agency AI Platform. Read these before implementing features.
 
+**Binding rules:** [../DEVELOPMENT_RULES.md](../DEVELOPMENT_RULES.md) and [../AGENTS.md](../AGENTS.md).
+
 | Document | Description |
 | --- | --- |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System overview, apps, packages, infrastructure, providers |
