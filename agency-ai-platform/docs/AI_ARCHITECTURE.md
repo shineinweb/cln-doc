@@ -228,6 +228,36 @@ createPullRequests()
 
 **Non-goals for Coding AI:** autonomous production deploys, unrestricted shell, merging to protected branches without staff.
 
+### 5.5 Coding delivery pipeline
+
+```text
+AI CODE
+   ↓
+BRANCH
+   ↓
+TEST
+   ↓
+PULL REQUEST
+   ↓
+HUMAN REVIEW
+   ↓
+MERGE
+   ↓
+DEPLOY
+```
+
+| Stage            | Codename         | Actors           | Coding AI? | Notes                                      |
+| ---------------- | ---------------- | ---------------- | ---------- | ------------------------------------------ |
+| **AI Code**      | `ai_code`        | coding_ai        | yes        | Draft code/tests via tools                 |
+| **Branch**       | `branch`         | coding_ai, human | yes*       | `createBranches` — approval required       |
+| **Test**         | `test`           | coding_ai, ci    | yes        | Sandboxed `runTests`                       |
+| **Pull Request** | `pull_request`   | coding_ai, human | yes*       | `createPullRequests` — approval; no merge  |
+| **Human Review** | `human_review`   | human            | **no**     | Staff approve / request changes            |
+| **Merge**        | `merge`          | human            | **no**     | Protected base; human only                 |
+| **Deploy**       | `deploy`         | human, ci        | **no**     | Never triggered by Coding AI               |
+
+\* Branch and PR creation still require human approval gates. Source of truth: `CODING_PIPELINE` in `@agency/ai`.
+
 **Also planned (other agents):** `quote.create_draft`, `hosting.restart_service` (approval), `dns.apply_record_change` (approval), `billing.issue_refund` (approval).
 
 ---

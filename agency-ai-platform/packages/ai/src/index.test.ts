@@ -6,8 +6,12 @@ import {
   AI_TOOL_REGISTRY,
   AiService,
   AiToolUnwiredError,
+  CODING_PIPELINE_DIAGRAM,
+  CODING_PIPELINE_STAGES,
   CODING_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOL_NAMES,
+  canCodingAiActAtStage,
+  getNextCodingPipelineStage,
   DEFAULT_AI_SECURITY_POLICY,
   DEFAULT_MEMORY_POLICIES,
   OPENAI_LLM_PROVIDER_NAME,
@@ -85,6 +89,26 @@ describe("package module map", () => {
     expect(getAgentDefinition("coding").toolAllowlist).toEqual([...CODING_TOOL_NAMES]);
     expect(getTool("createBranches")?.requiresApproval).toBe(true);
     expect(requiresApproval("write", true)).toBe(true);
+  });
+
+  it("encodes the Coding AI delivery pipeline through Deploy", () => {
+    expect([...CODING_PIPELINE_STAGES]).toEqual([
+      "ai_code",
+      "branch",
+      "test",
+      "pull_request",
+      "human_review",
+      "merge",
+      "deploy",
+    ]);
+    expect(CODING_PIPELINE_DIAGRAM).toContain("HUMAN REVIEW");
+    expect(getNextCodingPipelineStage("ai_code")).toBe("branch");
+    expect(getNextCodingPipelineStage("pull_request")).toBe("human_review");
+    expect(getNextCodingPipelineStage("deploy")).toBeNull();
+    expect(canCodingAiActAtStage("test")).toBe(true);
+    expect(canCodingAiActAtStage("human_review")).toBe(false);
+    expect(canCodingAiActAtStage("merge")).toBe(false);
+    expect(canCodingAiActAtStage("deploy")).toBe(false);
   });
 
   it("invokeTool fails loudly until domain handlers are bound", async () => {

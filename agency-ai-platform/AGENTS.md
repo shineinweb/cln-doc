@@ -181,6 +181,7 @@ When building AI features:
 3. Persist `AiRun`, `AiToolCall`, approvals, and feedback.
 4. Embeddings/chunks stay in MariaDB (`VectorStore` adapter) — no Postgres vector DB.
 5. Customer-facing assistant is scoped; staff agents may use internal collections only when authorized.
+6. Coding AI follows **AI Code → Branch → Test → PR → Human Review → Merge → Deploy**; AI stops before Human Review / Merge / Deploy.
 
 ---
 
