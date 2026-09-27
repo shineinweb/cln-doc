@@ -1,11 +1,13 @@
 import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
+      "@": path.resolve(__dirname, "./src"),
       "@agency/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@agency/shared": path.resolve(__dirname, "../../packages/shared/src"),
       "@agency/auth/browser": path.resolve(__dirname, "../../packages/auth/src/browser.ts"),
