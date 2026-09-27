@@ -1,5 +1,10 @@
 import { PrismaClient, type OrganizationMemberRole } from "@prisma/client";
-import { hashPassword, PLATFORM_PERMISSIONS, PLATFORM_ROLES } from "@agency/auth";
+import {
+  hashPassword,
+  PLATFORM_PERMISSION_KEYS,
+  PLATFORM_PERMISSIONS,
+  PLATFORM_ROLES,
+} from "@agency/auth";
 
 const prisma = new PrismaClient();
 
@@ -14,6 +19,23 @@ async function main() {
       update: { description: permission.description },
     });
   }
+
+  // Super Admin uses literal "*" grant (not part of the enumerated catalog).
+  await prisma.permission.upsert({
+    where: { key: "*" },
+    create: { key: "*", description: "Unrestricted access (super admin)" },
+    update: { description: "Unrestricted access (super admin)" },
+  });
+
+  const retainedPermissionKeys = [...PLATFORM_PERMISSION_KEYS, "*"];
+
+  // Drop obsolete permission keys no longer in the catalog.
+  await prisma.rolePermission.deleteMany({
+    where: { permission: { key: { notIn: retainedPermissionKeys } } },
+  });
+  await prisma.permission.deleteMany({
+    where: { key: { notIn: retainedPermissionKeys } },
+  });
 
   const roleIds = new Map<string, string>();
 

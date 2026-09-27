@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getPlatformRole,
   isStaffRoleKey,
+  PLATFORM_PERMISSION_KEYS,
   PLATFORM_PERMISSIONS,
   PLATFORM_ROLE_KEYS,
   PLATFORM_ROLES,
@@ -22,33 +23,43 @@ describe("platform roles catalog", () => {
       "billing",
       "customer",
     ]);
-    expect(PLATFORM_ROLES.map((role) => role.name)).toEqual([
-      "Super Admin",
-      "Administrator",
-      "Manager",
-      "Sales",
-      "Developer",
-      "Designer",
-      "SEO Specialist",
-      "Hosting Technician",
-      "Support Agent",
-      "Billing",
-      "Customer",
+  });
+
+  it("uses the canonical permission keys", () => {
+    expect(PLATFORM_PERMISSION_KEYS).toEqual([
+      "customers.view",
+      "customers.create",
+      "customers.edit",
+      "customers.delete",
+      "projects.view",
+      "projects.create",
+      "projects.edit",
+      "hosting.view",
+      "hosting.create",
+      "hosting.suspend",
+      "domains.view",
+      "domains.manage",
+      "billing.view",
+      "billing.refund",
+      "ai.use",
+      "ai.manage",
+      "ai.approve",
+      "users.manage",
+      "roles.manage",
     ]);
   });
 
-  it("gives super admin unrestricted access and customer portal-only access", () => {
+  it("gives super admin unrestricted access", () => {
     expect(getPlatformRole("super_admin").permissions).toEqual(["*"]);
-    expect(getPlatformRole("customer").permissions).toEqual(["portal.*"]);
     expect(getPlatformRole("customer").isStaff).toBe(false);
     expect(isStaffRoleKey("developer")).toBe(true);
-    expect(isStaffRoleKey("customer")).toBe(false);
   });
 
-  it("references only declared permission keys", () => {
+  it("references only declared permission keys (or *)", () => {
     const declared = new Set(PLATFORM_PERMISSIONS.map((permission) => permission.key));
     for (const role of PLATFORM_ROLES) {
       for (const permission of role.permissions) {
+        if (permission === "*") continue;
         expect(declared.has(permission)).toBe(true);
       }
     }

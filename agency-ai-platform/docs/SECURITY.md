@@ -65,22 +65,19 @@ Public registration creates a customer `User`, `Organization`, and owner members
 
 ### 4.1 Permission model
 
-Permissions are string capabilities, e.g.:
+Permissions are string capabilities. Canonical catalog (`@agency/auth` `PLATFORM_PERMISSIONS`):
 
 ```text
-crm.leads.read
-crm.leads.write
-billing.invoices.read
-billing.refunds.create
-hosting.accounts.suspend
-domains.transfer
-ai.approvals.decide
-audit.read
-settings.write
+customers.view | customers.create | customers.edit | customers.delete
+projects.view | projects.create | projects.edit
+hosting.view | hosting.create | hosting.suspend
+domains.view | domains.manage
+billing.view | billing.refund
+ai.use | ai.manage | ai.approve
+users.manage | roles.manage
 ```
 
-Roles bundle permissions. Platform catalog (`@agency/auth` `PLATFORM_ROLES`):
-
+Roles bundle these permissions (`PLATFORM_ROLES`):  
 `super_admin`, `administrator`, `manager`, `sales`, `developer`, `designer`, `seo_specialist`, `hosting_technician`, `support_agent`, `billing`, `customer`.
 
 ### 4.2 Portal vs admin
@@ -104,7 +101,7 @@ A staff user accessing portal-impersonation (if ever enabled) requires explicit 
 Examples:
 
 - Portal user may only read invoices where `invoice.organizationId ∈ user.memberships`
-- Staff need `billing.invoices.read` **and** (global scope or assigned account policy)
+- Staff need `billing.view` **and** (global scope or assigned account policy)
 
 ---
 
@@ -181,7 +178,7 @@ Details: [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md).
 - Append-only (`AuditLog`)
 - Includes actor, action, entity, before/after (redacted), IP, user agent, request id
 - Retained per compliance policy; exportable for reports
-- Admins with `audit.read` only; no update/delete API
+- Admins with `roles.manage` / privileged staff only for audit access; no update/delete API
 
 ---
 

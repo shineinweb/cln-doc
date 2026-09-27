@@ -20,7 +20,8 @@ describe("PermissionsGuard", () => {
 
   it("denies when required permissions are missing", () => {
     const reflector = {
-      getAllAndOverride: (key: string) => (key === PERMISSIONS_KEY ? ["audit.read"] : undefined),
+      getAllAndOverride: (key: string) =>
+        key === PERMISSIONS_KEY ? ["customers.view"] : undefined,
     } as unknown as Reflector;
     const guard = new PermissionsGuard(reflector);
     const context = {
@@ -28,7 +29,7 @@ describe("PermissionsGuard", () => {
       getClass: () => ({}),
       switchToHttp: () => ({
         getRequest: () => ({
-          auth: { user: { permissions: ["crm.leads.read"] } },
+          auth: { user: { permissions: ["projects.view"] } },
         }),
       }),
     } as never;

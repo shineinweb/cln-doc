@@ -5,7 +5,7 @@ import { Permissions } from "../common/decorators/permissions.decorator";
 @Controller("admin")
 export class AdminDemoController {
   @Get("ping")
-  @Permissions("audit.read")
+  @Permissions("customers.view")
   ping() {
     return { data: { ok: true, scope: "admin" } };
   }

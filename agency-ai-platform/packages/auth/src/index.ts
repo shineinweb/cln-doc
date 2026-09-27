@@ -9,9 +9,15 @@ export { slugifyOrganizationName } from "./slug";
 export type { AuthUserView, AuthMembership, RequestAuthContext } from "./types";
 export {
   PLATFORM_PERMISSIONS,
+  PLATFORM_PERMISSION_KEYS,
   PLATFORM_ROLES,
   PLATFORM_ROLE_KEYS,
   getPlatformRole,
   isStaffRoleKey,
 } from "./roles";
-export type { PlatformRoleKey, PlatformRoleDef, PlatformPermissionDef } from "./roles";
+export type {
+  PlatformRoleKey,
+  PlatformRoleDef,
+  PlatformPermissionDef,
+  PlatformPermissionKey,
+} from "./roles";

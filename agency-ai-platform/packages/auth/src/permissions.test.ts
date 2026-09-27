@@ -3,13 +3,14 @@ import { hasAllPermissions, hasPermission } from "./permissions";
 
 describe("permissions", () => {
   it("matches exact and wildcard grants", () => {
-    expect(hasPermission(["crm.leads.read"], "crm.leads.read")).toBe(true);
-    expect(hasPermission(["crm.*"], "crm.leads.write")).toBe(true);
-    expect(hasPermission(["crm.leads.read"], "billing.refunds.create")).toBe(false);
+    expect(hasPermission(["customers.view"], "customers.view")).toBe(true);
+    expect(hasPermission(["customers.*"], "customers.edit")).toBe(true);
+    expect(hasPermission(["*"], "roles.manage")).toBe(true);
+    expect(hasPermission(["customers.view"], "billing.refund")).toBe(false);
   });
 
   it("requires all listed permissions", () => {
-    expect(hasAllPermissions(["a", "b"], ["a", "b"])).toBe(true);
-    expect(hasAllPermissions(["a"], ["a", "b"])).toBe(false);
+    expect(hasAllPermissions(["customers.view", "billing.view"], ["customers.view"])).toBe(true);
+    expect(hasAllPermissions(["customers.view"], ["customers.view", "billing.refund"])).toBe(false);
   });
 });
