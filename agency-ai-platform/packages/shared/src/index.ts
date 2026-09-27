@@ -81,3 +81,19 @@ export type {
   SupportTicketPriorityValue,
   SupportTicketStatusValue,
 } from "./support";
+
+export {
+  KNOWLEDGE_ARTICLE_STATUSES,
+  KNOWLEDGE_ARTICLE_STATUS_PIPELINE,
+  KNOWLEDGE_DOCUMENT_STATUSES,
+  KNOWLEDGE_DOMAIN_MODELS,
+  KNOWLEDGE_VISIBILITIES,
+  isKnowledgeArticleStatus,
+  isKnowledgeVisibility,
+} from "./knowledge";
+export type {
+  KnowledgeArticleStatusValue,
+  KnowledgeDocumentStatusValue,
+  KnowledgeDomainModel,
+  KnowledgeVisibilityValue,
+} from "./knowledge";

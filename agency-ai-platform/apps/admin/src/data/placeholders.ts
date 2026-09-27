@@ -13,6 +13,7 @@ export const ADMIN_NAV = [
   { to: "/admin/quotes", label: "Quotes" },
   { to: "/admin/customers", label: "Customers" },
   { to: "/admin/tickets", label: "Tickets" },
+  { to: "/admin/knowledge", label: "Knowledge" },
   { to: "/admin/products", label: "Products" },
   { to: "/admin/prices", label: "Prices" },
   { to: "/admin/invoices", label: "Invoices" },
@@ -299,6 +300,36 @@ export const PLACEHOLDER_QUOTES = [
     organization: "Atelier Goods",
     validUntil: "2026-03-01",
     lines: [] as string[],
+  },
+] as const;
+
+export const PLACEHOLDER_KNOWLEDGE_ARTICLES = [
+  {
+    id: "ka_ssl",
+    slug: "enable-ssl-on-hosting",
+    title: "Enable SSL on your hosting plan",
+    category: "Hosting",
+    status: "PUBLISHED",
+    visibility: "PUBLIC",
+    updatedAt: "2026-09-20",
+  },
+  {
+    id: "ka_dns",
+    slug: "point-domain-to-hosting",
+    title: "Point a domain to your hosting",
+    category: "Domains",
+    status: "PUBLISHED",
+    visibility: "BOTH",
+    updatedAt: "2026-09-18",
+  },
+  {
+    id: "ka_refund",
+    slug: "request-a-refund",
+    title: "Request a refund",
+    category: "Billing",
+    status: "DRAFT",
+    visibility: "INTERNAL",
+    updatedAt: "2026-09-27",
   },
 ] as const;
 

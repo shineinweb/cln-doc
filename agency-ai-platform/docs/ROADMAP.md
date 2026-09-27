@@ -145,7 +145,8 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 - [x] Support schema: `SupportTicket`, `TicketMessage`, `TicketAttachment`, `TicketAssignment`, `TicketStatusHistory`
 - SLA fields / assignment (schema fields landed; enforcement jobs pending)
-- KB CMS (public + internal)
+- [x] Knowledge schema: `KnowledgeArticle`, `KnowledgeCategory`, `KnowledgeDocument`, `KnowledgeChunk`, `KnowledgeRevision`
+- KB CMS UX (admin list PLACEHOLDER; public site still uses content stubs)
 - [x] Portal New Ticket form + tickets list shell (PLACEHOLDER submit — API not wired)
 - Admin ticket UX (admin list PLACEHOLDER)
 - Macro/canned replies

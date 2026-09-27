@@ -13,6 +13,8 @@ import {
   REFUND_WORKFLOW_STAGES,
   SUPPORT_TICKET_DOMAIN_MODELS,
   SUPPORT_TICKET_STATUSES,
+  KNOWLEDGE_DOMAIN_MODELS,
+  KNOWLEDGE_ARTICLE_STATUSES,
 } from "@agency/shared";
 
 const schemaPath = path.resolve(__dirname, "../prisma/schema.prisma");
@@ -76,6 +78,14 @@ const SUPPORT_MODELS = [
   "TicketStatusHistory",
 ] as const;
 
+const KNOWLEDGE_MODELS = [
+  "KnowledgeArticle",
+  "KnowledgeCategory",
+  "KnowledgeDocument",
+  "KnowledgeChunk",
+  "KnowledgeRevision",
+] as const;
+
 describe("Prisma MariaDB schema", () => {
   const schema = readFileSync(schemaPath, "utf8");
 
@@ -86,13 +96,14 @@ describe("Prisma MariaDB schema", () => {
     expect(schema).not.toMatch(/pgvector/i);
   });
 
-  it("declares identity, lifecycle, delivery, billing, and support models", () => {
+  it("declares identity, lifecycle, delivery, billing, support, and knowledge models", () => {
     for (const model of [
       ...IDENTITY_MODELS,
       ...LIFECYCLE_MODELS,
       ...DELIVERY_MODELS,
       ...BILLING_MODELS,
       ...SUPPORT_MODELS,
+      ...KNOWLEDGE_MODELS,
     ]) {
       expect(schema).toContain(`model ${model}`);
     }
@@ -211,6 +222,22 @@ describe("Prisma MariaDB schema", () => {
     expect(schema).toMatch(/status\s+SupportTicketStatus\s+@default\(OPEN\)/);
   });
 
+  it("documents knowledge domain KnowledgeArticle through KnowledgeRevision", () => {
+    expect(schema).toContain("KnowledgeCategory → KnowledgeArticle → KnowledgeRevision");
+    expect(schema).toContain("KnowledgeDocument → KnowledgeChunk");
+    expect(schema).toContain("embedding Json in MariaDB only");
+    expect(KNOWLEDGE_DOMAIN_MODELS).toEqual([
+      "KnowledgeArticle",
+      "KnowledgeCategory",
+      "KnowledgeDocument",
+      "KnowledgeChunk",
+      "KnowledgeRevision",
+    ]);
+    expect(KNOWLEDGE_ARTICLE_STATUSES).toEqual(["DRAFT", "PUBLISHED", "ARCHIVED"]);
+    expect(schema).toMatch(/status\s+KnowledgeArticleStatus\s+@default\(DRAFT\)/);
+    expect(schema).toContain("embeddingJson");
+  });
+
   it("exposes generated model delegates on Prisma client DMMF", () => {
     const modelNames = Prisma.dmmf.datamodel.models.map((model) => model.name);
     expect(modelNames).toEqual(
@@ -220,6 +247,7 @@ describe("Prisma MariaDB schema", () => {
         ...DELIVERY_MODELS,
         ...BILLING_MODELS,
         ...SUPPORT_MODELS,
+        ...KNOWLEDGE_MODELS,
       ]),
     );
   });

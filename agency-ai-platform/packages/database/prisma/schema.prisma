@@ -48,6 +48,9 @@ model User {
   ticketAssignments   TicketAssignment[]     @relation("TicketAssignee")
   ticketAssignerActs  TicketAssignment[]     @relation("TicketAssigner")
   ticketStatusChanges TicketStatusHistory[]  @relation("TicketStatusActor")
+  authoredArticles    KnowledgeArticle[]     @relation("KnowledgeArticleAuthor")
+  knowledgeRevisions  KnowledgeRevision[]    @relation("KnowledgeRevisionAuthor")
+  uploadedDocuments   KnowledgeDocument[]    @relation("KnowledgeDocumentUploader")
 
   @@index([isStaff, isActive])
   @@index([createdAt])
@@ -132,6 +135,7 @@ model Organization {
   paymentMethods   PaymentMethod[]
   billingCustomer  BillingCustomer?
   supportTickets   SupportTicket[]
+  knowledgeDocuments KnowledgeDocument[]
 
   @@index([createdAt])
   @@map("organizations")
@@ -1254,4 +1258,147 @@ model TicketStatusHistory {
   @@index([actorUserId])
   @@index([toStatus])
   @@map("ticket_status_history")
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge — KnowledgeCategory → KnowledgeArticle → KnowledgeRevision
+//            KnowledgeDocument → KnowledgeChunk (RAG; embedding Json in MariaDB only)
+// ---------------------------------------------------------------------------
+
+enum KnowledgeVisibility {
+  PUBLIC
+  INTERNAL
+  BOTH
+}
+
+enum KnowledgeArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum KnowledgeDocumentSourceType {
+  UPLOAD
+  URL
+  MANUAL
+}
+
+enum KnowledgeDocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model KnowledgeCategory {
+  id          String    @id @default(uuid()) @db.Char(36)
+  parentId    String?   @map("parent_id") @db.Char(36)
+  key         String    @unique @db.VarChar(80)
+  name        String    @db.VarChar(160)
+  description String?   @db.VarChar(500)
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  parent   KnowledgeCategory?  @relation("KnowledgeCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children KnowledgeCategory[] @relation("KnowledgeCategoryTree")
+  articles KnowledgeArticle[]
+
+  @@index([parentId, sortOrder])
+  @@index([sortOrder])
+  @@map("knowledge_categories")
+}
+
+model KnowledgeArticle {
+  id            String                 @id @default(uuid()) @db.Char(36)
+  categoryId    String?                @map("category_id") @db.Char(36)
+  authorUserId  String?                @map("author_user_id") @db.Char(36)
+  slug          String                 @unique @db.VarChar(160)
+  title         String                 @db.VarChar(300)
+  summary       String?                @db.VarChar(500)
+  status        KnowledgeArticleStatus @default(DRAFT)
+  visibility    KnowledgeVisibility    @default(INTERNAL)
+  publishedAt   DateTime?              @map("published_at")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+  deletedAt     DateTime?              @map("deleted_at")
+
+  category  KnowledgeCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author    User?               @relation("KnowledgeArticleAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  revisions KnowledgeRevision[]
+  chunks    KnowledgeChunk[]
+
+  @@index([categoryId, status])
+  @@index([status, visibility, publishedAt])
+  @@index([authorUserId])
+  @@map("knowledge_articles")
+}
+
+model KnowledgeRevision {
+  id           String   @id @default(uuid()) @db.Char(36)
+  articleId    String   @map("article_id") @db.Char(36)
+  authorUserId String?  @map("author_user_id") @db.Char(36)
+  version      Int
+  title        String   @db.VarChar(300)
+  body         String   @db.LongText
+  changeNote   String?  @map("change_note") @db.VarChar(500)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  article KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author  User?            @relation("KnowledgeRevisionAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+
+  @@unique([articleId, version])
+  @@index([articleId, createdAt])
+  @@index([authorUserId])
+  @@map("knowledge_revisions")
+}
+
+model KnowledgeDocument {
+  id               String                      @id @default(uuid()) @db.Char(36)
+  organizationId   String?                     @map("organization_id") @db.Char(36)
+  uploadedByUserId String?                     @map("uploaded_by_user_id") @db.Char(36)
+  title            String                      @db.VarChar(300)
+  sourceType       KnowledgeDocumentSourceType @default(UPLOAD)
+  status           KnowledgeDocumentStatus     @default(PENDING)
+  storageKey       String?                     @map("storage_key") @db.VarChar(500)
+  sourceUrl        String?                     @map("source_url") @db.VarChar(1000)
+  mimeType         String?                     @map("mime_type") @db.VarChar(120)
+  sizeBytes        Int?                        @map("size_bytes")
+  errorMessage     String?                     @map("error_message") @db.VarChar(500)
+  createdAt        DateTime                    @default(now()) @map("created_at")
+  updatedAt        DateTime                    @updatedAt @map("updated_at")
+  deletedAt        DateTime?                   @map("deleted_at")
+
+  organization Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedBy   User?            @relation("KnowledgeDocumentUploader", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+  chunks       KnowledgeChunk[]
+
+  @@index([organizationId, status])
+  @@index([status, createdAt])
+  @@index([uploadedByUserId])
+  @@map("knowledge_documents")
+}
+
+model KnowledgeChunk {
+  id             String   @id @default(uuid()) @db.Char(36)
+  articleId      String?  @map("article_id") @db.Char(36)
+  documentId     String?  @map("document_id") @db.Char(36)
+  organizationId String?  @map("organization_id") @db.Char(36)
+  chunkIndex     Int      @map("chunk_index")
+  content        String   @db.LongText
+  tokenCount     Int?     @map("token_count")
+  /// MariaDB JSON float array for v1 VectorStore (MariaDB-only; not a second SQL engine).
+  embeddingJson  Json?    @map("embedding_json")
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  article  KnowledgeArticle?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  document KnowledgeDocument? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, chunkIndex])
+  @@index([documentId, chunkIndex])
+  @@index([organizationId])
+  @@map("knowledge_chunks")
 }

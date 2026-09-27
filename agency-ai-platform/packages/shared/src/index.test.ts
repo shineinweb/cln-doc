@@ -17,8 +17,11 @@ import {
   SUPPORT_TICKET_DOMAIN_MODELS,
   SUPPORT_TICKET_STATUS_PIPELINE,
   SUPPORT_TICKET_STATUSES,
+  KNOWLEDGE_ARTICLE_STATUS_PIPELINE,
+  KNOWLEDGE_DOMAIN_MODELS,
   canPerformQuoteAction,
   formatUsdFromCents,
+  isKnowledgeArticleStatus,
   isProjectStatusStage,
   isRefundWorkflowStage,
   isSupportTicketDepartment,
@@ -194,5 +197,24 @@ describe("SUPPORT_TICKET_DOMAIN", () => {
     expect(SUPPORT_TICKET_DEPARTMENTS.map((item) => item.label)).toContain("Hosting");
     expect(isSupportTicketDepartment("hosting")).toBe(true);
     expect(isSupportTicketDepartment("sales")).toBe(false);
+  });
+});
+
+describe("KNOWLEDGE_DOMAIN", () => {
+  it("lists KnowledgeArticle through KnowledgeRevision", () => {
+    expect(KNOWLEDGE_DOMAIN_MODELS).toEqual([
+      "KnowledgeArticle",
+      "KnowledgeCategory",
+      "KnowledgeDocument",
+      "KnowledgeChunk",
+      "KnowledgeRevision",
+    ]);
+    expect(KNOWLEDGE_ARTICLE_STATUS_PIPELINE.map((step) => step.label)).toEqual([
+      "Draft",
+      "Published",
+      "Archived",
+    ]);
+    expect(isKnowledgeArticleStatus("PUBLISHED")).toBe(true);
+    expect(isKnowledgeArticleStatus("LIVE")).toBe(false);
   });
 });

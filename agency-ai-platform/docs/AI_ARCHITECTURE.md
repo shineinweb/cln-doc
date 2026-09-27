@@ -193,7 +193,7 @@ Source change → BullMQ index job
   → extract text
   → chunk (token-aware)
   → EmbeddingProvider.embed
-  → VectorStore.upsert (MariaDB KnowledgeChunk + KnowledgeEmbedding)
+  → VectorStore.upsert (MariaDB KnowledgeChunk.embeddingJson)
 ```
 
 Unpublish/delete → `deleteBySource`.

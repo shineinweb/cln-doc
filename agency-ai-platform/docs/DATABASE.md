@@ -210,10 +210,18 @@ Support domain (`SupportTicket → TicketMessage → TicketAttachment` + assignm
 
 SLA fields on `SupportTicket`: `firstResponseDueAt`, `resolutionDueAt`, `firstRespondedAt`.
 
+Knowledge domain (`KnowledgeCategory → KnowledgeArticle → KnowledgeRevision` + documents/chunks):
+
+| Model               | Purpose                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| `KnowledgeCategory` | Nested taxonomy for articles                                    |
+| `KnowledgeArticle`  | KB article (Draft / Published / Archived; Public / Internal)    |
+| `KnowledgeRevision` | Versioned article body (`version` per article)                  |
+| `KnowledgeDocument` | Uploaded/URL/manual source for RAG ingestion                    |
+| `KnowledgeChunk`    | Chunk text + optional `embeddingJson` (MariaDB VectorStore v1)  |
+
 | Model                     | Purpose                             |
 | ------------------------- | ----------------------------------- |
-| `KnowledgeArticle`        | KB article (public and/or internal) |
-| `KnowledgeArticleVersion` | Version history                     |
 | `BlogPost`                | Public blog                         |
 | `PortfolioItem`           | Case studies                        |
 | `Notification`            | In-app notification                 |
@@ -237,17 +245,15 @@ SLA fields on `SupportTicket`: `firstResponseDueAt`, `resolutionDueAt`, `firstRe
 | `AiMemory`           | Long-lived memory items (scoped)                                   |
 | `AiFeedback`         | Thumbs / ratings / comments                                        |
 | `AiEvaluation`       | Offline/online eval records                                        |
-| `KnowledgeSource`    | RAG source (KB, ticket, file, URL)                                 |
-| `KnowledgeChunk`     | Chunk text + metadata                                              |
-| `KnowledgeEmbedding` | Embedding vector storage                                           |
+| `KnowledgeChunk`     | Chunk text + `embeddingJson` (see knowledge domain above)          |
 | `AiAuditEvent`       | AI-specific audit (also mirrored to platform audit where required) |
 
 ### 9.1 Embedding storage strategy (no PostgreSQL)
 
-**v1 (required):** store embeddings in MariaDB:
+**v1 (required):** store embeddings in MariaDB on `KnowledgeChunk.embeddingJson`:
 
-- Column `embedding Json` (number array) **or** `VARBINARY`/`BLOB` of float32
-- Metadata columns for filter (`organizationId`, `sourceType`, `sourceId`)
+- Column `embeddingJson` (JSON number array) **or** later `VARBINARY`/`BLOB` of float32
+- Metadata columns for filter (`organizationId`, `articleId`, `documentId`)
 - Similarity search: worker-side cosine over filtered candidate sets; acceptable for early scale
 
 **v2 (optional):** Redis or dedicated ANN service **in front of** MariaDB as a cache/index — MariaDB remains source of truth for chunk text + embedding bytes.
@@ -292,7 +298,9 @@ Lead ──▶ Opportunity ──▶ Quote ──▶ Customer (Organization)
                               └──▶ Project ──▶ Invoice
                               └──▶ Subscription (Recurring Services)
 
-KnowledgeArticle ──▶ KnowledgeChunk ──▶ KnowledgeEmbedding
+KnowledgeCategory ──▶ KnowledgeArticle ──▶ KnowledgeRevision
+                  └──▶ KnowledgeChunk (embeddingJson)
+KnowledgeDocument ──▶ KnowledgeChunk
 AiRun ── AiToolCall ── AiApproval
 ```
 

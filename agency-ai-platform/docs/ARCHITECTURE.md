@@ -207,7 +207,7 @@ Nest modules map to business capabilities (illustrative):
 | `BillingModule`       | Products, Prices, Invoices, Subscriptions, Payments, Refund workflow, Webhooks via `PaymentProvider`                    |
 | `DomainsModule`       | Domains, DNS                                                                                                            |
 | `HostingModule`       | Hosting accounts, servers, sync jobs                                                                                    |
-| `SupportModule`       | SupportTicket, TicketMessage, TicketAttachment, TicketAssignment, TicketStatusHistory, KB articles                      |
+| `SupportModule`       | SupportTicket + messages/assignments; KnowledgeArticle/Category/Document/Chunk/Revision                                 |
 | `CmsModule`           | Blog, portfolio, public pages content                                                                                   |
 | `NotificationsModule` | In-app notifications, preferences                                                                                       |
 | `AiModule`            | Agents, runs, RAG, approvals, eval                                                                                      |
