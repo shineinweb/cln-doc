@@ -39,11 +39,11 @@ interface VectorStore {
 }
 ```
 
-| Interface | v1 adapter | Notes |
-| --- | --- | --- |
-| `LLMProvider` | `OpenAiLlmProvider` | Chat + tool calling |
-| `EmbeddingProvider` | `OpenAiEmbeddingProvider` | Batch embeddings |
-| `VectorStore` | `MariaDbVectorStore` | Chunks + embeddings in MariaDB; in-process cosine over filtered sets |
+| Interface           | v1 adapter                | Notes                                                                |
+| ------------------- | ------------------------- | -------------------------------------------------------------------- |
+| `LLMProvider`       | `OpenAiLlmProvider`       | Chat + tool calling                                                  |
+| `EmbeddingProvider` | `OpenAiEmbeddingProvider` | Batch embeddings                                                     |
+| `VectorStore`       | `MariaDbVectorStore`      | Chunks + embeddings in MariaDB; in-process cosine over filtered sets |
 
 Future adapters (Anthropic, Azure OpenAI, external ANN) must not change agent code — only DI bindings.
 
@@ -53,14 +53,14 @@ Future adapters (Anthropic, Azure OpenAI, external ANN) must not change agent co
 
 ## 3. Agent roster
 
-| Agent | Codename | Primary users | Responsibility |
-| --- | --- | --- | --- |
-| **AI Supervisor** | `supervisor` | System | Route intents, pick specialist, enforce policies, synthesize final answer |
-| **Customer Support AI** | `support` | Portal + admin support | Tickets, KB answers, troubleshooting |
-| **Coding AI** | `coding` | Staff (optionally limited portal) | Implementation guidance, code review assist, task breakdown |
-| **Hosting AI** | `hosting` | Staff + constrained portal | Hosting diagnostics, WHM-safe recommendations/actions |
-| **Sales AI** | `sales` | Staff (+ website assist later) | Qualification, quote drafts, plan recommendations |
-| **SEO AI** | `seo` | Staff (+ portal read-only tips) | Audits, content recommendations, keyword research assist |
+| Agent                   | Codename     | Primary users                     | Responsibility                                                            |
+| ----------------------- | ------------ | --------------------------------- | ------------------------------------------------------------------------- |
+| **AI Supervisor**       | `supervisor` | System                            | Route intents, pick specialist, enforce policies, synthesize final answer |
+| **Customer Support AI** | `support`    | Portal + admin support            | Tickets, KB answers, troubleshooting                                      |
+| **Coding AI**           | `coding`     | Staff (optionally limited portal) | Implementation guidance, code review assist, task breakdown               |
+| **Hosting AI**          | `hosting`    | Staff + constrained portal        | Hosting diagnostics, WHM-safe recommendations/actions                     |
+| **Sales AI**            | `sales`      | Staff (+ website assist later)    | Qualification, quote drafts, plan recommendations                         |
+| **SEO AI**              | `seo`        | Staff (+ portal read-only tips)   | Audits, content recommendations, keyword research assist                  |
 
 Each agent has:
 
@@ -99,11 +99,11 @@ Persist messages, tool calls, feedback hooks, audit
 
 ### 4.1 Execution venues
 
-| Venue | Trigger |
-| --- | --- |
-| Interactive (portal/admin) | User sends message → API → queue or inline stream |
-| Ticket assist | Staff clicks “AI draft” or auto-suggest on new ticket |
-| Background | Reindex RAG, eval suites, memory compaction |
+| Venue                      | Trigger                                               |
+| -------------------------- | ----------------------------------------------------- |
+| Interactive (portal/admin) | User sends message → API → queue or inline stream     |
+| Ticket assist              | Staff clicks “AI draft” or auto-suggest on new ticket |
+| Background                 | Reindex RAG, eval suites, memory compaction           |
 
 Long or tool-heavy runs go through **BullMQ `ai` queue** so HTTP workers stay responsive.
 
@@ -121,11 +121,11 @@ Tools are typed functions registered in a **tool registry**, exposed to the LLM 
 
 ### 5.1 Tool categories
 
-| Risk | Examples | Gate |
-| --- | --- | --- |
-| **Read-only** | `kb.search`, `ticket.get`, `invoice.list`, `dns.list`, `hosting.status` | Auto |
-| **Draft** | `quote.draft`, `email.draft`, `ticket.reply.draft` | Auto; human sends |
-| **Mutating low** | `ticket.tag`, `notification.create` | Auto or soft confirm |
+| Risk              | Examples                                                                    | Gate                        |
+| ----------------- | --------------------------------------------------------------------------- | --------------------------- |
+| **Read-only**     | `kb.search`, `ticket.get`, `invoice.list`, `dns.list`, `hosting.status`     | Auto                        |
+| **Draft**         | `quote.draft`, `email.draft`, `ticket.reply.draft`                          | Auto; human sends           |
+| **Mutating low**  | `ticket.tag`, `notification.create`                                         | Auto or soft confirm        |
 | **Mutating high** | `hosting.suspend`, `dns.delete_record`, `domain.transfer`, `billing.refund` | **Human approval required** |
 
 ### 5.2 Tool handler rules
@@ -177,14 +177,14 @@ Portal customers **never** approve infrastructure-destructive tools; only staff 
 
 ### 7.1 Sources
 
-| Source | Visibility | Use |
-| --- | --- | --- |
-| Published KB articles | public / internal | Support + public assist |
-| Blog / portfolio | public | Sales / marketing Q&A |
-| Internal runbooks | internal | Staff agents only |
-| Ticket macros / resolved tickets | internal, optionally org-scrubbed | Support (careful PII) |
-| Project docs (opt-in) | organization | Portal project assistant |
-| Uploaded files | per ACL | Scoped retrieval |
+| Source                           | Visibility                        | Use                      |
+| -------------------------------- | --------------------------------- | ------------------------ |
+| Published KB articles            | public / internal                 | Support + public assist  |
+| Blog / portfolio                 | public                            | Sales / marketing Q&A    |
+| Internal runbooks                | internal                          | Staff agents only        |
+| Ticket macros / resolved tickets | internal, optionally org-scrubbed | Support (careful PII)    |
+| Project docs (opt-in)            | organization                      | Portal project assistant |
+| Uploaded files                   | per ACL                           | Scoped retrieval         |
 
 ### 7.2 Pipeline
 
@@ -216,12 +216,12 @@ Unpublish/delete → `deleteBySource`.
 
 ## 8. Memory
 
-| Type | Scope | Lifecycle |
-| --- | --- | --- |
-| Conversation buffer | `AiConversation` | Short-term; truncated/summarized |
-| User memory | userId (+ org) | Explicit preferences (“prefers concise answers”) |
-| Organization memory | organizationId | Account facts approved for reuse |
-| Agent procedural memory | agentId | Playbooks / learned tips (staff-reviewed) |
+| Type                    | Scope            | Lifecycle                                        |
+| ----------------------- | ---------------- | ------------------------------------------------ |
+| Conversation buffer     | `AiConversation` | Short-term; truncated/summarized                 |
+| User memory             | userId (+ org)   | Explicit preferences (“prefers concise answers”) |
+| Organization memory     | organizationId   | Account facts approved for reuse                 |
+| Agent procedural memory | agentId          | Playbooks / learned tips (staff-reviewed)        |
 
 `AiMemory` items have: `kind`, `content`, `importance`, `expiresAt?`, `sourceRunId?`.
 
@@ -239,12 +239,12 @@ Memory writes from AI are **rate-limited** and may require approval when they st
 
 ### 9.2 Evaluation
 
-| Mode | Description |
-| --- | --- |
-| Golden sets | Curated Q/A with expected citations/tools |
-| Regression | Run on agent version change |
-| Online sampling | Sample production runs for human review |
-| Safety evals | Prompt-injection and high-risk tool suites |
+| Mode            | Description                                |
+| --------------- | ------------------------------------------ |
+| Golden sets     | Curated Q/A with expected citations/tools  |
+| Regression      | Run on agent version change                |
+| Online sampling | Sample production runs for human review    |
+| Safety evals    | Prompt-injection and high-risk tool suites |
 
 Results in `AiEvaluation` (scores, notes, agentVersionId). Shipping a new agent version requires eval gate in process (roadmap ceremony).
 

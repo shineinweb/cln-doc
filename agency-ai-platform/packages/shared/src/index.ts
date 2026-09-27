@@ -16,3 +16,13 @@ export type ApiHealth = {
 export function assertNever(value: never, message = "Unexpected value"): never {
   throw new Error(`${message}: ${String(value)}`);
 }
+
+export {
+  apiEnvSchema,
+  webEnvSchema,
+  parseEnv,
+  loadApiEnv,
+  loadWebEnv,
+  EnvValidationError,
+} from "./env";
+export type { ApiEnv, WebEnv } from "./env";

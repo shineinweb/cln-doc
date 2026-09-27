@@ -8,8 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 5173",
     "typecheck": "tsc -b --pretty false",
-    "lint": "echo \"lint: website — configure later\"",
-    "test": "echo \"no tests yet\""
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest run --config ../../vitest.config.ts apps/website/src --passWithNoTests"
   },
   "dependencies": {
     "@agency/shared": "workspace:*",

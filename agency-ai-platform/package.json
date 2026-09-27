@@ -14,14 +14,29 @@
     "dev:admin": "pnpm --filter @agency/admin dev",
     "dev:api": "pnpm --filter @agency/api dev",
     "build": "pnpm run build:packages && pnpm -r --filter \"./apps/*\" run build",
-    "lint": "pnpm -r run lint",
-    "typecheck": "pnpm -r run typecheck",
-    "test": "pnpm -r run test",
-    "clean": "pnpm -r exec rm -rf dist node_modules/.cache",
-    "build:packages": "pnpm -r --filter \"./packages/*\" run build"
+    "build:packages": "pnpm -r --filter \"./packages/*\" run build",
+    "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "format": "prettier --write .",
+    "typecheck": "pnpm run build:packages && pnpm -r run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache coverage"
   },
   "devDependencies": {
-    "typescript": "^5.8.2"
+    "@eslint/js": "^9.22.0",
+    "@types/node": "^22.13.10",
+    "@vitest/coverage-v8": "^3.0.8",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.0.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1",
+    "vitest": "^3.0.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -4,13 +4,13 @@
 
 This document defines system boundaries, runtime topology, package ownership, and integration rules. Companion docs:
 
-| Doc | Focus |
-| --- | --- |
-| [DATABASE.md](./DATABASE.md) | MariaDB schema & Prisma conventions |
-| [API.md](./API.md) | REST & WebSocket contracts |
-| [SECURITY.md](./SECURITY.md) | AuthN/Z, tenancy, secrets, audit |
+| Doc                                        | Focus                                 |
+| ------------------------------------------ | ------------------------------------- |
+| [DATABASE.md](./DATABASE.md)               | MariaDB schema & Prisma conventions   |
+| [API.md](./API.md)                         | REST & WebSocket contracts            |
+| [SECURITY.md](./SECURITY.md)               | AuthN/Z, tenancy, secrets, audit      |
 | [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md) | Multi-agent AI, RAG, tools, approvals |
-| [ROADMAP.md](./ROADMAP.md) | Phased delivery |
+| [ROADMAP.md](./ROADMAP.md)                 | Phased delivery                       |
 
 **Non-negotiables**
 
@@ -132,15 +132,15 @@ packages/database                 →  Prisma only (no provider SDKs)
 
 ## 3. Runtime & infrastructure
 
-| Component | Role |
-| --- | --- |
-| **Nginx** | TLS termination, static assets, reverse proxy to Vite builds & API |
-| **API (NestJS)** | HTTP REST, WebSockets (Socket.IO or native WS gateway), auth guards |
-| **Worker processes** | Same codebase, BullMQ consumers (email, RAG index, hosting sync, AI jobs) |
-| **MariaDB** | System of record |
-| **Redis** | Sessions (optional), cache, BullMQ broker, rate limits, pub/sub for WS fan-out |
-| **Object storage** | Files, contract PDFs, ticket attachments (via `StorageProvider`) |
-| **Docker Compose** | Local/dev & single-node staging; production may use same images on VMs/K8s |
+| Component            | Role                                                                           |
+| -------------------- | ------------------------------------------------------------------------------ |
+| **Nginx**            | TLS termination, static assets, reverse proxy to Vite builds & API             |
+| **API (NestJS)**     | HTTP REST, WebSockets (Socket.IO or native WS gateway), auth guards            |
+| **Worker processes** | Same codebase, BullMQ consumers (email, RAG index, hosting sync, AI jobs)      |
+| **MariaDB**          | System of record                                                               |
+| **Redis**            | Sessions (optional), cache, BullMQ broker, rate limits, pub/sub for WS fan-out |
+| **Object storage**   | Files, contract PDFs, ticket attachments (via `StorageProvider`)               |
+| **Docker Compose**   | Local/dev & single-node staging; production may use same images on VMs/K8s     |
 
 ### 3.1 Process model
 
@@ -160,11 +160,11 @@ worker (one or more replicas)
 
 ### 3.2 Environments
 
-| Env | MariaDB | Redis | Notes |
-| --- | --- | --- | --- |
-| local | Docker | Docker | Seed data; mock providers available |
-| staging | Managed MariaDB | Managed Redis | Real Stripe test + WHM sandbox if available |
-| production | Managed MariaDB (HA) | Managed Redis | Live providers; stricter secrets |
+| Env        | MariaDB              | Redis         | Notes                                       |
+| ---------- | -------------------- | ------------- | ------------------------------------------- |
+| local      | Docker               | Docker        | Seed data; mock providers available         |
+| staging    | Managed MariaDB      | Managed Redis | Real Stripe test + WHM sandbox if available |
+| production | Managed MariaDB (HA) | Managed Redis | Live providers; stricter secrets            |
 
 ---
 
@@ -172,17 +172,17 @@ worker (one or more replicas)
 
 Every external capability has a TypeScript interface in the owning package. Adapters implement the interface. Nest registers the concrete adapter via DI (`PROVIDER` tokens).
 
-| Interface | Package | Default production adapter | Purpose |
-| --- | --- | --- | --- |
-| `LLMProvider` | `ai` | OpenAI chat/completions | Text generation, tool calling |
-| `EmbeddingProvider` | `ai` | OpenAI embeddings | Chunk → vector |
-| `VectorStore` | `ai` | MariaDB vector/JSON + Redis ANN *or* file/blob index (see AI doc) | Similarity search **without PostgreSQL** |
-| `PaymentProvider` | `billing` | Stripe | Checkout, subscriptions, webhooks |
-| `HostingProvider` | `hosting` | cPanel/WHM | Accounts, packages, suspend/unsuspend |
-| `DomainProvider` | `domains` | Registrar adapter(s) | Search, register, renew, transfer |
-| `DnsProvider` | `domains` | Registrar DNS and/or cPanel DNS | Record CRUD |
-| `EmailProvider` | `email` | Transactional ESP (e.g. SES/Postmark/SendGrid) | Transactional mail |
-| `StorageProvider` | `storage` | S3-compatible | Files & artifacts |
+| Interface           | Package   | Default production adapter                                        | Purpose                                  |
+| ------------------- | --------- | ----------------------------------------------------------------- | ---------------------------------------- |
+| `LLMProvider`       | `ai`      | OpenAI chat/completions                                           | Text generation, tool calling            |
+| `EmbeddingProvider` | `ai`      | OpenAI embeddings                                                 | Chunk → vector                           |
+| `VectorStore`       | `ai`      | MariaDB vector/JSON + Redis ANN _or_ file/blob index (see AI doc) | Similarity search **without PostgreSQL** |
+| `PaymentProvider`   | `billing` | Stripe                                                            | Checkout, subscriptions, webhooks        |
+| `HostingProvider`   | `hosting` | cPanel/WHM                                                        | Accounts, packages, suspend/unsuspend    |
+| `DomainProvider`    | `domains` | Registrar adapter(s)                                              | Search, register, renew, transfer        |
+| `DnsProvider`       | `domains` | Registrar DNS and/or cPanel DNS                                   | Record CRUD                              |
+| `EmailProvider`     | `email`   | Transactional ESP (e.g. SES/Postmark/SendGrid)                    | Transactional mail                       |
+| `StorageProvider`   | `storage` | S3-compatible                                                     | Files & artifacts                        |
 
 **Rules**
 
@@ -197,24 +197,24 @@ Every external capability has a TypeScript interface in the owning package. Adap
 
 Nest modules map to business capabilities (illustrative):
 
-| Module | Owns |
-| --- | --- |
-| `IdentityModule` | Users, credentials, MFA, sessions |
-| `CrmModule` | Leads, customers, companies, pipeline |
-| `CatalogModule` | Services, hosting plans, pricing |
-| `SalesModule` | Quotes, contracts |
-| `ProjectsModule` | Projects, tasks, milestones, files |
-| `BillingModule` | Invoices, payments, subscriptions |
-| `DomainsModule` | Domains, DNS |
-| `HostingModule` | Hosting accounts, servers, sync jobs |
-| `SupportModule` | Tickets, KB articles |
-| `CmsModule` | Blog, portfolio, public pages content |
-| `NotificationsModule` | In-app notifications, preferences |
-| `AiModule` | Agents, runs, RAG, approvals, eval |
-| `RbacModule` | Roles, permissions |
-| `AuditModule` | Immutable audit log writes/queries |
-| `SettingsModule` | System settings |
-| `ReportsModule` | Aggregations / exports |
+| Module                | Owns                                  |
+| --------------------- | ------------------------------------- |
+| `IdentityModule`      | Users, credentials, MFA, sessions     |
+| `CrmModule`           | Leads, customers, companies, pipeline |
+| `CatalogModule`       | Services, hosting plans, pricing      |
+| `SalesModule`         | Quotes, contracts                     |
+| `ProjectsModule`      | Projects, tasks, milestones, files    |
+| `BillingModule`       | Invoices, payments, subscriptions     |
+| `DomainsModule`       | Domains, DNS                          |
+| `HostingModule`       | Hosting accounts, servers, sync jobs  |
+| `SupportModule`       | Tickets, KB articles                  |
+| `CmsModule`           | Blog, portfolio, public pages content |
+| `NotificationsModule` | In-app notifications, preferences     |
+| `AiModule`            | Agents, runs, RAG, approvals, eval    |
+| `RbacModule`          | Roles, permissions                    |
+| `AuditModule`         | Immutable audit log writes/queries    |
+| `SettingsModule`      | System settings                       |
+| `ReportsModule`       | Aggregations / exports                |
 
 Public website reads CMS/catalog/KB via public endpoints; mutations that create leads/quotes go through sales/CRM modules.
 
@@ -262,15 +262,15 @@ Provider webhooks and payment intents use idempotency keys stored in MariaDB.
 
 ## 7. Frontend architecture
 
-| Concern | Approach |
-| --- | --- |
-| Framework | React + Vite + TypeScript |
-| Routing | Per-app router (public vs portal vs admin route trees) |
-| Data | Typed API client generated or hand-maintained from OpenAPI |
-| Auth | HttpOnly cookies or Bearer tokens per SECURITY.md |
-| UI | `@agency/ui` design system; no business logic in UI package |
-| Forms | Schema-validated (shared zod/types where possible) |
-| AI UX | Streaming over WS/SSE; approval states surfaced in admin |
+| Concern   | Approach                                                    |
+| --------- | ----------------------------------------------------------- |
+| Framework | React + Vite + TypeScript                                   |
+| Routing   | Per-app router (public vs portal vs admin route trees)      |
+| Data      | Typed API client generated or hand-maintained from OpenAPI  |
+| Auth      | HttpOnly cookies or Bearer tokens per SECURITY.md           |
+| UI        | `@agency/ui` design system; no business logic in UI package |
+| Forms     | Schema-validated (shared zod/types where possible)          |
+| AI UX     | Streaming over WS/SSE; approval states surfaced in admin    |
 
 Apps never talk to MariaDB, Redis, or providers directly.
 
@@ -305,6 +305,6 @@ Secrets via environment / secret manager only. Prisma migrations run as a contro
 
 ---
 
-## 10. What this phase does *not* include
+## 10. What this phase does _not_ include
 
 Per product direction: **no production application implementation yet**. This documentation set is the contract for subsequent implementation phases defined in [ROADMAP.md](./ROADMAP.md).

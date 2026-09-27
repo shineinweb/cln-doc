@@ -14,9 +14,7 @@ export type AiCompletionResponse = {
   model: string;
 };
 
-export async function completeStub(
-  request: AiCompletionRequest,
-): Promise<AiCompletionResponse> {
+export async function completeStub(request: AiCompletionRequest): Promise<AiCompletionResponse> {
   return {
     model: request.model,
     content: "AI provider not configured yet.",

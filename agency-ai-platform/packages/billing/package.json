@@ -14,8 +14,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"lint: billing — configure later\"",
-    "test": "echo \"no tests yet\""
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest run --config ../../vitest.config.ts packages/billing/src"
   },
   "dependencies": {
     "@agency/shared": "workspace:*"

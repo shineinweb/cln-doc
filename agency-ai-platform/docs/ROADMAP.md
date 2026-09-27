@@ -1,7 +1,7 @@
 # Product & Delivery Roadmap
 
 Phased plan to build the Agency AI Platform from architecture → production SaaS.  
-**Current phase:** documentation & scaffold only — **no production application implementation yet**.
+**Current phase:** Phase 1 foundation tooling (monorepo quality gates). Business features not started.
 
 Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [SECURITY.md](./SECURITY.md), [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md).
 
@@ -23,9 +23,9 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 - [x] Monorepo scaffold (`apps/*`, `packages/*`, pnpm workspaces)
 - [x] Architecture documentation set (this folder)
-- [ ] Docker Compose skeleton (MariaDB, Redis, Nginx, API, workers) — *next engineering step*
+- [ ] Docker Compose skeleton (MariaDB, Redis, Nginx, API, workers) — _next engineering step_
 - [ ] `@agency/database` Prisma MariaDB schema baseline
-- [ ] Shared lint/test/CI pipeline for the monorepo
+- [x] Shared lint/test/CI pipeline for the monorepo (ESLint, Prettier, Vitest, typecheck, build)
 
 **Exit criteria:** developers can run empty API + MariaDB + Redis locally from documented commands.
 
@@ -179,13 +179,13 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 ## Cross-cutting workstreams (parallel)
 
-| Stream | Starts | Notes |
-| --- | --- | --- |
-| Design system (`@agency/ui`) | Phase 1 | Shared across three apps |
-| Observability | Phase 1 | Logs, metrics, request ids |
-| CI/CD | Phase 0–1 | Lint, typecheck, test, migrate |
-| Provider fakes | Each phase | Local dev without vendors |
-| Compliance readiness | Phase 4+ | Erasure jobs, AI data retention |
+| Stream                       | Starts     | Notes                           |
+| ---------------------------- | ---------- | ------------------------------- |
+| Design system (`@agency/ui`) | Phase 1    | Shared across three apps        |
+| Observability                | Phase 1    | Logs, metrics, request ids      |
+| CI/CD                        | Phase 0–1  | Lint, typecheck, test, migrate  |
+| Provider fakes               | Each phase | Local dev without vendors       |
+| Compliance readiness         | Phase 4+   | Erasure jobs, AI data retention |
 
 ---
 
@@ -213,11 +213,11 @@ After these docs are accepted:
 
 ## Success metrics (directional)
 
-| Area | Signal |
-| --- | --- |
-| Acquisition | Quote requests, registrations |
-| Delivery | Projects on-time milestone rate |
-| Billing | MRR from subscriptions, invoice days-sales-outstanding |
-| Hosting/Domains | Provision success rate, sync drift |
-| Support | First response time, AI draft acceptance rate |
-| AI | Groundedness (eval), approval SLA, cost per resolved ticket |
+| Area            | Signal                                                      |
+| --------------- | ----------------------------------------------------------- |
+| Acquisition     | Quote requests, registrations                               |
+| Delivery        | Projects on-time milestone rate                             |
+| Billing         | MRR from subscriptions, invoice days-sales-outstanding      |
+| Hosting/Domains | Provision success rate, sync drift                          |
+| Support         | First response time, AI draft acceptance rate               |
+| AI              | Groundedness (eval), approval SLA, cost per resolved ticket |

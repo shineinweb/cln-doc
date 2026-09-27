@@ -18,16 +18,16 @@ Companion: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [
 
 ## 2. Threat model (summary)
 
-| Threat | Mitigations |
-| --- | --- |
-| Credential stuffing | Rate limits, MFA, lockouts, breach-resistant password hashing (Argon2id) |
-| Session theft | HttpOnly Secure cookies, rotation, device binding optional |
-| IDOR / cross-tenant access | Mandatory `organizationId` scoping + automated tests |
-| Privilege escalation | Permission checks on every admin route; no role trust in client |
-| Webhook forgery | Signature verification, idempotency store |
-| Prompt injection → tool abuse | Tool allowlists, human approval, sandboxed side effects |
-| Secret leakage | Env/secret manager; never log tokens/PAN/raw provider secrets |
-| File malware | Type/size limits, virus scan job (planned), signed URLs |
+| Threat                        | Mitigations                                                              |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Credential stuffing           | Rate limits, MFA, lockouts, breach-resistant password hashing (Argon2id) |
+| Session theft                 | HttpOnly Secure cookies, rotation, device binding optional               |
+| IDOR / cross-tenant access    | Mandatory `organizationId` scoping + automated tests                     |
+| Privilege escalation          | Permission checks on every admin route; no role trust in client          |
+| Webhook forgery               | Signature verification, idempotency store                                |
+| Prompt injection → tool abuse | Tool allowlists, human approval, sandboxed side effects                  |
+| Secret leakage                | Env/secret manager; never log tokens/PAN/raw provider secrets            |
+| File malware                  | Type/size limits, virus scan job (planned), signed URLs                  |
 
 ---
 
@@ -35,12 +35,12 @@ Companion: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [
 
 ### 3.1 Actors
 
-| Actor | Auth |
-| --- | --- |
-| Customer user | Email/password (+ optional MFA) |
-| Staff user | Email/password + **MFA required** in production |
-| Provider webhooks | Signature secrets |
-| Workers | No public auth; private network + job tokens if needed |
+| Actor             | Auth                                                   |
+| ----------------- | ------------------------------------------------------ |
+| Customer user     | Email/password (+ optional MFA)                        |
+| Staff user        | Email/password + **MFA required** in production        |
+| Provider webhooks | Signature secrets                                      |
+| Workers           | No public auth; private network + job tokens if needed |
 
 ### 3.2 Session strategy (preferred)
 
@@ -83,10 +83,10 @@ Roles bundle permissions (`sales`, `project_manager`, `developer`, `designer`, `
 
 ### 4.2 Portal vs admin
 
-| Context | Mechanism |
-| --- | --- |
-| Portal | `OrganizationMember.role` → limited permission set (`portal.*`) |
-| Admin | `UserRole` → `Role` → `Permission` |
+| Context | Mechanism                                                       |
+| ------- | --------------------------------------------------------------- |
+| Portal  | `OrganizationMember.role` → limited permission set (`portal.*`) |
+| Admin   | `UserRole` → `Role` → `Permission`                              |
 
 A staff user accessing portal-impersonation (if ever enabled) requires explicit `support.impersonate` and full audit.
 
@@ -117,14 +117,14 @@ Examples:
 
 ## 6. Data protection
 
-| Class | Handling |
-| --- | --- |
-| Passwords / MFA secrets | Hash / encrypt; never log |
-| Payment data | Tokenized via Stripe; no PAN/CVID in MariaDB |
-| File contents | Object storage; DB stores keys + checksums |
-| Provider tokens | Secret manager; encrypted at rest if stored |
-| PII | Minimize; retention policies; erasure workflow |
-| Backups | Encrypted; access-controlled |
+| Class                   | Handling                                       |
+| ----------------------- | ---------------------------------------------- |
+| Passwords / MFA secrets | Hash / encrypt; never log                      |
+| Payment data            | Tokenized via Stripe; no PAN/CVID in MariaDB   |
+| File contents           | Object storage; DB stores keys + checksums     |
+| Provider tokens         | Secret manager; encrypted at rest if stored    |
+| PII                     | Minimize; retention policies; erasure workflow |
+| Backups                 | Encrypted; access-controlled                   |
 
 **Encryption at rest:** disk-level for MariaDB/Redis/volumes; field-level encryption for MFA secrets and similar.
 
@@ -134,14 +134,14 @@ Examples:
 
 ## 7. Provider security
 
-| Provider | Controls |
-| --- | --- |
-| Stripe | Webhook signing secret; restricted API keys; test vs live separation |
-| OpenAI | Server-side keys only; per-org budget caps; content logging policy |
-| WHM/cPanel | IP allowlist if possible; least-privilege API tokens; action audit |
-| Domain registrar | API keys in secrets; confirm emails for transfers |
-| Email | Domain auth (SPF/DKIM/DMARC); template injection safety |
-| Storage | Private buckets; short-lived signed URLs |
+| Provider         | Controls                                                             |
+| ---------------- | -------------------------------------------------------------------- |
+| Stripe           | Webhook signing secret; restricted API keys; test vs live separation |
+| OpenAI           | Server-side keys only; per-org budget caps; content logging policy   |
+| WHM/cPanel       | IP allowlist if possible; least-privilege API tokens; action audit   |
+| Domain registrar | API keys in secrets; confirm emails for transfers                    |
+| Email            | Domain auth (SPF/DKIM/DMARC); template injection safety              |
+| Storage          | Private buckets; short-lived signed URLs                             |
 
 All calls go through provider interfaces; adapters centralize credential usage.
 
@@ -185,15 +185,15 @@ Details: [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md).
 
 ## 10. Application security practices
 
-| Practice | Requirement |
-| --- | --- |
-| Input validation | Zod/class-validator on all mutating endpoints |
-| Output encoding | React default escaping; sanitize CMS HTML |
-| CORS | Explicit allowlist of website/portal/admin origins |
-| Headers | Helmet-equivalent: CSP, HSTS, frame deny |
-| Dependencies | Lockfile + automated CVE scanning |
-| File uploads | Size/MIME allowlist; storage via `StorageProvider` |
-| SSRF | Providers validate URLs; no open fetch tools without allowlist |
+| Practice         | Requirement                                                    |
+| ---------------- | -------------------------------------------------------------- |
+| Input validation | Zod/class-validator on all mutating endpoints                  |
+| Output encoding  | React default escaping; sanitize CMS HTML                      |
+| CORS             | Explicit allowlist of website/portal/admin origins             |
+| Headers          | Helmet-equivalent: CSP, HSTS, frame deny                       |
+| Dependencies     | Lockfile + automated CVE scanning                              |
+| File uploads     | Size/MIME allowlist; storage via `StorageProvider`             |
+| SSRF             | Providers validate URLs; no open fetch tools without allowlist |
 
 ---
 

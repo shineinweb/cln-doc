@@ -49,19 +49,19 @@ mysql://USER:PASS@HOST:3306/agency_ai?connection_limit=10
 
 ## 3. Identity & access
 
-| Model | Purpose |
-| --- | --- |
-| `User` | Any login identity (customer or staff) |
-| `Credential` | Password hash, MFA secrets (encrypted), recovery codes |
-| `Session` | Server-side session / refresh metadata |
-| `Organization` | Customer company / billing account (tenant) |
-| `OrganizationMember` | User ↔ org membership + portal role |
-| `EmployeeProfile` | Staff profile (title, department, capacity) |
-| `Role` | Named role (`customer_admin`, `sales`, `developer`, …) |
-| `Permission` | Fine-grained permission string |
-| `RolePermission` | M2M |
-| `UserRole` | Staff user ↔ role (agency-scoped) |
-| `ApiKey` | Machine keys for limited integrations (hashed) |
+| Model                | Purpose                                                |
+| -------------------- | ------------------------------------------------------ |
+| `User`               | Any login identity (customer or staff)                 |
+| `Credential`         | Password hash, MFA secrets (encrypted), recovery codes |
+| `Session`            | Server-side session / refresh metadata                 |
+| `Organization`       | Customer company / billing account (tenant)            |
+| `OrganizationMember` | User ↔ org membership + portal role                    |
+| `EmployeeProfile`    | Staff profile (title, department, capacity)            |
+| `Role`               | Named role (`customer_admin`, `sales`, `developer`, …) |
+| `Permission`         | Fine-grained permission string                         |
+| `RolePermission`     | M2M                                                    |
+| `UserRole`           | Staff user ↔ role (agency-scoped)                      |
+| `ApiKey`             | Machine keys for limited integrations (hashed)         |
 
 **Notes**
 
@@ -73,19 +73,19 @@ mysql://USER:PASS@HOST:3306/agency_ai?connection_limit=10
 
 ## 4. CRM & sales
 
-| Model | Purpose |
-| --- | --- |
-| `Lead` | Unqualified / inbound interest |
-| `LeadActivity` | Calls, emails, notes, status changes |
-| `Customer` | Optional profile projection linked to `Organization` |
-| `PipelineStage` | Sales stages |
-| `Opportunity` | Deal in pipeline |
-| `Quote` | Formal quote |
-| `QuoteLineItem` | Line items (service, qty, unit price) |
-| `Contract` | Signed/pending contract |
-| `ContractVersion` | Immutable PDF/HTML snapshots |
-| `ServiceCatalogItem` | Sellable services (web design, SEO, …) |
-| `HostingPlan` | Hosting SKUs (mapped to WHM packages) |
+| Model                | Purpose                                              |
+| -------------------- | ---------------------------------------------------- |
+| `Lead`               | Unqualified / inbound interest                       |
+| `LeadActivity`       | Calls, emails, notes, status changes                 |
+| `Customer`           | Optional profile projection linked to `Organization` |
+| `PipelineStage`      | Sales stages                                         |
+| `Opportunity`        | Deal in pipeline                                     |
+| `Quote`              | Formal quote                                         |
+| `QuoteLineItem`      | Line items (service, qty, unit price)                |
+| `Contract`           | Signed/pending contract                              |
+| `ContractVersion`    | Immutable PDF/HTML snapshots                         |
+| `ServiceCatalogItem` | Sellable services (web design, SEO, …)               |
+| `HostingPlan`        | Hosting SKUs (mapped to WHM packages)                |
 
 **Lead → customer conversion** creates/links `Organization`, memberships, and optionally an `Opportunity` / first `Project`.
 
@@ -93,14 +93,14 @@ mysql://USER:PASS@HOST:3306/agency_ai?connection_limit=10
 
 ## 5. Delivery (projects)
 
-| Model | Purpose |
-| --- | --- |
-| `Project` | Delivery container for an organization |
-| `Milestone` | Phase / milestone |
-| `Task` | Work item; assignee can be staff user |
-| `TaskComment` | Discussion |
-| `ProjectFile` | Metadata for files in object storage |
-| `TimeEntry` | Optional time tracking for reporting |
+| Model         | Purpose                                |
+| ------------- | -------------------------------------- |
+| `Project`     | Delivery container for an organization |
+| `Milestone`   | Phase / milestone                      |
+| `Task`        | Work item; assignee can be staff user  |
+| `TaskComment` | Discussion                             |
+| `ProjectFile` | Metadata for files in object storage   |
+| `TimeEntry`   | Optional time tracking for reporting   |
 
 Statuses are enums in Prisma (`ProjectStatus`, `TaskStatus`, …) mirrored in `@agency/shared`.
 
@@ -108,16 +108,16 @@ Statuses are enums in Prisma (`ProjectStatus`, `TaskStatus`, …) mirrored in `@
 
 ## 6. Billing
 
-| Model | Purpose |
-| --- | --- |
-| `Invoice` | Invoice header |
-| `InvoiceLineItem` | Lines |
-| `Payment` | Successful/failed payment attempts |
-| `Subscription` | Recurring product (hosting, maintenance, retainers) |
-| `SubscriptionItem` | Items within a subscription |
-| `PaymentMethod` | Tokenized PM references (no raw PAN) |
-| `BillingCustomer` | Mapping org → `PaymentProvider` customer id |
-| `WebhookEvent` | Idempotent provider webhook inbox |
+| Model              | Purpose                                             |
+| ------------------ | --------------------------------------------------- |
+| `Invoice`          | Invoice header                                      |
+| `InvoiceLineItem`  | Lines                                               |
+| `Payment`          | Successful/failed payment attempts                  |
+| `Subscription`     | Recurring product (hosting, maintenance, retainers) |
+| `SubscriptionItem` | Items within a subscription                         |
+| `PaymentMethod`    | Tokenized PM references (no raw PAN)                |
+| `BillingCustomer`  | Mapping org → `PaymentProvider` customer id         |
+| `WebhookEvent`     | Idempotent provider webhook inbox                   |
 
 **Stripe** is an adapter behind `PaymentProvider`. Domain tables stay provider-agnostic via `provider` + `externalId` fields.
 
@@ -125,16 +125,16 @@ Statuses are enums in Prisma (`ProjectStatus`, `TaskStatus`, …) mirrored in `@
 
 ## 7. Domains & hosting
 
-| Model | Purpose |
-| --- | --- |
-| `Domain` | Registered or managed domain |
-| `DomainOrder` | Search/register/transfer workflow |
-| `DnsZone` | Zone ownership |
-| `DnsRecord` | Individual records |
-| `Server` | WHM/server inventory |
-| `HostingAccount` | cPanel account (or equivalent) |
-| `HostingPackage` | Local mirror of remote package |
-| `HostingAction` | Async action log (create, suspend, …) |
+| Model            | Purpose                               |
+| ---------------- | ------------------------------------- |
+| `Domain`         | Registered or managed domain          |
+| `DomainOrder`    | Search/register/transfer workflow     |
+| `DnsZone`        | Zone ownership                        |
+| `DnsRecord`      | Individual records                    |
+| `Server`         | WHM/server inventory                  |
+| `HostingAccount` | cPanel account (or equivalent)        |
+| `HostingPackage` | Local mirror of remote package        |
+| `HostingAction`  | Async action log (create, suspend, …) |
 
 Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `DnsProvider`.
 
@@ -142,40 +142,40 @@ Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `Dns
 
 ## 8. Support, CMS, notifications
 
-| Model | Purpose |
-| --- | --- |
-| `Ticket` | Support ticket |
-| `TicketMessage` | Thread messages (staff/customer/AI) |
-| `TicketAttachment` | File refs |
-| `KnowledgeArticle` | KB article (public and/or internal) |
-| `KnowledgeArticleVersion` | Version history |
-| `BlogPost` | Public blog |
-| `PortfolioItem` | Case studies |
-| `Notification` | In-app notification |
-| `NotificationPreference` | Per-user channel prefs |
-| `ContactRequest` | Public contact form submissions |
-| `QuoteRequest` | Public “request quote” submissions |
+| Model                     | Purpose                             |
+| ------------------------- | ----------------------------------- |
+| `Ticket`                  | Support ticket                      |
+| `TicketMessage`           | Thread messages (staff/customer/AI) |
+| `TicketAttachment`        | File refs                           |
+| `KnowledgeArticle`        | KB article (public and/or internal) |
+| `KnowledgeArticleVersion` | Version history                     |
+| `BlogPost`                | Public blog                         |
+| `PortfolioItem`           | Case studies                        |
+| `Notification`            | In-app notification                 |
+| `NotificationPreference`  | Per-user channel prefs              |
+| `ContactRequest`          | Public contact form submissions     |
+| `QuoteRequest`            | Public “request quote” submissions  |
 
 ---
 
 ## 9. AI & RAG persistence (MariaDB)
 
-| Model | Purpose |
-| --- | --- |
-| `AiAgent` | Agent definition (Support, Coding, …) |
-| `AiAgentVersion` | Prompt/tool config versions |
-| `AiConversation` | Thread (portal/admin/system) |
-| `AiMessage` | Role/content/tool calls |
-| `AiRun` | Single agent execution |
-| `AiToolCall` | Tool invocation + args/result |
-| `AiApproval` | Human-in-the-loop gate |
-| `AiMemory` | Long-lived memory items (scoped) |
-| `AiFeedback` | Thumbs / ratings / comments |
-| `AiEvaluation` | Offline/online eval records |
-| `KnowledgeSource` | RAG source (KB, ticket, file, URL) |
-| `KnowledgeChunk` | Chunk text + metadata |
-| `KnowledgeEmbedding` | Embedding vector storage |
-| `AiAuditEvent` | AI-specific audit (also mirrored to platform audit where required) |
+| Model                | Purpose                                                            |
+| -------------------- | ------------------------------------------------------------------ |
+| `AiAgent`            | Agent definition (Support, Coding, …)                              |
+| `AiAgentVersion`     | Prompt/tool config versions                                        |
+| `AiConversation`     | Thread (portal/admin/system)                                       |
+| `AiMessage`          | Role/content/tool calls                                            |
+| `AiRun`              | Single agent execution                                             |
+| `AiToolCall`         | Tool invocation + args/result                                      |
+| `AiApproval`         | Human-in-the-loop gate                                             |
+| `AiMemory`           | Long-lived memory items (scoped)                                   |
+| `AiFeedback`         | Thumbs / ratings / comments                                        |
+| `AiEvaluation`       | Offline/online eval records                                        |
+| `KnowledgeSource`    | RAG source (KB, ticket, file, URL)                                 |
+| `KnowledgeChunk`     | Chunk text + metadata                                              |
+| `KnowledgeEmbedding` | Embedding vector storage                                           |
+| `AiAuditEvent`       | AI-specific audit (also mirrored to platform audit where required) |
 
 ### 9.1 Embedding storage strategy (no PostgreSQL)
 
@@ -193,12 +193,12 @@ Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `Dns
 
 ## 10. Platform / audit / settings
 
-| Model | Purpose |
-| --- | --- |
-| `AuditLog` | Append-only business audit |
-| `SystemSetting` | Key/value configuration |
-| `FeatureFlag` | Optional toggles |
-| `OutboxEvent` | Transactional outbox for reliable messaging |
+| Model           | Purpose                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| `AuditLog`      | Append-only business audit                                        |
+| `SystemSetting` | Key/value configuration                                           |
+| `FeatureFlag`   | Optional toggles                                                  |
+| `OutboxEvent`   | Transactional outbox for reliable messaging                       |
 | `JobDeadLetter` | Optional DLQ metadata (BullMQ is primary; DB for support tooling) |
 
 `AuditLog` columns (minimum): `id`, `actorUserId`, `actorType`, `organizationId?`, `action`, `entityType`, `entityId`, `beforeJson?`, `afterJson?`, `ip`, `userAgent`, `createdAt`.
@@ -226,15 +226,15 @@ AiRun ── AiToolCall ── AiApproval
 
 ## 12. Indexing guidelines
 
-| Area | Indexes |
-| --- | --- |
-| Tenancy | `(organizationId, createdAt)` on major entities |
-| Auth | unique `User.email`; `Session.tokenHash` |
-| Billing | `(provider, externalId)` unique where applicable |
-| Domains | unique `Domain.fqdn` |
-| Tickets | `(organizationId, status, updatedAt)` |
-| AI | `(conversationId, createdAt)` on messages; embeddings by `(sourceType, sourceId)` |
-| Audit | `(createdAt)`, `(organizationId, createdAt)`, `(entityType, entityId)` |
+| Area    | Indexes                                                                           |
+| ------- | --------------------------------------------------------------------------------- |
+| Tenancy | `(organizationId, createdAt)` on major entities                                   |
+| Auth    | unique `User.email`; `Session.tokenHash`                                          |
+| Billing | `(provider, externalId)` unique where applicable                                  |
+| Domains | unique `Domain.fqdn`                                                              |
+| Tickets | `(organizationId, status, updatedAt)`                                             |
+| AI      | `(conversationId, createdAt)` on messages; embeddings by `(sourceType, sourceId)` |
+| Audit   | `(createdAt)`, `(organizationId, createdAt)`, `(entityType, entityId)`            |
 
 Use composite indexes matching real list/filter queries from admin & portal.
 
@@ -251,13 +251,13 @@ Use composite indexes matching real list/filter queries from admin & portal.
 
 ## 14. Multi-DB policy
 
-| Store | Allowed? | Use |
-| --- | --- | --- |
-| MariaDB | **Required** | System of record |
-| Redis | Yes | Cache, queues, rate limits, optional session |
-| Object storage | Yes | Blobs |
-| PostgreSQL | **No** | — |
-| Secondary SQL (MySQL/MariaDB replica) | Yes | Read replicas only |
+| Store                                 | Allowed?     | Use                                          |
+| ------------------------------------- | ------------ | -------------------------------------------- |
+| MariaDB                               | **Required** | System of record                             |
+| Redis                                 | Yes          | Cache, queues, rate limits, optional session |
+| Object storage                        | Yes          | Blobs                                        |
+| PostgreSQL                            | **No**       | —                                            |
+| Secondary SQL (MySQL/MariaDB replica) | Yes          | Read replicas only                           |
 
 ---
 

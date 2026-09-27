@@ -10,13 +10,13 @@ Also read [AGENTS.md](./AGENTS.md) and the contracts under [docs/](./docs/).
 
 ## TECHNOLOGY
 
-| Layer | Stack |
-| --- | --- |
+| Layer    | Stack                     |
+| -------- | ------------------------- |
 | Frontend | React + Vite + TypeScript |
-| Backend | NestJS + TypeScript |
-| Database | MariaDB + Prisma |
-| Cache | Redis |
-| Jobs | BullMQ |
+| Backend  | NestJS + TypeScript       |
+| Database | MariaDB + Prisma          |
+| Cache    | Redis                     |
+| Jobs     | BullMQ                    |
 
 Related infrastructure (see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)): Nginx, Docker. AI via provider interfaces (OpenAI first). Billing via Stripe behind `PaymentProvider`. Hosting via cPanel/WHM behind `HostingProvider`.
 

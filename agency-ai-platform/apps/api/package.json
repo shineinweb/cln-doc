@@ -8,8 +8,8 @@
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"lint: api — configure later\"",
-    "test": "echo \"no tests yet\""
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest run --config ../../vitest.config.ts apps/api/src --passWithNoTests"
   },
   "dependencies": {
     "@agency/ai": "workspace:*",

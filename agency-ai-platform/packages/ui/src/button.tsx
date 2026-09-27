@@ -6,12 +6,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "ghost";
 };
 
-export function Button({
-  children,
-  variant = "primary",
-  style,
-  ...rest
-}: ButtonProps) {
+export function Button({ children, variant = "primary", style, ...rest }: ButtonProps) {
   const base: CSSProperties = {
     fontFamily: tokens.font.sans,
     fontWeight: 600,

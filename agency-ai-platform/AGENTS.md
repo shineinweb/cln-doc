@@ -10,13 +10,13 @@ You are implementing a **production-grade SaaS platform** for a digital agency (
 
 ## 1. Current phase
 
-**Documentation + monorepo scaffold.** Production application features are **not** started until Phase 0 engineering begins (see [docs/ROADMAP.md](./docs/ROADMAP.md)).
+**Phase 1 foundation:** monorepo apps/packages + quality tooling. Identity/tenancy/business features are **not** implemented yet (see [docs/ROADMAP.md](./docs/ROADMAP.md)).
 
-| Allowed now | Not allowed yet (unless explicitly asked) |
-| --- | --- |
-| Docs, rules, scaffold hygiene | Full feature implementation |
-| Docker/Prisma baseline when requested | Skipping provider interfaces |
-| Clarifying architecture | Introducing PostgreSQL / `pgvector` |
+| Allowed now                           | Not allowed yet (unless explicitly asked) |
+| ------------------------------------- | ----------------------------------------- |
+| Tooling, scaffold, docs               | Auth, CRM, billing, hosting features      |
+| Docker/Prisma baseline when requested | Skipping provider interfaces              |
+| Clarifying architecture               | Introducing PostgreSQL / `pgvector`       |
 
 When asked to implement, follow the roadmap order and the docs below.
 
@@ -24,15 +24,15 @@ When asked to implement, follow the roadmap order and the docs below.
 
 ## 2. Required reading (before coding)
 
-| Order | Doc | Why |
-| --- | --- | --- |
-| 0 | [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md) | Binding engineering / security / AI / workflow rules |
-| 1 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Surfaces, packages, runtime, providers |
-| 2 | [docs/DATABASE.md](./docs/DATABASE.md) | MariaDB + Prisma model |
-| 3 | [docs/API.md](./docs/API.md) | REST / WebSocket contracts |
-| 4 | [docs/SECURITY.md](./docs/SECURITY.md) | AuthN/Z, tenancy, audit |
-| 5 | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) | Agents, RAG, tools, approvals |
-| 6 | [docs/ROADMAP.md](./docs/ROADMAP.md) | What to build next |
+| Order | Doc                                                  | Why                                                  |
+| ----- | ---------------------------------------------------- | ---------------------------------------------------- |
+| 0     | [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md)       | Binding engineering / security / AI / workflow rules |
+| 1     | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)       | Surfaces, packages, runtime, providers               |
+| 2     | [docs/DATABASE.md](./docs/DATABASE.md)               | MariaDB + Prisma model                               |
+| 3     | [docs/API.md](./docs/API.md)                         | REST / WebSocket contracts                           |
+| 4     | [docs/SECURITY.md](./docs/SECURITY.md)               | AuthN/Z, tenancy, audit                              |
+| 5     | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) | Agents, RAG, tools, approvals                        |
+| 6     | [docs/ROADMAP.md](./docs/ROADMAP.md)                 | What to build next                                   |
 
 Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/).
 
@@ -96,12 +96,12 @@ UI/controllers ↛ vendor SDKs
 
 ## 5. Product surfaces (what belongs where)
 
-| Surface | App | Owns |
-| --- | --- | --- |
-| Public | `website` | Services, hosting plans, domain search, pricing, portfolio, blog, KB, contact, quote request, register/login entry |
-| Customer | `client-portal` | Dashboard, projects, tasks, files, quotes, contracts, invoices, payments, subscriptions, domains, DNS, hosting, tickets, AI assistant, notifications, profile |
-| Admin | `admin` | CRM, leads, customers, sales, quotes, contracts, projects, tasks, employees, hosting/servers, domains/DNS, billing, tickets, KB CMS, AI management, reports, roles, permissions, audit, settings |
-| AI platform | logical (`packages/ai` + API) | Supervisor, Support/Coding/Hosting/Sales/SEO agents, RAG, tools, memory, feedback, eval, approvals, AI audit |
+| Surface     | App                           | Owns                                                                                                                                                                                             |
+| ----------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Public      | `website`                     | Services, hosting plans, domain search, pricing, portfolio, blog, KB, contact, quote request, register/login entry                                                                               |
+| Customer    | `client-portal`               | Dashboard, projects, tasks, files, quotes, contracts, invoices, payments, subscriptions, domains, DNS, hosting, tickets, AI assistant, notifications, profile                                    |
+| Admin       | `admin`                       | CRM, leads, customers, sales, quotes, contracts, projects, tasks, employees, hosting/servers, domains/DNS, billing, tickets, KB CMS, AI management, reports, roles, permissions, audit, settings |
+| AI platform | logical (`packages/ai` + API) | Supervisor, Support/Coding/Hosting/Sales/SEO agents, RAG, tools, memory, feedback, eval, approvals, AI audit                                                                                     |
 
 Do not put admin capabilities in the portal, or portal billing UI in the public site, unless the architecture docs explicitly allow a shared entry (e.g. login).
 
@@ -109,18 +109,18 @@ Do not put admin capabilities in the portal, or portal billing UI in the public 
 
 ## 6. Technology stack
 
-| Layer | Choice |
-| --- | --- |
-| Frontends | React, Vite, TypeScript |
-| Backend | Node.js, NestJS, TypeScript, REST, WebSockets |
-| DB | **MariaDB** + Prisma |
-| Async | Redis + BullMQ |
-| Edge | Nginx |
-| Containers | Docker |
-| AI | OpenAI via `LLMProvider` / `EmbeddingProvider`; RAG via `VectorStore` (MariaDB-backed v1) |
-| Billing | Stripe via `PaymentProvider` |
-| Hosting | cPanel/WHM via `HostingProvider` |
-| Domains | Registrar adapters via `DomainProvider` / `DnsProvider` |
+| Layer      | Choice                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| Frontends  | React, Vite, TypeScript                                                                   |
+| Backend    | Node.js, NestJS, TypeScript, REST, WebSockets                                             |
+| DB         | **MariaDB** + Prisma                                                                      |
+| Async      | Redis + BullMQ                                                                            |
+| Edge       | Nginx                                                                                     |
+| Containers | Docker                                                                                    |
+| AI         | OpenAI via `LLMProvider` / `EmbeddingProvider`; RAG via `VectorStore` (MariaDB-backed v1) |
+| Billing    | Stripe via `PaymentProvider`                                                              |
+| Hosting    | cPanel/WHM via `HostingProvider`                                                          |
+| Domains    | Registrar adapters via `DomainProvider` / `DnsProvider`                                   |
 
 ---
 
@@ -211,14 +211,14 @@ Follow the full workflow in [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md):
 
 Concise always/glob rules in [`.cursor/rules/`](./.cursor/rules/):
 
-| Rule | Scope |
-| --- | --- |
-| `architecture.mdc` | Always — stack, boundaries, providers |
-| `security.mdc` | Always — authZ, tenancy, secrets, audit |
-| `frontend.mdc` | Website, portal, admin, UI |
-| `backend.mdc` | API + domain integration packages |
-| `database.mdc` | Prisma / MariaDB |
-| `testing.mdc` | Tests + verification workflow |
-| `ai.mdc` | Agents, RAG, tools, approvals |
+| Rule               | Scope                                   |
+| ------------------ | --------------------------------------- |
+| `architecture.mdc` | Always — stack, boundaries, providers   |
+| `security.mdc`     | Always — authZ, tenancy, secrets, audit |
+| `frontend.mdc`     | Website, portal, admin, UI              |
+| `backend.mdc`      | API + domain integration packages       |
+| `database.mdc`     | Prisma / MariaDB                        |
+| `testing.mdc`      | Tests + verification workflow           |
+| `ai.mdc`           | Agents, RAG, tools, approvals           |
 
 If a rule conflicts with `DEVELOPMENT_RULES.md` or `docs/`, **docs win** — then update the rule to match.
