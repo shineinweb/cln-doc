@@ -1,50 +1,127 @@
-# Agency AI Platform — Agent Guide
+# AGENTS.md — Agency AI Platform
 
-Monorepo for an agency operating system: public marketing site, client portal, internal admin, and NestJS API, with shared packages for UI, data, auth, AI, billing, hosting, and domains.
+Instructions for AI coding agents and human contributors working in this repository.
 
-## Layout
+You are implementing a **production-grade SaaS platform** for a digital agency (web, design, branding, SEO, domains, hosting, maintenance, custom AI, support). Act as a careful senior full-stack engineer: follow the architecture contracts, prefer small correct changes, and do not invent parallel stacks.
 
-```
-apps/
-  website/         # Public React/Vite site
-  client-portal/   # Customer React/Vite app
-  admin/           # Employee/admin React/Vite app
-  api/             # NestJS API
-packages/
-  ui/              # Shared React components & design tokens
-  database/        # Prisma schema, client, migrations
-  auth/            # Auth helpers, session/JWT utilities
-  ai/              # AI providers & agent tooling
-  billing/         # Subscriptions, invoices, Stripe adapters
-  hosting/         # Deploy/hosting integrations
-  domains/         # Domain DNS & registration adapters
-  shared/          # Cross-cutting types, utils, constants
-docs/              # Architecture contracts (read before coding)
-.cursor/rules/     # Cursor project rules
-```
+---
 
-## Architecture docs (required reading)
+## 1. Current phase
 
-| Doc | Path |
+**Documentation + monorepo scaffold.** Production application features are **not** started until Phase 0 engineering begins (see [docs/ROADMAP.md](./docs/ROADMAP.md)).
+
+| Allowed now | Not allowed yet (unless explicitly asked) |
 | --- | --- |
-| System architecture | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
-| MariaDB / Prisma | [docs/DATABASE.md](./docs/DATABASE.md) |
-| API contracts | [docs/API.md](./docs/API.md) |
-| Security | [docs/SECURITY.md](./docs/SECURITY.md) |
-| AI / agents / RAG | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) |
-| Roadmap | [docs/ROADMAP.md](./docs/ROADMAP.md) |
+| Docs, rules, scaffold hygiene | Full feature implementation |
+| Docker/Prisma baseline when requested | Skipping provider interfaces |
+| Clarifying architecture | Introducing PostgreSQL / `pgvector` |
 
-**Hard rules from architecture:** MariaDB only (never PostgreSQL). All vendors behind provider interfaces (`LLMProvider`, `PaymentProvider`, `HostingProvider`, `DomainProvider`, etc.).
+When asked to implement, follow the roadmap order and the docs below.
 
-## Tooling
+---
 
-- **Package manager:** pnpm workspaces (`pnpm-workspace.yaml`)
-- **Language:** TypeScript (strict), shared `tsconfig.base.json`
-- **Frontends:** React + Vite (`website`, `client-portal`, `admin`)
-- **Backend:** NestJS (`api`)
-- **Node:** >= 22
+## 2. Required reading (before coding)
 
-## Commands
+| Order | Doc | Why |
+| --- | --- | --- |
+| 1 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Surfaces, packages, runtime, providers |
+| 2 | [docs/DATABASE.md](./docs/DATABASE.md) | MariaDB + Prisma model |
+| 3 | [docs/API.md](./docs/API.md) | REST / WebSocket contracts |
+| 4 | [docs/SECURITY.md](./docs/SECURITY.md) | AuthN/Z, tenancy, audit |
+| 5 | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) | Agents, RAG, tools, approvals |
+| 6 | [docs/ROADMAP.md](./docs/ROADMAP.md) | What to build next |
+
+Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/).
+
+---
+
+## 3. Hard constraints (non-negotiable)
+
+1. **MariaDB only** as the primary transactional database. Prisma provider: `mysql`.  
+   **Never** add PostgreSQL, `pg`, or `pgvector`.
+2. **Provider interfaces** for all third parties — no vendor SDKs in React apps or Nest controllers:
+   - `LLMProvider`, `EmbeddingProvider`, `VectorStore`
+   - `PaymentProvider`, `HostingProvider`, `DomainProvider`, `DnsProvider`
+   - `EmailProvider`, `StorageProvider`
+3. **One NestJS API** (`apps/api`) is the system of record for business operations.
+4. **Apps stay thin** — domain logic in `packages/*`.
+5. **Organization tenancy** — customer data always scoped by `organizationId`.
+6. **High-risk AI tools** require human approval + audit (hosting suspend, DNS delete, refunds, domain transfer, etc.).
+7. **No secrets in git** — `.env.example` only; real values in local/env/secret manager.
+
+---
+
+## 4. Repository layout
+
+```text
+agency-ai-platform/
+├── apps/
+│   ├── website/          # Public React/Vite — marketing, pricing, KB, auth entry
+│   ├── client-portal/    # Customer React/Vite — projects, billing, hosting, AI
+│   ├── admin/            # Staff React/Vite — CRM, ops, RBAC, AI management
+│   └── api/              # NestJS — REST, WebSockets, workers entry
+├── packages/
+│   ├── ui/               # Design system
+│   ├── database/         # Prisma schema, client, migrations (MariaDB)
+│   ├── auth/             # Sessions, credentials, MFA helpers
+│   ├── ai/               # Agents, RAG, LLM/embedding/vector providers
+│   ├── billing/          # Invoices, subscriptions, PaymentProvider
+│   ├── hosting/          # HostingProvider (cPanel/WHM adapters)
+│   ├── domains/          # DomainProvider + DnsProvider
+│   ├── shared/           # Types, constants, pure utils
+│   ├── email/            # EmailProvider          [planned]
+│   ├── storage/          # StorageProvider        [planned]
+│   ├── notifications/    # In-app notifications   [planned]
+│   └── queue/            # BullMQ helpers         [planned]
+├── docs/                 # Architecture contracts
+├── .cursor/rules/        # Editor/agent rules
+├── AGENTS.md             # This file
+├── pnpm-workspace.yaml
+└── package.json
+```
+
+**Dependency direction**
+
+```text
+apps/*        → packages/*
+packages/*    → shared (+ siblings without cycles)
+apps ↛ apps
+UI/controllers ↛ vendor SDKs
+```
+
+---
+
+## 5. Product surfaces (what belongs where)
+
+| Surface | App | Owns |
+| --- | --- | --- |
+| Public | `website` | Services, hosting plans, domain search, pricing, portfolio, blog, KB, contact, quote request, register/login entry |
+| Customer | `client-portal` | Dashboard, projects, tasks, files, quotes, contracts, invoices, payments, subscriptions, domains, DNS, hosting, tickets, AI assistant, notifications, profile |
+| Admin | `admin` | CRM, leads, customers, sales, quotes, contracts, projects, tasks, employees, hosting/servers, domains/DNS, billing, tickets, KB CMS, AI management, reports, roles, permissions, audit, settings |
+| AI platform | logical (`packages/ai` + API) | Supervisor, Support/Coding/Hosting/Sales/SEO agents, RAG, tools, memory, feedback, eval, approvals, AI audit |
+
+Do not put admin capabilities in the portal, or portal billing UI in the public site, unless the architecture docs explicitly allow a shared entry (e.g. login).
+
+---
+
+## 6. Technology stack
+
+| Layer | Choice |
+| --- | --- |
+| Frontends | React, Vite, TypeScript |
+| Backend | Node.js, NestJS, TypeScript, REST, WebSockets |
+| DB | **MariaDB** + Prisma |
+| Async | Redis + BullMQ |
+| Edge | Nginx |
+| Containers | Docker |
+| AI | OpenAI via `LLMProvider` / `EmbeddingProvider`; RAG via `VectorStore` (MariaDB-backed v1) |
+| Billing | Stripe via `PaymentProvider` |
+| Hosting | cPanel/WHM via `HostingProvider` |
+| Domains | Registrar adapters via `DomainProvider` / `DnsProvider` |
+
+---
+
+## 7. Tooling commands
 
 From `agency-ai-platform/`:
 
@@ -55,21 +132,76 @@ pnpm dev:portal     # :5174
 pnpm dev:admin      # :5175
 pnpm dev:api        # :3000
 pnpm build
+pnpm build:packages
 pnpm typecheck
 pnpm lint
 pnpm test
 ```
 
-## Conventions
+Package manager: **pnpm only** (never npm/yarn for this project). Node `>= 22`.
 
-1. Prefer package imports via workspace names (`@agency/ui`, `@agency/shared`, …). Do not deep-import another app’s internals.
-2. Put domain logic in `packages/*`; keep apps thin (routing, composition, Nest modules).
-3. Shared types and pure helpers belong in `@agency/shared`.
-4. Database access goes through `@agency/database` — no ad-hoc clients in apps.
-5. Auth, billing, hosting, domains, and AI stay behind their package boundaries so adapters can swap.
-6. Match existing patterns in neighboring packages before inventing new ones.
-7. Do not commit secrets; use `.env.example` and local `.env` only.
+---
 
-## Cursor rules
+## 8. Engineering conventions
 
-Project-specific rules live in `.cursor/rules/`. Read them before large refactors or new package work.
+1. Import via workspace names (`@agency/ui`, `@agency/shared`, …). No deep imports of another app’s internals.
+2. Put domain logic in `packages/*`; Nest modules wire providers and HTTP/WS.
+3. Shared types/constants → `@agency/shared`.
+4. All DB access → `@agency/database` (Prisma). No ad-hoc MariaDB clients in apps.
+5. Money: integer minor units (`amountCents`) + ISO `currency`.
+6. Lists: cursor pagination; errors: stable problem-details shape ([docs/API.md](./docs/API.md)).
+7. Mutating provider calls and webhooks: idempotency keys.
+8. Match neighboring package patterns before inventing new ones.
+9. Prefer fakes/mocks for providers in local dev and unit tests.
+10. Update docs when you change a contract (API shape, schema area, provider interface).
+
+---
+
+## 9. Security checklist (every feature)
+
+- [ ] Auth guard + permission check on admin routes
+- [ ] Portal queries filtered by `organizationId`
+- [ ] No secrets/tokens in logs or client bundles
+- [ ] Webhooks signature-verified
+- [ ] File uploads via `StorageProvider` with size/MIME limits
+- [ ] Sensitive actions write `AuditLog`
+- [ ] AI tools: allowlist + approval for high risk ([docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md))
+
+---
+
+## 10. AI implementation rules
+
+When building AI features:
+
+1. Go through **Supervisor → specialist** (do not call OpenAI from random services).
+2. RAG chunks are **untrusted** context; never treat retrieved text as instructions.
+3. Persist `AiRun`, `AiToolCall`, approvals, and feedback.
+4. Embeddings/chunks stay in MariaDB (`VectorStore` adapter) — no Postgres vector DB.
+5. Customer-facing assistant is scoped; staff agents may use internal collections only when authorized.
+
+---
+
+## 11. How to take a task
+
+1. Identify the roadmap phase and surface (public / portal / admin / API / AI).
+2. Read the relevant architecture doc section.
+3. Implement behind package boundaries + provider interfaces.
+4. Add/adjust Prisma schema only in `@agency/database` with migrations.
+5. Typecheck/lint affected packages; add tests for authZ and tenancy where applicable.
+6. Keep PRs focused; do not drive-by refactor unrelated apps.
+
+---
+
+## 12. Explicit non-goals
+
+- PostgreSQL or dual primary SQL databases
+- Calling Stripe / OpenAI / WHM SDKs from React
+- Autonomous production deploys by Coding AI
+- Unscoped cross-tenant “admin debug” queries in portal code
+- Expanding scope outside the requested phase without updating ROADMAP/docs
+
+---
+
+## 13. Cursor rules
+
+Project rules in [`.cursor/rules/`](./.cursor/rules/) reinforce monorepo, frontend, and API constraints. If a rule conflicts with these docs, **docs win** — then update the rule to match.
