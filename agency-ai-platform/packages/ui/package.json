@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src --max-warnings 0",
-    "test": "vitest run --config ../../vitest.config.ts packages/ui/src"
+    "test": "pnpm --dir ../.. exec vitest run --config vitest.config.ts packages/ui/src"
   },
   "peerDependencies": {
     "react": "^19.0.0",

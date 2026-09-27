@@ -9,7 +9,7 @@
     "start:prod": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src --max-warnings 0",
-    "test": "vitest run --config ../../vitest.config.ts apps/api/src --passWithNoTests"
+    "test": "pnpm --dir ../.. exec vitest run --config vitest.config.ts apps/api/src --passWithNoTests"
   },
   "dependencies": {
     "@agency/ai": "workspace:*",
