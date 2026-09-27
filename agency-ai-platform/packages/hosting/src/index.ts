@@ -1,4 +1,4 @@
-/** Hosting package — deploy targets, status helpers, HostingProvider contract. */
+/** Hosting package — deploy targets, status helpers, HostingProvider + WHM adapter. */
 export type HostingStatus = "pending" | "provisioning" | "live" | "failed";
 
 export type HostingSite = {
@@ -28,3 +28,19 @@ export type {
   HostingProviderRef,
   HostingUsage,
 } from "./hosting-provider";
+
+export {
+  CPANEL_WHM_PROVIDER_NAME,
+  CpanelWhmProvider,
+  HostingProviderUnwiredError,
+  UnwiredWhmApiTransport,
+  normalizeWhmUsername,
+  usernameFromDomain,
+} from "./cpanel-whm-provider";
+export type {
+  CpanelWhmConfig,
+  WhmApiTransport,
+  WhmCreateAccountParams,
+  WhmCreateAccountResult,
+  WhmUsageResult,
+} from "./cpanel-whm-provider";

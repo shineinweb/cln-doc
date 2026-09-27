@@ -2,8 +2,8 @@
  * HostingProvider — WHM/cPanel (and future adapters) implement this interface.
  * Nest controllers and React apps must not call vendor SDKs directly.
  *
- * PLACEHOLDER: no live WHM/cPanel adapter yet. Wire a real adapter behind this
- * contract in Phase 6; do not invent fake remote APIs in apps.
+ * Production adapter: `CpanelWhmProvider` (WHM HTTP transport still PLACEHOLDER —
+ * inject `WhmApiTransport`; do not invent fake remote APIs in apps).
  */
 
 export type HostingAccountStatus =

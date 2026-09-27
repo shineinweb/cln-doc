@@ -184,7 +184,7 @@ Requested → Pending approval → Approved → Processing → Succeeded
 | `HostingPackage` | Local mirror of remote package        |
 | `HostingAction`  | Async action log (create, suspend, …) |
 
-Provider interface: `@agency/hosting` `HostingProvider` (createAccount, suspend/unsuspend/terminate, getUsage). Domain DTOs stay provider-agnostic via `provider` + `externalId`; WHM/cPanel is an adapter only.
+Provider interface: `@agency/hosting` `HostingProvider` (createAccount, suspend/unsuspend/terminate, getUsage). Adapter: `CpanelWhmProvider` (`provider: "cpanel-whm"`) over injectable `WhmApiTransport` — live WHM HTTP client PLACEHOLDER. Domain DTOs stay provider-agnostic via `provider` + `externalId`.
 
 Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `DnsProvider`.
 

@@ -124,7 +124,8 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 **Outcomes**
 
 - [x] `HostingProvider` interface in `@agency/hosting` (create / suspend / unsuspend / terminate / usage)
-- `HostingProvider` WHM adapter (placeholder — no live vendor SDK wired yet)
+- [x] `CpanelWhmProvider` adapter (inject `WhmApiTransport`; live WHM HTTP client still PLACEHOLDER)
+
 - Server inventory + hosting accounts (Prisma models when Phase 6 lands)
 - Provision on subscription / order
 - Suspend/unsuspend/terminate with approvals for destructive ops
