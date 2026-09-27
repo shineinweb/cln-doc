@@ -105,6 +105,8 @@ Commercial lifecycle: Lead → Opportunity → Quote → Customer → Project �
 
 Project delivery: Project → Milestone → Task → Subtask, plus Comment, Attachment, TimeEntry, ProjectMember, ProjectActivity.
 
+Project pipeline: New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance.
+
 ## Authentication
 
 NestJS auth under `/api/v1/auth/*` with Argon2id passwords, HttpOnly `agency_session` cookies, RBAC guards, rate limiting, validation, and audit logs.

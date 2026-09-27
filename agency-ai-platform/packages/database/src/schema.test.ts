@@ -6,6 +6,7 @@ import {
   COMMERCIAL_LIFECYCLE,
   COMMERCIAL_LIFECYCLE_STAGES,
   PROJECT_DELIVERY_MODELS,
+  PROJECT_STATUS_STAGES,
 } from "@agency/shared";
 
 const schemaPath = path.resolve(__dirname, "../prisma/schema.prisma");
@@ -102,6 +103,24 @@ describe("Prisma MariaDB schema", () => {
       "ProjectMember",
       "ProjectActivity",
     ]);
+  });
+
+  it("documents the Project status pipeline New → Maintenance", () => {
+    expect(schema).toContain(
+      "New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance",
+    );
+    expect(PROJECT_STATUS_STAGES).toEqual([
+      "NEW",
+      "PLANNING",
+      "DESIGN",
+      "DEVELOPMENT",
+      "CUSTOMER_REVIEW",
+      "REVISION",
+      "QA",
+      "LAUNCH",
+      "MAINTENANCE",
+    ]);
+    expect(schema).toMatch(/status\s+ProjectStatus\s+@default\(NEW\)/);
   });
 
   it("exposes generated model delegates on Prisma client DMMF", () => {

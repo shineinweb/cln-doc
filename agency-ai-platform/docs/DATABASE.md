@@ -127,7 +127,13 @@ Shared constants: `@agency/shared` `PROJECT_DELIVERY_MODELS`.
 | `ProjectMember`   | Staff/client membership + project role             |
 | `ProjectActivity` | Append-only activity feed for project events       |
 
-Statuses/priorities are Prisma enums (`ProjectStatus`, `MilestoneStatus`, `TaskStatus`, `TaskPriority`, `SubtaskStatus`, `ProjectMemberRole`, `ProjectActivityType`).
+**Project status pipeline** (`ProjectStatus`, `@agency/shared` `PROJECT_STATUS_STAGES`):
+
+```text
+New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance
+```
+
+Other statuses/priorities are Prisma enums (`MilestoneStatus`, `TaskStatus`, `TaskPriority`, `SubtaskStatus`, `ProjectMemberRole`, `ProjectActivityType`).
 
 ---
 

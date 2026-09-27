@@ -71,9 +71,12 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 **Hierarchy:** Project → Milestone → Task → Subtask (+ Comment, Attachment, TimeEntry, ProjectMember, ProjectActivity)
 
+**Project pipeline:** New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance
+
 **Outcomes**
 
 - [x] Prisma models for Project delivery hierarchy (Milestone, Task, Subtask, Comment, Attachment, TimeEntry, ProjectMember, ProjectActivity)
+- [x] Canonical `ProjectStatus` pipeline (New → Maintenance)
 - Projects / tasks APIs + admin / portal views
 - File uploads (`StorageProvider`) wired to `Attachment.storageKey`
 - Portal project visibility

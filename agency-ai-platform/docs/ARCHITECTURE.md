@@ -197,24 +197,24 @@ Every external capability has a TypeScript interface in the owning package. Adap
 
 Nest modules map to business capabilities (illustrative):
 
-| Module                | Owns                                                                                 |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| `IdentityModule`      | Users, credentials, MFA, sessions                                                    |
-| `CrmModule`           | Leads, customers, companies, pipeline                                                |
-| `CatalogModule`       | Services, hosting plans, pricing                                                     |
-| `SalesModule`         | Quotes, contracts                                                                    |
-| `ProjectsModule`      | Project → Milestone → Task → Subtask; comments, attachments, time, members, activity |
-| `BillingModule`       | Invoices, payments, subscriptions                                                    |
-| `DomainsModule`       | Domains, DNS                                                                         |
-| `HostingModule`       | Hosting accounts, servers, sync jobs                                                 |
-| `SupportModule`       | Tickets, KB articles                                                                 |
-| `CmsModule`           | Blog, portfolio, public pages content                                                |
-| `NotificationsModule` | In-app notifications, preferences                                                    |
-| `AiModule`            | Agents, runs, RAG, approvals, eval                                                   |
-| `RbacModule`          | Roles, permissions                                                                   |
-| `AuditModule`         | Immutable audit log writes/queries                                                   |
-| `SettingsModule`      | System settings                                                                      |
-| `ReportsModule`       | Aggregations / exports                                                               |
+| Module                | Owns                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `IdentityModule`      | Users, credentials, MFA, sessions                                                                                       |
+| `CrmModule`           | Leads, customers, companies, pipeline                                                                                   |
+| `CatalogModule`       | Services, hosting plans, pricing                                                                                        |
+| `SalesModule`         | Quotes, contracts                                                                                                       |
+| `ProjectsModule`      | Project → Milestone → Task → Subtask; status pipeline New → Maintenance; comments, attachments, time, members, activity |
+| `BillingModule`       | Invoices, payments, subscriptions                                                                                       |
+| `DomainsModule`       | Domains, DNS                                                                                                            |
+| `HostingModule`       | Hosting accounts, servers, sync jobs                                                                                    |
+| `SupportModule`       | Tickets, KB articles                                                                                                    |
+| `CmsModule`           | Blog, portfolio, public pages content                                                                                   |
+| `NotificationsModule` | In-app notifications, preferences                                                                                       |
+| `AiModule`            | Agents, runs, RAG, approvals, eval                                                                                      |
+| `RbacModule`          | Roles, permissions                                                                                                      |
+| `AuditModule`         | Immutable audit log writes/queries                                                                                      |
+| `SettingsModule`      | System settings                                                                                                         |
+| `ReportsModule`       | Aggregations / exports                                                                                                  |
 
 Public website reads CMS/catalog/KB via public endpoints; mutations that create leads/quotes go through sales/CRM modules.
 

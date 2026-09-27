@@ -1,4 +1,47 @@
 /**
+ * Canonical project status pipeline for the Agency AI Platform.
+ *
+ * New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance
+ */
+export const PROJECT_STATUS_STAGES = [
+  "NEW",
+  "PLANNING",
+  "DESIGN",
+  "DEVELOPMENT",
+  "CUSTOMER_REVIEW",
+  "REVISION",
+  "QA",
+  "LAUNCH",
+  "MAINTENANCE",
+] as const;
+
+export type ProjectStatusStage = (typeof PROJECT_STATUS_STAGES)[number];
+
+export const PROJECT_STATUS_PIPELINE = [
+  { status: "NEW", label: "New", description: "Project created; intake and kickoff pending." },
+  { status: "PLANNING", label: "Planning", description: "Scope, timeline, and resourcing." },
+  { status: "DESIGN", label: "Design", description: "UX/UI and creative production." },
+  { status: "DEVELOPMENT", label: "Development", description: "Build and integration work." },
+  {
+    status: "CUSTOMER_REVIEW",
+    label: "Customer Review",
+    description: "Customer feedback on delivered work.",
+  },
+  { status: "REVISION", label: "Revision", description: "Address review feedback." },
+  { status: "QA", label: "QA", description: "Quality assurance and acceptance checks." },
+  { status: "LAUNCH", label: "Launch", description: "Go-live and cutover." },
+  {
+    status: "MAINTENANCE",
+    label: "Maintenance",
+    description: "Post-launch support and recurring care.",
+  },
+] as const;
+
+export function isProjectStatusStage(value: string): value is ProjectStatusStage {
+  return (PROJECT_STATUS_STAGES as readonly string[]).includes(value);
+}
+
+/**
  * Canonical project delivery hierarchy for the Agency AI Platform.
  *
  * Project → Milestone → Task → Subtask

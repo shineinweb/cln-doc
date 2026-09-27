@@ -427,12 +427,18 @@ model QuoteLineItem {
   @@map("quote_line_items")
 }
 
+/// Canonical project pipeline:
+/// New → Planning → Design → Development → Customer Review → Revision → QA → Launch → Maintenance
 enum ProjectStatus {
+  NEW
   PLANNING
-  ACTIVE
-  ON_HOLD
-  COMPLETED
-  CANCELLED
+  DESIGN
+  DEVELOPMENT
+  CUSTOMER_REVIEW
+  REVISION
+  QA
+  LAUNCH
+  MAINTENANCE
 }
 
 model Project {
@@ -442,7 +448,7 @@ model Project {
   quoteId        String?       @map("quote_id") @db.Char(36)
   ownerUserId    String?       @map("owner_user_id") @db.Char(36)
   name           String        @db.VarChar(200)
-  status         ProjectStatus @default(PLANNING)
+  status         ProjectStatus @default(NEW)
   startsAt       DateTime?     @map("starts_at")
   dueAt          DateTime?     @map("due_at")
   completedAt    DateTime?     @map("completed_at")

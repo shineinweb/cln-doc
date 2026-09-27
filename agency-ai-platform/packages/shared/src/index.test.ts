@@ -6,6 +6,9 @@ import {
   COMMERCIAL_LIFECYCLE_STAGES,
   isCommercialLifecycleStage,
   PROJECT_DELIVERY_MODELS,
+  PROJECT_STATUS_PIPELINE,
+  PROJECT_STATUS_STAGES,
+  isProjectStatusStage,
 } from "./index";
 
 describe("APP_NAMES", () => {
@@ -59,5 +62,34 @@ describe("PROJECT_DELIVERY_MODELS", () => {
       "ProjectMember",
       "ProjectActivity",
     ]);
+  });
+});
+
+describe("PROJECT_STATUS_PIPELINE", () => {
+  it("encodes New through Maintenance in order", () => {
+    expect(PROJECT_STATUS_STAGES).toEqual([
+      "NEW",
+      "PLANNING",
+      "DESIGN",
+      "DEVELOPMENT",
+      "CUSTOMER_REVIEW",
+      "REVISION",
+      "QA",
+      "LAUNCH",
+      "MAINTENANCE",
+    ]);
+    expect(PROJECT_STATUS_PIPELINE.map((step) => step.label)).toEqual([
+      "New",
+      "Planning",
+      "Design",
+      "Development",
+      "Customer Review",
+      "Revision",
+      "QA",
+      "Launch",
+      "Maintenance",
+    ]);
+    expect(isProjectStatusStage("QA")).toBe(true);
+    expect(isProjectStatusStage("ACTIVE")).toBe(false);
   });
 });

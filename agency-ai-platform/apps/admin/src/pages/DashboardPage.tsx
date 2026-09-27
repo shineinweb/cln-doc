@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { COMMERCIAL_LIFECYCLE } from "@agency/shared";
+import { COMMERCIAL_LIFECYCLE, PROJECT_STATUS_PIPELINE } from "@agency/shared";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PlaceholderBadge } from "@/components/ui/PlaceholderBadge";
 import {
@@ -25,7 +25,7 @@ export function DashboardPage() {
     <div className="mx-auto max-w-6xl space-y-8">
       <PageHeader
         title="Dashboard"
-        description="Commercial lifecycle overview — Lead through Recurring Services."
+        description="Commercial lifecycle and project delivery pipeline overview."
       />
       <PlaceholderBadge />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -41,10 +41,23 @@ export function DashboardPage() {
         ))}
       </div>
       <section className="surface rounded-2xl p-5">
-        <h2 className="font-display text-xl font-bold">Lifecycle</h2>
+        <h2 className="font-display text-xl font-bold">Commercial lifecycle</h2>
         <ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {COMMERCIAL_LIFECYCLE.map((step, index) => (
             <li key={step.stage} className="rounded-xl border border-[var(--border)] p-3 text-sm">
+              <p className="text-xs font-bold text-[var(--color-accent)]">
+                {index + 1}. {step.label}
+              </p>
+              <p className="text-muted mt-1 text-xs leading-relaxed">{step.description}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+      <section className="surface rounded-2xl p-5">
+        <h2 className="font-display text-xl font-bold">Project pipeline</h2>
+        <ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {PROJECT_STATUS_PIPELINE.map((step, index) => (
+            <li key={step.status} className="rounded-xl border border-[var(--border)] p-3 text-sm">
               <p className="text-xs font-bold text-[var(--color-accent)]">
                 {index + 1}. {step.label}
               </p>
