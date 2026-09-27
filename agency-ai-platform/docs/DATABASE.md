@@ -186,9 +186,11 @@ Requested → Pending approval → Approved → Processing → Succeeded
 
 Provider interface: `@agency/hosting` `HostingProvider` (createAccount, suspend/unsuspend/terminate, getUsage). Adapter: `CpanelWhmProvider` (`provider: "cpanel-whm"`) over injectable `WhmApiTransport` — live WHM HTTP client PLACEHOLDER. Domain DTOs stay provider-agnostic via `provider` + `externalId`.
 
+Provider interface: `@agency/domains` `DomainProvider` (searchDomain, registerDomain, transferDomain, renewDomain, get/setNameservers, get/create/update/deleteDNSRecords). `DnsProvider` is the DNS-only Pick of that interface. Registrar SDK PLACEHOLDER.
+
 Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `DnsProvider`.
 
-**Note:** Prisma `HostingAccount` / `Server` models are Phase 6 — the TypeScript contract in `@agency/hosting` is the source of truth until those tables land.
+**Note:** Prisma `HostingAccount` / `Server` / `Domain` models for these providers are Phase 5–6 — TypeScript contracts in `@agency/hosting` / `@agency/domains` are the source of truth until those tables land.
 
 ---
 

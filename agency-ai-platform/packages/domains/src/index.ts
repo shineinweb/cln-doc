@@ -1,4 +1,4 @@
-/** Domains package — registration and DNS adapters. */
+/** Domains package — registration, DNS helpers, DomainProvider contract. */
 export type DomainRecordType = "A" | "AAAA" | "CNAME" | "MX" | "TXT";
 
 export type DnsRecord = {
@@ -11,3 +11,20 @@ export type DnsRecord = {
 export function normalizeDomain(domain: string): string {
   return domain.trim().toLowerCase().replace(/\.$/, "");
 }
+
+export type {
+  CreateDnsRecordInput,
+  DnsProvider,
+  DomainDnsRecord,
+  DomainDnsRecordType,
+  DomainMoney,
+  DomainOrderResult,
+  DomainOrderStatus,
+  DomainProvider,
+  DomainSearchResult,
+  RegisterDomainInput,
+  RenewDomainInput,
+  SearchDomainInput,
+  TransferDomainInput,
+  UpdateDnsRecordInput,
+} from "./domain-provider";

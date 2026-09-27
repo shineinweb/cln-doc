@@ -109,7 +109,9 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 **Outcomes**
 
-- `DomainProvider` + `DnsProvider` interfaces
+- [x] `DomainProvider` interface in `@agency/domains` (search / register / transfer / renew + nameservers + DNS CRUD)
+- [x] `DnsProvider` type alias (DNS subset of `DomainProvider` for DI)
+- Registrar adapter (PLACEHOLDER — no live vendor SDK wired yet)
 - Domain search (public + portal)
 - Register/renew/transfer orders (async jobs)
 - DNS record CRUD with audit

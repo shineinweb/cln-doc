@@ -179,8 +179,8 @@ Every external capability has a TypeScript interface in the owning package. Adap
 | `VectorStore`       | `ai`      | MariaDB vector/JSON + Redis ANN _or_ file/blob index (see AI doc) | Similarity search **without PostgreSQL** |
 | `PaymentProvider`   | `billing` | Stripe                                                            | Checkout, subscriptions, webhooks        |
 | `HostingProvider`   | `hosting` | `CpanelWhmProvider` (WHM HTTP transport PLACEHOLDER)              | create / suspend / unsuspend / terminate / usage |
-| `DomainProvider`    | `domains` | Registrar adapter(s)                                              | Search, register, renew, transfer        |
-| `DnsProvider`       | `domains` | Registrar DNS and/or cPanel DNS                                   | Record CRUD                              |
+| `DomainProvider`    | `domains` | Registrar adapter(s) (interface shipped; SDK PLACEHOLDER)         | Search/register/transfer/renew + NS + DNS CRUD |
+| `DnsProvider`       | `domains` | DNS subset type of `DomainProvider`                               | Record CRUD (same adapter or dedicated)  |
 | `EmailProvider`     | `email`   | Transactional ESP (e.g. SES/Postmark/SendGrid)                    | Transactional mail                       |
 | `StorageProvider`   | `storage` | S3-compatible                                                     | Files & artifacts                        |
 
