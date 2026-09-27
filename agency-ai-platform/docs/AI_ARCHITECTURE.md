@@ -303,17 +303,30 @@ All stages are **read-only**. Source of truth: `HOSTING_PIPELINE` / `HOSTING_TOO
 
 ## 6. Human approval system
 
+Canonical pipeline (`APPROVAL_PIPELINE` in `@agency/ai`):
+
 ```text
-Tool call requested (high risk)
-    → AiApproval created (status=pending)
-    → WS event to admin:ops / approvers
-    → Run pauses (or continues with read-only path)
-    → Staff approve/deny (+ note)
-    → On approve: execute tool once; audit
-    → On deny: inform agent; continue with explanation
+AI requests approval
+       ↓
+Admin approves
+       ↓
+Tool executes
+       ↓
+Audit log
 ```
 
-**Policies** stored per agent version (and global deny list). Approvals expire; expired = deny.
+| Stage                    | Codename               | Actor        | Notes                                              |
+| ------------------------ | ---------------------- | ------------ | -------------------------------------------------- |
+| **AI requests approval** | `ai_requests_approval` | AI / system  | `AiApproval` pending; run pauses                   |
+| **Admin approves**       | `admin_approves`       | admin        | Staff with `ai.approvals.decide` approve or deny   |
+| **Tool executes**        | `tool_executes`        | system       | On approve only — tool runs **once**               |
+| **Audit log**            | `audit_log`            | system       | `AuditLog` + `AiToolCall` for decision + execution |
+
+Helpers: `requestToolApproval` → `decideToolApproval` → `completeApprovedToolAudit` (Nest persists + calls `invokeTool`).
+
+On **deny**: inform the agent; do not execute; still write an audit entry for the denial (Phase 8+). Approvals expire; expired = deny.
+
+**Policies** stored per agent version (and global deny list).
 
 Portal customers **never** approve infrastructure-destructive tools; only staff with `ai.approvals.decide`.
 

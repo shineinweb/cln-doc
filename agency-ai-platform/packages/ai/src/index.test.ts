@@ -4,9 +4,15 @@ import {
   AI_AGENT_ROSTER,
   AI_ORG_CHART,
   AI_TOOL_REGISTRY,
+  APPROVAL_PIPELINE_DIAGRAM,
+  APPROVAL_PIPELINE_STAGES,
   AiService,
   AiToolUnwiredError,
   CODING_PIPELINE_DIAGRAM,
+  completeApprovedToolAudit,
+  decideToolApproval,
+  getNextApprovalPipelineStage,
+  requestToolApproval,
   CODING_PIPELINE_STAGES,
   CODING_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOL_NAMES,
@@ -140,6 +146,39 @@ describe("package module map", () => {
     expect(getAgentDefinition("coding").toolAllowlist).toEqual([...CODING_TOOL_NAMES]);
     expect(getTool("createBranches")?.requiresApproval).toBe(true);
     expect(requiresApproval("write", true)).toBe(true);
+  });
+
+  it("encodes AI requests approval → Admin approves → Tool executes → Audit log", () => {
+    expect([...APPROVAL_PIPELINE_STAGES]).toEqual([
+      "ai_requests_approval",
+      "admin_approves",
+      "tool_executes",
+      "audit_log",
+    ]);
+    expect(APPROVAL_PIPELINE_DIAGRAM).toContain("Audit log");
+    expect(getNextApprovalPipelineStage("ai_requests_approval")).toBe("admin_approves");
+    expect(getNextApprovalPipelineStage("audit_log")).toBeNull();
+
+    const requested = requestToolApproval({
+      toolName: "createPullRequests",
+      risk: "write",
+      rationale: "Open draft PR for review",
+      requestedByUserId: "user_ai",
+    });
+    expect(requested.stage).toBe("ai_requests_approval");
+    expect(requested.approval.status).toBe("pending");
+
+    const approved = decideToolApproval(requested.approval, "approved", "admin_1");
+    expect(approved.status).toBe("approved");
+
+    const audited = completeApprovedToolAudit({
+      approval: approved,
+      decidedByUserId: "admin_1",
+      executed: true,
+    });
+    expect(audited.stage).toBe("audit_log");
+    expect(audited.audit?.executed).toBe(true);
+    expect(audited.audit?.auditLogId).toContain("audit_placeholder_");
   });
 
   it("hard-denies AI → production server → randomly change files", () => {

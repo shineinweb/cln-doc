@@ -183,6 +183,7 @@ When building AI features:
 5. Customer-facing assistant is scoped; staff agents may use internal collections only when authorized.
 6. Coding AI follows **AI Code → Branch → Test → PR → Human Review → Merge → Deploy**; AI stops before Human Review / Merge / Deploy.
 7. **Forbidden:** `AI → production server → randomly change files` (hard deny in `@agency/ai` security).
+8. Gated tools follow **AI requests approval → Admin approves → Tool executes → Audit log**.
 
 ---
 
