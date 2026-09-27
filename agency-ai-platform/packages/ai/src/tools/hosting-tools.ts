@@ -1,20 +1,21 @@
 /**
- * Hosting AI tool surface — read-only diagnostics via providers.
- * Never mutates production files (see security/forbidden-paths).
+ * Hosting AI tool surface — diagnostics + gated renewals via providers.
+ * Never mutates production files arbitrarily (see security/forbidden-paths).
  */
 
 import type { AiToolDefinition } from "./types";
 
 /** Includes shared `searchKnowledge` (defined on Customer Support tools). */
 export const HOSTING_TOOL_NAMES = [
-  "identifyHostingAccount",
+  "getHostingAccount",
   "checkServer",
-  "checkDns",
-  "checkSsl",
+  "getDNS",
+  "getSSLStatus",
   "checkServiceStatus",
   "readSafeLogs",
   "searchKnowledge",
   "diagnoseHosting",
+  "renewCertificate",
 ] as const;
 
 export type HostingToolName = (typeof HOSTING_TOOL_NAMES)[number];
@@ -22,7 +23,7 @@ export type HostingToolName = (typeof HOSTING_TOOL_NAMES)[number];
 /** Hosting-specific tools only (searchKnowledge lives in customer-support-tools). */
 export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   {
-    name: "identifyHostingAccount",
+    name: "getHostingAccount",
     description:
       "Resolve the customer's hosting account from domain, username, or account id.",
     risk: "read",
@@ -54,13 +55,13 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
     parameters: {
       hostingAccountId: {
         type: "string",
-        description: "Hosting account id from identifyHostingAccount.",
+        description: "Hosting account id from getHostingAccount.",
         required: true,
       },
     },
   },
   {
-    name: "checkDns",
+    name: "getDNS",
     description:
       "Check DNS records for the account's domain via DnsProvider (read-only).",
     risk: "read",
@@ -74,7 +75,7 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
     },
   },
   {
-    name: "checkSsl",
+    name: "getSSLStatus",
     description: "Check SSL certificate status and expiry for the domain.",
     risk: "read",
     requiresApproval: false,
@@ -145,6 +146,25 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
         type: "string",
         description: "JSON or text summary of prior check outputs.",
         required: false,
+      },
+    },
+  },
+  {
+    name: "renewCertificate",
+    description:
+      "Renew an SSL certificate for the customer's domain (requires admin approval).",
+    risk: "write",
+    requiresApproval: true,
+    parameters: {
+      hostingAccountId: {
+        type: "string",
+        description: "Hosting account id.",
+        required: true,
+      },
+      domain: {
+        type: "string",
+        description: "Domain whose certificate to renew.",
+        required: true,
       },
     },
   },

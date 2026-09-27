@@ -20,3 +20,14 @@ export type {
   ApprovalPipelineStage,
   ApprovalPipelineStageDefinition,
 } from "./pipeline";
+
+export {
+  AI_EXECUTION_RISK_LEVELS,
+  formatAiExecutionTitle,
+  isAiExecutionRiskLevel,
+} from "./execution";
+export type {
+  AiExecution,
+  AiExecutionRiskLevel,
+  AiExecutionToolResult,
+} from "./execution";

@@ -12,6 +12,7 @@ import {
   CODING_PIPELINE_DIAGRAM,
   completeApprovedToolAudit,
   decideToolApproval,
+  formatAiExecutionTitle,
   getNextApprovalPipelineStage,
   requestToolApproval,
   CODING_PIPELINE_STAGES,
@@ -145,19 +146,23 @@ describe("package module map", () => {
 
   it("registers hosting diagnostic tools on the hosting agent", () => {
     expect([...HOSTING_TOOL_NAMES]).toEqual([
-      "identifyHostingAccount",
+      "getHostingAccount",
       "checkServer",
-      "checkDns",
-      "checkSsl",
+      "getDNS",
+      "getSSLStatus",
       "checkServiceStatus",
       "readSafeLogs",
       "searchKnowledge",
       "diagnoseHosting",
+      "renewCertificate",
     ]);
     expect(getAgentDefinition("hosting").toolAllowlist).toEqual([...HOSTING_TOOL_NAMES]);
-    expect(getTool("readSafeLogs")?.risk).toBe("read");
+    expect(getTool("getSSLStatus")?.risk).toBe("read");
     expect(getTool("diagnoseHosting")?.risk).toBe("read");
-    expect(HOSTING_TOOLS.every((tool) => tool.risk === "read")).toBe(true);
+    expect(getTool("renewCertificate")?.requiresApproval).toBe(true);
+    expect(HOSTING_TOOLS.filter((tool) => tool.name !== "renewCertificate").every((tool) => tool.risk === "read")).toBe(
+      true,
+    );
   });
 
   it("encodes the Hosting AI diagnostic pipeline", () => {
@@ -216,6 +221,28 @@ describe("package module map", () => {
     expect(ADMIN_AI_SECTIONS.every((section) => section.apiPath.startsWith("/admin/ai/"))).toBe(
       true,
     );
+  });
+
+  it("formats AI Execution cards for gated hosting actions", () => {
+    expect(
+      formatAiExecutionTitle({
+        number: 18_552,
+        agentLabel: "Hosting Agent",
+        customerName: "ABC Company",
+        question: "My SSL stopped working.",
+        tools: [
+          { name: "getHostingAccount", ok: true },
+          { name: "getDNS", ok: true },
+          { name: "getSSLStatus", ok: true },
+        ],
+        diagnosis: "Certificate expired",
+        requestedAction: "Renew certificate",
+        requestedToolName: "renewCertificate",
+        riskLevel: "medium",
+        status: "pending",
+      }),
+    ).toBe("AI EXECUTION #18552");
+    expect(getTool("renewCertificate")?.requiresApproval).toBe(true);
   });
 
   it("encodes AI requests approval → Admin approves → Tool executes → Audit log", () => {

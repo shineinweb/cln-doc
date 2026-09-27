@@ -380,8 +380,8 @@ export const PLACEHOLDER_TICKETS = [
 export const PLACEHOLDER_AI_APPROVALS = [
   {
     id: "apr_ui_001",
-    toolName: "createPullRequests",
-    agent: "Coding",
+    toolName: "renewCertificate",
+    agent: "Hosting",
     risk: "write",
     status: "pending",
     requestedAt: "2026-09-27 14:02",
@@ -401,6 +401,26 @@ export const PLACEHOLDER_AI_APPROVALS = [
     risk: "write",
     status: "approved",
     requestedAt: "2026-09-26 18:11",
+  },
+] as const;
+
+/** Rich AI Execution cards for the Approvals queue (e.g. #18552). */
+export const PLACEHOLDER_AI_EXECUTIONS = [
+  {
+    number: 18_552,
+    agentLabel: "Hosting Agent",
+    customerName: "ABC Company",
+    question: "My SSL stopped working.",
+    tools: [
+      { name: "getHostingAccount", ok: true },
+      { name: "getDNS", ok: true },
+      { name: "getSSLStatus", ok: true },
+    ],
+    diagnosis: "Certificate expired",
+    requestedAction: "Renew certificate",
+    requestedToolName: "renewCertificate",
+    riskLevel: "medium" as const,
+    status: "pending" as const,
   },
 ] as const;
 
@@ -445,7 +465,7 @@ export const PLACEHOLDER_AI_CONVERSATIONS = [
 export const PLACEHOLDER_AI_TOOL_CALLS = [
   {
     id: "tc_501",
-    toolName: "checkSsl",
+    toolName: "getSSLStatus",
     agent: "Hosting",
     risk: "read",
     status: "ok",
@@ -461,8 +481,8 @@ export const PLACEHOLDER_AI_TOOL_CALLS = [
   },
   {
     id: "tc_503",
-    toolName: "createPullRequests",
-    agent: "Coding",
+    toolName: "renewCertificate",
+    agent: "Hosting",
     risk: "write",
     status: "awaiting_approval",
     latencyMs: "—",

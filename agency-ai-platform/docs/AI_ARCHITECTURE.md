@@ -286,16 +286,16 @@ Diagnosis
 | -------------------------- | -------------------------- | ------------------------ | ------------------------------------------ |
 | Customer request           | `customer_request`         | —                        | Supervisor routes                          |
 | Hosting AI                 | `hosting_ai`               | —                        | Specialist handoff                         |
-| Identify hosting account   | `identify_hosting_account` | `identifyHostingAccount` | HostingProvider lookup                     |
+| Identify hosting account   | `identify_hosting_account` | `getHostingAccount`      | HostingProvider lookup                     |
 | Check server               | `check_server`             | `checkServer`            | Read-only host health                      |
-| Check DNS                  | `check_dns`                | `checkDns`               | DnsProvider                                |
-| Check SSL                  | `check_ssl`                | `checkSsl`               | Cert status                                |
+| Check DNS                  | `check_dns`                | `getDNS`                 | DnsProvider                                |
+| Check SSL                  | `check_ssl`                | `getSSLStatus`           | Cert status                                |
 | Check service status       | `check_service_status`     | `checkServiceStatus`     | HTTP/service probe                         |
 | Read safe logs             | `read_safe_logs`           | `readSafeLogs`           | Allowlisted + redacted only                |
 | Search knowledge           | `search_knowledge`         | `searchKnowledge`        | RAG runbooks                               |
 | Diagnosis                  | `diagnosis`                | `diagnoseHosting`        | Synthesize; **no mutations**               |
 
-All stages are **read-only**. Source of truth: `HOSTING_PIPELINE` / `HOSTING_TOOL_NAMES` in `@agency/ai`. Still forbidden: `AI → production server → randomly change files`.
+Diagnostic stages are **read-only**. Gated follow-up: `renewCertificate` (write, **approval required**) — shown on admin AI Execution cards. Source of truth: `HOSTING_PIPELINE` / `HOSTING_TOOL_NAMES`. Still forbidden: `AI → production server → randomly change files`.
 
 **Also planned (other agents):** `quote.create_draft`, `hosting.restart_service` (approval), `dns.apply_record_change` (approval), `billing.issue_refund` (approval).
 
@@ -323,6 +323,8 @@ Audit log
 | **Audit log**            | `audit_log`            | system       | `AuditLog` + `AiToolCall` for decision + execution |
 
 Helpers: `requestToolApproval` → `decideToolApproval` → `completeApprovedToolAudit` (Nest persists + calls `invokeTool`).
+
+Admin Approvals UI shows **AI Execution** cards (`AiExecution` / `formatAiExecutionTitle`), e.g. `#18552` Hosting Agent — SSL expired → `renewCertificate` — Risk Medium — **[Approve] [Reject]**.
 
 On **deny**: inform the agent; do not execute; still write an audit entry for the denial (Phase 8+). Approvals expire; expired = deny.
 

@@ -92,7 +92,7 @@ export const HOSTING_PIPELINE: readonly HostingPipelineStageDefinition[] = [
     stage: "identify_hosting_account",
     label: "Identify hosting account",
     description: "Resolve the correct HostingProvider account for the customer.",
-    tool: "identifyHostingAccount",
+    tool: "getHostingAccount",
     readOnly: true,
   },
   {
@@ -106,14 +106,14 @@ export const HOSTING_PIPELINE: readonly HostingPipelineStageDefinition[] = [
     stage: "check_dns",
     label: "Check DNS",
     description: "Inspect DNS via DnsProvider.",
-    tool: "checkDns",
+    tool: "getDNS",
     readOnly: true,
   },
   {
     stage: "check_ssl",
     label: "Check SSL",
     description: "Certificate validity and expiry.",
-    tool: "checkSsl",
+    tool: "getSSLStatus",
     readOnly: true,
   },
   {

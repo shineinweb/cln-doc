@@ -3,6 +3,7 @@ import { ADMIN_AI_SECTIONS } from "@agency/ai";
 import {
   ADMIN_NAV,
   PLACEHOLDER_AI_APPROVALS,
+  PLACEHOLDER_AI_EXECUTIONS,
   PLACEHOLDER_AI_RUNS,
   PLACEHOLDER_AI_SECURITY_EVENTS,
   PLACEHOLDER_KNOWLEDGE_ARTICLES,
@@ -35,6 +36,8 @@ describe("admin CRM and billing routes catalog", () => {
       true,
     );
     expect(PLACEHOLDER_AI_APPROVALS.some((item) => item.status === "pending")).toBe(true);
+    expect(PLACEHOLDER_AI_EXECUTIONS[0]?.number).toBe(18_552);
+    expect(PLACEHOLDER_AI_EXECUTIONS[0]?.requestedToolName).toBe("renewCertificate");
     expect(PLACEHOLDER_AI_RUNS.length).toBeGreaterThan(0);
     expect(ADMIN_AI_SECTIONS).toHaveLength(11);
     expect(ADMIN_AI_SECTIONS.map((s) => `/admin/ai/${s.path}`)).toContain(

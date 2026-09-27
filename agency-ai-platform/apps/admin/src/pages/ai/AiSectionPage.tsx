@@ -8,11 +8,13 @@ import {
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PlaceholderBadge } from "@/components/ui/PlaceholderBadge";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { AiExecutionCard } from "@/pages/ai/AiExecutionCard";
 import {
   PLACEHOLDER_AI_APPROVALS,
   PLACEHOLDER_AI_CONVERSATIONS,
   PLACEHOLDER_AI_COSTS,
   PLACEHOLDER_AI_EVALUATIONS,
+  PLACEHOLDER_AI_EXECUTIONS,
   PLACEHOLDER_AI_FAILURES,
   PLACEHOLDER_AI_FEEDBACK,
   PLACEHOLDER_AI_KNOWLEDGE_JOBS,
@@ -122,17 +124,22 @@ export function AiSectionPage() {
         />
       ) : null}
       {section.key === "approvals" ? (
-        <SimpleTable
-          columns={["ID", "Tool", "Agent", "Risk", "Status", "Requested"]}
-          rows={PLACEHOLDER_AI_APPROVALS.map((row) => [
-            row.id,
-            row.toolName,
-            row.agent,
-            row.risk,
-            row.status,
-            row.requestedAt,
-          ])}
-        />
+        <div className="space-y-4">
+          {PLACEHOLDER_AI_EXECUTIONS.map((execution) => (
+            <AiExecutionCard key={execution.number} execution={execution} />
+          ))}
+          <SimpleTable
+            columns={["ID", "Tool", "Agent", "Risk", "Status", "Requested"]}
+            rows={PLACEHOLDER_AI_APPROVALS.map((row) => [
+              row.id,
+              row.toolName,
+              row.agent,
+              row.risk,
+              row.status,
+              row.requestedAt,
+            ])}
+          />
+        </div>
       ) : null}
       {section.key === "failures" ? (
         <SimpleTable
