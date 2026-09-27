@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { ADMIN_AI_SECTIONS } from "@agency/ai";
 import {
   ADMIN_NAV,
   PLACEHOLDER_AI_APPROVALS,
   PLACEHOLDER_AI_RUNS,
+  PLACEHOLDER_AI_SECURITY_EVENTS,
   PLACEHOLDER_KNOWLEDGE_ARTICLES,
   PLACEHOLDER_LEADS,
   PLACEHOLDER_PRODUCTS,
@@ -34,5 +36,10 @@ describe("admin CRM and billing routes catalog", () => {
     );
     expect(PLACEHOLDER_AI_APPROVALS.some((item) => item.status === "pending")).toBe(true);
     expect(PLACEHOLDER_AI_RUNS.length).toBeGreaterThan(0);
+    expect(ADMIN_AI_SECTIONS).toHaveLength(11);
+    expect(ADMIN_AI_SECTIONS.map((s) => `/admin/ai/${s.path}`)).toContain(
+      "/admin/ai/security-events",
+    );
+    expect(PLACEHOLDER_AI_SECURITY_EVENTS.some((e) => e.kind === "forbidden_path")).toBe(true);
   });
 });

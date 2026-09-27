@@ -425,6 +425,154 @@ export const PLACEHOLDER_AI_RUNS = [
   },
 ] as const;
 
+export const PLACEHOLDER_AI_CONVERSATIONS = [
+  {
+    id: "conv_901",
+    agent: "Customer Support",
+    user: "riley@atelier.example",
+    messages: 6,
+    updatedAt: "2026-09-27 12:10",
+  },
+  {
+    id: "conv_902",
+    agent: "Hosting",
+    user: "casey@signal.example",
+    messages: 4,
+    updatedAt: "2026-09-27 11:02",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_TOOL_CALLS = [
+  {
+    id: "tc_501",
+    toolName: "checkSsl",
+    agent: "Hosting",
+    risk: "read",
+    status: "ok",
+    latencyMs: "180ms",
+  },
+  {
+    id: "tc_502",
+    toolName: "createKnowledgeProposal",
+    agent: "Knowledge",
+    risk: "write",
+    status: "ok",
+    latencyMs: "95ms",
+  },
+  {
+    id: "tc_503",
+    toolName: "createPullRequests",
+    agent: "Coding",
+    risk: "write",
+    status: "awaiting_approval",
+    latencyMs: "—",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_COSTS = [
+  { period: "2026-09", agent: "Customer Support", model: "gpt-4o-mini", costUsd: "$42.10" },
+  { period: "2026-09", agent: "Hosting", model: "gpt-4o-mini", costUsd: "$18.40" },
+  { period: "2026-09", agent: "Coding", model: "gpt-4o", costUsd: "$96.25" },
+] as const;
+
+export const PLACEHOLDER_AI_TOKEN_USAGE = [
+  {
+    period: "2026-09-27",
+    promptTokens: 128_400,
+    completionTokens: 41_200,
+    totalTokens: 169_600,
+    budgetUsed: "34%",
+  },
+  {
+    period: "2026-09",
+    promptTokens: 2_410_000,
+    completionTokens: 780_000,
+    totalTokens: 3_190_000,
+    budgetUsed: "61%",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_KNOWLEDGE_JOBS = [
+  {
+    id: "idx_301",
+    source: "article:enable-ssl-on-hosting",
+    status: "ready",
+    chunks: 12,
+    updatedAt: "2026-09-27 09:00",
+  },
+  {
+    id: "idx_302",
+    source: "proposal:apr_ui_002",
+    status: "pending_review",
+    chunks: 0,
+    updatedAt: "2026-09-27 13:40",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_FEEDBACK = [
+  {
+    id: "fb_201",
+    runId: "run_sup_772",
+    rating: "up",
+    comment: "Clear invoice explanation",
+    at: "2026-09-27 12:15",
+  },
+  {
+    id: "fb_202",
+    runId: "run_host_881",
+    rating: "down",
+    comment: "Missed custom nameserver note",
+    at: "2026-09-27 11:20",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_EVALUATIONS = [
+  {
+    suite: "support_kb_v1",
+    score: "0.82",
+    passed: 41,
+    failed: 9,
+    ranAt: "2026-09-26",
+  },
+  {
+    suite: "hosting_diag_v1",
+    score: "0.91",
+    passed: 22,
+    failed: 2,
+    ranAt: "2026-09-25",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_FAILURES = [
+  {
+    id: "fail_101",
+    agent: "Coding",
+    error: "OpenAI transport unwired (503 PLACEHOLDER)",
+    at: "2026-09-27 10:01",
+  },
+  {
+    id: "fail_102",
+    agent: "Hosting",
+    error: "HostingProvider.getUsage unwired",
+    at: "2026-09-26 22:14",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_SECURITY_EVENTS = [
+  {
+    id: "sec_001",
+    kind: "forbidden_path",
+    detail: "Blocked AI → production server → randomly change files",
+    at: "2026-09-27 08:44",
+  },
+  {
+    id: "sec_002",
+    kind: "kill_switch",
+    detail: "ai.enabled=false refused completion for org_demo",
+    at: "2026-09-20 16:00",
+  },
+] as const;
+
 export const PLACEHOLDER_CUSTOMERS = [
   {
     id: "cust_dev_001",

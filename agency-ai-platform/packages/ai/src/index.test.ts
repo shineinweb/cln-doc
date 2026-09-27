@@ -4,6 +4,7 @@ import {
   AI_AGENT_ROSTER,
   AI_ORG_CHART,
   AI_TOOL_REGISTRY,
+  ADMIN_AI_SECTIONS,
   APPROVAL_PIPELINE_DIAGRAM,
   APPROVAL_PIPELINE_STAGES,
   AiService,
@@ -196,6 +197,25 @@ describe("package module map", () => {
     expect(getAgentDefinition("coding").toolAllowlist).toEqual([...CODING_TOOL_NAMES]);
     expect(getTool("createBranches")?.requiresApproval).toBe(true);
     expect(requiresApproval("write", true)).toBe(true);
+  });
+
+  it("catalogs admin AI management sections", () => {
+    expect(ADMIN_AI_SECTIONS.map((section) => section.label)).toEqual([
+      "AI Agents",
+      "AI Conversations",
+      "AI Tool Calls",
+      "AI Costs",
+      "Token Usage",
+      "Knowledge",
+      "Feedback",
+      "Evaluations",
+      "Approvals",
+      "Failures",
+      "Security Events",
+    ]);
+    expect(ADMIN_AI_SECTIONS.every((section) => section.apiPath.startsWith("/admin/ai/"))).toBe(
+      true,
+    );
   });
 
   it("encodes AI requests approval → Admin approves → Tool executes → Audit log", () => {

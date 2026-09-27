@@ -10,6 +10,7 @@
  *   evaluations/  Eval harness stubs
  *   approvals/    Human-in-the-loop gates
  *   security/     Kill switch, quotas, risk defaults
+ *   admin/        Admin AI management section catalog
  *
  * Stack: React → NestJS API → AiService → LLMProvider → OpenAI
  */
@@ -25,6 +26,7 @@ export * from "./memory";
 export * from "./evaluations";
 export * from "./approvals";
 export * from "./security";
+export * from "./admin";
 
 /** @deprecated Prefer LlmMessage via LLMProvider / AiService. */
 export type AiMessage = {

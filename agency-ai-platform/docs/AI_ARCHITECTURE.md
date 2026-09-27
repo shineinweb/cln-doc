@@ -461,7 +461,14 @@ Every interactive turn produces:
 - `AiAuditEvent` for security-relevant steps
 - Platform `AuditLog` for approvals and executed high-risk tools
 
-Admin AI management UI (future) lists runs, failures, cost, approval queue, eval scores.
+Admin AI management UI (`/admin/ai`, catalog `ADMIN_AI_SECTIONS`):
+
+```text
+AI Agents · AI Conversations · AI Tool Calls · AI Costs · Token Usage ·
+Knowledge · Feedback · Evaluations · Approvals · Failures · Security Events
+```
+
+Overview at `/admin/ai`; section routes at `/admin/ai/<path>` (e.g. `/admin/ai/approvals`).
 
 ---
 
@@ -510,6 +517,7 @@ packages/ai/
   evaluations/    # Eval harness stubs
   approvals/      # Human-in-the-loop gates
   security/       # Kill switch, quotas, risk defaults
+  admin/          # Admin AI management section catalog (/admin/ai/*)
 ```
 
 Nest `AiModule` wires DI; BullMQ processors live under `apps/api` workers (or `packages/queue`).

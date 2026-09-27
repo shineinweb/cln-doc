@@ -15,7 +15,9 @@ import { LoginPage } from "@/pages/LoginPage";
 import { OpportunitiesPage } from "@/pages/OpportunitiesPage";
 import { QuoteDetailPage } from "@/pages/QuoteDetailPage";
 import { QuotesPage } from "@/pages/QuotesPage";
-import { AiPage } from "@/pages/AiPage";
+import { AiLayout } from "@/pages/ai/AiLayout";
+import { AiOverviewPage } from "@/pages/ai/AiOverviewPage";
+import { AiSectionPage } from "@/pages/ai/AiSectionPage";
 import { KnowledgePage } from "@/pages/KnowledgePage";
 import { TicketsPage } from "@/pages/TicketsPage";
 
@@ -35,7 +37,10 @@ export function App() {
             <Route path="quotes/:quoteId" element={<QuoteDetailPage />} />
             <Route path="tickets" element={<TicketsPage />} />
             <Route path="knowledge" element={<KnowledgePage />} />
-            <Route path="ai" element={<AiPage />} />
+            <Route path="ai" element={<AiLayout />}>
+              <Route index element={<AiOverviewPage />} />
+              <Route path=":sectionPath" element={<AiSectionPage />} />
+            </Route>
             <Route path="products" element={<ProductsPage />} />
             <Route path="prices" element={<PricesPage />} />
             <Route path="invoices" element={<InvoicesPage />} />

@@ -1,4 +1,5 @@
 import {
+  ADMIN_AI_SECTIONS,
   AI_AGENT_ROSTER,
   AI_ORG_CHART,
   APPROVAL_PIPELINE,
@@ -8,21 +9,39 @@ import {
   KNOWLEDGE_PIPELINE_DIAGRAM,
   listSpecialists,
 } from "@agency/ai";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PlaceholderBadge } from "@/components/ui/PlaceholderBadge";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { PLACEHOLDER_AI_APPROVALS, PLACEHOLDER_AI_RUNS } from "@/data/placeholders";
 
-export function AiPage() {
+export function AiOverviewPage() {
   const specialists = listSpecialists();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <>
       <PageHeader
         title="AI"
-        description="Supervisor roster, approval queue, and delivery pipelines. Target API: GET /api/v1/admin/ai/runs · /approvals"
+        description="Supervisor roster, approval queue, and delivery pipelines. Target API: GET /api/v1/admin/ai/*"
       />
       <PlaceholderBadge />
+
+      <section className="surface animate-rise rounded-2xl p-5">
+        <h2 className="font-display text-lg font-bold">Management sections</h2>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {ADMIN_AI_SECTIONS.map((section) => (
+            <li key={section.key}>
+              <Link
+                to={`/admin/ai/${section.path}`}
+                className="block rounded-xl border border-[var(--border)] p-3 text-sm no-underline transition-colors hover:border-[var(--color-accent)]"
+              >
+                <p className="font-semibold text-[var(--fg)]">{section.label}</p>
+                <p className="text-muted mt-1 text-xs leading-relaxed">{section.description}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="surface animate-rise rounded-2xl p-5">
         <h2 className="font-display text-lg font-bold">AI Supervisor</h2>
@@ -52,10 +71,20 @@ export function AiPage() {
       </section>
 
       <section className="surface animate-rise rounded-2xl p-5">
-        <h2 className="font-display text-lg font-bold">Approval queue</h2>
-        <p className="text-muted mt-1 text-sm">
-          {APPROVAL_PIPELINE.map((step) => step.label).join(" → ")}
-        </p>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold">Approval queue</h2>
+            <p className="text-muted mt-1 text-sm">
+              {APPROVAL_PIPELINE.map((step) => step.label).join(" → ")}
+            </p>
+          </div>
+          <Link
+            to="/admin/ai/approvals"
+            className="text-sm font-semibold text-[var(--color-accent)] no-underline hover:underline"
+          >
+            View all
+          </Link>
+        </div>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--border)] text-xs tracking-wide text-[var(--fg-muted)] uppercase">
@@ -131,7 +160,7 @@ export function AiPage() {
           {FORBIDDEN_AI_PATHS[0]?.reason}
         </p>
       </section>
-    </div>
+    </>
   );
 }
 
