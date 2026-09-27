@@ -12,6 +12,7 @@ Architecture contracts for the Agency AI Platform. Read these before implementin
 | [SECURITY.md](./SECURITY.md)               | AuthN/Z, tenancy, secrets, audit                           |
 | [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md) | Multi-agent AI, RAG, tools, approvals                      |
 | [SOPS.md](./SOPS.md)                       | SOP-001 … SOP-030 staff runbook catalog                    |
+| [BUILD_SEQUENCE.md](./BUILD_SEQUENCE.md)   | Canonical 01→30 Architecture → Production order            |
 | [DEPLOYMENT.md](./DEPLOYMENT.md)           | Development → GitHub → Staging → Tests → Approval → Prod   |
 | [SECURITY_AUDIT.md](./SECURITY_AUDIT.md)   | Static security review findings                            |
 | [ROADMAP.md](./ROADMAP.md)                 | Phased delivery plan                                       |

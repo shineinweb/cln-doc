@@ -272,7 +272,15 @@ Domain tables and `@agency/shared` `COMMERCIAL_LIFECYCLE` encode this path. Recu
 
 Provider webhooks and payment intents use idempotency keys stored in MariaDB.
 
-### 6.7 Release pipeline
+### 6.7 Build sequence (01 → 30)
+
+```text
+Architecture → … → Testing → Security Audit → Staging → Production
+```
+
+Canonical product build order is `@agency/shared` `BUILD_SEQUENCE` (30 steps). Details: [BUILD_SEQUENCE.md](./BUILD_SEQUENCE.md).
+
+### 6.8 Release pipeline
 
 ```text
 Development → GitHub → Staging → Automated tests → Manual approval → Production

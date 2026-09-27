@@ -24,13 +24,21 @@ import {
   RELEASE_PIPELINE,
   RELEASE_PIPELINE_DIAGRAM,
   RELEASE_PIPELINE_STAGES,
+  BUILD_SEQUENCE,
+  BUILD_SEQUENCE_DIAGRAM,
+  BUILD_SEQUENCE_STEP_COUNT,
   canCiAutoAdvanceFrom,
   canPerformQuoteAction,
+  formatBuildStepLabel,
   formatSopLabel,
   formatUsdFromCents,
+  getBuildStepByKey,
+  getBuildStepByNumber,
+  getNextBuildStep,
   getNextReleasePipelineStage,
   getReleasePipelineStage,
   getSopByCode,
+  isBuildSequenceStatus,
   isKnowledgeArticleStatus,
   isProjectStatusStage,
   isRefundWorkflowStage,
@@ -38,6 +46,7 @@ import {
   isSopCategory,
   isSupportTicketDepartment,
   isSupportTicketStatus,
+  listBuildStepsByStatus,
   listSopsByCategory,
   nextQuoteStatusAfterAction,
 } from "./index";
@@ -292,5 +301,55 @@ describe("RELEASE_PIPELINE", () => {
     expect(canCiAutoAdvanceFrom("manual_approval")).toBe(false);
     expect(isReleasePipelineStage("github")).toBe(true);
     expect(isReleasePipelineStage("prod")).toBe(false);
+  });
+});
+
+describe("BUILD_SEQUENCE", () => {
+  it("encodes the 01–30 Architecture → Production build order", () => {
+    expect(BUILD_SEQUENCE_STEP_COUNT).toBe(30);
+    expect(BUILD_SEQUENCE.map((step) => formatBuildStepLabel(step))).toEqual([
+      "01 Architecture",
+      "02 Cursor Rules",
+      "03 Monorepo",
+      "04 MariaDB + Redis",
+      "05 Prisma",
+      "06 Authentication",
+      "07 Roles & Permissions",
+      "08 Public React/Vite Website",
+      "09 CRM",
+      "10 Projects",
+      "11 Quotes/Contracts",
+      "12 Billing",
+      "13 Customer Portal",
+      "14 Hosting",
+      "15 Domains/DNS",
+      "16 Support Tickets",
+      "17 Knowledge Base",
+      "18 AI Foundation",
+      "19 AI Supervisor",
+      "20 Customer Support AI",
+      "21 Coding AI",
+      "22 Hosting AI",
+      "23 Sales/SEO AI",
+      "24 AI Learning System",
+      "25 AI Control Center",
+      "26 Reports/Analytics",
+      "27 Testing",
+      "28 Security Audit",
+      "29 Staging",
+      "30 Production",
+    ]);
+    expect(BUILD_SEQUENCE_DIAGRAM).toContain("01 Architecture");
+    expect(BUILD_SEQUENCE_DIAGRAM).toContain("30 Production");
+    expect(getBuildStepByNumber(1)?.key).toBe("architecture");
+    expect(getBuildStepByKey("security_audit")?.code).toBe("28");
+    expect(getNextBuildStep(28)?.label).toBe("Staging");
+    expect(getNextBuildStep(30)).toBeNull();
+    expect(listBuildStepsByStatus("complete").length).toBeGreaterThanOrEqual(8);
+    expect(listBuildStepsByStatus("planned").map((step) => step.key)).toEqual(
+      expect.arrayContaining(["sales_seo_ai", "reports_analytics", "production"]),
+    );
+    expect(isBuildSequenceStatus("in_progress")).toBe(true);
+    expect(isBuildSequenceStatus("done")).toBe(false);
   });
 });

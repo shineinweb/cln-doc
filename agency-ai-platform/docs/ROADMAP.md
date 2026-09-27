@@ -1,9 +1,27 @@
 # Product & Delivery Roadmap
 
 Phased plan to build the Agency AI Platform from architecture → production SaaS.  
-**Current phase:** Phase 1 complete for auth + public site shell; commercial lifecycle **schema** landed (Lead → Recurring Services). API modules for CRM/sales still pending.
+**Canonical order:** [BUILD_SEQUENCE.md](./BUILD_SEQUENCE.md) (`01` → `30`, encoded as `@agency/shared` `BUILD_SEQUENCE`).  
+**Current focus:** Finish `in_progress` vertical slices (CRM → portal → providers → AI handlers) before Sales/SEO AI and Reports.
 
-Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [SECURITY.md](./SECURITY.md), [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md).
+Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [SECURITY.md](./SECURITY.md), [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md), [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+---
+
+## Build sequence (01 → 30)
+
+```text
+01 Architecture → 02 Cursor Rules → 03 Monorepo → 04 MariaDB + Redis → 05 Prisma
+→ 06 Authentication → 07 Roles & Permissions → 08 Public React/Vite Website
+→ 09 CRM → 10 Projects → 11 Quotes/Contracts → 12 Billing → 13 Customer Portal
+→ 14 Hosting → 15 Domains/DNS → 16 Support Tickets → 17 Knowledge Base
+→ 18 AI Foundation → 19 AI Supervisor → 20 Customer Support AI → 21 Coding AI
+→ 22 Hosting AI → 23 Sales/SEO AI → 24 AI Learning System → 25 AI Control Center
+→ 26 Reports/Analytics → 27 Testing → 28 Security Audit → 29 Staging → 30 Production
+```
+
+Full status table: [BUILD_SEQUENCE.md](./BUILD_SEQUENCE.md).  
+Release ops for 29–30: [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ---
 
@@ -227,12 +245,13 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 ## Suggested near-term engineering order
 
-After these docs are accepted:
+Follow [BUILD_SEQUENCE.md](./BUILD_SEQUENCE.md). Next highest-leverage work:
 
-1. Docker Compose + MariaDB + Redis + Prisma baseline schema (Identity + RBAC + Audit)
-2. Auth + public website information architecture
-3. Portal/admin shells with navigation matching product IA
-4. Then Phase 2 vertical slice (CRM → quote)
+1. Close CRM / Quotes / Projects API gaps (steps 09–11)
+2. Wire Billing + Hosting + Domains handlers behind providers (12, 14–15)
+3. Support + KB APIs for portal/admin (16–17)
+4. Bind AI tool handlers + remediate SECURITY_AUDIT High findings (18–22, 28)
+5. Staging soak then Production with manual approval (29–30)
 
 ---
 

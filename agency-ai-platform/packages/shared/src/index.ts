@@ -123,3 +123,17 @@ export type {
   ReleasePipelineStage,
   ReleasePipelineStageDefinition,
 } from "./release";
+
+export {
+  BUILD_SEQUENCE,
+  BUILD_SEQUENCE_DIAGRAM,
+  BUILD_SEQUENCE_STATUSES,
+  BUILD_SEQUENCE_STEP_COUNT,
+  formatBuildStepLabel,
+  getBuildStepByKey,
+  getBuildStepByNumber,
+  getNextBuildStep,
+  isBuildSequenceStatus,
+  listBuildStepsByStatus,
+} from "./build-sequence";
+export type { BuildSequenceStatus, BuildSequenceStepDefinition } from "./build-sequence";
