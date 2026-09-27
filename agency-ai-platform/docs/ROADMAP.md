@@ -129,7 +129,8 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 - Server inventory + hosting accounts (Prisma models when Phase 6 lands)
 - Provision on subscription / order
 - Suspend/unsuspend/terminate with approvals for destructive ops
-- Portal hosting dashboard (status, limited actions)
+- [x] Portal hosting dashboard shell (status + usage card + Manage Hosting PLACEHOLDER)
+- Portal hosting actions (cPanel SSO / limited ops) — not wired yet
 - Sync jobs MariaDB ↔ WHM
 
 **Exit criteria:** create and suspend a cPanel account via provider in a non-prod WHM.

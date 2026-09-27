@@ -12,17 +12,19 @@
     "test": "pnpm --dir ../.. exec vitest run --config vitest.config.ts apps/client-portal/src --passWithNoTests"
   },
   "dependencies": {
+    "@agency/hosting": "workspace:*",
     "@agency/shared": "workspace:*",
     "@agency/ui": "workspace:*",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@types/node": "^22.13.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.8.2",
-    "vite": "^6.2.0",
-    "@types/node": "^22.13.10"
+    "vite": "^6.2.0"
   }
 }

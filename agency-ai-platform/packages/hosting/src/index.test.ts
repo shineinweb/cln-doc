@@ -5,7 +5,10 @@ import {
   HostingProviderUnwiredError,
   UnwiredWhmApiTransport,
   describeHostingStatus,
+  formatBytesAsGb,
+  formatUsagePair,
   normalizeWhmUsername,
+  usagePercent,
   usernameFromDomain,
   type CreateHostingAccountInput,
   type HostingAccount,
@@ -18,6 +21,14 @@ describe("hosting status helpers", () => {
   it("describes known statuses", () => {
     expect(describeHostingStatus("live")).toBe("Live");
     expect(describeHostingStatus("provisioning")).toBe("Provisioning");
+  });
+
+  it("formats disk/bandwidth pairs for portal UI", () => {
+    const gib = 1024 ** 3;
+    expect(formatBytesAsGb(14 * gib)).toBe("14 GB");
+    expect(formatUsagePair(14 * gib, 50 * gib)).toBe("14 GB / 50 GB");
+    expect(formatUsagePair(34 * gib, 500 * gib)).toBe("34 GB / 500 GB");
+    expect(usagePercent(14 * gib, 50 * gib)).toBe(28);
   });
 });
 

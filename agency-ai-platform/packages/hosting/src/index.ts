@@ -44,3 +44,5 @@ export type {
   WhmCreateAccountResult,
   WhmUsageResult,
 } from "./cpanel-whm-provider";
+
+export { formatBytesAsGb, formatUsagePair, usagePercent } from "./format";
