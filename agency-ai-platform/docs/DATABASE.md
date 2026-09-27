@@ -198,13 +198,13 @@ Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `Dns
 
 Support domain (`SupportTicket → TicketMessage → TicketAttachment` + assignment/history):
 
-| Model                 | Purpose                                              |
-| --------------------- | ---------------------------------------------------- |
-| `SupportTicket`       | Customer support ticket (org-scoped, numbered)       |
-| `TicketMessage`       | Thread messages (customer / staff / AI / system)     |
-| `TicketAttachment`    | File refs via `StorageProvider` (`storageKey`)       |
-| `TicketAssignment`    | Primary / collaborator / watcher staff assignment    |
-| `TicketStatusHistory` | Append-only status transitions                       |
+| Model                 | Purpose                                           |
+| --------------------- | ------------------------------------------------- |
+| `SupportTicket`       | Customer support ticket (org-scoped, numbered)    |
+| `TicketMessage`       | Thread messages (customer / staff / AI / system)  |
+| `TicketAttachment`    | File refs via `StorageProvider` (`storageKey`)    |
+| `TicketAssignment`    | Primary / collaborator / watcher staff assignment |
+| `TicketStatusHistory` | Append-only status transitions                    |
 
 **Ticket status:** Open → Pending → Customer Reply → Escalated → Resolved → Closed
 
@@ -212,41 +212,41 @@ SLA fields on `SupportTicket`: `firstResponseDueAt`, `resolutionDueAt`, `firstRe
 
 Knowledge domain (`KnowledgeCategory → KnowledgeArticle → KnowledgeRevision` + documents/chunks):
 
-| Model               | Purpose                                                         |
-| ------------------- | --------------------------------------------------------------- |
-| `KnowledgeCategory` | Nested taxonomy for articles                                    |
-| `KnowledgeArticle`  | KB article (Draft / Published / Archived; Public / Internal)    |
-| `KnowledgeRevision` | Versioned article body (`version` per article)                  |
-| `KnowledgeDocument` | Uploaded/URL/manual source for RAG ingestion                    |
-| `KnowledgeChunk`    | Chunk text + optional `embeddingJson` (MariaDB VectorStore v1)  |
+| Model               | Purpose                                                        |
+| ------------------- | -------------------------------------------------------------- |
+| `KnowledgeCategory` | Nested taxonomy for articles                                   |
+| `KnowledgeArticle`  | KB article (Draft / Published / Archived; Public / Internal)   |
+| `KnowledgeRevision` | Versioned article body (`version` per article)                 |
+| `KnowledgeDocument` | Uploaded/URL/manual source for RAG ingestion                   |
+| `KnowledgeChunk`    | Chunk text + optional `embeddingJson` (MariaDB VectorStore v1) |
 
-| Model                     | Purpose                             |
-| ------------------------- | ----------------------------------- |
-| `BlogPost`                | Public blog                         |
-| `PortfolioItem`           | Case studies                        |
-| `Notification`            | In-app notification                 |
-| `NotificationPreference`  | Per-user channel prefs              |
-| `ContactRequest`          | Public contact form submissions     |
-| `QuoteRequest`            | Public “request quote” submissions  |
+| Model                    | Purpose                            |
+| ------------------------ | ---------------------------------- |
+| `BlogPost`               | Public blog                        |
+| `PortfolioItem`          | Case studies                       |
+| `Notification`           | In-app notification                |
+| `NotificationPreference` | Per-user channel prefs             |
+| `ContactRequest`         | Public contact form submissions    |
+| `QuoteRequest`           | Public “request quote” submissions |
 
 ---
 
 ## 9. AI & RAG persistence (MariaDB)
 
-| Model                | Purpose                                                            |
-| -------------------- | ------------------------------------------------------------------ |
-| `AiAgent`            | Agent definition (Supervisor → Support/Coding/Hosting/Sales/SEO/Knowledge) |
-| `AiAgentVersion`     | Prompt/tool config versions                                        |
-| `AiConversation`     | Thread (portal/admin/system)                                       |
-| `AiMessage`          | Role/content/tool calls                                            |
-| `AiRun`              | Single agent execution                                             |
-| `AiToolCall`         | Tool invocation + args/result                                      |
-| `AiApproval`         | Human-in-the-loop gate                                             |
-| `AiMemory`           | Long-lived memory items (scoped)                                   |
-| `AiFeedback`         | Thumbs / ratings / comments                                        |
-| `AiEvaluation`       | Offline/online eval records                                        |
-| `KnowledgeChunk`     | Chunk text + `embeddingJson` (see knowledge domain above)          |
-| `AiAuditEvent`       | AI-specific audit (also mirrored to platform audit where required) |
+| Model            | Purpose                                                                    |
+| ---------------- | -------------------------------------------------------------------------- |
+| `AiAgent`        | Agent definition (Supervisor → Support/Coding/Hosting/Sales/SEO/Knowledge) |
+| `AiAgentVersion` | Prompt/tool config versions                                                |
+| `AiConversation` | Thread (portal/admin/system)                                               |
+| `AiMessage`      | Role/content/tool calls                                                    |
+| `AiRun`          | Single agent execution                                                     |
+| `AiToolCall`     | Tool invocation + args/result                                              |
+| `AiApproval`     | Human-in-the-loop gate                                                     |
+| `AiMemory`       | Long-lived memory items (scoped)                                           |
+| `AiFeedback`     | Thumbs / ratings / comments                                                |
+| `AiEvaluation`   | Offline/online eval records                                                |
+| `KnowledgeChunk` | Chunk text + `embeddingJson` (see knowledge domain above)                  |
+| `AiAuditEvent`   | AI-specific audit (also mirrored to platform audit where required)         |
 
 ### 9.1 Embedding storage strategy (no PostgreSQL)
 

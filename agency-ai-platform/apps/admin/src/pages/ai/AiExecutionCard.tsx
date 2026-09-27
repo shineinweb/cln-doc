@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  formatAiExecutionTitle,
-  type AiExecution,
-  type ApprovalDecision,
-} from "@agency/ai";
+import { formatAiExecutionTitle, type AiExecution, type ApprovalDecision } from "@agency/ai";
 import { StatusPill } from "@/components/ui/StatusPill";
 
 export function AiExecutionCard({
@@ -28,9 +24,7 @@ export function AiExecutionCard({
           <p className="font-mono text-xs font-bold tracking-wide text-[var(--color-accent)] uppercase">
             {formatAiExecutionTitle(execution)}
           </p>
-          <h2 className="font-display mt-1 text-xl font-bold">
-            {execution.requestedAction}
-          </h2>
+          <h2 className="font-display mt-1 text-xl font-bold">{execution.requestedAction}</h2>
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusPill label={execution.riskLevel} />
@@ -60,16 +54,16 @@ export function AiExecutionCard({
       </dl>
 
       <section className="mt-4">
-        <h3 className="text-xs font-bold tracking-wide text-[var(--fg-muted)] uppercase">
-          Tools
-        </h3>
+        <h3 className="text-xs font-bold tracking-wide text-[var(--fg-muted)] uppercase">Tools</h3>
         <ul className="mt-2 flex flex-wrap gap-2">
           {execution.tools.map((tool) => (
             <li
               key={tool.name}
               className="rounded-lg border border-[var(--border)] px-2.5 py-1 font-mono text-xs"
             >
-              <span className={tool.ok ? "text-[var(--color-accent)]" : "text-[var(--color-danger)]"}>
+              <span
+                className={tool.ok ? "text-[var(--color-accent)]" : "text-[var(--color-danger)]"}
+              >
                 {tool.ok ? "✓" : "✗"}
               </span>{" "}
               {tool.name}
@@ -90,9 +84,7 @@ export function AiExecutionCard({
             Requested action
           </h3>
           <p className="mt-1 text-sm font-semibold">{execution.requestedAction}</p>
-          <p className="text-muted mt-1 font-mono text-[11px]">
-            {execution.requestedToolName}
-          </p>
+          <p className="text-muted mt-1 font-mono text-[11px]">{execution.requestedToolName}</p>
         </div>
       </section>
 

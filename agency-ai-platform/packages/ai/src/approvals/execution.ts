@@ -43,8 +43,6 @@ export function formatAiExecutionTitle(execution: AiExecution): string {
   return `AI EXECUTION #${execution.number}`;
 }
 
-export function isAiExecutionRiskLevel(
-  value: string,
-): value is AiExecutionRiskLevel {
+export function isAiExecutionRiskLevel(value: string): value is AiExecutionRiskLevel {
   return (AI_EXECUTION_RISK_LEVELS as readonly string[]).includes(value);
 }

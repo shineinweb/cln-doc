@@ -146,9 +146,7 @@ export const HOSTING_PIPELINE: readonly HostingPipelineStageDefinition[] = [
   },
 ] as const;
 
-export function isHostingPipelineStage(
-  value: string,
-): value is HostingPipelineStage {
+export function isHostingPipelineStage(value: string): value is HostingPipelineStage {
   return (HOSTING_PIPELINE_STAGES as readonly string[]).includes(value);
 }
 

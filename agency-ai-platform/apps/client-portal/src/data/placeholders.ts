@@ -7,8 +7,7 @@ import type { SupportTicketPriorityValue } from "@agency/shared";
 
 const GIB = 1024 ** 3;
 
-export const PLACEHOLDER_NOTICE =
-  "Development placeholder — not loaded from the portal API.";
+export const PLACEHOLDER_NOTICE = "Development placeholder — not loaded from the portal API.";
 
 export type PortalHostingAccountView = {
   id: string;

@@ -27,3 +27,10 @@ export type {
   HostingToolName,
   KnowledgeToolName,
 } from "./registry";
+
+export {
+  AiApprovalRequiredError,
+  assertToolApprovalGranted,
+  invokeAuthorizedTool,
+} from "./authorized-invoke";
+export type { AuthorizedInvokeOptions } from "./authorized-invoke";

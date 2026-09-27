@@ -178,17 +178,17 @@ worker (one or more replicas)
 
 Every external capability has a TypeScript interface in the owning package. Adapters implement the interface. Nest registers the concrete adapter via DI (`PROVIDER` tokens).
 
-| Interface           | Package   | Default production adapter                                        | Purpose                                  |
-| ------------------- | --------- | ----------------------------------------------------------------- | ---------------------------------------- |
-| `LLMProvider`       | `ai`      | OpenAI chat/completions                                           | Text generation, tool calling            |
-| `EmbeddingProvider` | `ai`      | OpenAI embeddings                                                 | Chunk → vector                           |
-| `VectorStore`       | `ai`      | MariaDB vector/JSON + Redis ANN _or_ file/blob index (see AI doc) | Similarity search **without PostgreSQL** |
-| `PaymentProvider`   | `billing` | Stripe                                                            | Checkout, subscriptions, webhooks        |
+| Interface           | Package   | Default production adapter                                        | Purpose                                          |
+| ------------------- | --------- | ----------------------------------------------------------------- | ------------------------------------------------ |
+| `LLMProvider`       | `ai`      | OpenAI chat/completions                                           | Text generation, tool calling                    |
+| `EmbeddingProvider` | `ai`      | OpenAI embeddings                                                 | Chunk → vector                                   |
+| `VectorStore`       | `ai`      | MariaDB vector/JSON + Redis ANN _or_ file/blob index (see AI doc) | Similarity search **without PostgreSQL**         |
+| `PaymentProvider`   | `billing` | Stripe                                                            | Checkout, subscriptions, webhooks                |
 | `HostingProvider`   | `hosting` | `CpanelWhmProvider` (WHM HTTP transport PLACEHOLDER)              | create / suspend / unsuspend / terminate / usage |
-| `DomainProvider`    | `domains` | Registrar adapter(s) (interface shipped; SDK PLACEHOLDER)         | Search/register/transfer/renew + NS + DNS CRUD |
-| `DnsProvider`       | `domains` | DNS subset type of `DomainProvider`                               | Record CRUD (same adapter or dedicated)  |
-| `EmailProvider`     | `email`   | Transactional ESP (e.g. SES/Postmark/SendGrid)                    | Transactional mail                       |
-| `StorageProvider`   | `storage` | S3-compatible                                                     | Files & artifacts                        |
+| `DomainProvider`    | `domains` | Registrar adapter(s) (interface shipped; SDK PLACEHOLDER)         | Search/register/transfer/renew + NS + DNS CRUD   |
+| `DnsProvider`       | `domains` | DNS subset type of `DomainProvider`                               | Record CRUD (same adapter or dedicated)          |
+| `EmailProvider`     | `email`   | Transactional ESP (e.g. SES/Postmark/SendGrid)                    | Transactional mail                               |
+| `StorageProvider`   | `storage` | S3-compatible                                                     | Files & artifacts                                |
 
 **Rules**
 

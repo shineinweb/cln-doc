@@ -27,3 +27,21 @@ export type {
   PaymentProvider,
   ProviderRef,
 } from "./payment-provider";
+
+export {
+  signStripeWebhookPayload,
+  StripeWebhookSignatureError,
+  verifyStripeWebhookSignature,
+} from "./stripe-webhook";
+export type { VerifyStripeWebhookOptions } from "./stripe-webhook";
+
+export { StripePaymentProvider } from "./stripe-payment-provider";
+export type { StripePaymentProviderOptions } from "./stripe-payment-provider";
+
+export {
+  assertCanIssueRefund,
+  authorizeRefundIssuance,
+  AuthorizationError,
+  canIssueRefund,
+} from "./refund-authorization";
+export type { IssueRefundCommand } from "./refund-authorization";

@@ -96,9 +96,7 @@ describe("package module map", () => {
       "createTicket",
       "replyTicket",
     ]);
-    expect(getAgentDefinition("support").toolAllowlist).toEqual([
-      ...CUSTOMER_SUPPORT_TOOL_NAMES,
-    ]);
+    expect(getAgentDefinition("support").toolAllowlist).toEqual([...CUSTOMER_SUPPORT_TOOL_NAMES]);
     expect(getTool("replyTicket")?.parameters.body?.required).toBe(true);
   });
 
@@ -111,9 +109,7 @@ describe("package module map", () => {
       "publishKnowledgeProposal",
       "updateKnowledgeEmbeddings",
     ]);
-    expect(getAgentDefinition("knowledge").toolAllowlist).toEqual([
-      ...KNOWLEDGE_TOOL_NAMES,
-    ]);
+    expect(getAgentDefinition("knowledge").toolAllowlist).toEqual([...KNOWLEDGE_TOOL_NAMES]);
     expect(getTool("createKnowledgeProposal")?.risk).toBe("write");
     expect(getTool("approveKnowledgeProposal")?.requiresApproval).toBe(true);
     expect(getTool("publishKnowledgeProposal")?.requiresApproval).toBe(true);
@@ -135,9 +131,7 @@ describe("package module map", () => {
     expect(KNOWLEDGE_PIPELINE_DIAGRAM).toContain("Knowledge Proposal");
     expect(continueKnowledgeCapture(true)).toBe("extract_reusable_knowledge");
     expect(continueKnowledgeCapture(false)).toBeNull();
-    expect(getNextKnowledgePipelineStage("create_knowledge_proposal")).toBe(
-      "human_review",
-    );
+    expect(getNextKnowledgePipelineStage("create_knowledge_proposal")).toBe("human_review");
     expect(getNextKnowledgePipelineStage("future_retrieval")).toBeNull();
     expect(canKnowledgeAiActAtStage("extract_reusable_knowledge")).toBe(true);
     expect(canKnowledgeAiActAtStage("human_review")).toBe(false);
@@ -160,9 +154,11 @@ describe("package module map", () => {
     expect(getTool("getSSLStatus")?.risk).toBe("read");
     expect(getTool("diagnoseHosting")?.risk).toBe("read");
     expect(getTool("renewCertificate")?.requiresApproval).toBe(true);
-    expect(HOSTING_TOOLS.filter((tool) => tool.name !== "renewCertificate").every((tool) => tool.risk === "read")).toBe(
-      true,
-    );
+    expect(
+      HOSTING_TOOLS.filter((tool) => tool.name !== "renewCertificate").every(
+        (tool) => tool.risk === "read",
+      ),
+    ).toBe(true);
   });
 
   it("encodes the Hosting AI diagnostic pipeline", () => {
@@ -279,12 +275,8 @@ describe("package module map", () => {
   });
 
   it("hard-denies AI → production server → randomly change files", () => {
-    expect(FORBIDDEN_AI_PATHS[0]?.diagram).toBe(
-      "AI → production server → randomly change files",
-    );
-    expect(
-      isForbiddenAiPathDiagram("AI → production server → randomly change files"),
-    ).toBe(true);
+    expect(FORBIDDEN_AI_PATHS[0]?.diagram).toBe("AI → production server → randomly change files");
+    expect(isForbiddenAiPathDiagram("AI → production server → randomly change files")).toBe(true);
     expect(DEFAULT_AI_SECURITY_POLICY.allowProductionFileMutation).toBe(false);
     expect(() => assertNotProductionFileMutation()).toThrow(ForbiddenAiPathError);
     expect(() => assertCodingPathAllowed({ mutatesProductionFiles: true })).toThrow(
@@ -355,10 +347,7 @@ describe("package module map", () => {
       "hosting",
     ]);
     expect(listAgentsByTier("cross_cutting").map((a) => a.code)).toEqual(["sales"]);
-    expect(listAgentsByTier("specialty").map((a) => a.code)).toEqual([
-      "seo",
-      "knowledge",
-    ]);
+    expect(listAgentsByTier("specialty").map((a) => a.code)).toEqual(["seo", "knowledge"]);
     expect(AI_ORG_CHART).toContain("AI SUPERVISOR");
     expect(AI_ORG_CHART).toContain("Knowledge");
   });
@@ -395,10 +384,7 @@ describe("OpenAiLlmProvider + AiService stack", () => {
   });
 
   it("fails loudly when OpenAI transport is unwired", async () => {
-    const provider = new OpenAiLlmProvider(
-      { apiKey: "sk-test" },
-      new UnwiredOpenAiApiTransport(),
-    );
+    const provider = new OpenAiLlmProvider({ apiKey: "sk-test" }, new UnwiredOpenAiApiTransport());
     expect(provider.name).toBe(OPENAI_LLM_PROVIDER_NAME);
     await expect(
       provider.complete({

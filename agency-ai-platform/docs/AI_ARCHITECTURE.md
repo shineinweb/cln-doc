@@ -53,11 +53,11 @@ interface VectorStore {
 }
 ```
 
-| Interface           | v1 adapter                | Notes                                                                |
-| ------------------- | ------------------------- | -------------------------------------------------------------------- |
-| `LLMProvider`       | `OpenAiLlmProvider`       | Chat; HTTP transport PLACEHOLDER (`UnwiredOpenAiApiTransport`)       |
-| `EmbeddingProvider` | (interface only)          | OpenAI embeddings adapter TBD                                        |
-| `VectorStore`       | (interface only)          | MariaDB `KnowledgeChunk.embeddingJson` adapter TBD                   |
+| Interface           | v1 adapter          | Notes                                                          |
+| ------------------- | ------------------- | -------------------------------------------------------------- |
+| `LLMProvider`       | `OpenAiLlmProvider` | Chat; HTTP transport PLACEHOLDER (`UnwiredOpenAiApiTransport`) |
+| `EmbeddingProvider` | (interface only)    | OpenAI embeddings adapter TBD                                  |
+| `VectorStore`       | (interface only)    | MariaDB `KnowledgeChunk.embeddingJson` adapter TBD             |
 
 Future adapters (Anthropic, Azure OpenAI, external ANN) must not change agent code — only DI bindings.
 
@@ -81,15 +81,15 @@ Future adapters (Anthropic, Azure OpenAI, external ANN) must not change agent co
       SEO                              Knowledge
 ```
 
-| Agent               | Codename     | Tier           | Primary users                     | Responsibility                                                            |
-| ------------------- | ------------ | -------------- | --------------------------------- | ------------------------------------------------------------------------- |
-| **AI Supervisor**   | `supervisor` | supervisor     | System                            | Route intents, pick specialist, enforce policies, synthesize final answer |
-| **Customer Support**| `support`    | primary        | Portal + admin support            | Tickets, KB answers, troubleshooting                                      |
-| **Coding**          | `coding`     | primary        | Staff (optionally limited portal) | Implementation guidance, code review assist, task breakdown               |
-| **Hosting**         | `hosting`    | primary        | Staff + constrained portal        | Hosting diagnostics, WHM-safe recommendations/actions                     |
-| **Sales**           | `sales`      | cross_cutting  | Staff (+ website assist later)    | Qualification, quote drafts, plan recommendations (spans primary lanes)   |
-| **SEO**             | `seo`        | specialty      | Staff (+ portal read-only tips)   | Audits, content recommendations, keyword research assist                  |
-| **Knowledge**       | `knowledge`  | specialty      | Staff + RAG ops                   | Collection scoping, retrieval quality, KB curation assist                 |
+| Agent                | Codename     | Tier          | Primary users                     | Responsibility                                                            |
+| -------------------- | ------------ | ------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| **AI Supervisor**    | `supervisor` | supervisor    | System                            | Route intents, pick specialist, enforce policies, synthesize final answer |
+| **Customer Support** | `support`    | primary       | Portal + admin support            | Tickets, KB answers, troubleshooting                                      |
+| **Coding**           | `coding`     | primary       | Staff (optionally limited portal) | Implementation guidance, code review assist, task breakdown               |
+| **Hosting**          | `hosting`    | primary       | Staff + constrained portal        | Hosting diagnostics, WHM-safe recommendations/actions                     |
+| **Sales**            | `sales`      | cross_cutting | Staff (+ website assist later)    | Qualification, quote drafts, plan recommendations (spans primary lanes)   |
+| **SEO**              | `seo`        | specialty     | Staff (+ portal read-only tips)   | Audits, content recommendations, keyword research assist                  |
+| **Knowledge**        | `knowledge`  | specialty     | Staff + RAG ops                   | Collection scoping, retrieval quality, KB curation assist                 |
 
 All specialists `reportsTo: supervisor`. Source of truth: `AI_AGENT_ROSTER` / `AI_ORG_CHART` in `@agency/ai`.
 
@@ -182,17 +182,17 @@ createTicket()
 replyTicket()
 ```
 
-| Tool                   | Risk  | Approval                                      |
-| ---------------------- | ----- | -------------------------------------------- |
-| `getCurrentCustomer`   | read  | Session customer profile                     |
-| `getCustomerServices`  | read  | Active / pending services                    |
-| `getCustomerDomains`   | read  | Customer domains                             |
-| `getCustomerHosting`   | read  | Hosting accounts + status                    |
-| `getCustomerInvoices`  | read  | Invoices (optional status filter)            |
-| `getCustomerTickets`   | read  | Tickets (optional status filter)             |
-| `searchKnowledge`      | read  | RAG over published KB chunks                 |
-| `createTicket`         | write | New ticket (dept, subject, body, priority)   |
-| `replyTicket`          | write | Customer reply on own ticket                 |
+| Tool                  | Risk  | Approval                                   |
+| --------------------- | ----- | ------------------------------------------ |
+| `getCurrentCustomer`  | read  | Session customer profile                   |
+| `getCustomerServices` | read  | Active / pending services                  |
+| `getCustomerDomains`  | read  | Customer domains                           |
+| `getCustomerHosting`  | read  | Hosting accounts + status                  |
+| `getCustomerInvoices` | read  | Invoices (optional status filter)          |
+| `getCustomerTickets`  | read  | Tickets (optional status filter)           |
+| `searchKnowledge`     | read  | RAG over published KB chunks               |
+| `createTicket`        | write | New ticket (dept, subject, body, priority) |
+| `replyTicket`         | write | Customer reply on own ticket               |
 
 Handlers are PLACEHOLDER (`invokeTool` → `AiToolUnwiredError`) until Nest binds domain services. AuthZ always uses the initiating customer principal — no cross-tenant reads.
 
@@ -213,18 +213,18 @@ createBranches()
 createPullRequests()
 ```
 
-| Tool                  | Risk  | Approval / gate                                              |
-| --------------------- | ----- | ------------------------------------------------------------ |
-| `readRepository`      | read  | Repo tree / file contents                                  |
-| `searchCode`          | read  | Symbol / text / path search                                  |
-| `explainCode`         | read  | Plain-language explanation of files/symbols                  |
-| `diagnoseErrors`      | read  | Analyze lint/typecheck/runtime logs                          |
-| `generateCode`        | write | Draft patch only (not applied to production)                 |
-| `generateTests`       | write | Draft tests for scoped change                                |
-| `runTests`            | write | Sandboxed test run                                           |
-| `reviewChanges`       | read  | Diff / working-tree review                                   |
-| `createBranches`      | write | **Requires approval** — branch policy enforced               |
-| `createPullRequests`  | write | **Requires approval** — draft PR; no auto-merge / deploy     |
+| Tool                 | Risk  | Approval / gate                                          |
+| -------------------- | ----- | -------------------------------------------------------- |
+| `readRepository`     | read  | Repo tree / file contents                                |
+| `searchCode`         | read  | Symbol / text / path search                              |
+| `explainCode`        | read  | Plain-language explanation of files/symbols              |
+| `diagnoseErrors`     | read  | Analyze lint/typecheck/runtime logs                      |
+| `generateCode`       | write | Draft patch only (not applied to production)             |
+| `generateTests`      | write | Draft tests for scoped change                            |
+| `runTests`           | write | Sandboxed test run                                       |
+| `reviewChanges`      | read  | Diff / working-tree review                               |
+| `createBranches`     | write | **Requires approval** — branch policy enforced           |
+| `createPullRequests` | write | **Requires approval** — draft PR; no auto-merge / deploy |
 
 **Non-goals for Coding AI:** autonomous production deploys, unrestricted shell, merging to protected branches without staff.
 
@@ -246,15 +246,15 @@ MERGE
 DEPLOY
 ```
 
-| Stage            | Codename         | Actors           | Coding AI? | Notes                                      |
-| ---------------- | ---------------- | ---------------- | ---------- | ------------------------------------------ |
-| **AI Code**      | `ai_code`        | coding_ai        | yes        | Draft code/tests via tools                 |
-| **Branch**       | `branch`         | coding_ai, human | yes*       | `createBranches` — approval required       |
-| **Test**         | `test`           | coding_ai, ci    | yes        | Sandboxed `runTests`                       |
-| **Pull Request** | `pull_request`   | coding_ai, human | yes*       | `createPullRequests` — approval; no merge  |
-| **Human Review** | `human_review`   | human            | **no**     | Staff approve / request changes            |
-| **Merge**        | `merge`          | human            | **no**     | Protected base; human only                 |
-| **Deploy**       | `deploy`         | human, ci        | **no**     | Never triggered by Coding AI               |
+| Stage            | Codename       | Actors           | Coding AI? | Notes                                     |
+| ---------------- | -------------- | ---------------- | ---------- | ----------------------------------------- |
+| **AI Code**      | `ai_code`      | coding_ai        | yes        | Draft code/tests via tools                |
+| **Branch**       | `branch`       | coding_ai, human | yes*       | `createBranches` — approval required      |
+| **Test**         | `test`         | coding_ai, ci    | yes        | Sandboxed `runTests`                      |
+| **Pull Request** | `pull_request` | coding_ai, human | yes*       | `createPullRequests` — approval; no merge |
+| **Human Review** | `human_review` | human            | **no**     | Staff approve / request changes           |
+| **Merge**        | `merge`        | human            | **no**     | Protected base; human only                |
+| **Deploy**       | `deploy`       | human, ci        | **no**     | Never triggered by Coding AI              |
 
 \* Branch and PR creation still require human approval gates. Source of truth: `CODING_PIPELINE` in `@agency/ai`.
 
@@ -282,18 +282,18 @@ Search knowledge
 Diagnosis
 ```
 
-| Stage                      | Codename                   | Tool                     | Notes                                      |
-| -------------------------- | -------------------------- | ------------------------ | ------------------------------------------ |
-| Customer request           | `customer_request`         | —                        | Supervisor routes                          |
-| Hosting AI                 | `hosting_ai`               | —                        | Specialist handoff                         |
-| Identify hosting account   | `identify_hosting_account` | `getHostingAccount`      | HostingProvider lookup                     |
-| Check server               | `check_server`             | `checkServer`            | Read-only host health                      |
-| Check DNS                  | `check_dns`                | `getDNS`                 | DnsProvider                                |
-| Check SSL                  | `check_ssl`                | `getSSLStatus`           | Cert status                                |
-| Check service status       | `check_service_status`     | `checkServiceStatus`     | HTTP/service probe                         |
-| Read safe logs             | `read_safe_logs`           | `readSafeLogs`           | Allowlisted + redacted only                |
-| Search knowledge           | `search_knowledge`         | `searchKnowledge`        | RAG runbooks                               |
-| Diagnosis                  | `diagnosis`                | `diagnoseHosting`        | Synthesize; **no mutations**               |
+| Stage                    | Codename                   | Tool                 | Notes                        |
+| ------------------------ | -------------------------- | -------------------- | ---------------------------- |
+| Customer request         | `customer_request`         | —                    | Supervisor routes            |
+| Hosting AI               | `hosting_ai`               | —                    | Specialist handoff           |
+| Identify hosting account | `identify_hosting_account` | `getHostingAccount`  | HostingProvider lookup       |
+| Check server             | `check_server`             | `checkServer`        | Read-only host health        |
+| Check DNS                | `check_dns`                | `getDNS`             | DnsProvider                  |
+| Check SSL                | `check_ssl`                | `getSSLStatus`       | Cert status                  |
+| Check service status     | `check_service_status`     | `checkServiceStatus` | HTTP/service probe           |
+| Read safe logs           | `read_safe_logs`           | `readSafeLogs`       | Allowlisted + redacted only  |
+| Search knowledge         | `search_knowledge`         | `searchKnowledge`    | RAG runbooks                 |
+| Diagnosis                | `diagnosis`                | `diagnoseHosting`    | Synthesize; **no mutations** |
 
 Diagnostic stages are **read-only**. Gated follow-up: `renewCertificate` (write, **approval required**) — shown on admin AI Execution cards. Source of truth: `HOSTING_PIPELINE` / `HOSTING_TOOL_NAMES`. Still forbidden: `AI → production server → randomly change files`.
 
@@ -315,12 +315,12 @@ Tool executes
 Audit log
 ```
 
-| Stage                    | Codename               | Actor        | Notes                                              |
-| ------------------------ | ---------------------- | ------------ | -------------------------------------------------- |
-| **AI requests approval** | `ai_requests_approval` | AI / system  | `AiApproval` pending; run pauses                   |
-| **Admin approves**       | `admin_approves`       | admin        | Staff with `ai.approvals.decide` approve or deny   |
-| **Tool executes**        | `tool_executes`        | system       | On approve only — tool runs **once**               |
-| **Audit log**            | `audit_log`            | system       | `AuditLog` + `AiToolCall` for decision + execution |
+| Stage                    | Codename               | Actor       | Notes                                              |
+| ------------------------ | ---------------------- | ----------- | -------------------------------------------------- |
+| **AI requests approval** | `ai_requests_approval` | AI / system | `AiApproval` pending; run pauses                   |
+| **Admin approves**       | `admin_approves`       | admin       | Staff with `ai.approvals.decide` approve or deny   |
+| **Tool executes**        | `tool_executes`        | system      | On approve only — tool runs **once**               |
+| **Audit log**            | `audit_log`            | system      | `AuditLog` + `AiToolCall` for decision + execution |
 
 Helpers: `requestToolApproval` → `decideToolApproval` → `completeApprovedToolAudit` (Nest persists + calls `invokeTool`).
 
@@ -373,18 +373,18 @@ Embedding/index update
 Future AI can retrieve it
 ```
 
-| Stage                            | Codename                     | Tool                         | Notes                                      |
-| -------------------------------- | ---------------------------- | ---------------------------- | ------------------------------------------ |
-| Customer asks question           | `customer_asks_question`     | —                            | Portal / ticket / chat                     |
-| AI answers                       | `ai_answers`                 | `searchKnowledge`            | RAG-backed answer                          |
-| Problem resolved?                | `problem_resolved_gate`      | —                            | **NO → stop** (no proposal)                |
-| AI extracts reusable knowledge   | `extract_reusable_knowledge` | `extractReusableKnowledge`   | De-identify + draft                        |
-| Creates Knowledge Proposal       | `create_knowledge_proposal`  | `createKnowledgeProposal`    | Draft only                                 |
-| Human review                     | `human_review`               | —                            | **Human only**                             |
-| Approve                          | `approve`                    | `approveKnowledgeProposal`   | **Approval required**                      |
-| Knowledge Base                   | `knowledge_base`             | `publishKnowledgeProposal`   | Publish article/revision                   |
-| Embedding/index update           | `embedding_index_update`     | `updateKnowledgeEmbeddings`  | Chunk + embed + upsert                     |
-| Future AI can retrieve it        | `future_retrieval`           | `searchKnowledge`            | Available to agents                        |
+| Stage                          | Codename                     | Tool                        | Notes                       |
+| ------------------------------ | ---------------------------- | --------------------------- | --------------------------- |
+| Customer asks question         | `customer_asks_question`     | —                           | Portal / ticket / chat      |
+| AI answers                     | `ai_answers`                 | `searchKnowledge`           | RAG-backed answer           |
+| Problem resolved?              | `problem_resolved_gate`      | —                           | **NO → stop** (no proposal) |
+| AI extracts reusable knowledge | `extract_reusable_knowledge` | `extractReusableKnowledge`  | De-identify + draft         |
+| Creates Knowledge Proposal     | `create_knowledge_proposal`  | `createKnowledgeProposal`   | Draft only                  |
+| Human review                   | `human_review`               | —                           | **Human only**              |
+| Approve                        | `approve`                    | `approveKnowledgeProposal`  | **Approval required**       |
+| Knowledge Base                 | `knowledge_base`             | `publishKnowledgeProposal`  | Publish article/revision    |
+| Embedding/index update         | `embedding_index_update`     | `updateKnowledgeEmbeddings` | Chunk + embed + upsert      |
+| Future AI can retrieve it      | `future_retrieval`           | `searchKnowledge`           | Available to agents         |
 
 Source of truth: `KNOWLEDGE_PIPELINE` / `KNOWLEDGE_TOOL_NAMES` in `@agency/ai`. AI must not skip human review.
 

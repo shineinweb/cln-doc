@@ -95,8 +95,7 @@ export const CODING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "generateCode",
-    description:
-      "Propose code changes as a draft patch (does not apply to production).",
+    description: "Propose code changes as a draft patch (does not apply to production).",
     risk: "write",
     requiresApproval: false,
     parameters: {
@@ -186,8 +185,7 @@ export const CODING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "createPullRequests",
-    description:
-      "Open a pull request for the current branch (staff approval; no auto-merge).",
+    description: "Open a pull request for the current branch (staff approval; no auto-merge).",
     risk: "write",
     requiresApproval: true,
     parameters: {

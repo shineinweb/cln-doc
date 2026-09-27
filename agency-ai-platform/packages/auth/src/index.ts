@@ -21,3 +21,17 @@ export type {
   PlatformPermissionDef,
   PlatformPermissionKey,
 } from "./roles";
+export {
+  assertOrganizationAccess,
+  canAccessOrganization,
+  membershipOrganizationIds,
+  OrganizationAccessError,
+} from "./tenant";
+export {
+  assertCanIssueRefund,
+  assertPermission,
+  assertStaff,
+  AuthorizationError,
+  canIssueRefund,
+  permissionsForPlatformRole,
+} from "./authorization";

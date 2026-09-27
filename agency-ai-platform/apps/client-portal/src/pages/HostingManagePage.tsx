@@ -14,8 +14,8 @@ export function HostingManagePage() {
       <p className="portal-page__eyebrow">Manage Hosting</p>
       <h1 className="portal-page__title">{account.domain}</h1>
       <p className="portal-page__lede">
-        {account.packageName} — cPanel/WHM management (SSO, file manager, email) is a
-        PLACEHOLDER. No fake remote control panel is exposed here.
+        {account.packageName} — cPanel/WHM management (SSO, file manager, email) is a PLACEHOLDER.
+        No fake remote control panel is exposed here.
       </p>
       <p className="placeholder-badge" role="note">
         {PLACEHOLDER_NOTICE}

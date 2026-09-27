@@ -178,7 +178,9 @@ a {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--ink-soft);
-  transition: background-color 160ms ease, color 160ms ease;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
 }
 
 .portal-nav__link:hover {
@@ -281,7 +283,9 @@ a {
   background: var(--accent);
   color: #fff;
   cursor: pointer;
-  transition: background-color 160ms ease, transform 160ms ease;
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
 }
 
 .dash-ask__submit:hover {
@@ -635,7 +639,9 @@ a {
   background: var(--accent);
   color: #fff;
   border: 1px solid transparent;
-  transition: transform 160ms ease, background-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
 }
 
 .hosting-cta:hover {
@@ -712,7 +718,9 @@ a {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .ticket-field textarea {

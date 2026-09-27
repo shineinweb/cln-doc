@@ -1,17 +1,8 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Post,
-  ServiceUnavailableException,
-} from "@nestjs/common";
+import { Body, Controller, Inject, Post, ServiceUnavailableException } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
-import {
-  AiService,
-  LlmProviderUnwiredError,
-  type LlmCompletionResponse,
-} from "@agency/ai";
+import { AiService, LlmProviderUnwiredError, type LlmCompletionResponse } from "@agency/ai";
 import { CurrentUser } from "../common/decorators/current-user.decorator";
+import { Permissions } from "../common/decorators/permissions.decorator";
 import type { AuthUserView } from "@agency/auth";
 import { AI_SERVICE } from "./ai.constants";
 import { CompleteDto } from "./dto/complete.dto";
@@ -25,6 +16,7 @@ export class AiController {
   constructor(@Inject(AI_SERVICE) private readonly aiService: AiService) {}
 
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Permissions("ai.use")
   @Post("complete")
   async complete(
     @Body() dto: CompleteDto,

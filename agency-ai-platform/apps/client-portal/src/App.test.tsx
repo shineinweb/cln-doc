@@ -31,12 +31,10 @@ describe("client portal hosting placeholders", () => {
     expect(account?.domain).toBe("example.com");
     expect(account?.packageName).toBe("Business Hosting");
     expect(account?.statusLabel).toBe("Active");
-    expect(
-      formatUsagePair(account!.diskUsedBytes, account!.diskLimitBytes),
-    ).toBe("14 GB / 50 GB");
-    expect(
-      formatUsagePair(account!.bandwidthUsedBytes, account!.bandwidthLimitBytes),
-    ).toBe("34 GB / 500 GB");
+    expect(formatUsagePair(account!.diskUsedBytes, account!.diskLimitBytes)).toBe("14 GB / 50 GB");
+    expect(formatUsagePair(account!.bandwidthUsedBytes, account!.bandwidthLimitBytes)).toBe(
+      "34 GB / 500 GB",
+    );
   });
 });
 

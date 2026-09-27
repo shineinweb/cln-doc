@@ -67,12 +67,7 @@ export function AiSectionPage() {
       {section.key === "costs" ? (
         <SimpleTable
           columns={["Period", "Agent", "Model", "Cost (USD)"]}
-          rows={PLACEHOLDER_AI_COSTS.map((row) => [
-            row.period,
-            row.agent,
-            row.model,
-            row.costUsd,
-          ])}
+          rows={PLACEHOLDER_AI_COSTS.map((row) => [row.period, row.agent, row.model, row.costUsd])}
         />
       ) : null}
       {section.key === "token_usage" ? (
@@ -144,12 +139,7 @@ export function AiSectionPage() {
       {section.key === "failures" ? (
         <SimpleTable
           columns={["ID", "Agent", "Error", "At"]}
-          rows={PLACEHOLDER_AI_FAILURES.map((row) => [
-            row.id,
-            row.agent,
-            row.error,
-            row.at,
-          ])}
+          rows={PLACEHOLDER_AI_FAILURES.map((row) => [row.id, row.agent, row.error, row.at])}
         />
       ) : null}
       {section.key === "security_events" ? (
@@ -203,13 +193,7 @@ function AgentsPanel() {
   );
 }
 
-function SimpleTable({
-  columns,
-  rows,
-}: {
-  columns: string[];
-  rows: string[][];
-}) {
+function SimpleTable({ columns, rows }: { columns: string[]; rows: string[][] }) {
   return (
     <div className="surface animate-rise overflow-x-auto rounded-2xl">
       <table className="min-w-full text-left text-sm">
@@ -224,7 +208,10 @@ function SimpleTable({
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={`${row[0]}-${index}`} className="border-b border-[var(--border)] last:border-0">
+            <tr
+              key={`${row[0]}-${index}`}
+              className="border-b border-[var(--border)] last:border-0"
+            >
               {row.map((cell, cellIndex) => (
                 <td key={`${columns[cellIndex]}-${cell}`} className="px-3 py-3">
                   {columns[cellIndex] === "Status" ||

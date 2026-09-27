@@ -3,49 +3,25 @@
  * Handlers call domain services / providers later; PLACEHOLDER for now.
  */
 
-import {
-  CODING_TOOL_NAMES,
-  CODING_TOOLS,
-  type CodingToolName,
-} from "./coding-tools";
+import { CODING_TOOL_NAMES, CODING_TOOLS, type CodingToolName } from "./coding-tools";
 import {
   CUSTOMER_SUPPORT_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOLS,
   type CustomerSupportToolName,
 } from "./customer-support-tools";
-import {
-  HOSTING_TOOL_NAMES,
-  HOSTING_TOOLS,
-  type HostingToolName,
-} from "./hosting-tools";
-import {
-  KNOWLEDGE_TOOL_NAMES,
-  KNOWLEDGE_TOOLS,
-  type KnowledgeToolName,
-} from "./knowledge-tools";
+import { HOSTING_TOOL_NAMES, HOSTING_TOOLS, type HostingToolName } from "./hosting-tools";
+import { KNOWLEDGE_TOOL_NAMES, KNOWLEDGE_TOOLS, type KnowledgeToolName } from "./knowledge-tools";
 import type { AiToolDefinition, AiToolInvokeContext } from "./types";
 
 export type { AiToolDefinition, AiToolInvokeContext, AiToolRisk } from "./types";
-export {
-  CODING_TOOL_NAMES,
-  CODING_TOOLS,
-  type CodingToolName,
-} from "./coding-tools";
+export { CODING_TOOL_NAMES, CODING_TOOLS, type CodingToolName } from "./coding-tools";
 export {
   CUSTOMER_SUPPORT_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOLS,
   type CustomerSupportToolName,
 } from "./customer-support-tools";
-export {
-  HOSTING_TOOL_NAMES,
-  HOSTING_TOOLS,
-  type HostingToolName,
-} from "./hosting-tools";
-export {
-  KNOWLEDGE_TOOL_NAMES,
-  KNOWLEDGE_TOOLS,
-  type KnowledgeToolName,
-} from "./knowledge-tools";
+export { HOSTING_TOOL_NAMES, HOSTING_TOOLS, type HostingToolName } from "./hosting-tools";
+export { KNOWLEDGE_TOOL_NAMES, KNOWLEDGE_TOOLS, type KnowledgeToolName } from "./knowledge-tools";
 
 export const AI_TOOL_REGISTRY: readonly AiToolDefinition[] = [
   ...CUSTOMER_SUPPORT_TOOLS,
@@ -58,9 +34,7 @@ export class AiToolUnwiredError extends Error {
   readonly toolName: string;
 
   constructor(toolName: string) {
-    super(
-      `AI tool "${toolName}" is PLACEHOLDER — bind a domain handler before invoking.`,
-    );
+    super(`AI tool "${toolName}" is PLACEHOLDER — bind a domain handler before invoking.`);
     this.name = "AiToolUnwiredError";
     this.toolName = toolName;
   }
@@ -74,9 +48,7 @@ export function getTool(name: string): AiToolDefinition | undefined {
   return AI_TOOL_REGISTRY.find((tool) => tool.name === name);
 }
 
-export function isCustomerSupportTool(
-  name: string,
-): name is CustomerSupportToolName {
+export function isCustomerSupportTool(name: string): name is CustomerSupportToolName {
   return (CUSTOMER_SUPPORT_TOOL_NAMES as readonly string[]).includes(name);
 }
 

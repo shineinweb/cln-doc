@@ -16,8 +16,7 @@ export const CUSTOMER_SUPPORT_TOOL_NAMES = [
   "replyTicket",
 ] as const;
 
-export type CustomerSupportToolName =
-  (typeof CUSTOMER_SUPPORT_TOOL_NAMES)[number];
+export type CustomerSupportToolName = (typeof CUSTOMER_SUPPORT_TOOL_NAMES)[number];
 
 export const CUSTOMER_SUPPORT_TOOLS: readonly AiToolDefinition[] = [
   {
@@ -94,8 +93,7 @@ export const CUSTOMER_SUPPORT_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "createTicket",
-    description:
-      "Create a support ticket for the current customer (department, subject, body).",
+    description: "Create a support ticket for the current customer (department, subject, body).",
     risk: "write",
     requiresApproval: false,
     parameters: {

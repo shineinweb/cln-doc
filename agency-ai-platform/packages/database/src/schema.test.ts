@@ -198,12 +198,8 @@ describe("Prisma MariaDB schema", () => {
   });
 
   it("documents support ticket domain SupportTicket through TicketStatusHistory", () => {
-    expect(schema).toContain(
-      "SupportTicket → TicketMessage → TicketAttachment",
-    );
-    expect(schema).toContain(
-      "Open → Pending → Customer Reply → Escalated → Resolved → Closed",
-    );
+    expect(schema).toContain("SupportTicket → TicketMessage → TicketAttachment");
+    expect(schema).toContain("Open → Pending → Customer Reply → Escalated → Resolved → Closed");
     expect(SUPPORT_TICKET_DOMAIN_MODELS).toEqual([
       "SupportTicket",
       "TicketMessage",

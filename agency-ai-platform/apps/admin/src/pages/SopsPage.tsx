@@ -21,16 +21,11 @@ export function SopsPage() {
         const sops = listSopsByCategory(category);
         return (
           <section key={category} className="surface animate-rise rounded-2xl p-5">
-            <h2 className="font-display text-lg font-bold">
-              {SOP_CATEGORY_LABELS[category]}
-            </h2>
+            <h2 className="font-display text-lg font-bold">{SOP_CATEGORY_LABELS[category]}</h2>
             <p className="text-muted mt-1 text-xs">{sops.length} procedures</p>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
               {sops.map((sop) => (
-                <li
-                  key={sop.code}
-                  className="rounded-xl border border-[var(--border)] p-3 text-sm"
-                >
+                <li key={sop.code} className="rounded-xl border border-[var(--border)] p-3 text-sm">
                   <p className="font-mono text-xs font-bold text-[var(--color-accent)]">
                     {sop.code}
                   </p>

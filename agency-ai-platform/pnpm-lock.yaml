@@ -287,6 +287,9 @@ importers:
 
   packages/billing:
     dependencies:
+      '@agency/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@agency/shared':
         specifier: workspace:*
         version: link:../shared

@@ -113,9 +113,7 @@ describe("CpanelWhmProvider", () => {
 
   it("rejects missing config", () => {
     expect(() => new CpanelWhmProvider({ baseUrl: "", apiToken: "x" })).toThrow(/baseUrl/);
-    expect(() => new CpanelWhmProvider({ baseUrl: "https://x", apiToken: "" })).toThrow(
-      /apiToken/,
-    );
+    expect(() => new CpanelWhmProvider({ baseUrl: "https://x", apiToken: "" })).toThrow(/apiToken/);
   });
 
   it("fails loudly when WHM transport is unwired", async () => {

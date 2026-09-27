@@ -46,8 +46,8 @@ export function AskAiPage() {
           <p className="ask-ai-reply__label">You asked</p>
           <p className="ask-ai-reply__q">“{submitted}”</p>
           <p className="ask-ai-reply__a">
-            AI reply is PLACEHOLDER until Nest binds `POST /api/v1/ai/complete` for portal
-            sessions. Hosting diagnostics and ticket tools will run under the Support agent.
+            AI reply is PLACEHOLDER until Nest binds `POST /api/v1/ai/complete` for portal sessions.
+            Hosting diagnostics and ticket tools will run under the Support agent.
           </p>
           <Link className="hosting-cta hosting-cta--ghost" to="/tickets/new">
             Open a ticket instead

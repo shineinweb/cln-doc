@@ -1,8 +1,5 @@
 import { Link } from "react-router-dom";
-import {
-  SUPPORT_TICKET_DEPARTMENTS,
-  SUPPORT_TICKET_PRIORITY_LABELS,
-} from "@agency/shared";
+import { SUPPORT_TICKET_DEPARTMENTS, SUPPORT_TICKET_PRIORITY_LABELS } from "@agency/shared";
 import { PLACEHOLDER_NOTICE, PLACEHOLDER_PORTAL_TICKETS } from "../data/placeholders";
 
 export function TicketsPage() {

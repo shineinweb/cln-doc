@@ -8,10 +8,7 @@ type HostingAccountCardProps = {
 
 export function HostingAccountCard({ account }: HostingAccountCardProps) {
   const diskPct = usagePercent(account.diskUsedBytes, account.diskLimitBytes);
-  const bandwidthPct = usagePercent(
-    account.bandwidthUsedBytes,
-    account.bandwidthLimitBytes,
-  );
+  const bandwidthPct = usagePercent(account.bandwidthUsedBytes, account.bandwidthLimitBytes);
 
   return (
     <article className="hosting-card" aria-labelledby={`hosting-${account.id}-title`}>

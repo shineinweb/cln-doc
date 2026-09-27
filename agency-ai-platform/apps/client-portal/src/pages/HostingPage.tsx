@@ -7,8 +7,8 @@ export function HostingPage() {
       <header className="portal-page__header">
         <h1 className="portal-page__title">Hosting</h1>
         <p className="portal-page__lede">
-          Status and usage for your hosting accounts. Management actions use the hosting
-          provider — WHM SSO is not wired yet.
+          Status and usage for your hosting accounts. Management actions use the hosting provider —
+          WHM SSO is not wired yet.
         </p>
         <p className="placeholder-badge" role="note">
           {PLACEHOLDER_NOTICE}

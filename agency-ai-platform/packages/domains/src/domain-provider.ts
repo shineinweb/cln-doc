@@ -14,15 +14,7 @@ export type DomainMoney = {
 
 export type DomainOrderStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
-export type DomainDnsRecordType =
-  | "A"
-  | "AAAA"
-  | "CNAME"
-  | "MX"
-  | "TXT"
-  | "NS"
-  | "SRV"
-  | "CAA";
+export type DomainDnsRecordType = "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "NS" | "SRV" | "CAA";
 
 export type SearchDomainInput = {
   /** FQDN or label to check (e.g. example.com or example). */

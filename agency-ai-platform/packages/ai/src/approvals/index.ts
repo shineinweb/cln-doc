@@ -26,8 +26,4 @@ export {
   formatAiExecutionTitle,
   isAiExecutionRiskLevel,
 } from "./execution";
-export type {
-  AiExecution,
-  AiExecutionRiskLevel,
-  AiExecutionToolResult,
-} from "./execution";
+export type { AiExecution, AiExecutionRiskLevel, AiExecutionToolResult } from "./execution";

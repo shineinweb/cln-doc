@@ -6,7 +6,8 @@ export function formatBytesAsGb(bytes: number): string {
     return "0 GB";
   }
   const gib = bytes / GIB;
-  const rounded = Math.abs(gib - Math.round(gib)) < 1e-9 ? Math.round(gib) : Math.round(gib * 10) / 10;
+  const rounded =
+    Math.abs(gib - Math.round(gib)) < 1e-9 ? Math.round(gib) : Math.round(gib * 10) / 10;
   return `${rounded} GB`;
 }
 

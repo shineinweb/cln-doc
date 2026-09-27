@@ -1,9 +1,5 @@
 /** AI security policies (kill switch, quotas, forbidden paths). */
-export {
-  DEFAULT_AI_SECURITY_POLICY,
-  assertAiEnabled,
-  clampMaxTokens,
-} from "./policy";
+export { DEFAULT_AI_SECURITY_POLICY, assertAiEnabled, clampMaxTokens } from "./policy";
 export type { AiSecurityPolicy } from "./policy";
 
 export {
@@ -14,3 +10,6 @@ export {
   isForbiddenAiPathDiagram,
 } from "./forbidden-paths";
 export type { ForbiddenAiPathId } from "./forbidden-paths";
+
+export { AiAuthorizationError, aiActorFromUser, assertAiActorAuthorized } from "./authorization";
+export type { AiActor } from "./authorization";

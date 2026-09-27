@@ -34,10 +34,7 @@ export {
   isHostingPipelineReadOnly,
   isHostingPipelineStage,
 } from "./hosting-pipeline";
-export type {
-  HostingPipelineStage,
-  HostingPipelineStageDefinition,
-} from "./hosting-pipeline";
+export type { HostingPipelineStage, HostingPipelineStageDefinition } from "./hosting-pipeline";
 
 export {
   KNOWLEDGE_PIPELINE,

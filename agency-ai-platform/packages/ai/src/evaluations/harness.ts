@@ -4,11 +4,7 @@
  */
 
 export type EvaluationMetric =
-  | "groundedness"
-  | "helpfulness"
-  | "safety"
-  | "latency_ms"
-  | "cost_tokens";
+  "groundedness" | "helpfulness" | "safety" | "latency_ms" | "cost_tokens";
 
 export type EvaluationCase = {
   id: string;

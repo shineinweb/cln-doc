@@ -49,8 +49,8 @@ export function LoginPage() {
             </Button>
           </div>
           <p className="auth-demo-note">
-            Demo session is a development placeholder for portal UI — it does not create a
-            server session.
+            Demo session is a development placeholder for portal UI — it does not create a server
+            session.
           </p>
         </form>
       </section>

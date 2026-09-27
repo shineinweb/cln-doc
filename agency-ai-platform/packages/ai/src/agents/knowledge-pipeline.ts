@@ -44,11 +44,7 @@ export const KNOWLEDGE_PIPELINE_STAGES = [
 export type KnowledgePipelineStage = (typeof KNOWLEDGE_PIPELINE_STAGES)[number];
 
 export type KnowledgePipelineActor =
-  | "customer"
-  | "support_ai"
-  | "knowledge_ai"
-  | "human"
-  | "system";
+  "customer" | "support_ai" | "knowledge_ai" | "human" | "system";
 
 export type KnowledgePipelineStageDefinition = {
   stage: KnowledgePipelineStage;
@@ -104,8 +100,7 @@ export const KNOWLEDGE_PIPELINE: readonly KnowledgePipelineStageDefinition[] = [
   {
     stage: "problem_resolved_gate",
     label: "Problem resolved?",
-    description:
-      "Gate: only YES continues to extraction. NO ends the capture path.",
+    description: "Gate: only YES continues to extraction. NO ends the capture path.",
     actors: ["customer", "support_ai", "human"],
     tool: null,
     humanOnly: false,
@@ -168,9 +163,7 @@ export const KNOWLEDGE_PIPELINE: readonly KnowledgePipelineStageDefinition[] = [
   },
 ] as const;
 
-export function isKnowledgePipelineStage(
-  value: string,
-): value is KnowledgePipelineStage {
+export function isKnowledgePipelineStage(value: string): value is KnowledgePipelineStage {
   return (KNOWLEDGE_PIPELINE_STAGES as readonly string[]).includes(value);
 }
 

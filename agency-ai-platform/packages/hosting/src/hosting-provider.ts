@@ -7,11 +7,7 @@
  */
 
 export type HostingAccountStatus =
-  | "PROVISIONING"
-  | "ACTIVE"
-  | "SUSPENDED"
-  | "TERMINATED"
-  | "FAILED";
+  "PROVISIONING" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "FAILED";
 
 export type HostingProviderRef = {
   provider: string;

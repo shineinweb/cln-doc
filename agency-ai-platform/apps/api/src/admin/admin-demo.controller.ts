@@ -1,8 +1,10 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, UseGuards } from "@nestjs/common";
 import { Permissions } from "../common/decorators/permissions.decorator";
+import { StaffGuard } from "../common/guards/staff.guard";
 
-/** Minimal admin route to exercise permission guards. */
+/** Minimal admin route to exercise staff + permission guards. */
 @Controller("admin")
+@UseGuards(StaffGuard)
 export class AdminDemoController {
   @Get("ping")
   @Permissions("customers.view")

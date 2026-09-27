@@ -35,11 +35,7 @@ export const AI_AGENT_CODES = [
 export type AiAgentCode = (typeof AI_AGENT_CODES)[number];
 
 /** Position in the supervisor org chart. */
-export type AiAgentTier =
-  | "supervisor"
-  | "primary"
-  | "cross_cutting"
-  | "specialty";
+export type AiAgentTier = "supervisor" | "primary" | "cross_cutting" | "specialty";
 
 export type AiAgentDefinition = {
   code: AiAgentCode;
@@ -100,8 +96,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
   {
     code: "sales",
     label: "Sales",
-    description:
-      "Cross-cutting qualification, quote drafts, plan recommendations.",
+    description: "Cross-cutting qualification, quote drafts, plan recommendations.",
     reportsTo: "supervisor",
     tier: "cross_cutting",
     toolAllowlist: [

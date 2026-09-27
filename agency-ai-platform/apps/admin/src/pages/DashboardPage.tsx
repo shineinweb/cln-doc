@@ -28,7 +28,10 @@ export function DashboardPage() {
             >
               <dt className="text-[var(--fg-muted)]">{row.label}</dt>
               <dd className="font-display text-right text-lg font-bold tracking-tight">
-                <Link to={row.to} className="text-[var(--fg)] no-underline hover:text-[var(--color-accent)]">
+                <Link
+                  to={row.to}
+                  className="text-[var(--fg)] no-underline hover:text-[var(--color-accent)]"
+                >
                   {row.value}
                 </Link>
               </dd>

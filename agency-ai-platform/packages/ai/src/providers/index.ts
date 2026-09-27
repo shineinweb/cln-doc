@@ -8,18 +8,9 @@ export type {
   LLMProvider,
 } from "./llm-provider";
 
-export type {
-  EmbeddingProvider,
-  EmbeddingRequest,
-  EmbeddingResponse,
-} from "./embedding-provider";
+export type { EmbeddingProvider, EmbeddingRequest, EmbeddingResponse } from "./embedding-provider";
 
-export type {
-  VectorMatch,
-  VectorQuery,
-  VectorStore,
-  VectorUpsert,
-} from "./vector-store";
+export type { VectorMatch, VectorQuery, VectorStore, VectorUpsert } from "./vector-store";
 
 export {
   OPENAI_LLM_PROVIDER_NAME,

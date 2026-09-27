@@ -98,6 +98,8 @@ describe("AuthService", () => {
 
     expect(result.sessionToken.length).toBeGreaterThan(20);
     expect(result.user.email).toBe("owner@example.com");
+    expect(result.user.permissions).toContain("ai.use");
+    expect(result.user.roles).toContain("customer");
     expect(email.sent).toHaveLength(1);
     expect(email.sent[0]?.subject).toMatch(/Verify/i);
     expect(audit.write).toHaveBeenCalled();

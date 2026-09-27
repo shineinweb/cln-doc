@@ -40,8 +40,7 @@ export function NewTicketPage() {
         <p className="portal-page__eyebrow">Support</p>
         <h1 className="portal-page__title">New Ticket</h1>
         <p className="portal-page__lede">
-          Open a support request. Submissions are placeholder until the portal tickets API is
-          wired.
+          Open a support request. Submissions are placeholder until the portal tickets API is wired.
         </p>
         <p className="placeholder-badge" role="note">
           {PLACEHOLDER_NOTICE}
@@ -82,9 +81,7 @@ export function NewTicketPage() {
             <select
               name="department"
               value={department}
-              onChange={(event) =>
-                setDepartment(event.target.value as SupportTicketDepartmentKey)
-              }
+              onChange={(event) => setDepartment(event.target.value as SupportTicketDepartmentKey)}
               required
             >
               {SUPPORT_TICKET_DEPARTMENTS.map((item) => (
@@ -100,9 +97,7 @@ export function NewTicketPage() {
             <select
               name="priority"
               value={priority}
-              onChange={(event) =>
-                setPriority(event.target.value as SupportTicketPriorityValue)
-              }
+              onChange={(event) => setPriority(event.target.value as SupportTicketPriorityValue)}
               required
             >
               {SUPPORT_TICKET_PRIORITIES.map((value) => (

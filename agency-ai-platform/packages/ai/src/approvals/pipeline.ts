@@ -85,9 +85,7 @@ export type ApprovalPipelineResult = {
   audit?: ApprovalAuditEntry;
 };
 
-export function isApprovalPipelineStage(
-  value: string,
-): value is ApprovalPipelineStage {
+export function isApprovalPipelineStage(value: string): value is ApprovalPipelineStage {
   return (APPROVAL_PIPELINE_STAGES as readonly string[]).includes(value);
 }
 

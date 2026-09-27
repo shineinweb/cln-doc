@@ -53,10 +53,7 @@ export function AiOverviewPage() {
         </pre>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {specialists.map((agent) => (
-            <li
-              key={agent.code}
-              className="rounded-xl border border-[var(--border)] p-3 text-sm"
-            >
+            <li key={agent.code} className="rounded-xl border border-[var(--border)] p-3 text-sm">
               <p className="text-xs font-bold tracking-wide text-[var(--color-accent)] uppercase">
                 {agent.tier.replaceAll("_", " ")}
               </p>
@@ -156,9 +153,7 @@ export function AiOverviewPage() {
         <p className="mt-2 font-mono text-sm text-[var(--color-danger)]">
           {FORBIDDEN_AI_PATHS[0]?.diagram}
         </p>
-        <p className="text-muted mt-2 text-sm leading-relaxed">
-          {FORBIDDEN_AI_PATHS[0]?.reason}
-        </p>
+        <p className="text-muted mt-2 text-sm leading-relaxed">{FORBIDDEN_AI_PATHS[0]?.reason}</p>
       </section>
     </>
   );

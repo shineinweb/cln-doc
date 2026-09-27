@@ -32,9 +32,7 @@ export function assertAiEnabled(policy: AiSecurityPolicy = DEFAULT_AI_SECURITY_P
     throw new Error("AI is disabled by security policy (ai.enabled=false)");
   }
   if (policy.allowProductionFileMutation) {
-    throw new Error(
-      "AI security policy forbids AI → production server → randomly change files",
-    );
+    throw new Error("AI security policy forbids AI → production server → randomly change files");
   }
 }
 

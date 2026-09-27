@@ -151,25 +151,25 @@ Customer task updates are restricted (comment, attach, mark done if policy allow
 
 All routes under `/admin` require staff authentication + permission checks.
 
-| Area                  | Endpoints (representative)                                |
-| --------------------- | --------------------------------------------------------- |
-| Dashboard             | `GET /admin/dashboard`                                    |
-| CRM / leads           | CRUD `/admin/leads`, activities, convert                  |
-| Customers             | CRUD `/admin/organizations`, members                      |
-| Sales / opportunities | `/admin/opportunities`                                    |
-| Quotes / contracts    | full lifecycle + send/sign workflows                      |
-| Projects / tasks      | full CRUD, assignments                                    |
-| Employees             | `/admin/employees`, capacity, roles assignment            |
-| Hosting / servers     | `/admin/servers`, `/admin/hosting-accounts`, sync actions |
-| Domains / DNS         | admin overrides + registrar ops                           |
-| Billing               | invoices, subscriptions, refunds (via provider)           |
-| Support               | tickets, assignment, internal notes                       |
-| Knowledge base        | article CMS + publish                                     |
+| Area                  | Endpoints (representative)                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard             | `GET /admin/dashboard`                                                                                                                                                    |
+| CRM / leads           | CRUD `/admin/leads`, activities, convert                                                                                                                                  |
+| Customers             | CRUD `/admin/organizations`, members                                                                                                                                      |
+| Sales / opportunities | `/admin/opportunities`                                                                                                                                                    |
+| Quotes / contracts    | full lifecycle + send/sign workflows                                                                                                                                      |
+| Projects / tasks      | full CRUD, assignments                                                                                                                                                    |
+| Employees             | `/admin/employees`, capacity, roles assignment                                                                                                                            |
+| Hosting / servers     | `/admin/servers`, `/admin/hosting-accounts`, sync actions                                                                                                                 |
+| Domains / DNS         | admin overrides + registrar ops                                                                                                                                           |
+| Billing               | invoices, subscriptions, refunds (via provider)                                                                                                                           |
+| Support               | tickets, assignment, internal notes                                                                                                                                       |
+| Knowledge base        | article CMS + publish                                                                                                                                                     |
 | AI management         | Admin UI `/admin/ai` (+ agents, conversations, tool-calls, costs, token-usage, knowledge, feedback, evaluations, approvals, failures, security-events); API `/admin/ai/*` |
-| Reports               | `/admin/reports/...`                                      |
-| RBAC                  | `/admin/roles`, `/admin/permissions`                      |
-| Audit                 | `GET /admin/audit-logs`                                   |
-| Settings              | `/admin/settings`                                         |
+| Reports               | `/admin/reports/...`                                                                                                                                                      |
+| RBAC                  | `/admin/roles`, `/admin/permissions`                                                                                                                                      |
+| Audit                 | `GET /admin/audit-logs`                                                                                                                                                   |
+| Settings              | `/admin/settings`                                                                                                                                                         |
 
 Destructive provider actions (suspend hosting, transfer domain) require elevated permissions and produce audit entries.
 

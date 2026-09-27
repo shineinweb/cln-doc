@@ -1,9 +1,5 @@
 import { Module } from "@nestjs/common";
-import {
-  AiService,
-  OpenAiLlmProvider,
-  UnwiredOpenAiApiTransport,
-} from "@agency/ai";
+import { AiService, OpenAiLlmProvider, UnwiredOpenAiApiTransport } from "@agency/ai";
 import { AiController } from "./ai.controller";
 import { AI_SERVICE } from "./ai.constants";
 

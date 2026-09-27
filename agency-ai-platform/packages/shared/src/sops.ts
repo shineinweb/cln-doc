@@ -235,24 +235,21 @@ export const AGENCY_SOPS: readonly SopDefinition[] = [
     number: 28,
     title: "AI Tool Approval",
     category: "ai",
-    description:
-      "AI requests approval → Admin approves → Tool executes → Audit log.",
+    description: "AI requests approval → Admin approves → Tool executes → Audit log.",
   },
   {
     code: "SOP-029",
     number: 29,
     title: "AI Knowledge Training",
     category: "ai",
-    description:
-      "Resolved answers → Knowledge Proposal → human approve → embed/index.",
+    description: "Resolved answers → Knowledge Proposal → human approve → embed/index.",
   },
   {
     code: "SOP-030",
     number: 30,
     title: "AI Incident Response",
     category: "ai",
-    description:
-      "Respond to AI failures, policy denials, and forbidden-path attempts.",
+    description: "Respond to AI failures, policy denials, and forbidden-path attempts.",
   },
 ] as const;
 

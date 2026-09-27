@@ -24,8 +24,7 @@ export type HostingToolName = (typeof HOSTING_TOOL_NAMES)[number];
 export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   {
     name: "getHostingAccount",
-    description:
-      "Resolve the customer's hosting account from domain, username, or account id.",
+    description: "Resolve the customer's hosting account from domain, username, or account id.",
     risk: "read",
     requiresApproval: false,
     parameters: {
@@ -48,8 +47,7 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "checkServer",
-    description:
-      "Read-only server health for the account's host (load, disk, reachability).",
+    description: "Read-only server health for the account's host (load, disk, reachability).",
     risk: "read",
     requiresApproval: false,
     parameters: {
@@ -62,8 +60,7 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "getDNS",
-    description:
-      "Check DNS records for the account's domain via DnsProvider (read-only).",
+    description: "Check DNS records for the account's domain via DnsProvider (read-only).",
     risk: "read",
     requiresApproval: false,
     parameters: {
@@ -89,8 +86,7 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "checkServiceStatus",
-    description:
-      "Check HTTP/service status for the site (uptime, response code) — read-only.",
+    description: "Check HTTP/service status for the site (uptime, response code) — read-only.",
     risk: "read",
     requiresApproval: false,
     parameters: {
@@ -132,8 +128,7 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "diagnoseHosting",
-    description:
-      "Synthesize a hosting diagnosis from prior check results (no mutations).",
+    description: "Synthesize a hosting diagnosis from prior check results (no mutations).",
     risk: "read",
     requiresApproval: false,
     parameters: {
@@ -151,8 +146,7 @@ export const HOSTING_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "renewCertificate",
-    description:
-      "Renew an SSL certificate for the customer's domain (requires admin approval).",
+    description: "Renew an SSL certificate for the customer's domain (requires admin approval).",
     risk: "write",
     requiresApproval: true,
     parameters: {

@@ -118,15 +118,11 @@ export const CODING_PIPELINE: readonly CodingPipelineStageDefinition[] = [
   },
 ] as const;
 
-export function isCodingPipelineStage(
-  value: string,
-): value is CodingPipelineStage {
+export function isCodingPipelineStage(value: string): value is CodingPipelineStage {
   return (CODING_PIPELINE_STAGES as readonly string[]).includes(value);
 }
 
-export function getCodingPipelineStage(
-  stage: CodingPipelineStage,
-): CodingPipelineStageDefinition {
+export function getCodingPipelineStage(stage: CodingPipelineStage): CodingPipelineStageDefinition {
   const found = CODING_PIPELINE.find((item) => item.stage === stage);
   if (!found) {
     throw new Error(`Unknown coding pipeline stage: ${stage}`);
@@ -135,9 +131,7 @@ export function getCodingPipelineStage(
 }
 
 /** Next stage in the pipeline, or null after Deploy. */
-export function getNextCodingPipelineStage(
-  stage: CodingPipelineStage,
-): CodingPipelineStage | null {
+export function getNextCodingPipelineStage(stage: CodingPipelineStage): CodingPipelineStage | null {
   const index = CODING_PIPELINE_STAGES.indexOf(stage);
   if (index < 0 || index >= CODING_PIPELINE_STAGES.length - 1) return null;
   return CODING_PIPELINE_STAGES[index + 1] ?? null;

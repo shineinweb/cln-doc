@@ -21,8 +21,7 @@ export type KnowledgeToolName = (typeof KNOWLEDGE_TOOL_NAMES)[number];
 export const KNOWLEDGE_TOOLS: readonly AiToolDefinition[] = [
   {
     name: "extractReusableKnowledge",
-    description:
-      "From a resolved conversation, extract a reusable, de-identified knowledge draft.",
+    description: "From a resolved conversation, extract a reusable, de-identified knowledge draft.",
     risk: "read",
     requiresApproval: false,
     parameters: {
@@ -40,8 +39,7 @@ export const KNOWLEDGE_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "createKnowledgeProposal",
-    description:
-      "Create a Knowledge Proposal (draft) for human review — not published yet.",
+    description: "Create a Knowledge Proposal (draft) for human review — not published yet.",
     risk: "write",
     requiresApproval: false,
     parameters: {
@@ -92,8 +90,7 @@ export const KNOWLEDGE_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "publishKnowledgeProposal",
-    description:
-      "Publish an approved proposal into the Knowledge Base (article/revision).",
+    description: "Publish an approved proposal into the Knowledge Base (article/revision).",
     risk: "write",
     requiresApproval: true,
     parameters: {
@@ -106,8 +103,7 @@ export const KNOWLEDGE_TOOLS: readonly AiToolDefinition[] = [
   },
   {
     name: "updateKnowledgeEmbeddings",
-    description:
-      "Chunk published knowledge and upsert embeddings/index (MariaDB VectorStore).",
+    description: "Chunk published knowledge and upsert embeddings/index (MariaDB VectorStore).",
     risk: "write",
     requiresApproval: false,
     parameters: {

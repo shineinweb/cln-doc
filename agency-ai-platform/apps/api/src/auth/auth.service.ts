@@ -11,6 +11,7 @@ import {
   hashToken,
   InMemoryEmailProvider,
   isPasswordPolicyValid,
+  permissionsForPlatformRole,
   PORTAL_PERMISSIONS,
   slugifyOrganizationName,
   type AuthUserView,
@@ -396,6 +397,11 @@ export class AuthService {
       }
     }
 
+    // Non-staff portal actors receive the catalog `customer` permissions (e.g. ai.use).
+    const customerCatalogPermissions = user.isStaff ? [] : permissionsForPlatformRole("customer");
+
+    const roles = user.isStaff ? roleKeys : [...new Set([...roleKeys, "customer"])];
+
     return {
       id: user.id,
       email: user.email,
@@ -408,8 +414,10 @@ export class AuthService {
         organizationSlug: membership.organization.slug,
         role: membership.role,
       })),
-      roles: roleKeys,
-      permissions: [...new Set([...staffPermissions, ...portalPermissions])],
+      roles,
+      permissions: [
+        ...new Set([...staffPermissions, ...portalPermissions, ...customerCatalogPermissions]),
+      ],
     };
   }
 }

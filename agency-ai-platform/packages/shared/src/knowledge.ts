@@ -23,12 +23,7 @@ export const KNOWLEDGE_VISIBILITIES = ["PUBLIC", "INTERNAL", "BOTH"] as const;
 
 export type KnowledgeVisibilityValue = (typeof KNOWLEDGE_VISIBILITIES)[number];
 
-export const KNOWLEDGE_DOCUMENT_STATUSES = [
-  "PENDING",
-  "PROCESSING",
-  "READY",
-  "FAILED",
-] as const;
+export const KNOWLEDGE_DOCUMENT_STATUSES = ["PENDING", "PROCESSING", "READY", "FAILED"] as const;
 
 export type KnowledgeDocumentStatusValue = (typeof KNOWLEDGE_DOCUMENT_STATUSES)[number];
 

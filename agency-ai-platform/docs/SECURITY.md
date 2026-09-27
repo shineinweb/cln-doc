@@ -91,10 +91,12 @@ A staff user accessing portal-impersonation (if ever enabled) requires explicit 
 
 ### 4.3 Enforcement points
 
-1. Nest guards on controllers (`PermissionsGuard`)
-2. Service-layer assertions for defense in depth
+1. Nest guards on controllers (`AuthGuard`, `PermissionsGuard`, `StaffGuard` on `/admin`)
+2. Service-layer assertions for defense in depth (`assertOrganizationAccess`, `authorizeRefundIssuance`, `invokeAuthorizedTool`)
 3. Prisma queries always filter by tenant where applicable
 4. UI hides controls **but never authorizes**
+5. Stripe webhooks: HMAC signature verification before any side effects (`StripePaymentProvider.parseWebhook`)
+6. Automated suites: `pnpm test:authorization`, `pnpm test:tenant-isolation`, `pnpm test:integration`
 
 ### 4.4 Object-level checks
 

@@ -28,7 +28,7 @@ describe("AiController", () => {
         isStaff: false,
         emailVerified: true,
         memberships: [],
-        permissions: [],
+        permissions: ["ai.use"],
         roles: ["customer"],
       },
     );
@@ -57,7 +57,7 @@ describe("AiController", () => {
           isStaff: false,
           emailVerified: true,
           memberships: [],
-          permissions: [],
+          permissions: ["ai.use"],
           roles: ["customer"],
         },
       ),

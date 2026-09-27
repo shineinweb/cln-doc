@@ -8,16 +8,16 @@ Admin UI: `/admin/sops`. Knowledge / AI agents retrieve these as internal runboo
 
 ## Delivery & projects
 
-| Code      | Title               |
-| --------- | ------------------- |
-| SOP-001   | Lead Intake         |
-| SOP-002   | Customer Onboarding |
-| SOP-003   | Website Proposal    |
-| SOP-004   | Website Development |
-| SOP-005   | Graphic Design      |
-| SOP-006   | Customer Approval   |
-| SOP-007   | Website QA          |
-| SOP-008   | Website Launch      |
+| Code    | Title               |
+| ------- | ------------------- |
+| SOP-001 | Lead Intake         |
+| SOP-002 | Customer Onboarding |
+| SOP-003 | Website Proposal    |
+| SOP-004 | Website Development |
+| SOP-005 | Graphic Design      |
+| SOP-006 | Customer Approval   |
+| SOP-007 | Website QA          |
+| SOP-008 | Website Launch      |
 
 ## Domains & DNS
 
@@ -64,12 +64,12 @@ Admin UI: `/admin/sops`. Knowledge / AI agents retrieve these as internal runboo
 
 ## AI operations
 
-| Code    | Title                  | Related platform flow                                      |
-| ------- | ---------------------- | ---------------------------------------------------------- |
-| SOP-027 | AI Customer Support    | Support agent tools + RAG                                  |
-| SOP-028 | AI Tool Approval       | Approval pipeline → AI Execution cards                     |
-| SOP-029 | AI Knowledge Training  | Knowledge capture pipeline                                 |
-| SOP-030 | AI Incident Response   | Failures + Security Events; forbidden production mutation  |
+| Code    | Title                 | Related platform flow                                     |
+| ------- | --------------------- | --------------------------------------------------------- |
+| SOP-027 | AI Customer Support   | Support agent tools + RAG                                 |
+| SOP-028 | AI Tool Approval      | Approval pipeline → AI Execution cards                    |
+| SOP-029 | AI Knowledge Training | Knowledge capture pipeline                                |
+| SOP-030 | AI Incident Response  | Failures + Security Events; forbidden production mutation |
 
 ---
 
