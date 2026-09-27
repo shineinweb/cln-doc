@@ -184,7 +184,11 @@ Requested → Pending approval → Approved → Processing → Succeeded
 | `HostingPackage` | Local mirror of remote package        |
 | `HostingAction`  | Async action log (create, suspend, …) |
 
+Provider interface: `@agency/hosting` `HostingProvider` (createAccount, suspend/unsuspend/terminate, getUsage). Domain DTOs stay provider-agnostic via `provider` + `externalId`; WHM/cPanel is an adapter only.
+
 Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `DnsProvider`.
+
+**Note:** Prisma `HostingAccount` / `Server` models are Phase 6 — the TypeScript contract in `@agency/hosting` is the source of truth until those tables land.
 
 ---
 

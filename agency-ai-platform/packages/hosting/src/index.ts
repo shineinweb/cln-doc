@@ -1,4 +1,4 @@
-/** Hosting package — deploy targets and status. */
+/** Hosting package — deploy targets, status helpers, HostingProvider contract. */
 export type HostingStatus = "pending" | "provisioning" | "live" | "failed";
 
 export type HostingSite = {
@@ -19,3 +19,12 @@ export function describeHostingStatus(status: HostingStatus): string {
       return "Failed";
   }
 }
+
+export type {
+  CreateHostingAccountInput,
+  HostingAccount,
+  HostingAccountStatus,
+  HostingProvider,
+  HostingProviderRef,
+  HostingUsage,
+} from "./hosting-provider";
