@@ -19,13 +19,19 @@ import {
   SUPPORT_TICKET_STATUSES,
   KNOWLEDGE_ARTICLE_STATUS_PIPELINE,
   KNOWLEDGE_DOMAIN_MODELS,
+  AGENCY_SOPS,
+  SOP_CATEGORIES,
   canPerformQuoteAction,
+  formatSopLabel,
   formatUsdFromCents,
+  getSopByCode,
   isKnowledgeArticleStatus,
   isProjectStatusStage,
   isRefundWorkflowStage,
+  isSopCategory,
   isSupportTicketDepartment,
   isSupportTicketStatus,
+  listSopsByCategory,
   nextQuoteStatusAfterAction,
 } from "./index";
 
@@ -216,5 +222,33 @@ describe("KNOWLEDGE_DOMAIN", () => {
     ]);
     expect(isKnowledgeArticleStatus("PUBLISHED")).toBe(true);
     expect(isKnowledgeArticleStatus("LIVE")).toBe(false);
+  });
+});
+
+describe("AGENCY_SOPS", () => {
+  it("catalogs SOP-001 through SOP-030 across seven categories", () => {
+    expect(AGENCY_SOPS).toHaveLength(30);
+    expect(AGENCY_SOPS[0]?.code).toBe("SOP-001");
+    expect(AGENCY_SOPS[29]?.code).toBe("SOP-030");
+    expect(SOP_CATEGORIES).toEqual([
+      "delivery",
+      "domains",
+      "hosting",
+      "support",
+      "billing",
+      "security",
+      "ai",
+    ]);
+    expect(getSopByCode("SOP-014")?.title).toBe("SSL");
+    expect(getSopByCode("SOP-028")?.title).toBe("AI Tool Approval");
+    expect(listSopsByCategory("ai").map((sop) => sop.code)).toEqual([
+      "SOP-027",
+      "SOP-028",
+      "SOP-029",
+      "SOP-030",
+    ]);
+    expect(formatSopLabel(getSopByCode("SOP-001")!)).toBe("SOP-001 Lead Intake");
+    expect(isSopCategory("hosting")).toBe(true);
+    expect(isSopCategory("marketing")).toBe(false);
   });
 });

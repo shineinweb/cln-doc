@@ -19,6 +19,7 @@ import { AiLayout } from "@/pages/ai/AiLayout";
 import { AiOverviewPage } from "@/pages/ai/AiOverviewPage";
 import { AiSectionPage } from "@/pages/ai/AiSectionPage";
 import { KnowledgePage } from "@/pages/KnowledgePage";
+import { SopsPage } from "@/pages/SopsPage";
 import { TicketsPage } from "@/pages/TicketsPage";
 
 export function App() {
@@ -37,6 +38,7 @@ export function App() {
             <Route path="quotes/:quoteId" element={<QuoteDetailPage />} />
             <Route path="tickets" element={<TicketsPage />} />
             <Route path="knowledge" element={<KnowledgePage />} />
+            <Route path="sops" element={<SopsPage />} />
             <Route path="ai" element={<AiLayout />}>
               <Route index element={<AiOverviewPage />} />
               <Route path=":sectionPath" element={<AiSectionPage />} />

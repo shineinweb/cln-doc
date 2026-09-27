@@ -14,6 +14,7 @@ export const ADMIN_NAV = [
   { to: "/admin/customers", label: "Customers" },
   { to: "/admin/tickets", label: "Tickets" },
   { to: "/admin/knowledge", label: "Knowledge" },
+  { to: "/admin/sops", label: "SOPs" },
   { to: "/admin/ai", label: "AI" },
   { to: "/admin/products", label: "Products" },
   { to: "/admin/prices", label: "Prices" },

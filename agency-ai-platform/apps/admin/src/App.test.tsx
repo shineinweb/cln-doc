@@ -21,6 +21,7 @@ describe("admin CRM and billing routes catalog", () => {
     expect(paths).toContain("/admin/quotes");
     expect(paths).toContain("/admin/tickets");
     expect(paths).toContain("/admin/knowledge");
+    expect(paths).toContain("/admin/sops");
     expect(paths).toContain("/admin/ai");
     expect(paths).toContain("/admin/products");
     expect(paths).toContain("/admin/prices");

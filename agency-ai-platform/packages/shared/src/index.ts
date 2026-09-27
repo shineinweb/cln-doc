@@ -97,3 +97,14 @@ export type {
   KnowledgeDomainModel,
   KnowledgeVisibilityValue,
 } from "./knowledge";
+
+export {
+  AGENCY_SOPS,
+  SOP_CATEGORIES,
+  SOP_CATEGORY_LABELS,
+  formatSopLabel,
+  getSopByCode,
+  isSopCategory,
+  listSopsByCategory,
+} from "./sops";
+export type { SopCategory, SopDefinition } from "./sops";
