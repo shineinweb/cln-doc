@@ -33,3 +33,6 @@ export {
   isCommercialLifecycleStage,
 } from "./lifecycle";
 export type { CommercialLifecycleStage } from "./lifecycle";
+
+export { PROJECT_DELIVERY_HIERARCHY, PROJECT_DELIVERY_MODELS } from "./delivery";
+export type { ProjectDeliveryModel } from "./delivery";

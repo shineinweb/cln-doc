@@ -35,6 +35,13 @@ model User {
   ownedOpportunities  Opportunity[]          @relation("OpportunityOwner")
   ownedProjects       Project[]              @relation("ProjectOwner")
   leadActivities      LeadActivity[]         @relation("LeadActivityActor")
+  assignedTasks       Task[]                 @relation("TaskAssignee")
+  assignedSubtasks    Subtask[]              @relation("SubtaskAssignee")
+  projectMemberships  ProjectMember[]
+  projectComments     Comment[]              @relation("CommentAuthor")
+  uploadedAttachments Attachment[]           @relation("AttachmentUploader")
+  timeEntries         TimeEntry[]
+  projectActivities   ProjectActivity[]      @relation("ProjectActivityActor")
 
   @@index([isStaff, isActive])
   @@index([createdAt])
@@ -444,12 +451,19 @@ model Project {
   updatedAt      DateTime      @updatedAt @map("updated_at")
   deletedAt      DateTime?     @map("deleted_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  quote        Quote?       @relation(fields: [quoteId], references: [id], onDelete: SetNull)
-  owner        User?        @relation("ProjectOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
-  invoices     Invoice[]
+  organization  Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer      Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  quote         Quote?             @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  owner         User?              @relation("ProjectOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  invoices      Invoice[]
   subscriptions Subscription[]
+  milestones    Milestone[]
+  tasks         Task[]
+  comments      Comment[]
+  attachments   Attachment[]
+  timeEntries   TimeEntry[]
+  members       ProjectMember[]
+  activities    ProjectActivity[]
 
   @@index([organizationId, createdAt])
   @@index([status, createdAt])
@@ -457,6 +471,252 @@ model Project {
   @@index([quoteId])
   @@index([ownerUserId])
   @@map("projects")
+}
+
+// ---------------------------------------------------------------------------
+// Delivery — Project → Milestone → Task → Subtask (+ Comment, Attachment, …)
+// ---------------------------------------------------------------------------
+
+enum MilestoneStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Milestone {
+  id          String          @id @default(uuid()) @db.Char(36)
+  projectId   String          @map("project_id") @db.Char(36)
+  name        String          @db.VarChar(200)
+  description String?         @db.Text
+  status      MilestoneStatus @default(PLANNED)
+  sortOrder   Int             @default(0) @map("sort_order")
+  dueAt       DateTime?       @map("due_at")
+  completedAt DateTime?       @map("completed_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  deletedAt   DateTime?       @map("deleted_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId, sortOrder])
+  @@index([status])
+  @@map("milestones")
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Task {
+  id             String       @id @default(uuid()) @db.Char(36)
+  projectId      String       @map("project_id") @db.Char(36)
+  milestoneId    String?      @map("milestone_id") @db.Char(36)
+  assigneeUserId String?      @map("assignee_user_id") @db.Char(36)
+  title          String       @db.VarChar(300)
+  description    String?      @db.Text
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  sortOrder      Int          @default(0) @map("sort_order")
+  dueAt          DateTime?    @map("due_at")
+  completedAt    DateTime?    @map("completed_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone   Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  assignee    User?        @relation("TaskAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+  subtasks    Subtask[]
+  comments    Comment[]
+  attachments Attachment[]
+  timeEntries TimeEntry[]
+
+  @@index([projectId, status])
+  @@index([milestoneId, sortOrder])
+  @@index([assigneeUserId])
+  @@index([dueAt])
+  @@map("tasks")
+}
+
+enum SubtaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+model Subtask {
+  id             String        @id @default(uuid()) @db.Char(36)
+  taskId         String        @map("task_id") @db.Char(36)
+  assigneeUserId String?       @map("assignee_user_id") @db.Char(36)
+  title          String        @db.VarChar(300)
+  status         SubtaskStatus @default(TODO)
+  sortOrder      Int           @default(0) @map("sort_order")
+  dueAt          DateTime?     @map("due_at")
+  completedAt    DateTime?     @map("completed_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  task        Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  assignee    User?        @relation("SubtaskAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+  comments    Comment[]
+  attachments Attachment[]
+  timeEntries TimeEntry[]
+
+  @@index([taskId, sortOrder])
+  @@index([assigneeUserId])
+  @@index([status])
+  @@map("subtasks")
+}
+
+model Comment {
+  id           String    @id @default(uuid()) @db.Char(36)
+  projectId    String    @map("project_id") @db.Char(36)
+  taskId       String?   @map("task_id") @db.Char(36)
+  subtaskId    String?   @map("subtask_id") @db.Char(36)
+  authorUserId String    @map("author_user_id") @db.Char(36)
+  body         String    @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task        Task?        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  subtask     Subtask?     @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+  author      User         @relation("CommentAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([projectId, createdAt])
+  @@index([taskId, createdAt])
+  @@index([subtaskId, createdAt])
+  @@index([authorUserId])
+  @@map("comments")
+}
+
+model Attachment {
+  id               String    @id @default(uuid()) @db.Char(36)
+  projectId        String    @map("project_id") @db.Char(36)
+  taskId           String?   @map("task_id") @db.Char(36)
+  subtaskId        String?   @map("subtask_id") @db.Char(36)
+  commentId        String?   @map("comment_id") @db.Char(36)
+  uploadedByUserId String?   @map("uploaded_by_user_id") @db.Char(36)
+  fileName         String    @map("file_name") @db.VarChar(255)
+  mimeType         String    @map("mime_type") @db.VarChar(120)
+  sizeBytes        Int       @map("size_bytes")
+  storageKey       String    @map("storage_key") @db.VarChar(500)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  subtask    Subtask? @relation(fields: [subtaskId], references: [id], onDelete: Cascade)
+  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  uploadedBy User?    @relation("AttachmentUploader", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@index([taskId])
+  @@index([subtaskId])
+  @@index([commentId])
+  @@index([uploadedByUserId])
+  @@map("attachments")
+}
+
+model TimeEntry {
+  id          String    @id @default(uuid()) @db.Char(36)
+  projectId   String    @map("project_id") @db.Char(36)
+  taskId      String?   @map("task_id") @db.Char(36)
+  subtaskId   String?   @map("subtask_id") @db.Char(36)
+  userId      String    @map("user_id") @db.Char(36)
+  minutes     Int
+  note        String?   @db.VarChar(500)
+  workedOn    DateTime  @map("worked_on") @db.Date
+  billable    Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task    Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  subtask Subtask? @relation(fields: [subtaskId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, workedOn])
+  @@index([taskId])
+  @@index([subtaskId])
+  @@index([userId, workedOn])
+  @@map("time_entries")
+}
+
+enum ProjectMemberRole {
+  OWNER
+  MANAGER
+  CONTRIBUTOR
+  VIEWER
+  CLIENT
+}
+
+model ProjectMember {
+  id        String            @id @default(uuid()) @db.Char(36)
+  projectId String            @map("project_id") @db.Char(36)
+  userId    String            @map("user_id") @db.Char(36)
+  role      ProjectMemberRole @default(CONTRIBUTOR)
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@index([projectId, role])
+  @@map("project_members")
+}
+
+enum ProjectActivityType {
+  CREATED
+  STATUS_CHANGED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  MILESTONE_UPDATED
+  TASK_UPDATED
+  COMMENT_ADDED
+  ATTACHMENT_ADDED
+  TIME_LOGGED
+  NOTE
+}
+
+model ProjectActivity {
+  id          String              @id @default(uuid()) @db.Char(36)
+  projectId   String              @map("project_id") @db.Char(36)
+  actorUserId String?             @map("actor_user_id") @db.Char(36)
+  type        ProjectActivityType @default(NOTE)
+  message     String              @db.VarChar(500)
+  metadata    Json?
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actor   User?   @relation("ProjectActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@index([actorUserId])
+  @@index([type])
+  @@map("project_activities")
 }
 
 enum InvoiceStatus {

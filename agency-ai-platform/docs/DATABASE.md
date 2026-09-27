@@ -108,16 +108,26 @@ This is the **system-of-record path** for acquisition through ongoing revenue. S
 
 ## 5. Delivery (projects)
 
-| Model         | Purpose                                |
-| ------------- | -------------------------------------- |
-| `Project`     | Delivery container for an organization |
-| `Milestone`   | Phase / milestone                      |
-| `Task`        | Work item; assignee can be staff user  |
-| `TaskComment` | Discussion                             |
-| `ProjectFile` | Metadata for files in object storage   |
-| `TimeEntry`   | Optional time tracking for reporting   |
+```text
+Project → Milestone → Task → Subtask
+         ↳ Comment / Attachment / TimeEntry / ProjectMember / ProjectActivity
+```
 
-Statuses are enums in Prisma (`ProjectStatus`, `TaskStatus`, …) mirrored in `@agency/shared`.
+Shared constants: `@agency/shared` `PROJECT_DELIVERY_MODELS`.
+
+| Model             | Purpose                                            |
+| ----------------- | -------------------------------------------------- |
+| `Project`         | Delivery container for an organization             |
+| `Milestone`       | Phase / checkpoint within a project                |
+| `Task`            | Work item; optional milestone + assignee           |
+| `Subtask`         | Child work item under a task                       |
+| `Comment`         | Discussion on project / task / subtask             |
+| `Attachment`      | File metadata (`storageKey` via `StorageProvider`) |
+| `TimeEntry`       | Time tracking (minutes, billable flag)             |
+| `ProjectMember`   | Staff/client membership + project role             |
+| `ProjectActivity` | Append-only activity feed for project events       |
+
+Statuses/priorities are Prisma enums (`ProjectStatus`, `MilestoneStatus`, `TaskStatus`, `TaskPriority`, `SubtaskStatus`, `ProjectMemberRole`, `ProjectActivityType`).
 
 ---
 
@@ -224,7 +234,10 @@ Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `Dns
 
 ```text
 User ──┬── OrganizationMember ── Organization ──┬── Customer
-       │                                        ├── Project
+       │                                        ├── Project ── Milestone ── Task ── Subtask
+       │                                        │              ├── Comment / Attachment
+       │                                        │              ├── TimeEntry / ProjectMember
+       │                                        │              └── ProjectActivity
        │                                        ├── Invoice
        │                                        ├── Subscription  (Recurring Services)
        │                                        ├── Domain / HostingAccount

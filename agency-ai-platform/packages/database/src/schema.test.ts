@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { Prisma } from "@prisma/client";
-import { COMMERCIAL_LIFECYCLE, COMMERCIAL_LIFECYCLE_STAGES } from "@agency/shared";
+import {
+  COMMERCIAL_LIFECYCLE,
+  COMMERCIAL_LIFECYCLE_STAGES,
+  PROJECT_DELIVERY_MODELS,
+} from "@agency/shared";
 
 const schemaPath = path.resolve(__dirname, "../prisma/schema.prisma");
 
@@ -34,6 +38,17 @@ const LIFECYCLE_MODELS = [
   "SubscriptionItem",
 ] as const;
 
+const DELIVERY_MODELS = [
+  "Milestone",
+  "Task",
+  "Subtask",
+  "Comment",
+  "Attachment",
+  "TimeEntry",
+  "ProjectMember",
+  "ProjectActivity",
+] as const;
+
 describe("Prisma MariaDB schema", () => {
   const schema = readFileSync(schemaPath, "utf8");
 
@@ -44,8 +59,8 @@ describe("Prisma MariaDB schema", () => {
     expect(schema).not.toMatch(/pgvector/i);
   });
 
-  it("declares identity and commercial lifecycle models", () => {
-    for (const model of [...IDENTITY_MODELS, ...LIFECYCLE_MODELS]) {
+  it("declares identity, lifecycle, and delivery models", () => {
+    for (const model of [...IDENTITY_MODELS, ...LIFECYCLE_MODELS, ...DELIVERY_MODELS]) {
       expect(schema).toContain(`model ${model}`);
     }
   });
@@ -74,8 +89,25 @@ describe("Prisma MariaDB schema", () => {
     ]);
   });
 
+  it("documents the Project delivery hierarchy", () => {
+    expect(schema).toContain("Project → Milestone → Task → Subtask (+ Comment, Attachment,");
+    expect(PROJECT_DELIVERY_MODELS).toEqual([
+      "Project",
+      "Milestone",
+      "Task",
+      "Subtask",
+      "Comment",
+      "Attachment",
+      "TimeEntry",
+      "ProjectMember",
+      "ProjectActivity",
+    ]);
+  });
+
   it("exposes generated model delegates on Prisma client DMMF", () => {
     const modelNames = Prisma.dmmf.datamodel.models.map((model) => model.name);
-    expect(modelNames).toEqual(expect.arrayContaining([...IDENTITY_MODELS, ...LIFECYCLE_MODELS]));
+    expect(modelNames).toEqual(
+      expect.arrayContaining([...IDENTITY_MODELS, ...LIFECYCLE_MODELS, ...DELIVERY_MODELS]),
+    );
   });
 });

@@ -69,10 +69,13 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 ## Phase 3 — Projects, tasks, files, notifications
 
+**Hierarchy:** Project → Milestone → Task → Subtask (+ Comment, Attachment, TimeEntry, ProjectMember, ProjectActivity)
+
 **Outcomes**
 
-- Projects, milestones, tasks, comments
-- File uploads (`StorageProvider`)
+- [x] Prisma models for Project delivery hierarchy (Milestone, Task, Subtask, Comment, Attachment, TimeEntry, ProjectMember, ProjectActivity)
+- Projects / tasks APIs + admin / portal views
+- File uploads (`StorageProvider`) wired to `Attachment.storageKey`
 - Portal project visibility
 - In-app notifications + WebSocket fan-out
 - Basic admin assignment for developers/designers

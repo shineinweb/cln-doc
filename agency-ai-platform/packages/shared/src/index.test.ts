@@ -5,6 +5,7 @@ import {
   COMMERCIAL_LIFECYCLE,
   COMMERCIAL_LIFECYCLE_STAGES,
   isCommercialLifecycleStage,
+  PROJECT_DELIVERY_MODELS,
 } from "./index";
 
 describe("APP_NAMES", () => {
@@ -42,5 +43,21 @@ describe("COMMERCIAL_LIFECYCLE", () => {
     ]);
     expect(isCommercialLifecycleStage("quote")).toBe(true);
     expect(isCommercialLifecycleStage("unknown")).toBe(false);
+  });
+});
+
+describe("PROJECT_DELIVERY_MODELS", () => {
+  it("lists Project through ProjectActivity", () => {
+    expect(PROJECT_DELIVERY_MODELS).toEqual([
+      "Project",
+      "Milestone",
+      "Task",
+      "Subtask",
+      "Comment",
+      "Attachment",
+      "TimeEntry",
+      "ProjectMember",
+      "ProjectActivity",
+    ]);
   });
 });
