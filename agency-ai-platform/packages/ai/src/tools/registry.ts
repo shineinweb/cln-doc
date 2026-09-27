@@ -18,6 +18,11 @@ import {
   HOSTING_TOOLS,
   type HostingToolName,
 } from "./hosting-tools";
+import {
+  KNOWLEDGE_TOOL_NAMES,
+  KNOWLEDGE_TOOLS,
+  type KnowledgeToolName,
+} from "./knowledge-tools";
 import type { AiToolDefinition, AiToolInvokeContext } from "./types";
 
 export type { AiToolDefinition, AiToolInvokeContext, AiToolRisk } from "./types";
@@ -36,11 +41,17 @@ export {
   HOSTING_TOOLS,
   type HostingToolName,
 } from "./hosting-tools";
+export {
+  KNOWLEDGE_TOOL_NAMES,
+  KNOWLEDGE_TOOLS,
+  type KnowledgeToolName,
+} from "./knowledge-tools";
 
 export const AI_TOOL_REGISTRY: readonly AiToolDefinition[] = [
   ...CUSTOMER_SUPPORT_TOOLS,
   ...CODING_TOOLS,
   ...HOSTING_TOOLS,
+  ...KNOWLEDGE_TOOLS,
 ] as const;
 
 export class AiToolUnwiredError extends Error {
@@ -75,6 +86,10 @@ export function isCodingTool(name: string): name is CodingToolName {
 
 export function isHostingTool(name: string): name is HostingToolName {
   return (HOSTING_TOOL_NAMES as readonly string[]).includes(name);
+}
+
+export function isKnowledgeTool(name: string): name is KnowledgeToolName {
+  return (KNOWLEDGE_TOOL_NAMES as readonly string[]).includes(name);
 }
 
 /**

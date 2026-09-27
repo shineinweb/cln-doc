@@ -8,11 +8,14 @@ export {
   CUSTOMER_SUPPORT_TOOLS,
   HOSTING_TOOL_NAMES,
   HOSTING_TOOLS,
+  KNOWLEDGE_TOOL_NAMES,
+  KNOWLEDGE_TOOLS,
   getTool,
   invokeTool,
   isCodingTool,
   isCustomerSupportTool,
   isHostingTool,
+  isKnowledgeTool,
   listTools,
 } from "./registry";
 export type {
@@ -22,4 +25,5 @@ export type {
   CodingToolName,
   CustomerSupportToolName,
   HostingToolName,
+  KnowledgeToolName,
 } from "./registry";

@@ -38,3 +38,19 @@ export type {
   HostingPipelineStage,
   HostingPipelineStageDefinition,
 } from "./hosting-pipeline";
+
+export {
+  KNOWLEDGE_PIPELINE,
+  KNOWLEDGE_PIPELINE_DIAGRAM,
+  KNOWLEDGE_PIPELINE_STAGES,
+  canKnowledgeAiActAtStage,
+  continueKnowledgeCapture,
+  getKnowledgePipelineStage,
+  getNextKnowledgePipelineStage,
+  isKnowledgePipelineStage,
+} from "./knowledge-pipeline";
+export type {
+  KnowledgePipelineActor,
+  KnowledgePipelineStage,
+  KnowledgePipelineStageDefinition,
+} from "./knowledge-pipeline";

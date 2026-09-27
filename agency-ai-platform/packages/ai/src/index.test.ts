@@ -20,9 +20,16 @@ import {
   HOSTING_PIPELINE_STAGES,
   HOSTING_TOOL_NAMES,
   HOSTING_TOOLS,
+  KNOWLEDGE_PIPELINE_DIAGRAM,
+  KNOWLEDGE_PIPELINE_STAGES,
+  KNOWLEDGE_TOOL_NAMES,
+  KNOWLEDGE_TOOLS,
   canCodingAiActAtStage,
+  canKnowledgeAiActAtStage,
+  continueKnowledgeCapture,
   getNextCodingPipelineStage,
   getNextHostingPipelineStage,
+  getNextKnowledgePipelineStage,
   isHostingPipelineReadOnly,
   DEFAULT_AI_SECURITY_POLICY,
   DEFAULT_MEMORY_POLICIES,
@@ -57,7 +64,8 @@ describe("package module map", () => {
     expect(AI_TOOL_REGISTRY.length).toBe(
       CUSTOMER_SUPPORT_TOOL_NAMES.length +
         CODING_TOOL_NAMES.length +
-        HOSTING_TOOLS.length,
+        HOSTING_TOOLS.length +
+        KNOWLEDGE_TOOLS.length,
     );
     expect(getTool("searchKnowledge")?.risk).toBe("read");
     expect(getTool("createTicket")?.risk).toBe("write");
@@ -90,6 +98,48 @@ describe("package module map", () => {
       ...CUSTOMER_SUPPORT_TOOL_NAMES,
     ]);
     expect(getTool("replyTicket")?.parameters.body?.required).toBe(true);
+  });
+
+  it("registers knowledge capture tools on the knowledge agent", () => {
+    expect([...KNOWLEDGE_TOOL_NAMES]).toEqual([
+      "searchKnowledge",
+      "extractReusableKnowledge",
+      "createKnowledgeProposal",
+      "approveKnowledgeProposal",
+      "publishKnowledgeProposal",
+      "updateKnowledgeEmbeddings",
+    ]);
+    expect(getAgentDefinition("knowledge").toolAllowlist).toEqual([
+      ...KNOWLEDGE_TOOL_NAMES,
+    ]);
+    expect(getTool("createKnowledgeProposal")?.risk).toBe("write");
+    expect(getTool("approveKnowledgeProposal")?.requiresApproval).toBe(true);
+    expect(getTool("publishKnowledgeProposal")?.requiresApproval).toBe(true);
+  });
+
+  it("encodes the Knowledge capture pipeline through future retrieval", () => {
+    expect([...KNOWLEDGE_PIPELINE_STAGES]).toEqual([
+      "customer_asks_question",
+      "ai_answers",
+      "problem_resolved_gate",
+      "extract_reusable_knowledge",
+      "create_knowledge_proposal",
+      "human_review",
+      "approve",
+      "knowledge_base",
+      "embedding_index_update",
+      "future_retrieval",
+    ]);
+    expect(KNOWLEDGE_PIPELINE_DIAGRAM).toContain("Knowledge Proposal");
+    expect(continueKnowledgeCapture(true)).toBe("extract_reusable_knowledge");
+    expect(continueKnowledgeCapture(false)).toBeNull();
+    expect(getNextKnowledgePipelineStage("create_knowledge_proposal")).toBe(
+      "human_review",
+    );
+    expect(getNextKnowledgePipelineStage("future_retrieval")).toBeNull();
+    expect(canKnowledgeAiActAtStage("extract_reusable_knowledge")).toBe(true);
+    expect(canKnowledgeAiActAtStage("human_review")).toBe(false);
+    expect(canKnowledgeAiActAtStage("approve")).toBe(false);
   });
 
   it("registers hosting diagnostic tools on the hosting agent", () => {

@@ -19,6 +19,7 @@ import {
   CODING_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOL_NAMES,
   HOSTING_TOOL_NAMES,
+  KNOWLEDGE_TOOL_NAMES,
 } from "../tools/registry";
 
 export const AI_AGENT_CODES = [
@@ -124,7 +125,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "RAG curation, collection scoping, retrieval quality assist.",
     reportsTo: "supervisor",
     tier: "specialty",
-    toolAllowlist: ["searchKnowledge"],
+    toolAllowlist: [...KNOWLEDGE_TOOL_NAMES],
   },
 ] as const;
 

@@ -345,7 +345,48 @@ Portal customers **never** approve infrastructure-destructive tools; only staff 
 | Project docs (opt-in)            | organization                      | Portal project assistant |
 | Uploaded files                   | per ACL                           | Scoped retrieval         |
 
-### 7.2 Pipeline
+### 7.2 Capture pipeline (resolved conversations)
+
+```text
+Customer asks question
+        ↓
+AI answers
+        ↓
+Problem resolved?
+        ↓
+YES
+        ↓
+AI extracts reusable knowledge
+        ↓
+Creates Knowledge Proposal
+        ↓
+Human review
+        ↓
+Approve
+        ↓
+Knowledge Base
+        ↓
+Embedding/index update
+        ↓
+Future AI can retrieve it
+```
+
+| Stage                            | Codename                     | Tool                         | Notes                                      |
+| -------------------------------- | ---------------------------- | ---------------------------- | ------------------------------------------ |
+| Customer asks question           | `customer_asks_question`     | —                            | Portal / ticket / chat                     |
+| AI answers                       | `ai_answers`                 | `searchKnowledge`            | RAG-backed answer                          |
+| Problem resolved?                | `problem_resolved_gate`      | —                            | **NO → stop** (no proposal)                |
+| AI extracts reusable knowledge   | `extract_reusable_knowledge` | `extractReusableKnowledge`   | De-identify + draft                        |
+| Creates Knowledge Proposal       | `create_knowledge_proposal`  | `createKnowledgeProposal`    | Draft only                                 |
+| Human review                     | `human_review`               | —                            | **Human only**                             |
+| Approve                          | `approve`                    | `approveKnowledgeProposal`   | **Approval required**                      |
+| Knowledge Base                   | `knowledge_base`             | `publishKnowledgeProposal`   | Publish article/revision                   |
+| Embedding/index update           | `embedding_index_update`     | `updateKnowledgeEmbeddings`  | Chunk + embed + upsert                     |
+| Future AI can retrieve it        | `future_retrieval`           | `searchKnowledge`            | Available to agents                        |
+
+Source of truth: `KNOWLEDGE_PIPELINE` / `KNOWLEDGE_TOOL_NAMES` in `@agency/ai`. AI must not skip human review.
+
+### 7.3 Index job (after publish)
 
 ```text
 Source change → BullMQ index job
@@ -357,7 +398,7 @@ Source change → BullMQ index job
 
 Unpublish/delete → `deleteBySource`.
 
-### 7.3 Retrieval
+### 7.4 Retrieval
 
 1. Embed query
 2. Filter by visibility + org scope + agent-allowed collections
@@ -365,7 +406,7 @@ Unpublish/delete → `deleteBySource`.
 4. Rerank lightly (optional LLM or heuristic)
 5. Inject into specialist prompt as **untrusted** context blocks
 
-### 7.4 Anti-patterns
+### 7.5 Anti-patterns
 
 - No cross-org private chunk retrieval
 - No dumping entire tickets into sales agent context

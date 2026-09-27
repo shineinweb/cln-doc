@@ -184,6 +184,7 @@ When building AI features:
 6. Coding AI follows **AI Code → Branch → Test → PR → Human Review → Merge → Deploy**; AI stops before Human Review / Merge / Deploy.
 7. **Forbidden:** `AI → production server → randomly change files` (hard deny in `@agency/ai` security).
 8. Gated tools follow **AI requests approval → Admin approves → Tool executes → Audit log**.
+9. Knowledge capture: resolved answer → extract → Knowledge Proposal → **human review/approve** → KB → embeddings → future retrieval.
 
 ---
 
