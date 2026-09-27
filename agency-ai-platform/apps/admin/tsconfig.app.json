@@ -12,8 +12,10 @@
       "@/*": ["./src/*"],
       "@agency/ui": ["../../packages/ui/src"],
       "@agency/shared": ["../../packages/shared/src"],
+      "@agency/ai": ["../../packages/ai/src"],
       "@agency/ui/*": ["../../packages/ui/src/*"],
       "@agency/shared/*": ["../../packages/shared/src/*"],
+      "@agency/ai/*": ["../../packages/ai/src/*"],
       "@agency/auth/browser": ["../../packages/auth/src/browser.ts"]
     }
   },

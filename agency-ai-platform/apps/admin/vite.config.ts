@@ -10,6 +10,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@agency/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@agency/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@agency/ai": path.resolve(__dirname, "../../packages/ai/src"),
       "@agency/auth/browser": path.resolve(__dirname, "../../packages/auth/src/browser.ts"),
     },
   },

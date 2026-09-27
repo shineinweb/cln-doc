@@ -12,6 +12,7 @@
     "test": "pnpm --dir ../.. exec vitest run --config vitest.config.ts apps/admin/src --passWithNoTests"
   },
   "dependencies": {
+    "@agency/ai": "workspace:*",
     "@agency/auth": "workspace:*",
     "@agency/shared": "workspace:*",
     "@agency/ui": "workspace:*",

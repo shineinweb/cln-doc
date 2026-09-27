@@ -50,6 +50,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@agency/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@agency/auth':
         specifier: workspace:*
         version: link:../../packages/auth

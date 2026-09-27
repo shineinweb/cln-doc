@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   ADMIN_NAV,
+  PLACEHOLDER_AI_APPROVALS,
+  PLACEHOLDER_AI_RUNS,
   PLACEHOLDER_KNOWLEDGE_ARTICLES,
   PLACEHOLDER_LEADS,
   PLACEHOLDER_PRODUCTS,
@@ -8,7 +10,7 @@ import {
 } from "./data/placeholders";
 
 describe("admin CRM and billing routes catalog", () => {
-  it("exposes CRM, support, knowledge, and billing admin paths", () => {
+  it("exposes CRM, support, knowledge, AI, and billing admin paths", () => {
     const paths = ADMIN_NAV.map((item) => item.to);
     expect(paths).toContain("/admin/leads");
     expect(paths).toContain("/admin/customers");
@@ -16,6 +18,7 @@ describe("admin CRM and billing routes catalog", () => {
     expect(paths).toContain("/admin/quotes");
     expect(paths).toContain("/admin/tickets");
     expect(paths).toContain("/admin/knowledge");
+    expect(paths).toContain("/admin/ai");
     expect(paths).toContain("/admin/products");
     expect(paths).toContain("/admin/prices");
     expect(paths).toContain("/admin/invoices");
@@ -29,5 +32,7 @@ describe("admin CRM and billing routes catalog", () => {
     expect(PLACEHOLDER_KNOWLEDGE_ARTICLES.some((article) => article.status === "PUBLISHED")).toBe(
       true,
     );
+    expect(PLACEHOLDER_AI_APPROVALS.some((item) => item.status === "pending")).toBe(true);
+    expect(PLACEHOLDER_AI_RUNS.length).toBeGreaterThan(0);
   });
 });

@@ -165,7 +165,7 @@ All routes under `/admin` require staff authentication + permission checks.
 | Billing               | invoices, subscriptions, refunds (via provider)           |
 | Support               | tickets, assignment, internal notes                       |
 | Knowledge base        | article CMS + publish                                     |
-| AI management         | agents, runs, memories, evals, approvals                  |
+| AI management         | Admin UI `/admin/ai`; API `/admin/ai/runs`, `/admin/ai/approvals`, agents, memories, evals |
 | Reports               | `/admin/reports/...`                                      |
 | RBAC                  | `/admin/roles`, `/admin/permissions`                      |
 | Audit                 | `GET /admin/audit-logs`                                   |

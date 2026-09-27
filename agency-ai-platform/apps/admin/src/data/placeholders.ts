@@ -14,6 +14,7 @@ export const ADMIN_NAV = [
   { to: "/admin/customers", label: "Customers" },
   { to: "/admin/tickets", label: "Tickets" },
   { to: "/admin/knowledge", label: "Knowledge" },
+  { to: "/admin/ai", label: "AI" },
   { to: "/admin/products", label: "Products" },
   { to: "/admin/prices", label: "Prices" },
   { to: "/admin/invoices", label: "Invoices" },
@@ -373,6 +374,54 @@ export const PLACEHOLDER_TICKETS = [
     priority: "MEDIUM",
     assignee: "Alex Rivera",
     updatedAt: "2026-09-27",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_APPROVALS = [
+  {
+    id: "apr_ui_001",
+    toolName: "createPullRequests",
+    agent: "Coding",
+    risk: "write",
+    status: "pending",
+    requestedAt: "2026-09-27 14:02",
+  },
+  {
+    id: "apr_ui_002",
+    toolName: "approveKnowledgeProposal",
+    agent: "Knowledge",
+    risk: "write",
+    status: "pending",
+    requestedAt: "2026-09-27 13:40",
+  },
+  {
+    id: "apr_ui_003",
+    toolName: "createBranches",
+    agent: "Coding",
+    risk: "write",
+    status: "approved",
+    requestedAt: "2026-09-26 18:11",
+  },
+] as const;
+
+export const PLACEHOLDER_AI_RUNS = [
+  {
+    id: "run_host_881",
+    agent: "Hosting",
+    status: "completed",
+    summary: "SSL + DNS checks for atelier.example — diagnosis ready",
+  },
+  {
+    id: "run_sup_772",
+    agent: "Customer Support",
+    status: "completed",
+    summary: "Answered invoice question; knowledge proposal drafted",
+  },
+  {
+    id: "run_code_661",
+    agent: "Coding",
+    status: "awaiting_approval",
+    summary: "Draft PR for hosting card fix — waiting on admin",
   },
 ] as const;
 
