@@ -69,14 +69,29 @@ Future adapters (Anthropic, Azure OpenAI, external ANN) must not change agent co
 
 ## 3. Agent roster
 
-| Agent                   | Codename     | Primary users                     | Responsibility                                                            |
-| ----------------------- | ------------ | --------------------------------- | ------------------------------------------------------------------------- |
-| **AI Supervisor**       | `supervisor` | System                            | Route intents, pick specialist, enforce policies, synthesize final answer |
-| **Customer Support AI** | `support`    | Portal + admin support            | Tickets, KB answers, troubleshooting                                      |
-| **Coding AI**           | `coding`     | Staff (optionally limited portal) | Implementation guidance, code review assist, task breakdown               |
-| **Hosting AI**          | `hosting`    | Staff + constrained portal        | Hosting diagnostics, WHM-safe recommendations/actions                     |
-| **Sales AI**            | `sales`      | Staff (+ website assist later)    | Qualification, quote drafts, plan recommendations                         |
-| **SEO AI**              | `seo`        | Staff (+ portal read-only tips)   | Audits, content recommendations, keyword research assist                  |
+```text
+                  AI SUPERVISOR
+                        │
+       ┌────────────────┼─────────────────┐
+       │                │                 │
+ Customer Support     Coding           Hosting
+       │                │                 │
+       ├────────────── Sales ─────────────┤
+       │                                  │
+      SEO                              Knowledge
+```
+
+| Agent               | Codename     | Tier           | Primary users                     | Responsibility                                                            |
+| ------------------- | ------------ | -------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| **AI Supervisor**   | `supervisor` | supervisor     | System                            | Route intents, pick specialist, enforce policies, synthesize final answer |
+| **Customer Support**| `support`    | primary        | Portal + admin support            | Tickets, KB answers, troubleshooting                                      |
+| **Coding**          | `coding`     | primary        | Staff (optionally limited portal) | Implementation guidance, code review assist, task breakdown               |
+| **Hosting**         | `hosting`    | primary        | Staff + constrained portal        | Hosting diagnostics, WHM-safe recommendations/actions                     |
+| **Sales**           | `sales`      | cross_cutting  | Staff (+ website assist later)    | Qualification, quote drafts, plan recommendations (spans primary lanes)   |
+| **SEO**             | `seo`        | specialty      | Staff (+ portal read-only tips)   | Audits, content recommendations, keyword research assist                  |
+| **Knowledge**       | `knowledge`  | specialty      | Staff + RAG ops                   | Collection scoping, retrieval quality, KB curation assist                 |
+
+All specialists `reportsTo: supervisor`. Source of truth: `AI_AGENT_ROSTER` / `AI_ORG_CHART` in `@agency/ai`.
 
 Each agent has:
 
@@ -319,7 +334,7 @@ Supervisor may refuse out-of-policy requests with a safe explanation.
 ```text
 packages/ai/
   providers/      # LLM, Embedding, VectorStore + OpenAI adapters
-  agents/         # Supervisor + specialist roster
+  agents/         # AI Supervisor org chart + specialist roster
   tools/          # Tool registry (provider-backed handlers later)
   knowledge/      # RAG chunking + retrieval orchestration
   memory/         # Memory write/read policies

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  AI_AGENT_CODES,
   AI_AGENT_ROSTER,
+  AI_ORG_CHART,
   AI_TOOL_REGISTRY,
   AiService,
   DEFAULT_AI_SECURITY_POLICY,
@@ -14,6 +16,8 @@ import {
   clampMaxTokens,
   getAgentDefinition,
   getTool,
+  listAgentsByTier,
+  listSpecialists,
   requiresApproval,
   scorePlaceholder,
   searchKnowledge,
@@ -36,6 +40,39 @@ describe("package module map", () => {
     expect(() => assertAiEnabled({ ...DEFAULT_AI_SECURITY_POLICY, enabled: false })).toThrow(
       /disabled/i,
     );
+  });
+
+  it("encodes the AI Supervisor org chart", () => {
+    expect(AI_AGENT_CODES).toEqual([
+      "supervisor",
+      "support",
+      "coding",
+      "hosting",
+      "sales",
+      "seo",
+      "knowledge",
+    ]);
+    expect(getAgentDefinition("supervisor").reportsTo).toBeNull();
+    expect(listSpecialists().map((a) => a.code)).toEqual([
+      "support",
+      "coding",
+      "hosting",
+      "sales",
+      "seo",
+      "knowledge",
+    ]);
+    expect(listAgentsByTier("primary").map((a) => a.code)).toEqual([
+      "support",
+      "coding",
+      "hosting",
+    ]);
+    expect(listAgentsByTier("cross_cutting").map((a) => a.code)).toEqual(["sales"]);
+    expect(listAgentsByTier("specialty").map((a) => a.code)).toEqual([
+      "seo",
+      "knowledge",
+    ]);
+    expect(AI_ORG_CHART).toContain("AI SUPERVISOR");
+    expect(AI_ORG_CHART).toContain("Knowledge");
   });
 
   it("knowledge search PLACEHOLDER returns empty until VectorStore is bound", async () => {

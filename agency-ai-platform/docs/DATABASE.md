@@ -235,7 +235,7 @@ Knowledge domain (`KnowledgeCategory → KnowledgeArticle → KnowledgeRevision`
 
 | Model                | Purpose                                                            |
 | -------------------- | ------------------------------------------------------------------ |
-| `AiAgent`            | Agent definition (Support, Coding, …)                              |
+| `AiAgent`            | Agent definition (Supervisor → Support/Coding/Hosting/Sales/SEO/Knowledge) |
 | `AiAgentVersion`     | Prompt/tool config versions                                        |
 | `AiConversation`     | Thread (portal/admin/system)                                       |
 | `AiMessage`          | Role/content/tool calls                                            |

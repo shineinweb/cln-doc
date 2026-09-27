@@ -3,7 +3,7 @@
  *
  * packages/ai/
  *   providers/    LLM, Embedding, VectorStore + OpenAI adapters
- *   agents/       Supervisor + specialist roster
+ *   agents/       AI Supervisor org chart + specialist roster
  *   tools/        Tool registry (provider-backed handlers later)
  *   knowledge/    RAG chunking + retrieval orchestration
  *   memory/       Memory write/read policies
