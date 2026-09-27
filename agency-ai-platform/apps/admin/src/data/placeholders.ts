@@ -12,6 +12,7 @@ export const ADMIN_NAV = [
   { to: "/admin/opportunities", label: "Opportunities" },
   { to: "/admin/quotes", label: "Quotes" },
   { to: "/admin/customers", label: "Customers" },
+  { to: "/admin/tickets", label: "Tickets" },
   { to: "/admin/products", label: "Products" },
   { to: "/admin/prices", label: "Prices" },
   { to: "/admin/invoices", label: "Invoices" },
@@ -298,6 +299,39 @@ export const PLACEHOLDER_QUOTES = [
     organization: "Atelier Goods",
     validUntil: "2026-03-01",
     lines: [] as string[],
+  },
+] as const;
+
+export const PLACEHOLDER_TICKETS = [
+  {
+    id: "tkt_1001",
+    number: 1001,
+    subject: "SSL certificate renewal failed",
+    customer: "Atelier Goods",
+    status: "IN_PROGRESS",
+    priority: "HIGH",
+    assignee: "Jordan Lee",
+    updatedAt: "2026-09-26",
+  },
+  {
+    id: "tkt_1002",
+    number: 1002,
+    subject: "DNS change for www.example.com",
+    customer: "Signal Media",
+    status: "WAITING_ON_CUSTOMER",
+    priority: "MEDIUM",
+    assignee: "Alex Rivera",
+    updatedAt: "2026-09-25",
+  },
+  {
+    id: "tkt_1003",
+    number: 1003,
+    subject: "Invoice copy request",
+    customer: "Lumen Labs",
+    status: "OPEN",
+    priority: "LOW",
+    assignee: "—",
+    updatedAt: "2026-09-27",
   },
 ] as const;
 

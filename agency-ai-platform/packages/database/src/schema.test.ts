@@ -11,6 +11,8 @@ import {
   QUOTE_CUSTOMER_ACTIONS,
   QUOTE_STATUSES,
   REFUND_WORKFLOW_STAGES,
+  SUPPORT_TICKET_DOMAIN_MODELS,
+  SUPPORT_TICKET_STATUSES,
 } from "@agency/shared";
 
 const schemaPath = path.resolve(__dirname, "../prisma/schema.prisma");
@@ -66,6 +68,14 @@ const BILLING_MODELS = [
   "WebhookEvent",
 ] as const;
 
+const SUPPORT_MODELS = [
+  "SupportTicket",
+  "TicketMessage",
+  "TicketAttachment",
+  "TicketAssignment",
+  "TicketStatusHistory",
+] as const;
+
 describe("Prisma MariaDB schema", () => {
   const schema = readFileSync(schemaPath, "utf8");
 
@@ -76,12 +86,13 @@ describe("Prisma MariaDB schema", () => {
     expect(schema).not.toMatch(/pgvector/i);
   });
 
-  it("declares identity, lifecycle, delivery, and billing models", () => {
+  it("declares identity, lifecycle, delivery, billing, and support models", () => {
     for (const model of [
       ...IDENTITY_MODELS,
       ...LIFECYCLE_MODELS,
       ...DELIVERY_MODELS,
       ...BILLING_MODELS,
+      ...SUPPORT_MODELS,
     ]) {
       expect(schema).toContain(`model ${model}`);
     }
@@ -175,6 +186,31 @@ describe("Prisma MariaDB schema", () => {
     expect(REFUND_WORKFLOW_STAGES).toContain("PENDING_APPROVAL");
   });
 
+  it("documents support ticket domain SupportTicket through TicketStatusHistory", () => {
+    expect(schema).toContain(
+      "SupportTicket → TicketMessage → TicketAttachment",
+    );
+    expect(schema).toContain(
+      "Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed",
+    );
+    expect(SUPPORT_TICKET_DOMAIN_MODELS).toEqual([
+      "SupportTicket",
+      "TicketMessage",
+      "TicketAttachment",
+      "TicketAssignment",
+      "TicketStatusHistory",
+    ]);
+    expect(SUPPORT_TICKET_STATUSES).toEqual([
+      "OPEN",
+      "IN_PROGRESS",
+      "WAITING_ON_CUSTOMER",
+      "WAITING_ON_US",
+      "RESOLVED",
+      "CLOSED",
+    ]);
+    expect(schema).toMatch(/status\s+SupportTicketStatus\s+@default\(OPEN\)/);
+  });
+
   it("exposes generated model delegates on Prisma client DMMF", () => {
     const modelNames = Prisma.dmmf.datamodel.models.map((model) => model.name);
     expect(modelNames).toEqual(
@@ -183,6 +219,7 @@ describe("Prisma MariaDB schema", () => {
         ...LIFECYCLE_MODELS,
         ...DELIVERY_MODELS,
         ...BILLING_MODELS,
+        ...SUPPORT_MODELS,
       ]),
     );
   });

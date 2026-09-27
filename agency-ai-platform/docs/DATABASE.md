@@ -196,11 +196,22 @@ Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `Dns
 
 ## 8. Support, CMS, notifications
 
+Support domain (`SupportTicket → TicketMessage → TicketAttachment` + assignment/history):
+
+| Model                 | Purpose                                              |
+| --------------------- | ---------------------------------------------------- |
+| `SupportTicket`       | Customer support ticket (org-scoped, numbered)       |
+| `TicketMessage`       | Thread messages (customer / staff / AI / system)     |
+| `TicketAttachment`    | File refs via `StorageProvider` (`storageKey`)       |
+| `TicketAssignment`    | Primary / collaborator / watcher staff assignment    |
+| `TicketStatusHistory` | Append-only status transitions                       |
+
+**Ticket status:** Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed
+
+SLA fields on `SupportTicket`: `firstResponseDueAt`, `resolutionDueAt`, `firstRespondedAt`.
+
 | Model                     | Purpose                             |
 | ------------------------- | ----------------------------------- |
-| `Ticket`                  | Support ticket                      |
-| `TicketMessage`           | Thread messages (staff/customer/AI) |
-| `TicketAttachment`        | File refs                           |
 | `KnowledgeArticle`        | KB article (public and/or internal) |
 | `KnowledgeArticleVersion` | Version history                     |
 | `BlogPost`                | Public blog                         |
@@ -270,7 +281,9 @@ User ──┬── OrganizationMember ── Organization ──┬── Cust
        │                                        ├── Invoice
        │                                        ├── Subscription  (Recurring Services)
        │                                        ├── Domain / HostingAccount
-       │                                        ├── Ticket
+       │                                        ├── SupportTicket ── TicketMessage / TicketAttachment
+       │                                        │                 ├── TicketAssignment
+       │                                        │                 └── TicketStatusHistory
        │                                        └── AiConversation
        │
        └── UserRole ── Role ── Permission     (staff)

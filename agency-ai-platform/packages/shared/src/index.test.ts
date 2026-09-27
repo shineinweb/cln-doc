@@ -13,10 +13,14 @@ import {
   QUOTE_CUSTOMER_ACTIONS,
   REFUND_WORKFLOW,
   REFUND_WORKFLOW_STAGES,
+  SUPPORT_TICKET_DOMAIN_MODELS,
+  SUPPORT_TICKET_STATUS_PIPELINE,
+  SUPPORT_TICKET_STATUSES,
   canPerformQuoteAction,
   formatUsdFromCents,
   isProjectStatusStage,
   isRefundWorkflowStage,
+  isSupportTicketStatus,
   nextQuoteStatusAfterAction,
 } from "./index";
 
@@ -155,5 +159,35 @@ describe("BILLING_DOMAIN", () => {
     expect(REFUND_WORKFLOW.map((step) => step.label)).toContain("Pending approval");
     expect(isRefundWorkflowStage("APPROVED")).toBe(true);
     expect(isRefundWorkflowStage("PAID")).toBe(false);
+  });
+});
+
+describe("SUPPORT_TICKET_DOMAIN", () => {
+  it("lists SupportTicket through TicketStatusHistory and status pipeline", () => {
+    expect(SUPPORT_TICKET_DOMAIN_MODELS).toEqual([
+      "SupportTicket",
+      "TicketMessage",
+      "TicketAttachment",
+      "TicketAssignment",
+      "TicketStatusHistory",
+    ]);
+    expect(SUPPORT_TICKET_STATUSES).toEqual([
+      "OPEN",
+      "IN_PROGRESS",
+      "WAITING_ON_CUSTOMER",
+      "WAITING_ON_US",
+      "RESOLVED",
+      "CLOSED",
+    ]);
+    expect(SUPPORT_TICKET_STATUS_PIPELINE.map((step) => step.label)).toEqual([
+      "Open",
+      "In progress",
+      "Waiting on customer",
+      "Waiting on us",
+      "Resolved",
+      "Closed",
+    ]);
+    expect(isSupportTicketStatus("OPEN")).toBe(true);
+    expect(isSupportTicketStatus("DONE")).toBe(false);
   });
 });

@@ -42,6 +42,12 @@ model User {
   uploadedAttachments Attachment[]           @relation("AttachmentUploader")
   timeEntries         TimeEntry[]
   projectActivities   ProjectActivity[]      @relation("ProjectActivityActor")
+  openedTickets       SupportTicket[]        @relation("TicketRequester")
+  ticketMessages      TicketMessage[]        @relation("TicketMessageAuthor")
+  ticketAttachments   TicketAttachment[]     @relation("TicketAttachmentUploader")
+  ticketAssignments   TicketAssignment[]     @relation("TicketAssignee")
+  ticketAssignerActs  TicketAssignment[]     @relation("TicketAssigner")
+  ticketStatusChanges TicketStatusHistory[]  @relation("TicketStatusActor")
 
   @@index([isStaff, isActive])
   @@index([createdAt])
@@ -125,6 +131,7 @@ model Organization {
   refunds          Refund[]
   paymentMethods   PaymentMethod[]
   billingCustomer  BillingCustomer?
+  supportTickets   SupportTicket[]
 
   @@index([createdAt])
   @@map("organizations")
@@ -218,6 +225,7 @@ model Customer {
   subscriptions Subscription[]
   payments      Payment[]
   refunds       Refund[]
+  supportTickets SupportTicket[]
 
   @@index([status, createdAt])
   @@map("customers")
@@ -1088,4 +1096,162 @@ model WebhookEvent {
   @@index([status, receivedAt])
   @@index([eventType, receivedAt])
   @@map("webhook_events")
+}
+
+// ---------------------------------------------------------------------------
+// Support — SupportTicket → TicketMessage → TicketAttachment
+//            (+ TicketAssignment, TicketStatusHistory)
+// Status: Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed
+// ---------------------------------------------------------------------------
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CUSTOMER
+  WAITING_ON_US
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketMessageAuthorType {
+  CUSTOMER
+  STAFF
+  AI
+  SYSTEM
+}
+
+enum TicketAssignmentRole {
+  PRIMARY
+  COLLABORATOR
+  WATCHER
+}
+
+model SupportTicket {
+  id               String                @id @default(uuid()) @db.Char(36)
+  organizationId   String                @map("organization_id") @db.Char(36)
+  customerId       String?               @map("customer_id") @db.Char(36)
+  requesterUserId  String?               @map("requester_user_id") @db.Char(36)
+  /// Globally unique public ticket number (auto-increment).
+  number           Int                   @unique @default(autoincrement())
+  subject          String                @db.VarChar(300)
+  status           SupportTicketStatus   @default(OPEN)
+  priority         SupportTicketPriority @default(MEDIUM)
+  category         String?               @db.VarChar(80)
+  /// Optional SLA target for first response.
+  firstResponseDueAt DateTime?           @map("first_response_due_at")
+  /// Optional SLA target for resolution.
+  resolutionDueAt  DateTime?             @map("resolution_due_at")
+  firstRespondedAt DateTime?             @map("first_responded_at")
+  resolvedAt       DateTime?             @map("resolved_at")
+  closedAt         DateTime?             @map("closed_at")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+  deletedAt        DateTime?             @map("deleted_at")
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  requester    User?                 @relation("TicketRequester", fields: [requesterUserId], references: [id], onDelete: SetNull)
+  messages     TicketMessage[]
+  attachments  TicketAttachment[]
+  assignments  TicketAssignment[]
+  statusHistory TicketStatusHistory[]
+
+  @@index([organizationId, status, updatedAt])
+  @@index([customerId])
+  @@index([requesterUserId])
+  @@index([priority, status])
+  @@index([firstResponseDueAt])
+  @@index([resolutionDueAt])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id           String                  @id @default(uuid()) @db.Char(36)
+  ticketId     String                  @map("ticket_id") @db.Char(36)
+  authorUserId String?                 @map("author_user_id") @db.Char(36)
+  authorType   TicketMessageAuthorType @default(CUSTOMER)
+  body         String                  @db.Text
+  /// Staff-only note not visible in the customer portal.
+  isInternal   Boolean                 @default(false) @map("is_internal")
+  createdAt    DateTime                @default(now()) @map("created_at")
+  updatedAt    DateTime                @updatedAt @map("updated_at")
+  deletedAt    DateTime?               @map("deleted_at")
+
+  ticket      SupportTicket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author      User?              @relation("TicketMessageAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  attachments TicketAttachment[]
+
+  @@index([ticketId, createdAt])
+  @@index([authorUserId])
+  @@index([authorType])
+  @@map("ticket_messages")
+}
+
+model TicketAttachment {
+  id               String    @id @default(uuid()) @db.Char(36)
+  ticketId         String    @map("ticket_id") @db.Char(36)
+  messageId        String?   @map("message_id") @db.Char(36)
+  uploadedByUserId String?   @map("uploaded_by_user_id") @db.Char(36)
+  fileName         String    @map("file_name") @db.VarChar(255)
+  mimeType         String    @map("mime_type") @db.VarChar(120)
+  sizeBytes        Int       @map("size_bytes")
+  storageKey       String    @map("storage_key") @db.VarChar(500)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  ticket     SupportTicket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message    TicketMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  uploadedBy User?          @relation("TicketAttachmentUploader", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt])
+  @@index([messageId])
+  @@index([uploadedByUserId])
+  @@map("ticket_attachments")
+}
+
+model TicketAssignment {
+  id             String               @id @default(uuid()) @db.Char(36)
+  ticketId       String               @map("ticket_id") @db.Char(36)
+  assigneeUserId String               @map("assignee_user_id") @db.Char(36)
+  assignedByUserId String?            @map("assigned_by_user_id") @db.Char(36)
+  role           TicketAssignmentRole @default(PRIMARY)
+  assignedAt     DateTime             @default(now()) @map("assigned_at")
+  unassignedAt   DateTime?            @map("unassigned_at")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  assignee   User          @relation("TicketAssignee", fields: [assigneeUserId], references: [id], onDelete: Cascade)
+  assignedBy User?         @relation("TicketAssigner", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, role])
+  @@index([assigneeUserId, unassignedAt])
+  @@index([assignedByUserId])
+  @@map("ticket_assignments")
+}
+
+model TicketStatusHistory {
+  id          String              @id @default(uuid()) @db.Char(36)
+  ticketId    String              @map("ticket_id") @db.Char(36)
+  fromStatus  SupportTicketStatus? @map("from_status")
+  toStatus    SupportTicketStatus @map("to_status")
+  actorUserId String?             @map("actor_user_id") @db.Char(36)
+  note        String?             @db.VarChar(500)
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor  User?         @relation("TicketStatusActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt])
+  @@index([actorUserId])
+  @@index([toStatus])
+  @@map("ticket_status_history")
 }
