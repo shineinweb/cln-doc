@@ -13,6 +13,8 @@ import { webEnv } from "../env";
 
 const auth = createAuthClient({ baseUrl: webEnv.VITE_API_URL });
 
+const DEMO_SESSION_KEY = "agency.portal.demoSession";
+
 const DEMO_USER: AuthUserView = {
   id: "demo_user",
   email: "demo@example.com",
@@ -23,6 +25,23 @@ const DEMO_USER: AuthUserView = {
   permissions: [],
   roles: ["customer"],
 };
+
+function readDemoFlag(): boolean {
+  try {
+    return sessionStorage.getItem(DEMO_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeDemoFlag(on: boolean): void {
+  try {
+    if (on) sessionStorage.setItem(DEMO_SESSION_KEY, "1");
+    else sessionStorage.removeItem(DEMO_SESSION_KEY);
+  } catch {
+    /* ignore storage failures in locked-down browsers */
+  }
+}
 
 type AuthContextValue = {
   user: AuthUserView | null;
@@ -41,10 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUserView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const demoSessionRef = useRef(false);
+  const demoSessionRef = useRef(readDemoFlag());
 
   useEffect(() => {
     let active = true;
+
+    if (demoSessionRef.current) {
+      setUser(DEMO_USER);
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
     void auth
       .me()
       .then((next) => {
@@ -64,12 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
     demoSessionRef.current = false;
+    writeDemoFlag(false);
     const next = await auth.login({ email, password });
     setUser(next);
   }, []);
 
   const enterDemoSession = useCallback(() => {
     demoSessionRef.current = true;
+    writeDemoFlag(true);
     setError(null);
     setLoading(false);
     setUser(DEMO_USER);
@@ -78,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     const wasDemo = demoSessionRef.current;
     demoSessionRef.current = false;
+    writeDemoFlag(false);
     if (!wasDemo) {
       try {
         await auth.logout();
