@@ -96,12 +96,12 @@ export function AiExecutionCard({
         </div>
       </section>
 
-      <footer className="mt-5 flex flex-wrap gap-2">
+      <footer className="relative z-10 mt-5 flex flex-wrap gap-2">
         <button
           type="button"
           disabled={!pending}
           onClick={() => decide("approved")}
-          className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+          className="relative z-10 cursor-pointer rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           Approve
         </button>
@@ -109,7 +109,7 @@ export function AiExecutionCard({
           type="button"
           disabled={!pending}
           onClick={() => decide("denied")}
-          className="rounded-lg border border-[var(--color-danger)] px-4 py-2 text-sm font-semibold text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="relative z-10 cursor-pointer rounded-lg border border-[var(--color-danger)] px-4 py-2 text-sm font-semibold text-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Reject
         </button>
