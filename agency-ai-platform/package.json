@@ -21,7 +21,11 @@
     "typecheck": "pnpm run build:packages && pnpm -r run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "pnpm -r exec rm -rf dist node_modules/.cache coverage"
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache coverage",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:ps": "docker compose ps",
+    "docker:logs": "docker compose logs -f mariadb redis"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
