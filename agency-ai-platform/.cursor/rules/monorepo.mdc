@@ -10,6 +10,8 @@ alwaysApply: true
 - Use pnpm workspaces; never npm/yarn for this project.
 - Import shared code via `@agency/*` package names.
 - Keep apps thin; put reusable logic in `packages/*`.
-- Database only through `@agency/database`.
+- Database only through `@agency/database` with **MariaDB** (Prisma `mysql` provider). Never introduce PostgreSQL.
+- Third-party systems only via provider interfaces (LLM, Embedding, VectorStore, Payment, Hosting, Domain, Email, Storage).
 - Prefer TypeScript strict mode; extend `tsconfig.base.json`.
 - Add `.env.example` when introducing new env vars; never commit secrets.
+- Before large features, read `docs/ARCHITECTURE.md` and the relevant companion doc.

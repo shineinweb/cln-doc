@@ -19,9 +19,22 @@ packages/
   hosting/         # Deploy/hosting integrations
   domains/         # Domain DNS & registration adapters
   shared/          # Cross-cutting types, utils, constants
-docs/              # Architecture & product docs
+docs/              # Architecture contracts (read before coding)
 .cursor/rules/     # Cursor project rules
 ```
+
+## Architecture docs (required reading)
+
+| Doc | Path |
+| --- | --- |
+| System architecture | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
+| MariaDB / Prisma | [docs/DATABASE.md](./docs/DATABASE.md) |
+| API contracts | [docs/API.md](./docs/API.md) |
+| Security | [docs/SECURITY.md](./docs/SECURITY.md) |
+| AI / agents / RAG | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) |
+| Roadmap | [docs/ROADMAP.md](./docs/ROADMAP.md) |
+
+**Hard rules from architecture:** MariaDB only (never PostgreSQL). All vendors behind provider interfaces (`LLMProvider`, `PaymentProvider`, `HostingProvider`, `DomainProvider`, etc.).
 
 ## Tooling
 
