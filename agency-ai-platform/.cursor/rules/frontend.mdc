@@ -1,0 +1,17 @@
+---
+description: React/Vite frontend conventions for website, portal, admin
+globs:
+  - "apps/website/**"
+  - "apps/client-portal/**"
+  - "apps/admin/**"
+  - "packages/ui/**"
+alwaysApply: false
+---
+
+# Frontend rules
+
+- React + Vite + TypeScript.
+- Prefer shared primitives from `@agency/ui` over duplicating components.
+- Use `@agency/shared` for types/constants used by more than one app.
+- Keep route/page files focused; extract hooks and presentational pieces.
+- Do not call Nest internals directly — go through the API / package clients.

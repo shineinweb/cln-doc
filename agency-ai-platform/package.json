@@ -1,0 +1,32 @@
+{
+  "name": "agency-ai-platform",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Agency AI platform monorepo — public website, client portal, admin, and NestJS API",
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" run dev",
+    "dev:website": "pnpm --filter @agency/website dev",
+    "dev:portal": "pnpm --filter @agency/client-portal dev",
+    "dev:admin": "pnpm --filter @agency/admin dev",
+    "dev:api": "pnpm --filter @agency/api dev",
+    "build": "pnpm run build:packages && pnpm -r --filter \"./apps/*\" run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache",
+    "build:packages": "pnpm -r --filter \"./packages/*\" run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@nestjs/core"
+    ]
+  }
+}

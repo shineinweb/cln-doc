@@ -1,0 +1,13 @@
+---
+description: NestJS API conventions
+globs:
+  - "apps/api/**"
+alwaysApply: false
+---
+
+# API rules
+
+- NestJS modular structure: feature modules under `src/`.
+- Wire domain packages (`@agency/auth`, `@agency/billing`, `@agency/ai`, etc.) as providers — avoid reimplementing them in controllers.
+- Validate inputs; keep DTOs next to their module.
+- Expose stable HTTP/JSON contracts consumed by the three frontends.

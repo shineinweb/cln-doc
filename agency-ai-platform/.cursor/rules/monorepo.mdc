@@ -1,0 +1,15 @@
+---
+description: Agency AI platform monorepo conventions
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Monorepo rules
+
+- Use pnpm workspaces; never npm/yarn for this project.
+- Import shared code via `@agency/*` package names.
+- Keep apps thin; put reusable logic in `packages/*`.
+- Database only through `@agency/database`.
+- Prefer TypeScript strict mode; extend `tsconfig.base.json`.
+- Add `.env.example` when introducing new env vars; never commit secrets.
