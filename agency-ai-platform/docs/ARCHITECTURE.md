@@ -272,6 +272,14 @@ Domain tables and `@agency/shared` `COMMERCIAL_LIFECYCLE` encode this path. Recu
 
 Provider webhooks and payment intents use idempotency keys stored in MariaDB.
 
+### 6.7 Release pipeline
+
+```text
+Development → GitHub → Staging → Automated tests → Manual approval → Production
+```
+
+Encoded in `@agency/shared` `RELEASE_PIPELINE`. Production requires human approval; Coding AI must not deploy to production. Details: [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ---
 
 ## 7. Frontend architecture

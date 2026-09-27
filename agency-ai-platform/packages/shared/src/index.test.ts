@@ -21,13 +21,20 @@ import {
   KNOWLEDGE_DOMAIN_MODELS,
   AGENCY_SOPS,
   SOP_CATEGORIES,
+  RELEASE_PIPELINE,
+  RELEASE_PIPELINE_DIAGRAM,
+  RELEASE_PIPELINE_STAGES,
+  canCiAutoAdvanceFrom,
   canPerformQuoteAction,
   formatSopLabel,
   formatUsdFromCents,
+  getNextReleasePipelineStage,
+  getReleasePipelineStage,
   getSopByCode,
   isKnowledgeArticleStatus,
   isProjectStatusStage,
   isRefundWorkflowStage,
+  isReleasePipelineStage,
   isSopCategory,
   isSupportTicketDepartment,
   isSupportTicketStatus,
@@ -250,5 +257,40 @@ describe("AGENCY_SOPS", () => {
     expect(formatSopLabel(getSopByCode("SOP-001")!)).toBe("SOP-001 Lead Intake");
     expect(isSopCategory("hosting")).toBe(true);
     expect(isSopCategory("marketing")).toBe(false);
+  });
+});
+
+describe("RELEASE_PIPELINE", () => {
+  it("encodes Development → GitHub → Staging → Automated tests → Manual approval → Production", () => {
+    expect([...RELEASE_PIPELINE_STAGES]).toEqual([
+      "development",
+      "github",
+      "staging",
+      "automated_tests",
+      "manual_approval",
+      "production",
+    ]);
+    expect(RELEASE_PIPELINE.map((step) => step.label)).toEqual([
+      "Development",
+      "GitHub",
+      "Staging",
+      "Automated tests",
+      "Manual approval",
+      "Production",
+    ]);
+    expect(RELEASE_PIPELINE_DIAGRAM).toContain("Manual approval");
+    expect(RELEASE_PIPELINE_DIAGRAM).toContain("Production");
+    expect(getNextReleasePipelineStage("development")).toBe("github");
+    expect(getNextReleasePipelineStage("staging")).toBe("automated_tests");
+    expect(getNextReleasePipelineStage("automated_tests")).toBe("manual_approval");
+    expect(getNextReleasePipelineStage("manual_approval")).toBe("production");
+    expect(getNextReleasePipelineStage("production")).toBeNull();
+    expect(getReleasePipelineStage("manual_approval").requiresManualApproval).toBe(true);
+    expect(getReleasePipelineStage("production").requiresManualApproval).toBe(true);
+    expect(canCiAutoAdvanceFrom("staging")).toBe(true);
+    expect(canCiAutoAdvanceFrom("automated_tests")).toBe(false);
+    expect(canCiAutoAdvanceFrom("manual_approval")).toBe(false);
+    expect(isReleasePipelineStage("github")).toBe(true);
+    expect(isReleasePipelineStage("prod")).toBe(false);
   });
 });

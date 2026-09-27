@@ -1,0 +1,70 @@
+# GitHub stage — automated checks on PRs and pushes to dev.
+# Part of: Development → GitHub → Staging → Automated tests → Manual approval → Production
+name: Agency AI Platform CI
+
+on:
+  pull_request:
+    paths:
+      - "agency-ai-platform/**"
+      - ".github/workflows/agency-ai-platform-ci.yml"
+  push:
+    branches:
+      - dev
+    paths:
+      - "agency-ai-platform/**"
+      - ".github/workflows/agency-ai-platform-ci.yml"
+
+defaults:
+  run:
+    working-directory: agency-ai-platform
+
+jobs:
+  checks:
+    name: Lint · typecheck · tests · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: agency-ai-platform/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test:unit
+
+      - name: Integration tests
+        run: pnpm test:integration
+
+      - name: API tests
+        run: pnpm test:api
+
+      - name: Authorization tests
+        run: pnpm test:authorization
+
+      - name: Tenant-isolation tests
+        run: pnpm test:tenant-isolation
+
+      - name: Full test suite
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build

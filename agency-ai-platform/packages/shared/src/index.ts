@@ -108,3 +108,18 @@ export {
   listSopsByCategory,
 } from "./sops";
 export type { SopCategory, SopDefinition } from "./sops";
+
+export {
+  RELEASE_PIPELINE,
+  RELEASE_PIPELINE_DIAGRAM,
+  RELEASE_PIPELINE_STAGES,
+  canCiAutoAdvanceFrom,
+  getNextReleasePipelineStage,
+  getReleasePipelineStage,
+  isReleasePipelineStage,
+} from "./release";
+export type {
+  ReleasePipelineActor,
+  ReleasePipelineStage,
+  ReleasePipelineStageDefinition,
+} from "./release";

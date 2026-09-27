@@ -33,7 +33,8 @@ When asked to implement, follow the roadmap order and the docs below.
 | 4     | [docs/SECURITY.md](./docs/SECURITY.md)               | AuthN/Z, tenancy, audit                              |
 | 5     | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) | Agents, RAG, tools, approvals                        |
 | 6     | [docs/SOPS.md](./docs/SOPS.md)                       | SOP-001 … SOP-030 runbook catalog                    |
-| 7     | [docs/ROADMAP.md](./docs/ROADMAP.md)                 | What to build next                                   |
+| 7     | [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)           | Dev → GitHub → Staging → Tests → Approval → Prod     |
+| 8     | [docs/ROADMAP.md](./docs/ROADMAP.md)                 | What to build next                                   |
 
 Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/).
 

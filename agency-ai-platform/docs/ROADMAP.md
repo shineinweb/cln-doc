@@ -204,13 +204,13 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 ## Cross-cutting workstreams (parallel)
 
-| Stream                       | Starts     | Notes                           |
-| ---------------------------- | ---------- | ------------------------------- |
-| Design system (`@agency/ui`) | Phase 1    | Shared across three apps        |
-| Observability                | Phase 1    | Logs, metrics, request ids      |
-| CI/CD                        | Phase 0–1  | Lint, typecheck, test, migrate  |
-| Provider fakes               | Each phase | Local dev without vendors       |
-| Compliance readiness         | Phase 4+   | Erasure jobs, AI data retention |
+| Stream                       | Starts     | Notes                                                                                            |
+| ---------------------------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| Design system (`@agency/ui`) | Phase 1    | Shared across three apps                                                                         |
+| Observability                | Phase 1    | Logs, metrics, request ids                                                                       |
+| CI/CD                        | Phase 0–1  | Dev → GitHub → Staging → Tests → Manual approval → Production ([DEPLOYMENT.md](./DEPLOYMENT.md)) |
+| Provider fakes               | Each phase | Local dev without vendors                                                                        |
+| Compliance readiness         | Phase 4+   | Erasure jobs, AI data retention                                                                  |
 
 ---
 
