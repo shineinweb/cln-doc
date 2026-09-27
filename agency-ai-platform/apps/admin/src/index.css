@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, sans-serif;
+
+  --color-ink: #0f172a;
+  --color-ink-soft: #1e293b;
+  --color-paper: #f1f5f9;
+  --color-accent: #0f766e;
+  --color-accent-strong: #0d9488;
+  --color-danger: #b91c1c;
+  --color-sidebar: #0b1220;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --bg: var(--color-paper);
+    --bg-elevated: #ffffff;
+    --fg: var(--color-ink);
+    --fg-muted: #475569;
+    --border: #dbe3ee;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply m-0 min-h-screen font-sans antialiased;
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-[var(--color-accent)];
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .text-muted {
+    color: var(--fg-muted);
+  }
+
+  .surface {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+  }
+
+  .animate-rise {
+    animation: rise 500ms var(--ease-out-soft) both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: none !important;
+  }
+}

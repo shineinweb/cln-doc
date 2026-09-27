@@ -1,0 +1,32 @@
+---
+description: Monorepo architecture, stack, and package boundaries
+alwaysApply: true
+---
+
+# Architecture
+
+Before architectural changes: read `DEVELOPMENT_RULES.md`, `AGENTS.md`, and `docs/ARCHITECTURE.md`.
+
+## Stack
+
+React + Vite + TS · NestJS + TS · MariaDB + Prisma · Redis · BullMQ · Docker · Nginx
+
+## Surfaces
+
+- `apps/website` — public marketing / acquisition
+- `apps/client-portal` — customer tenant app
+- `apps/admin` — staff CRM / ops / RBAC
+- `apps/api` — sole NestJS system of record (REST + WS + workers)
+- AI — `packages/ai` + API (not a separate business DB)
+
+## Boundaries
+
+- `apps/*` → `packages/*` only; apps never import apps
+- Domain logic in packages; apps stay thin
+- Workspace imports: `@agency/*`
+- pnpm only; Node >= 22; TypeScript strict; avoid `any`
+- External systems only via provider interfaces (never vendor SDKs in React or controllers)
+- Providers: `LLMProvider`, `EmbeddingProvider`, `VectorStore`, `PaymentProvider`, `HostingProvider`, `DomainProvider`, `DnsProvider`, `EmailProvider`, `StorageProvider`
+- Document env vars in `.env.example`; never commit secrets
+- Money: `amountCents` + ISO `currency`
+- Update docs when contracts change; follow `docs/ROADMAP.md` phase order

@@ -1,0 +1,147 @@
+# Release pipeline:
+#   Development → GitHub → Staging → Automated tests → Manual approval → Production
+#
+# Configure GitHub Environment `production` with required reviewers so Manual approval
+# cannot be skipped. Staging deploy steps are PLACEHOLDER until hosting targets exist.
+name: Agency AI Platform Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to release (branch, tag, or SHA)"
+        required: true
+        default: "dev"
+
+concurrency:
+  group: agency-ai-platform-release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: agency-ai-platform
+
+jobs:
+  staging:
+    name: Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: agency-ai-platform/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build staging candidate
+        run: pnpm build
+
+      - name: Deploy to staging (PLACEHOLDER)
+        run: |
+          echo "PLACEHOLDER: deploy agency-ai-platform build to staging"
+          echo "ref=${{ inputs.ref }}"
+
+  automated_tests:
+    name: Automated tests
+    needs: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: agency-ai-platform/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test:unit
+
+      - name: Integration tests
+        run: pnpm test:integration
+
+      - name: API tests
+        run: pnpm test:api
+
+      - name: Authorization tests
+        run: pnpm test:authorization
+
+      - name: Tenant-isolation tests
+        run: pnpm test:tenant-isolation
+
+      - name: Full test suite
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  # Manual approval is enforced by the GitHub Environment `production`
+  # (Settings → Environments → production → Required reviewers).
+  production:
+    name: Production
+    needs: automated_tests
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: agency-ai-platform/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build production artifact
+        run: pnpm build
+
+      - name: Deploy to production (PLACEHOLDER)
+        run: |
+          echo "PLACEHOLDER: deploy agency-ai-platform build to production after manual approval"
+          echo "ref=${{ inputs.ref }}"

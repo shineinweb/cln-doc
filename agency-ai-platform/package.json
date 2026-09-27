@@ -1,0 +1,65 @@
+{
+  "name": "agency-ai-platform",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Agency AI platform monorepo — public website, client portal, admin, and NestJS API",
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" run dev",
+    "dev:website": "pnpm --filter @agency/website dev",
+    "dev:portal": "pnpm --filter @agency/client-portal dev",
+    "dev:admin": "pnpm --filter @agency/admin dev",
+    "dev:api": "pnpm --filter @agency/api dev",
+    "build": "pnpm run build:packages && pnpm -r --filter \"./apps/*\" run build",
+    "build:packages": "pnpm -r --filter \"./packages/*\" run build",
+    "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "format": "prettier --write .",
+    "typecheck": "pnpm run build:packages && pnpm -r run typecheck",
+    "test": "vitest run",
+    "test:unit": "vitest run packages",
+    "test:integration": "vitest run apps/api/src/security.integration.test.ts",
+    "test:api": "vitest run apps/api/src",
+    "test:authorization": "vitest run packages/auth/src/authorization.test.ts packages/billing/src/refund-authorization.test.ts apps/api/src/common/guards/permissions.guard.authorization.test.ts apps/api/src/billing/refunds.service.authorization.test.ts apps/api/src/common/guards/staff.guard.test.ts",
+    "test:tenant-isolation": "vitest run packages/auth/src/tenant.test.ts apps/api/src/portal/portal-organizations.controller.tenant-isolation.test.ts",
+    "test:watch": "vitest",
+    "clean": "pnpm -r exec rm -rf dist node_modules/.cache coverage",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:ps": "docker compose ps",
+    "docker:logs": "docker compose logs -f mariadb redis",
+    "db:generate": "pnpm --filter @agency/database db:generate",
+    "db:validate": "pnpm --filter @agency/database db:validate",
+    "db:migrate:dev": "pnpm --filter @agency/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @agency/database db:migrate:deploy",
+    "db:seed": "pnpm --filter @agency/database db:seed"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/node": "^22.13.10",
+    "@vitest/coverage-v8": "^3.0.8",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.0.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1",
+    "vitest": "^3.0.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@nestjs/core",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines",
+      "@node-rs/argon2"
+    ]
+  }
+}

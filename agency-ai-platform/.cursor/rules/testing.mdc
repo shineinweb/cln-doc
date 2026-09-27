@@ -1,0 +1,18 @@
+---
+description: Testing and verification workflow
+globs:
+  - "**/*.{spec,test}.{ts,tsx}"
+  - "**/test/**"
+  - "**/tests/**"
+alwaysApply: false
+---
+
+# Testing
+
+Feature workflow (from `DEVELOPMENT_RULES.md`): inspect → read docs → plan (DB/API/security) → implement → **add tests** → lint → typecheck → test → build → fix → report.
+
+- Never ignore failing tests
+- Prefer provider fakes/mocks in unit tests; sandbox adapters for integration
+- Cover tenancy negatives (cross-org access denied) and authZ on protected APIs
+- Cover idempotency for webhooks/payments where implemented
+- After changes: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` (scoped filters OK when safe)

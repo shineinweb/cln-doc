@@ -1,0 +1,28 @@
+---
+description: NestJS API, services, queues, and provider wiring
+globs:
+  - "apps/api/**"
+  - "packages/auth/**"
+  - "packages/billing/**"
+  - "packages/hosting/**"
+  - "packages/domains/**"
+  - "packages/email/**"
+  - "packages/storage/**"
+  - "packages/notifications/**"
+  - "packages/queue/**"
+alwaysApply: false
+---
+
+# Backend
+
+- NestJS + TypeScript; dependency injection everywhere
+- Thin controllers; business logic in services / domain packages
+- Validate every request (DTOs / schema validation)
+- Wire Stripe, WHM, registrars, email, storage only through provider interfaces in packages
+- REST under `/api/v1` with public / auth / portal / admin / webhooks audiences (`docs/API.md`)
+- WebSockets for notifications, ticket/project activity, AI streaming
+- Slow/retiable work → BullMQ (Redis); job payloads carry IDs, workers load MariaDB state
+- Webhooks: verify signatures, persist idempotently, enqueue processing
+- Idempotency keys on payments, domain register, hosting create
+- Cursor pagination; stable problem-details errors
+- No ad-hoc DB clients — use `@agency/database` only

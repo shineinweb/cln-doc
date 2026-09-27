@@ -1,0 +1,20 @@
+---
+description: React/Vite frontend rules for website, portal, admin, UI
+globs:
+  - "apps/website/**"
+  - "apps/client-portal/**"
+  - "apps/admin/**"
+  - "packages/ui/**"
+alwaysApply: false
+---
+
+# Frontend
+
+- React + Vite + TypeScript strict
+- UI primitives from `@agency/ui`; shared types from `@agency/shared`
+- No business logic duplication — call the API; do not reimplement domain rules in components
+- Never import Nest internals, Prisma, or vendor SDKs (Stripe, OpenAI, WHM, etc.)
+- Never put backend secrets or API keys in frontend code or Vite env that is exposed to the client
+- Keep route/page files thin; extract hooks and presentational pieces
+- Respect surface boundaries: no admin capabilities in portal; no portal billing UI on the public site (login entry is OK)
+- Auth UX may use HTTP-only cookies; do not store long-lived tokens in `localStorage` by default

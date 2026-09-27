@@ -1,0 +1,17 @@
+---
+description: AuthN/Z, tenancy, secrets, audit, rate limits
+alwaysApply: true
+---
+
+# Security
+
+- Authentication ≠ authorization; every protected route must authorize
+- Portal data: filter by `organizationId` — Customer A never sees Customer B
+- Admin: RBAC permissions on every sensitive operation
+- Prefer secure HTTP-only cookies for sessions; protect auth endpoints; rate-limit
+- Validate all inputs; verify webhook signatures
+- Never log passwords, tokens, or API secrets; never hard-code credentials
+- Never expose backend secrets to React
+- File uploads via `StorageProvider` with size/MIME limits
+- Sensitive admin and high-risk AI actions → `AuditLog`
+- Details: `docs/SECURITY.md`
