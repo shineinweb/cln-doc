@@ -2,8 +2,6 @@
 
 Multi-agent AI subsystem for customer support, sales assistance, coding help, hosting ops, SEO guidance, supervision, RAG, tool calling, memory, feedback, evaluation, human approval, and audit.
 
-**Implementation note:** this document defines architecture only. No production AI runtime code in this phase.
-
 Companion: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [SECURITY.md](./SECURITY.md).
 
 ---
@@ -16,20 +14,36 @@ Companion: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [
 4. Orchestrate specialized agents under an **AI Supervisor**.
 5. Capture **memory, feedback, evaluation, and audit** for continuous improvement.
 
+### 1.1 Request stack (required)
+
+```text
+React (portal / admin)
+   ↓  HTTP /api/v1/ai/*
+NestJS API (AiController)
+   ↓
+AiService (@agency/ai)
+   ↓
+LLMProvider (OpenAiLlmProvider)
+   ↓  OpenAiApiTransport (PLACEHOLDER until live SDK wired)
+OpenAI
+```
+
+**Rules:** React never imports OpenAI or `@agency/ai` providers. Nest controllers never call OpenAI SDKs — only `AiService`.
+
 ---
 
 ## 2. Provider interfaces (`packages/ai`)
 
-```ts
-// Conceptual contracts — final signatures live in packages/ai when implemented
+Shipped in `@agency/ai`:
 
+```ts
 interface LLMProvider {
   complete(req: LlmCompletionRequest): Promise<LlmCompletionResponse>;
   stream(req: LlmCompletionRequest): AsyncIterable<LlmStreamEvent>;
 }
 
 interface EmbeddingProvider {
-  embed(texts: string[]): Promise<number[][]>;
+  embed(req: EmbeddingRequest): Promise<EmbeddingResponse>;
 }
 
 interface VectorStore {
@@ -41,13 +55,15 @@ interface VectorStore {
 
 | Interface           | v1 adapter                | Notes                                                                |
 | ------------------- | ------------------------- | -------------------------------------------------------------------- |
-| `LLMProvider`       | `OpenAiLlmProvider`       | Chat + tool calling                                                  |
-| `EmbeddingProvider` | `OpenAiEmbeddingProvider` | Batch embeddings                                                     |
-| `VectorStore`       | `MariaDbVectorStore`      | Chunks + embeddings in MariaDB; in-process cosine over filtered sets |
+| `LLMProvider`       | `OpenAiLlmProvider`       | Chat; HTTP transport PLACEHOLDER (`UnwiredOpenAiApiTransport`)       |
+| `EmbeddingProvider` | (interface only)          | OpenAI embeddings adapter TBD                                        |
+| `VectorStore`       | (interface only)          | MariaDB `KnowledgeChunk.embeddingJson` adapter TBD                   |
 
 Future adapters (Anthropic, Azure OpenAI, external ANN) must not change agent code — only DI bindings.
 
 **Also used by AI tools (other packages):** `PaymentProvider`, `HostingProvider`, `DomainProvider`, `DnsProvider`, `EmailProvider`, `StorageProvider` — agents never import vendor SDKs.
+
+**HTTP:** authenticated `POST /api/v1/ai/complete` → Nest `AiModule` → `AiService.complete`.
 
 ---
 

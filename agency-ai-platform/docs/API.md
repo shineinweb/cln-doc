@@ -137,6 +137,8 @@ All routes under `/portal` require authenticated org membership.
 | Tickets       | `GET/POST /portal/tickets`, `GET/POST /portal/tickets/:id/messages`                                                                                                  |
 | AI assistant  | `POST /portal/ai/conversations`, `POST /portal/ai/conversations/:id/messages`                                                                                        |
 
+**AI completion (shared):** authenticated `POST /api/v1/ai/complete` — React → Nest `AiController` → `AiService` → `LLMProvider` → OpenAI transport (PLACEHOLDER → 503 until wired). Conversation routes above wrap this stack later.
+
 Customer task updates are restricted (comment, attach, mark done if policy allows)—no reassignment of staff.
 
 ### 5.2 Domain search (authenticated)

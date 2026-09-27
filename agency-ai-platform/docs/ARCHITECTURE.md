@@ -74,7 +74,13 @@ Internal employees (sales, PM, developers, designers, support, ops):
 
 ### 1.4 AI platform (logical subsystem)
 
-Not a separate deployable UI by default. Exposed through:
+Not a separate deployable UI by default. Call stack:
+
+```text
+React → NestJS API → AiService (@agency/ai) → OpenAI (via LLMProvider)
+```
+
+Exposed through:
 
 - Admin → AI management / approvals / evaluation
 - Portal → customer AI assistant

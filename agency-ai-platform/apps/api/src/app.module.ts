@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AdminDemoController } from "./admin/admin-demo.controller";
+import { AiModule } from "./ai/ai.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuditModule } from "./audit/audit.module";
@@ -21,6 +22,7 @@ import { HealthController } from "./health.controller";
     ]),
     AuditModule,
     AuthModule,
+    AiModule,
   ],
   controllers: [AppController, HealthController, AdminDemoController],
   providers: [
