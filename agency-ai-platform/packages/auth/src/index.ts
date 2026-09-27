@@ -7,3 +7,11 @@ export { InMemoryEmailProvider } from "./email-provider";
 export type { EmailProvider, EmailMessage } from "./email-provider";
 export { slugifyOrganizationName } from "./slug";
 export type { AuthUserView, AuthMembership, RequestAuthContext } from "./types";
+export {
+  PLATFORM_PERMISSIONS,
+  PLATFORM_ROLES,
+  PLATFORM_ROLE_KEYS,
+  getPlatformRole,
+  isStaffRoleKey,
+} from "./roles";
+export type { PlatformRoleKey, PlatformRoleDef, PlatformPermissionDef } from "./roles";

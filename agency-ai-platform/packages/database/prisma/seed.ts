@@ -1,39 +1,13 @@
 import { PrismaClient, type OrganizationMemberRole } from "@prisma/client";
-import { hashPassword } from "@agency/auth";
+import { hashPassword, PLATFORM_PERMISSIONS, PLATFORM_ROLES } from "@agency/auth";
 
 const prisma = new PrismaClient();
 
-const PERMISSIONS = [
-  { key: "audit.read", description: "Read audit logs" },
-  { key: "crm.customers.read", description: "View customers" },
-  { key: "crm.customers.write", description: "Create/update customers" },
-  { key: "settings.write", description: "Change system settings" },
-  { key: "roles.read", description: "View roles and permissions" },
-  { key: "roles.write", description: "Manage roles and permissions" },
-] as const;
-
-const ROLES: Array<{
-  key: string;
-  name: string;
-  description: string;
-  permissions: readonly string[];
-}> = [
-  {
-    key: "admin",
-    name: "Administrator",
-    description: "Full staff access for local development",
-    permissions: PERMISSIONS.map((permission) => permission.key),
-  },
-  {
-    key: "support",
-    name: "Support",
-    description: "Customer support staff",
-    permissions: ["audit.read", "crm.customers.read"],
-  },
-];
+/** Legacy role keys replaced by the platform catalog. */
+const DEPRECATED_ROLE_KEYS = ["admin", "support"] as const;
 
 async function main() {
-  for (const permission of PERMISSIONS) {
+  for (const permission of PLATFORM_PERMISSIONS) {
     await prisma.permission.upsert({
       where: { key: permission.key },
       create: permission,
@@ -43,7 +17,7 @@ async function main() {
 
   const roleIds = new Map<string, string>();
 
-  for (const role of ROLES) {
+  for (const role of PLATFORM_ROLES) {
     const savedRole = await prisma.role.upsert({
       where: { key: role.key },
       create: {
@@ -58,10 +32,12 @@ async function main() {
     });
     roleIds.set(role.key, savedRole.id);
 
+    const desiredPermissionIds: string[] = [];
     for (const permissionKey of role.permissions) {
       const permission = await prisma.permission.findUniqueOrThrow({
         where: { key: permissionKey },
       });
+      desiredPermissionIds.push(permission.id);
       await prisma.rolePermission.upsert({
         where: {
           roleId_permissionId: {
@@ -76,7 +52,21 @@ async function main() {
         update: {},
       });
     }
+
+    await prisma.rolePermission.deleteMany({
+      where: {
+        roleId: savedRole.id,
+        permissionId: { notIn: desiredPermissionIds },
+      },
+    });
   }
+
+  await prisma.userRole.deleteMany({
+    where: { role: { key: { in: [...DEPRECATED_ROLE_KEYS] } } },
+  });
+  await prisma.role.deleteMany({
+    where: { key: { in: [...DEPRECATED_ROLE_KEYS] } },
+  });
 
   const passwordHash = await hashPassword("ChangeMeLocalOnly!");
 
@@ -84,14 +74,14 @@ async function main() {
     where: { email: "admin@agency.local" },
     create: {
       email: "admin@agency.local",
-      name: "Agency Admin",
+      name: "Agency Super Admin",
       passwordHash,
       isStaff: true,
       isActive: true,
       emailVerifiedAt: new Date(),
     },
     update: {
-      name: "Agency Admin",
+      name: "Agency Super Admin",
       passwordHash,
       isStaff: true,
       isActive: true,
@@ -99,18 +89,18 @@ async function main() {
     },
   });
 
-  const adminRoleId = roleIds.get("admin");
-  if (adminRoleId) {
+  const superAdminRoleId = roleIds.get("super_admin");
+  if (superAdminRoleId) {
     await prisma.userRole.upsert({
       where: {
         userId_roleId: {
           userId: staffUser.id,
-          roleId: adminRoleId,
+          roleId: superAdminRoleId,
         },
       },
       create: {
         userId: staffUser.id,
-        roleId: adminRoleId,
+        roleId: superAdminRoleId,
       },
       update: {},
     });
@@ -133,6 +123,23 @@ async function main() {
       emailVerifiedAt: new Date(),
     },
   });
+
+  const customerRoleId = roleIds.get("customer");
+  if (customerRoleId) {
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: customerUser.id,
+          roleId: customerRoleId,
+        },
+      },
+      create: {
+        userId: customerUser.id,
+        roleId: customerRoleId,
+      },
+      update: {},
+    });
+  }
 
   const organization = await prisma.organization.upsert({
     where: { slug: "acme" },
@@ -216,16 +223,17 @@ async function main() {
       entityId: organization.id,
       afterJson: {
         slug: organization.slug,
-        seededRoles: ROLES.map((role) => role.key),
+        seededRoles: PLATFORM_ROLES.map((role) => role.key),
       },
     },
   });
 
   console.log("Seed complete:", {
     staff: staffUser.email,
+    staffRole: "super_admin",
     customerOwner: customerUser.email,
     organization: organization.slug,
-    roles: ROLES.map((role) => role.key),
+    roles: PLATFORM_ROLES.map((role) => role.key),
   });
 }
 

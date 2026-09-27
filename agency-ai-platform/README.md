@@ -112,7 +112,9 @@ pnpm dev:api
 pnpm dev:website   # register / login UI
 ```
 
-Seeded users (local only): `admin@agency.local` / `owner@acme.local` — password `ChangeMeLocalOnly!`
+Seeded users (local only): `admin@agency.local` (Super Admin) / `owner@acme.local` (Customer) — password `ChangeMeLocalOnly!`
+
+Platform roles: Super Admin, Administrator, Manager, Sales, Developer, Designer, SEO Specialist, Hosting Technician, Support Agent, Billing, Customer.
 
 ## Application quick start
 

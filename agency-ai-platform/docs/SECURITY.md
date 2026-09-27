@@ -79,7 +79,9 @@ audit.read
 settings.write
 ```
 
-Roles bundle permissions (`sales`, `project_manager`, `developer`, `designer`, `support`, `billing`, `admin`, `owner`).
+Roles bundle permissions. Platform catalog (`@agency/auth` `PLATFORM_ROLES`):
+
+`super_admin`, `administrator`, `manager`, `sales`, `developer`, `designer`, `seo_specialist`, `hosting_technician`, `support_agent`, `billing`, `customer`.
 
 ### 4.2 Portal vs admin
 
