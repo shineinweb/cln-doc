@@ -206,7 +206,7 @@ Support domain (`SupportTicket → TicketMessage → TicketAttachment` + assignm
 | `TicketAssignment`    | Primary / collaborator / watcher staff assignment    |
 | `TicketStatusHistory` | Append-only status transitions                       |
 
-**Ticket status:** Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed
+**Ticket status:** Open → Pending → Customer Reply → Escalated → Resolved → Closed
 
 SLA fields on `SupportTicket`: `firstResponseDueAt`, `resolutionDueAt`, `firstRespondedAt`.
 

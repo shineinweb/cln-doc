@@ -50,8 +50,8 @@ export const PLACEHOLDER_PORTAL_TICKETS = [
     department: "domains",
     priority: "MEDIUM" as SupportTicketPriorityValue,
     subject: "DNS change for www.example.com",
-    status: "WAITING_ON_CUSTOMER",
-    statusLabel: "Waiting on customer",
+    status: "CUSTOMER_REPLY",
+    statusLabel: "Customer Reply",
   },
   {
     id: "tkt_portal_2",
@@ -61,6 +61,15 @@ export const PLACEHOLDER_PORTAL_TICKETS = [
     subject: "Invoice copy request",
     status: "RESOLVED",
     statusLabel: "Resolved",
+  },
+  {
+    id: "tkt_portal_3",
+    number: 1005,
+    department: "hosting",
+    priority: "HIGH" as SupportTicketPriorityValue,
+    subject: "Website unavailable",
+    status: "PENDING",
+    statusLabel: "Pending",
   },
 ] as const;
 

@@ -4,7 +4,7 @@
  * SupportTicket → TicketMessage → TicketAttachment
  * (+ TicketAssignment, TicketStatusHistory)
  *
- * Status: Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed
+ * Status: Open → Pending → Customer Reply → Escalated → Resolved → Closed
  */
 
 export const SUPPORT_TICKET_DOMAIN_MODELS = [
@@ -19,9 +19,9 @@ export type SupportTicketDomainModel = (typeof SUPPORT_TICKET_DOMAIN_MODELS)[num
 
 export const SUPPORT_TICKET_STATUSES = [
   "OPEN",
-  "IN_PROGRESS",
-  "WAITING_ON_CUSTOMER",
-  "WAITING_ON_US",
+  "PENDING",
+  "CUSTOMER_REPLY",
+  "ESCALATED",
   "RESOLVED",
   "CLOSED",
 ] as const;
@@ -31,19 +31,19 @@ export type SupportTicketStatusValue = (typeof SUPPORT_TICKET_STATUSES)[number];
 export const SUPPORT_TICKET_STATUS_PIPELINE = [
   { status: "OPEN", label: "Open", description: "New ticket awaiting triage." },
   {
-    status: "IN_PROGRESS",
-    label: "In progress",
-    description: "Staff is actively working the ticket.",
+    status: "PENDING",
+    label: "Pending",
+    description: "Queued for staff; not actively worked yet.",
   },
   {
-    status: "WAITING_ON_CUSTOMER",
-    label: "Waiting on customer",
-    description: "Blocked on customer reply or action.",
-  },
-  {
-    status: "WAITING_ON_US",
-    label: "Waiting on us",
+    status: "CUSTOMER_REPLY",
+    label: "Customer Reply",
     description: "Customer replied; staff action needed.",
+  },
+  {
+    status: "ESCALATED",
+    label: "Escalated",
+    description: "Raised to a higher tier or specialist.",
   },
   { status: "RESOLVED", label: "Resolved", description: "Issue addressed; pending close." },
   { status: "CLOSED", label: "Closed", description: "Ticket closed; reopen starts a new cycle." },

@@ -191,7 +191,7 @@ describe("Prisma MariaDB schema", () => {
       "SupportTicket → TicketMessage → TicketAttachment",
     );
     expect(schema).toContain(
-      "Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed",
+      "Open → Pending → Customer Reply → Escalated → Resolved → Closed",
     );
     expect(SUPPORT_TICKET_DOMAIN_MODELS).toEqual([
       "SupportTicket",
@@ -202,9 +202,9 @@ describe("Prisma MariaDB schema", () => {
     ]);
     expect(SUPPORT_TICKET_STATUSES).toEqual([
       "OPEN",
-      "IN_PROGRESS",
-      "WAITING_ON_CUSTOMER",
-      "WAITING_ON_US",
+      "PENDING",
+      "CUSTOMER_REPLY",
+      "ESCALATED",
       "RESOLVED",
       "CLOSED",
     ]);

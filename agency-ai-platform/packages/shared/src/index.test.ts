@@ -175,17 +175,17 @@ describe("SUPPORT_TICKET_DOMAIN", () => {
     ]);
     expect(SUPPORT_TICKET_STATUSES).toEqual([
       "OPEN",
-      "IN_PROGRESS",
-      "WAITING_ON_CUSTOMER",
-      "WAITING_ON_US",
+      "PENDING",
+      "CUSTOMER_REPLY",
+      "ESCALATED",
       "RESOLVED",
       "CLOSED",
     ]);
     expect(SUPPORT_TICKET_STATUS_PIPELINE.map((step) => step.label)).toEqual([
       "Open",
-      "In progress",
-      "Waiting on customer",
-      "Waiting on us",
+      "Pending",
+      "Customer Reply",
+      "Escalated",
       "Resolved",
       "Closed",
     ]);

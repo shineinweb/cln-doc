@@ -1101,14 +1101,14 @@ model WebhookEvent {
 // ---------------------------------------------------------------------------
 // Support — SupportTicket → TicketMessage → TicketAttachment
 //            (+ TicketAssignment, TicketStatusHistory)
-// Status: Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed
+// Status: Open → Pending → Customer Reply → Escalated → Resolved → Closed
 // ---------------------------------------------------------------------------
 
 enum SupportTicketStatus {
   OPEN
-  IN_PROGRESS
-  WAITING_ON_CUSTOMER
-  WAITING_ON_US
+  PENDING
+  CUSTOMER_REPLY
+  ESCALATED
   RESOLVED
   CLOSED
 }

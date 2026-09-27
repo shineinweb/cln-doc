@@ -1,6 +1,6 @@
 -- Support domain:
 -- SupportTicket → TicketMessage → TicketAttachment (+ TicketAssignment, TicketStatusHistory)
--- Status: Open → In progress → Waiting on customer → Waiting on us → Resolved → Closed
+-- Status: Open → Pending → Customer Reply → Escalated → Resolved → Closed
 
 -- CreateTable
 CREATE TABLE `support_tickets` (
@@ -10,7 +10,7 @@ CREATE TABLE `support_tickets` (
     `requester_user_id` CHAR(36) NULL,
     `number` INTEGER NOT NULL AUTO_INCREMENT,
     `subject` VARCHAR(300) NOT NULL,
-    `status` ENUM('OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER', 'WAITING_ON_US', 'RESOLVED', 'CLOSED') NOT NULL DEFAULT 'OPEN',
+    `status` ENUM('OPEN', 'PENDING', 'CUSTOMER_REPLY', 'ESCALATED', 'RESOLVED', 'CLOSED') NOT NULL DEFAULT 'OPEN',
     `priority` ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT') NOT NULL DEFAULT 'MEDIUM',
     `category` VARCHAR(80) NULL,
     `first_response_due_at` DATETIME(3) NULL,
@@ -92,8 +92,8 @@ CREATE TABLE `ticket_assignments` (
 CREATE TABLE `ticket_status_history` (
     `id` CHAR(36) NOT NULL,
     `ticket_id` CHAR(36) NOT NULL,
-    `from_status` ENUM('OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER', 'WAITING_ON_US', 'RESOLVED', 'CLOSED') NULL,
-    `to_status` ENUM('OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER', 'WAITING_ON_US', 'RESOLVED', 'CLOSED') NOT NULL,
+    `from_status` ENUM('OPEN', 'PENDING', 'CUSTOMER_REPLY', 'ESCALATED', 'RESOLVED', 'CLOSED') NULL,
+    `to_status` ENUM('OPEN', 'PENDING', 'CUSTOMER_REPLY', 'ESCALATED', 'RESOLVED', 'CLOSED') NOT NULL,
     `actor_user_id` CHAR(36) NULL,
     `note` VARCHAR(500) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
