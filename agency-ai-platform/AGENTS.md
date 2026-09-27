@@ -182,6 +182,7 @@ When building AI features:
 4. Embeddings/chunks stay in MariaDB (`VectorStore` adapter) — no Postgres vector DB.
 5. Customer-facing assistant is scoped; staff agents may use internal collections only when authorized.
 6. Coding AI follows **AI Code → Branch → Test → PR → Human Review → Merge → Deploy**; AI stops before Human Review / Merge / Deploy.
+7. **Forbidden:** `AI → production server → randomly change files` (hard deny in `@agency/ai` security).
 
 ---
 
@@ -203,6 +204,7 @@ Follow the full workflow in [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md):
 - PostgreSQL or dual primary SQL databases
 - Calling Stripe / OpenAI / WHM SDKs from React
 - Autonomous production deploys by Coding AI
+- AI mutating production server files directly (no PR / human review)
 - Unscoped cross-tenant “admin debug” queries in portal code
 - Expanding scope outside the requested phase without updating ROADMAP/docs
 

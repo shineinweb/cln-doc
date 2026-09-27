@@ -14,6 +14,11 @@ import {
   getNextCodingPipelineStage,
   DEFAULT_AI_SECURITY_POLICY,
   DEFAULT_MEMORY_POLICIES,
+  FORBIDDEN_AI_PATHS,
+  ForbiddenAiPathError,
+  assertCodingPathAllowed,
+  assertNotProductionFileMutation,
+  isForbiddenAiPathDiagram,
   OPENAI_LLM_PROVIDER_NAME,
   OpenAiLlmProvider,
   LlmProviderUnwiredError,
@@ -89,6 +94,21 @@ describe("package module map", () => {
     expect(getAgentDefinition("coding").toolAllowlist).toEqual([...CODING_TOOL_NAMES]);
     expect(getTool("createBranches")?.requiresApproval).toBe(true);
     expect(requiresApproval("write", true)).toBe(true);
+  });
+
+  it("hard-denies AI → production server → randomly change files", () => {
+    expect(FORBIDDEN_AI_PATHS[0]?.diagram).toBe(
+      "AI → production server → randomly change files",
+    );
+    expect(
+      isForbiddenAiPathDiagram("AI → production server → randomly change files"),
+    ).toBe(true);
+    expect(DEFAULT_AI_SECURITY_POLICY.allowProductionFileMutation).toBe(false);
+    expect(() => assertNotProductionFileMutation()).toThrow(ForbiddenAiPathError);
+    expect(() => assertCodingPathAllowed({ mutatesProductionFiles: true })).toThrow(
+      ForbiddenAiPathError,
+    );
+    expect(() => assertCodingPathAllowed({ mutatesProductionFiles: false })).not.toThrow();
   });
 
   it("encodes the Coding AI delivery pipeline through Deploy", () => {

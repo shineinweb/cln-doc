@@ -430,3 +430,11 @@ Sources live under `packages/ai/src/<module>/`.
 - No customer-hosted model runtime
 - No autonomous production deploys by Coding AI
 - No unrestricted shell/code execution tools
+
+### 15.1 Forbidden path (hard deny)
+
+```text
+AI → production server → randomly change files
+```
+
+**Never allowed.** Coding AI must not SSH/SFTP/API into production hosts to mutate files. Source of truth: `FORBIDDEN_AI_PATHS` / `assertCodingPathAllowed` in `@agency/ai`. Allowed path remains the delivery pipeline (AI Code → … → Human Review → Merge → Deploy).

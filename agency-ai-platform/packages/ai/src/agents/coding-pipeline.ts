@@ -2,6 +2,9 @@
  * Coding AI delivery pipeline — AI proposes; humans merge and deploy.
  *
  *   AI CODE → BRANCH → TEST → PULL REQUEST → HUMAN REVIEW → MERGE → DEPLOY
+ *
+ * Forbidden (see security/forbidden-paths):
+ *   AI → production server → randomly change files
  */
 
 import type { CodingToolName } from "../tools/coding-tools";
