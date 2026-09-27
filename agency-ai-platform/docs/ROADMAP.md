@@ -1,7 +1,7 @@
 # Product & Delivery Roadmap
 
 Phased plan to build the Agency AI Platform from architecture → production SaaS.  
-**Current phase:** Phase 1 foundation tooling (monorepo quality gates). Business features not started.
+**Current phase:** Phase 1 complete for auth + public site shell; commercial lifecycle **schema** landed (Lead → Recurring Services). API modules for CRM/sales still pending.
 
 Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [SECURITY.md](./SECURITY.md), [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md).
 
@@ -26,6 +26,7 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 - [x] Docker Compose local infra (MariaDB + Redis, volumes, healthchecks)
 - [ ] Docker Compose app/worker/Nginx services — _later_
 - [x] `@agency/database` Prisma MariaDB schema baseline (User/Session/Org/RBAC/Customer/AuditLog)
+- [x] Commercial lifecycle schema: Lead → Opportunity → Quote → Customer → Project → Invoice → Recurring Services (`Subscription`)
 - [x] Shared lint/test/CI pipeline for the monorepo (ESLint, Prettier, Vitest, typecheck, build)
 
 **Exit criteria:** developers can run empty API + MariaDB + Redis locally from documented commands.
@@ -50,16 +51,19 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 ## Phase 2 — CRM, sales, quotes, contracts
 
+**Canonical path:** Lead → Opportunity → Quote → Customer → Project → Invoice → Recurring Services
+
 **Outcomes**
 
-- Leads, activities, conversion → organization
-- Opportunities pipeline
+- [x] Prisma models for Lead, Opportunity, Quote, Project, Invoice, Subscription (+ line/activity items)
+- Leads, activities, conversion → organization / customer
+- Opportunities pipeline APIs + admin UI
 - Service catalog + hosting plans (content)
 - Quotes + line items; send/accept flow
 - Contracts + e-sign (simple) + PDF via storage
 - Admin CRM + sales views; portal quote/contract views
 
-**Exit criteria:** lead → quote → accepted contract path works without billing providers.
+**Exit criteria:** lead → opportunity → quote → customer path works end-to-end without billing providers.
 
 ---
 

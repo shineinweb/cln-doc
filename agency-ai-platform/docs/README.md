@@ -13,4 +13,4 @@ Architecture contracts for the Agency AI Platform. Read these before implementin
 | [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md) | Multi-agent AI, RAG, tools, approvals                      |
 | [ROADMAP.md](./ROADMAP.md)                 | Phased delivery plan                                       |
 
-**Status:** documentation phase — production application code is intentionally not started yet.
+**Status:** living architecture contracts. Schema includes identity/RBAC and the commercial lifecycle (Lead → Recurring Services).

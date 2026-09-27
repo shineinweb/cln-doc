@@ -10,13 +10,13 @@ You are implementing a **production-grade SaaS platform** for a digital agency (
 
 ## 1. Current phase
 
-**Phase 1 foundation:** monorepo apps/packages + quality tooling. Identity/tenancy/business features are **not** implemented yet (see [docs/ROADMAP.md](./docs/ROADMAP.md)).
+**Phase 1+:** monorepo, auth, public website shell, and commercial lifecycle **schema** (Lead → Recurring Services). CRM/sales API modules still pending (see [docs/ROADMAP.md](./docs/ROADMAP.md)).
 
-| Allowed now                           | Not allowed yet (unless explicitly asked) |
-| ------------------------------------- | ----------------------------------------- |
-| Tooling, scaffold, docs               | Auth, CRM, billing, hosting features      |
-| Docker/Prisma baseline when requested | Skipping provider interfaces              |
-| Clarifying architecture               | Introducing PostgreSQL / `pgvector`       |
+| Allowed now                                 | Not allowed yet (unless explicitly asked) |
+| ------------------------------------------- | ----------------------------------------- |
+| Tooling, scaffold, docs, requested features | Skipping provider interfaces              |
+| Prisma schema / migrations as asked         | Introducing PostgreSQL / `pgvector`       |
+| Clarifying architecture                     | Fake third-party integrations             |
 
 When asked to implement, follow the roadmap order and the docs below.
 

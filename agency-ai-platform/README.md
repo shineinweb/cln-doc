@@ -101,6 +101,8 @@ pnpm db:seed
 
 Initial models: User, Session, Organization, OrganizationMember, Role, Permission, RolePermission, Customer, CustomerContact, AuditLog.
 
+Commercial lifecycle: Lead → Opportunity → Quote → Customer → Project → Invoice → Recurring Services (`Subscription`), plus line/activity items.
+
 ## Authentication
 
 NestJS auth under `/api/v1/auth/*` with Argon2id passwords, HttpOnly `agency_session` cookies, RBAC guards, rate limiting, validation, and audit logs.

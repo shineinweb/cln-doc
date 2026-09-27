@@ -71,23 +71,38 @@ mysql://USER:PASS@HOST:3306/agency_ai?connection_limit=10
 
 ---
 
-## 4. CRM & sales
+## 4. Commercial lifecycle (canonical)
 
-| Model                | Purpose                                              |
-| -------------------- | ---------------------------------------------------- |
-| `Lead`               | Unqualified / inbound interest                       |
-| `LeadActivity`       | Calls, emails, notes, status changes                 |
-| `Customer`           | Optional profile projection linked to `Organization` |
-| `PipelineStage`      | Sales stages                                         |
-| `Opportunity`        | Deal in pipeline                                     |
-| `Quote`              | Formal quote                                         |
-| `QuoteLineItem`      | Line items (service, qty, unit price)                |
-| `Contract`           | Signed/pending contract                              |
-| `ContractVersion`    | Immutable PDF/HTML snapshots                         |
-| `ServiceCatalogItem` | Sellable services (web design, SEO, …)               |
-| `HostingPlan`        | Hosting SKUs (mapped to WHM packages)                |
+```text
+Lead → Opportunity → Quote → Customer → Project → Invoice → Recurring Services
+```
 
-**Lead → customer conversion** creates/links `Organization`, memberships, and optionally an `Opportunity` / first `Project`.
+This is the **system-of-record path** for acquisition through ongoing revenue. Shared constants live in `@agency/shared` (`COMMERCIAL_LIFECYCLE`).
+
+| Stage              | Model              | Purpose                                     |
+| ------------------ | ------------------ | ------------------------------------------- |
+| Lead               | `Lead`             | Unqualified / inbound interest              |
+|                    | `LeadActivity`     | Calls, emails, notes, status changes        |
+| Opportunity        | `Opportunity`      | Qualified deal in the sales pipeline        |
+| Quote              | `Quote`            | Formal quote                                |
+|                    | `QuoteLineItem`    | Line items (description, qty, unit cents)   |
+| Customer           | `Customer`         | Profile projection linked to `Organization` |
+| Project            | `Project`          | Delivery container after quote acceptance   |
+| Invoice            | `Invoice`          | One-time / project billing                  |
+|                    | `InvoiceLineItem`  | Invoice lines                               |
+| Recurring Services | `Subscription`     | Hosting, retainers, maintenance             |
+|                    | `SubscriptionItem` | Recurring line items                        |
+
+**Planned (not in schema yet):** `Contract` / `ContractVersion`, `ServiceCatalogItem`, `HostingPlan`, dedicated `PipelineStage` table (stages are enums on `Opportunity` for v1).
+
+**Conversion rules**
+
+1. Lead qualifies → `Opportunity` (`leadId` set).
+2. Opportunity priced → `Quote` (+ line items).
+3. Quote accepted → ensure `Organization` + `Customer` (and memberships); set `Quote.organizationId` / `acceptedAt`.
+4. Delivery starts → `Project` (optional `quoteId`, required `organizationId`).
+5. Billable work → `Invoice` (optional `projectId` / `quoteId`).
+6. Ongoing revenue → `Subscription` (Recurring Services: hosting, retainers).
 
 ---
 
@@ -208,16 +223,20 @@ Sync jobs reconcile local state with `HostingProvider` / `DomainProvider` / `Dns
 ## 11. Entity relationship (conceptual)
 
 ```text
-User ──┬── OrganizationMember ── Organization ──┬── Project ── Task
-       │                                        ├── Invoice / Subscription
+User ──┬── OrganizationMember ── Organization ──┬── Customer
+       │                                        ├── Project
+       │                                        ├── Invoice
+       │                                        ├── Subscription  (Recurring Services)
        │                                        ├── Domain / HostingAccount
        │                                        ├── Ticket
        │                                        └── AiConversation
        │
        └── UserRole ── Role ── Permission     (staff)
 
-Lead ──▶ Organization (conversion)
-Quote ──▶ Contract ──▶ Project / Subscription
+Lead ──▶ Opportunity ──▶ Quote ──▶ Customer (Organization)
+                              └──▶ Project ──▶ Invoice
+                              └──▶ Subscription (Recurring Services)
+
 KnowledgeArticle ──▶ KnowledgeChunk ──▶ KnowledgeEmbedding
 AiRun ── AiToolCall ── AiApproval
 ```

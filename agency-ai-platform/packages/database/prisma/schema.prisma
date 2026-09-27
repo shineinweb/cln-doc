@@ -31,6 +31,10 @@ model User {
   customerContacts    CustomerContact[]
   authTokens          AuthToken[]
   userRoles           UserRole[]
+  ownedLeads          Lead[]                 @relation("LeadOwner")
+  ownedOpportunities  Opportunity[]          @relation("OpportunityOwner")
+  ownedProjects       Project[]              @relation("ProjectOwner")
+  leadActivities      LeadActivity[]         @relation("LeadActivityActor")
 
   @@index([isStaff, isActive])
   @@index([createdAt])
@@ -101,9 +105,15 @@ model Organization {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  members   OrganizationMember[]
-  customer  Customer?
-  auditLogs AuditLog[]
+  members       OrganizationMember[]
+  customer      Customer?
+  auditLogs     AuditLog[]
+  leads         Lead[]
+  opportunities Opportunity[]
+  quotes        Quote[]
+  projects      Project[]
+  invoices      Invoice[]
+  subscriptions Subscription[]
 
   @@index([createdAt])
   @@map("organizations")
@@ -192,6 +202,9 @@ model Customer {
 
   organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   contacts     CustomerContact[]
+  projects     Project[]
+  invoices     Invoice[]
+  subscriptions Subscription[]
 
   @@index([status, createdAt])
   @@map("customers")
@@ -244,4 +257,328 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([actorUserId, createdAt])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Commercial lifecycle
+// Lead → Opportunity → Quote → Customer → Project → Invoice → Recurring Services
+// ---------------------------------------------------------------------------
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  DISQUALIFIED
+  CONVERTED
+}
+
+model Lead {
+  id               String     @id @default(uuid()) @db.Char(36)
+  organizationId   String?    @map("organization_id") @db.Char(36)
+  ownerUserId      String?    @map("owner_user_id") @db.Char(36)
+  status           LeadStatus @default(NEW)
+  source           String?    @db.VarChar(80)
+  companyName      String?    @map("company_name") @db.VarChar(200)
+  contactName      String     @map("contact_name") @db.VarChar(200)
+  email            String     @db.VarChar(320)
+  phone            String?    @db.VarChar(40)
+  title            String?    @db.VarChar(200)
+  notes            String?    @db.Text
+  convertedAt      DateTime?  @map("converted_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+  deletedAt        DateTime?  @map("deleted_at")
+
+  organization  Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  owner         User?         @relation("LeadOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  activities    LeadActivity[]
+  opportunities Opportunity[]
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([organizationId, createdAt])
+  @@index([ownerUserId])
+  @@map("leads")
+}
+
+enum LeadActivityType {
+  NOTE
+  CALL
+  EMAIL
+  STATUS_CHANGE
+  MEETING
+}
+
+model LeadActivity {
+  id          String           @id @default(uuid()) @db.Char(36)
+  leadId      String           @map("lead_id") @db.Char(36)
+  actorUserId String?          @map("actor_user_id") @db.Char(36)
+  type        LeadActivityType @default(NOTE)
+  body        String           @db.Text
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  lead  Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  actor User? @relation("LeadActivityActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([leadId, createdAt])
+  @@index([actorUserId])
+  @@map("lead_activities")
+}
+
+enum OpportunityStage {
+  QUALIFICATION
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+model Opportunity {
+  id             String           @id @default(uuid()) @db.Char(36)
+  leadId         String?          @map("lead_id") @db.Char(36)
+  organizationId String?          @map("organization_id") @db.Char(36)
+  ownerUserId    String?          @map("owner_user_id") @db.Char(36)
+  name           String           @db.VarChar(200)
+  stage          OpportunityStage @default(QUALIFICATION)
+  amountCents    Int?             @map("amount_cents")
+  currency       String           @default("USD") @db.Char(3)
+  expectedClose  DateTime?        @map("expected_close")
+  wonAt          DateTime?        @map("won_at")
+  lostAt         DateTime?        @map("lost_at")
+  lossReason     String?          @map("loss_reason") @db.VarChar(500)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  deletedAt      DateTime?        @map("deleted_at")
+
+  lead         Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  owner        User?         @relation("OpportunityOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  quotes       Quote[]
+
+  @@index([stage, createdAt])
+  @@index([leadId])
+  @@index([organizationId, createdAt])
+  @@index([ownerUserId])
+  @@map("opportunities")
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model Quote {
+  id             String      @id @default(uuid()) @db.Char(36)
+  opportunityId  String?     @map("opportunity_id") @db.Char(36)
+  organizationId String?     @map("organization_id") @db.Char(36)
+  number         String      @unique @db.VarChar(40)
+  title          String      @db.VarChar(200)
+  status         QuoteStatus @default(DRAFT)
+  currency       String      @default("USD") @db.Char(3)
+  subtotalCents  Int         @default(0) @map("subtotal_cents")
+  taxCents       Int         @default(0) @map("tax_cents")
+  totalCents     Int         @default(0) @map("total_cents")
+  validUntil     DateTime?   @map("valid_until")
+  sentAt         DateTime?   @map("sent_at")
+  acceptedAt     DateTime?   @map("accepted_at")
+  rejectedAt     DateTime?   @map("rejected_at")
+  notes          String?     @db.Text
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  deletedAt      DateTime?   @map("deleted_at")
+
+  opportunity  Opportunity?  @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  lineItems    QuoteLineItem[]
+  projects     Project[]
+  invoices     Invoice[]
+  subscriptions Subscription[]
+
+  @@index([status, createdAt])
+  @@index([opportunityId])
+  @@index([organizationId, createdAt])
+  @@map("quotes")
+}
+
+model QuoteLineItem {
+  id          String   @id @default(uuid()) @db.Char(36)
+  quoteId     String   @map("quote_id") @db.Char(36)
+  sortOrder   Int      @default(0) @map("sort_order")
+  description String   @db.VarChar(500)
+  quantity    Decimal  @default(1) @db.Decimal(12, 2)
+  unitCents   Int      @map("unit_cents")
+  totalCents  Int      @map("total_cents")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId, sortOrder])
+  @@map("quote_line_items")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+model Project {
+  id             String        @id @default(uuid()) @db.Char(36)
+  organizationId String        @map("organization_id") @db.Char(36)
+  customerId     String?       @map("customer_id") @db.Char(36)
+  quoteId        String?       @map("quote_id") @db.Char(36)
+  ownerUserId    String?       @map("owner_user_id") @db.Char(36)
+  name           String        @db.VarChar(200)
+  status         ProjectStatus @default(PLANNING)
+  startsAt       DateTime?     @map("starts_at")
+  dueAt          DateTime?     @map("due_at")
+  completedAt    DateTime?     @map("completed_at")
+  summary        String?       @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  quote        Quote?       @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  owner        User?        @relation("ProjectOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  invoices     Invoice[]
+  subscriptions Subscription[]
+
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([quoteId])
+  @@index([ownerUserId])
+  @@map("projects")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  VOID
+  OVERDUE
+}
+
+model Invoice {
+  id             String        @id @default(uuid()) @db.Char(36)
+  organizationId String        @map("organization_id") @db.Char(36)
+  customerId     String?       @map("customer_id") @db.Char(36)
+  projectId      String?       @map("project_id") @db.Char(36)
+  quoteId        String?       @map("quote_id") @db.Char(36)
+  number         String        @unique @db.VarChar(40)
+  status         InvoiceStatus @default(DRAFT)
+  currency       String        @default("USD") @db.Char(3)
+  subtotalCents  Int           @default(0) @map("subtotal_cents")
+  taxCents       Int           @default(0) @map("tax_cents")
+  totalCents     Int           @default(0) @map("total_cents")
+  amountPaidCents Int          @default(0) @map("amount_paid_cents")
+  issuedAt       DateTime?     @map("issued_at")
+  dueAt          DateTime?     @map("due_at")
+  paidAt         DateTime?     @map("paid_at")
+  notes          String?       @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  quote        Quote?           @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  lineItems    InvoiceLineItem[]
+
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([projectId])
+  @@index([quoteId])
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(uuid()) @db.Char(36)
+  invoiceId   String   @map("invoice_id") @db.Char(36)
+  sortOrder   Int      @default(0) @map("sort_order")
+  description String   @db.VarChar(500)
+  quantity    Decimal  @default(1) @db.Decimal(12, 2)
+  unitCents   Int      @map("unit_cents")
+  totalCents  Int      @map("total_cents")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, sortOrder])
+  @@map("invoice_line_items")
+}
+
+/// Recurring Services stage — hosting, retainers, maintenance subscriptions.
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  PAUSED
+  CANCELED
+}
+
+enum SubscriptionInterval {
+  MONTHLY
+  YEARLY
+}
+
+model Subscription {
+  id               String               @id @default(uuid()) @db.Char(36)
+  organizationId   String               @map("organization_id") @db.Char(36)
+  customerId       String?              @map("customer_id") @db.Char(36)
+  projectId        String?              @map("project_id") @db.Char(36)
+  quoteId          String?              @map("quote_id") @db.Char(36)
+  name             String               @db.VarChar(200)
+  status           SubscriptionStatus   @default(TRIALING)
+  interval         SubscriptionInterval @default(MONTHLY)
+  amountCents      Int                  @map("amount_cents")
+  currency         String               @default("USD") @db.Char(3)
+  currentPeriodStart DateTime?          @map("current_period_start")
+  currentPeriodEnd   DateTime?          @map("current_period_end")
+  cancelAt         DateTime?            @map("cancel_at")
+  canceledAt       DateTime?            @map("canceled_at")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+  deletedAt        DateTime?            @map("deleted_at")
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  project      Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  quote        Quote?             @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  items        SubscriptionItem[]
+
+  @@index([organizationId, createdAt])
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([projectId])
+  @@index([quoteId])
+  @@map("subscriptions")
+}
+
+model SubscriptionItem {
+  id             String   @id @default(uuid()) @db.Char(36)
+  subscriptionId String   @map("subscription_id") @db.Char(36)
+  sortOrder      Int      @default(0) @map("sort_order")
+  description    String   @db.VarChar(500)
+  quantity       Decimal  @default(1) @db.Decimal(12, 2)
+  unitCents      Int      @map("unit_cents")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, sortOrder])
+  @@map("subscription_items")
 }

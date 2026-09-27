@@ -26,3 +26,10 @@ export {
   EnvValidationError,
 } from "./env";
 export type { ApiEnv, WebEnv } from "./env";
+
+export {
+  COMMERCIAL_LIFECYCLE,
+  COMMERCIAL_LIFECYCLE_STAGES,
+  isCommercialLifecycleStage,
+} from "./lifecycle";
+export type { CommercialLifecycleStage } from "./lifecycle";

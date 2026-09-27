@@ -254,7 +254,15 @@ WebSockets for:
 - Staff users belong to the **Agency** tenant and access many organizations via RBAC.
 - Row-level checks: every customer-scoped query filters by `organizationId` (see SECURITY + DATABASE).
 
-### 6.5 Idempotency
+### 6.5 Commercial lifecycle
+
+```text
+Lead → Opportunity → Quote → Customer → Project → Invoice → Recurring Services
+```
+
+Domain tables and `@agency/shared` `COMMERCIAL_LIFECYCLE` encode this path. Recurring Services maps to the `Subscription` model (hosting, retainers, maintenance).
+
+### 6.6 Idempotency
 
 Provider webhooks and payment intents use idempotency keys stored in MariaDB.
 
