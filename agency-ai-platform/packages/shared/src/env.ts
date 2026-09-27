@@ -1,14 +1,26 @@
 import { z } from "zod";
 
+/** Treat empty strings as undefined so optional secrets may be blank in .env. */
+const optionalSecret = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().min(1).optional(),
+);
+
 /**
  * Server / API environment schema.
- * Required secrets are added as features land; optional until then.
+ * Secrets stay optional until the related feature is enabled.
  */
 export const apiEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().max(65535).default(3000),
-  DATABASE_URL: z.string().min(1).optional(),
-  REDIS_URL: z.string().min(1).optional(),
+  DATABASE_URL: optionalSecret,
+  REDIS_HOST: z.string().min(1).default("localhost"),
+  REDIS_PORT: z.coerce.number().int().positive().max(65535).default(6379),
+  REDIS_URL: optionalSecret,
+  JWT_SECRET: optionalSecret,
+  OPENAI_API_KEY: optionalSecret,
+  STRIPE_SECRET_KEY: optionalSecret,
+  STRIPE_WEBHOOK_SECRET: optionalSecret,
 });
 
 export type ApiEnv = z.infer<typeof apiEnvSchema>;

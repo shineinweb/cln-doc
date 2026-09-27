@@ -16,6 +16,21 @@ describe("loadApiEnv", () => {
   it("rejects invalid PORT", () => {
     expect(() => loadApiEnv({ PORT: "0" })).toThrow(EnvValidationError);
   });
+
+  it("defaults Redis host/port and treats blank secrets as unset", () => {
+    const env = loadApiEnv({
+      JWT_SECRET: "",
+      OPENAI_API_KEY: "",
+      STRIPE_SECRET_KEY: "",
+      STRIPE_WEBHOOK_SECRET: "",
+    });
+    expect(env.REDIS_HOST).toBe("localhost");
+    expect(env.REDIS_PORT).toBe(6379);
+    expect(env.JWT_SECRET).toBeUndefined();
+    expect(env.OPENAI_API_KEY).toBeUndefined();
+    expect(env.STRIPE_SECRET_KEY).toBeUndefined();
+    expect(env.STRIPE_WEBHOOK_SECRET).toBeUndefined();
+  });
 });
 
 describe("loadWebEnv", () => {

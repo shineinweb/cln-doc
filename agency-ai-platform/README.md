@@ -42,13 +42,14 @@ cp .env.example .env
 
 Edit `.env` and set **local-only** values for:
 
-- `MYSQL_USER`
-- `MYSQL_PASSWORD`
-- `MYSQL_ROOT_PASSWORD`
+- `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_ROOT_PASSWORD`
+- `DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/agency_platform"` (same user/password)
+- `REDIS_HOST` / `REDIS_PORT` (defaults: `localhost` / `6379`)
+- Optional when needed: `JWT_SECRET`, `OPENAI_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 
-Keep `MYSQL_DATABASE=agency_platform`. Update `DATABASE_URL` so the password matches `MYSQL_PASSWORD`.
+Keep `MYSQL_DATABASE=agency_platform`. Leave provider secrets empty until you configure those integrations.
 
-Do **not** put production credentials in `.env`. `.env` is gitignored.
+Do **not** put production credentials in `.env`. `.env` is gitignored. Server secrets must never be prefixed with `VITE_`.
 
 ### 3. Start MariaDB + Redis
 
