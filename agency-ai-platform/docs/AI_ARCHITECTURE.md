@@ -196,7 +196,39 @@ replyTicket()
 
 Handlers are PLACEHOLDER (`invokeTool` → `AiToolUnwiredError`) until Nest binds domain services. AuthZ always uses the initiating customer principal — no cross-tenant reads.
 
-**Also planned (staff / other agents):** `quote.create_draft`, `hosting.restart_service` (approval), `dns.apply_record_change` (approval), `billing.issue_refund` (approval).
+### 5.4 Coding tool surface (v1)
+
+Staff / project-scoped tools on the **Coding** agent (`CODING_TOOL_NAMES`):
+
+```text
+readRepository()
+searchCode()
+explainCode()
+diagnoseErrors()
+generateCode()
+generateTests()
+runTests()
+reviewChanges()
+createBranches()
+createPullRequests()
+```
+
+| Tool                  | Risk  | Approval / gate                                              |
+| --------------------- | ----- | ------------------------------------------------------------ |
+| `readRepository`      | read  | Repo tree / file contents                                  |
+| `searchCode`          | read  | Symbol / text / path search                                  |
+| `explainCode`         | read  | Plain-language explanation of files/symbols                  |
+| `diagnoseErrors`      | read  | Analyze lint/typecheck/runtime logs                          |
+| `generateCode`        | write | Draft patch only (not applied to production)                 |
+| `generateTests`       | write | Draft tests for scoped change                                |
+| `runTests`            | write | Sandboxed test run                                           |
+| `reviewChanges`       | read  | Diff / working-tree review                                   |
+| `createBranches`      | write | **Requires approval** — branch policy enforced               |
+| `createPullRequests`  | write | **Requires approval** — draft PR; no auto-merge / deploy     |
+
+**Non-goals for Coding AI:** autonomous production deploys, unrestricted shell, merging to protected branches without staff.
+
+**Also planned (other agents):** `quote.create_draft`, `hosting.restart_service` (approval), `dns.apply_record_change` (approval), `billing.issue_refund` (approval).
 
 ---
 

@@ -15,7 +15,10 @@
  *       SEO                              Knowledge
  */
 
-import { CUSTOMER_SUPPORT_TOOL_NAMES } from "../tools/registry";
+import {
+  CODING_TOOL_NAMES,
+  CUSTOMER_SUPPORT_TOOL_NAMES,
+} from "../tools/registry";
 
 export const AI_AGENT_CODES = [
   "supervisor",
@@ -82,7 +85,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "Implementation guidance and task breakdown.",
     reportsTo: "supervisor",
     tier: "primary",
-    toolAllowlist: [],
+    toolAllowlist: [...CODING_TOOL_NAMES],
   },
   {
     code: "hosting",

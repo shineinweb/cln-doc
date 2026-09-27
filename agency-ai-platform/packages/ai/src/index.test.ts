@@ -6,6 +6,7 @@ import {
   AI_TOOL_REGISTRY,
   AiService,
   AiToolUnwiredError,
+  CODING_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOL_NAMES,
   DEFAULT_AI_SECURITY_POLICY,
   DEFAULT_MEMORY_POLICIES,
@@ -32,9 +33,12 @@ describe("package module map", () => {
   it("exposes agents, tools, knowledge, memory, evaluations, approvals, security", () => {
     expect(AI_AGENT_ROSTER.map((agent) => agent.code)).toContain("supervisor");
     expect(getAgentDefinition("support").label).toContain("Support");
-    expect(AI_TOOL_REGISTRY.length).toBe(CUSTOMER_SUPPORT_TOOL_NAMES.length);
+    expect(AI_TOOL_REGISTRY.length).toBe(
+      CUSTOMER_SUPPORT_TOOL_NAMES.length + CODING_TOOL_NAMES.length,
+    );
     expect(getTool("searchKnowledge")?.risk).toBe("read");
     expect(getTool("createTicket")?.risk).toBe("write");
+    expect(getTool("createPullRequests")?.requiresApproval).toBe(true);
     expect(chunkText("hello world", 5).length).toBeGreaterThan(1);
     expect(DEFAULT_MEMORY_POLICIES[0]?.scope).toBe("conversation");
     expect(scorePlaceholder("case_1").passed).toBe(false);
@@ -65,12 +69,37 @@ describe("package module map", () => {
     expect(getTool("replyTicket")?.parameters.body?.required).toBe(true);
   });
 
+  it("registers coding tools on the coding agent", () => {
+    expect([...CODING_TOOL_NAMES]).toEqual([
+      "readRepository",
+      "searchCode",
+      "explainCode",
+      "diagnoseErrors",
+      "generateCode",
+      "generateTests",
+      "runTests",
+      "reviewChanges",
+      "createBranches",
+      "createPullRequests",
+    ]);
+    expect(getAgentDefinition("coding").toolAllowlist).toEqual([...CODING_TOOL_NAMES]);
+    expect(getTool("createBranches")?.requiresApproval).toBe(true);
+    expect(requiresApproval("write", true)).toBe(true);
+  });
+
   it("invokeTool fails loudly until domain handlers are bound", async () => {
     await expect(
       invokeTool(
         "getCurrentCustomer",
         {},
         { organizationId: "org_1", userId: "user_1", customerId: "cust_1" },
+      ),
+    ).rejects.toBeInstanceOf(AiToolUnwiredError);
+    await expect(
+      invokeTool(
+        "readRepository",
+        { path: "packages/ai" },
+        { organizationId: "org_1", userId: "user_1", projectId: "proj_1" },
       ),
     ).rejects.toBeInstanceOf(AiToolUnwiredError);
   });
