@@ -230,3 +230,14 @@ Concise always/glob rules in [`.cursor/rules/`](./.cursor/rules/):
 | `ai.mdc`           | Agents, RAG, tools, approvals           |
 
 If a rule conflicts with `DEVELOPMENT_RULES.md` or `docs/`, **docs win** — then update the rule to match.
+
+---
+
+## 14. Cursor Cloud specific instructions
+
+- Package manager is **pnpm** `10.33.3` (see `packageManager`). From `agency-ai-platform/`: `pnpm install`, `pnpm build:packages`, then `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`.
+- MariaDB and Redis come from `docker compose` in `agency-ai-platform/`. Cloud Agent VMs do not run systemd. The environment start command launches `dockerd` with the fuse-overlayfs driver, then `docker compose up -d`, `pnpm db:migrate:deploy`, and `pnpm db:seed`.
+- Nest does not load `.env` by itself. Before `pnpm dev:api`, export the repo env: `set -a && . ./.env && set +a && pnpm dev:api`. Prisma CLI reads `packages/database/.env`.
+- `pnpm db:seed` imports built `@agency/auth`, so run `pnpm build:packages` first. Seeded local login: `admin@agency.local` / `ChangeMeLocalOnly!`.
+- Dev servers: `pnpm dev:website` (:5173), `pnpm dev:portal` (:5174), `pnpm dev:admin` (:5175), `pnpm dev:api` (:3000).
+- The repository-root VuePress site (`yarn` / `yarn docs:dev` from `/workspace`) needs `NODE_OPTIONS=--openssl-legacy-provider` on Node 22.
