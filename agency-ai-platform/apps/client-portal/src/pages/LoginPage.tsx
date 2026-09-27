@@ -4,9 +4,9 @@ import { Button } from "@agency/ui";
 import { useAuth } from "../auth/AuthContext";
 
 export function LoginPage() {
-  const { user, loading, error, login, enterDemoSession, clearError } = useAuth();
+  const { user, error, login, enterDemoSession, clearError } = useAuth();
 
-  if (!loading && user) {
+  if (user) {
     return <Navigate to="/hosting" replace />;
   }
 
