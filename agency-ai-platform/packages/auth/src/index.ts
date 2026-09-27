@@ -1,16 +1,9 @@
-/** Auth package — session/JWT helpers and shared auth types. */
-export type SessionUser = {
-  id: string;
-  email: string;
-  role: "customer" | "admin" | "employee";
-};
-
-export type AuthTokenPayload = {
-  sub: string;
-  email: string;
-  role: SessionUser["role"];
-};
-
-export function isAdminRole(role: SessionUser["role"]): boolean {
-  return role === "admin" || role === "employee";
-}
+export { hashPassword, verifyPassword, isPasswordPolicyValid } from "./password";
+export { generateOpaqueToken, hashToken } from "./tokens";
+export { SESSION_COOKIE_NAME, buildSessionCookieOptions } from "./cookies";
+export type { SessionCookieOptions } from "./cookies";
+export { hasPermission, hasAllPermissions, PORTAL_PERMISSIONS } from "./permissions";
+export { InMemoryEmailProvider } from "./email-provider";
+export type { EmailProvider, EmailMessage } from "./email-provider";
+export { slugifyOrganizationName } from "./slug";
+export type { AuthUserView, AuthMembership, RequestAuthContext } from "./types";

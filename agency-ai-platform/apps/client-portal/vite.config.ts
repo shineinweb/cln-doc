@@ -8,6 +8,7 @@ export default defineConfig({
     alias: {
       "@agency/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@agency/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "@agency/auth/browser": path.resolve(__dirname, "../../packages/auth/src/browser.ts"),
     },
   },
   server: {

@@ -53,7 +53,8 @@
       "@nestjs/core",
       "prisma",
       "@prisma/client",
-      "@prisma/engines"
+      "@prisma/engines",
+      "@node-rs/argon2"
     ]
   }
 }

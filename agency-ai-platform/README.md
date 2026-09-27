@@ -101,6 +101,19 @@ pnpm db:seed
 
 Initial models: User, Session, Organization, OrganizationMember, Role, Permission, RolePermission, Customer, CustomerContact, AuditLog.
 
+## Authentication
+
+NestJS auth under `/api/v1/auth/*` with Argon2id passwords, HttpOnly `agency_session` cookies, RBAC guards, rate limiting, validation, and audit logs.
+
+```bash
+pnpm db:migrate:deploy
+pnpm db:seed
+pnpm dev:api
+pnpm dev:website   # register / login UI
+```
+
+Seeded users (local only): `admin@agency.local` / `owner@acme.local` — password `ChangeMeLocalOnly!`
+
 ## Application quick start
 
 ```bash

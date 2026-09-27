@@ -36,7 +36,7 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 
 **Outcomes**
 
-- Auth: register/login/logout/reset, sessions, staff invite
+- [x] Auth: register/login/logout/verify-email/reset, sessions, RBAC guards (staff invite still pending)
 - Organizations + memberships
 - RBAC seed roles/permissions
 - Public website pages wired to CMS/catalog stubs (services, pricing, portfolio, blog, KB, contact, quote request)

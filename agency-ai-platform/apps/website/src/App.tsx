@@ -1,5 +1,6 @@
-import { Button, tokens } from "@agency/ui";
+import { tokens } from "@agency/ui";
 import { APP_NAMES } from "@agency/shared";
+import { AuthPanel } from "./AuthPanel";
 
 export function App() {
   return (
@@ -20,13 +21,10 @@ export function App() {
         </p>
         <h1 className="brand">Agency AI</h1>
         <p className="lede">
-          Public site for the agency platform — marketing, leads, and product story.
+          Public site for the agency platform — marketing, leads, and secure customer registration.
         </p>
-        <div className="actions">
-          <Button>Get started</Button>
-          <Button variant="ghost">View docs</Button>
-        </div>
       </section>
+      <AuthPanel />
     </main>
   );
 }

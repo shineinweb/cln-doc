@@ -1,4 +1,4 @@
-export { OrganizationMemberRole, Prisma, PrismaClient } from "@prisma/client";
+export { AuthTokenType, OrganizationMemberRole, Prisma, PrismaClient } from "@prisma/client";
 export type {
   User,
   Session,
@@ -7,6 +7,8 @@ export type {
   Role,
   Permission,
   RolePermission,
+  UserRole,
+  AuthToken,
   Customer,
   CustomerContact,
   AuditLog,

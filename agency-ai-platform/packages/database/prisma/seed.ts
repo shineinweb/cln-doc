@@ -1,12 +1,7 @@
 import { PrismaClient, type OrganizationMemberRole } from "@prisma/client";
-import { createHash } from "node:crypto";
+import { hashPassword } from "@agency/auth";
 
 const prisma = new PrismaClient();
-
-/** Deterministic placeholder hash for local seed only (not a production password scheme). */
-function seedPasswordHash(password: string): string {
-  return `sha256:${createHash("sha256").update(`agency-seed:${password}`).digest("hex")}`;
-}
 
 const PERMISSIONS = [
   { key: "audit.read", description: "Read audit logs" },
@@ -46,6 +41,8 @@ async function main() {
     });
   }
 
+  const roleIds = new Map<string, string>();
+
   for (const role of ROLES) {
     const savedRole = await prisma.role.upsert({
       where: { key: role.key },
@@ -59,6 +56,7 @@ async function main() {
         description: role.description,
       },
     });
+    roleIds.set(role.key, savedRole.id);
 
     for (const permissionKey of role.permissions) {
       const permission = await prisma.permission.findUniqueOrThrow({
@@ -80,34 +78,59 @@ async function main() {
     }
   }
 
+  const passwordHash = await hashPassword("ChangeMeLocalOnly!");
+
   const staffUser = await prisma.user.upsert({
     where: { email: "admin@agency.local" },
     create: {
       email: "admin@agency.local",
       name: "Agency Admin",
-      passwordHash: seedPasswordHash("ChangeMeLocalOnly!"),
+      passwordHash,
       isStaff: true,
       isActive: true,
+      emailVerifiedAt: new Date(),
     },
     update: {
       name: "Agency Admin",
+      passwordHash,
       isStaff: true,
       isActive: true,
+      emailVerifiedAt: new Date(),
     },
   });
+
+  const adminRoleId = roleIds.get("admin");
+  if (adminRoleId) {
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: staffUser.id,
+          roleId: adminRoleId,
+        },
+      },
+      create: {
+        userId: staffUser.id,
+        roleId: adminRoleId,
+      },
+      update: {},
+    });
+  }
 
   const customerUser = await prisma.user.upsert({
     where: { email: "owner@acme.local" },
     create: {
       email: "owner@acme.local",
       name: "Acme Owner",
-      passwordHash: seedPasswordHash("ChangeMeLocalOnly!"),
+      passwordHash,
       isStaff: false,
       isActive: true,
+      emailVerifiedAt: new Date(),
     },
     update: {
       name: "Acme Owner",
+      passwordHash,
       isActive: true,
+      emailVerifiedAt: new Date(),
     },
   });
 

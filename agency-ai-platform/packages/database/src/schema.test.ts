@@ -27,6 +27,8 @@ describe("Prisma MariaDB schema", () => {
       "Customer",
       "CustomerContact",
       "AuditLog",
+      "AuthToken",
+      "UserRole",
     ]) {
       expect(schema).toContain(`model ${model}`);
     }
@@ -46,6 +48,8 @@ describe("Prisma MariaDB schema", () => {
         "Customer",
         "CustomerContact",
         "AuditLog",
+        "AuthToken",
+        "UserRole",
       ]),
     );
   });

@@ -12,7 +12,8 @@
       "@agency/ui": ["../../packages/ui/src"],
       "@agency/shared": ["../../packages/shared/src"],
       "@agency/ui/*": ["../../packages/ui/src/*"],
-      "@agency/shared/*": ["../../packages/shared/src/*"]
+      "@agency/shared/*": ["../../packages/shared/src/*"],
+      "@agency/auth/browser": ["../../packages/auth/src/browser.ts"]
     }
   },
   "include": ["src"]
