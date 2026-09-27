@@ -162,6 +162,7 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 - [x] Request stack: React → NestJS API → `AiService` → `LLMProvider` → OpenAI (transport PLACEHOLDER)
 - [x] `LLMProvider`, `EmbeddingProvider`, `VectorStore` interfaces in `@agency/ai` + `OpenAiLlmProvider`
 - [x] Nest `AiModule` + `POST /api/v1/ai/complete` (auth required; unwired → 503)
+- [x] `@agency/ai` module map: providers · agents · tools · knowledge · memory · evaluations · approvals · security
 - Supervisor + Support agent (read-only tools + draft replies)
 - RAG over published KB
 - Portal AI assistant (scoped)

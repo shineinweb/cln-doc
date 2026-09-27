@@ -1,46 +1,30 @@
 /**
- * @agency/ai — provider interfaces, OpenAI adapters, and AiService.
+ * @agency/ai
  *
- * Stack: React → NestJS API → AiService → LLMProvider (OpenAI) → OpenAI
+ * packages/ai/
+ *   providers/    LLM, Embedding, VectorStore + OpenAI adapters
+ *   agents/       Supervisor + specialist roster
+ *   tools/        Tool registry (provider-backed handlers later)
+ *   knowledge/    RAG chunking + retrieval orchestration
+ *   memory/       Memory write/read policies
+ *   evaluations/  Eval harness stubs
+ *   approvals/    Human-in-the-loop gates
+ *   security/     Kill switch, quotas, risk defaults
+ *
+ * Stack: React → NestJS API → AiService → LLMProvider → OpenAI
  */
 
 export type { AiServiceOptions } from "./ai-service";
 export { AiService } from "./ai-service";
 
-export type {
-  LlmCompletionRequest,
-  LlmCompletionResponse,
-  LlmMessage,
-  LlmRole,
-  LlmStreamEvent,
-  LLMProvider,
-} from "./providers/llm-provider";
-
-export type {
-  EmbeddingProvider,
-  EmbeddingRequest,
-  EmbeddingResponse,
-} from "./providers/embedding-provider";
-
-export type {
-  VectorMatch,
-  VectorQuery,
-  VectorStore,
-  VectorUpsert,
-} from "./providers/vector-store";
-
-export {
-  OPENAI_LLM_PROVIDER_NAME,
-  OpenAiLlmProvider,
-  LlmProviderUnwiredError,
-  UnwiredOpenAiApiTransport,
-} from "./providers/openai-llm-provider";
-export type {
-  OpenAiApiTransport,
-  OpenAiChatParams,
-  OpenAiChatResult,
-  OpenAiLlmConfig,
-} from "./providers/openai-llm-provider";
+export * from "./providers";
+export * from "./agents";
+export * from "./tools";
+export * from "./knowledge";
+export * from "./memory";
+export * from "./evaluations";
+export * from "./approvals";
+export * from "./security";
 
 /** @deprecated Prefer LlmMessage via LLMProvider / AiService. */
 export type AiMessage = {

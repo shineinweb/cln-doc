@@ -318,18 +318,18 @@ Supervisor may refuse out-of-policy requests with a safe explanation.
 
 ```text
 packages/ai/
-  src/
-    providers/          # LLM, Embedding, VectorStore interfaces + adapters
-    agents/             # Supervisor + specialists (defs, prompts)
-    tools/              # Registry + handlers (call into other packages)
-    rag/                # Chunking, indexing, retrieval
-    memory/             # Memory read/write policies
-    policy/             # Risk, approval, quotas
-    evaluation/         # Harness
-    audit/              # AI audit helpers
+  providers/      # LLM, Embedding, VectorStore + OpenAI adapters
+  agents/         # Supervisor + specialist roster
+  tools/          # Tool registry (provider-backed handlers later)
+  knowledge/      # RAG chunking + retrieval orchestration
+  memory/         # Memory write/read policies
+  evaluations/    # Eval harness stubs
+  approvals/      # Human-in-the-loop gates
+  security/       # Kill switch, quotas, risk defaults
 ```
 
 Nest `AiModule` wires DI; BullMQ processors live under `apps/api` workers (or `packages/queue`).
+Sources live under `packages/ai/src/<module>/`.
 
 ---
 

@@ -11,6 +11,10 @@ alwaysApply: false
 
 Read `docs/AI_ARCHITECTURE.md` before changing agent/tool/RAG behavior.
 
+Module map (`packages/ai/`): `providers` · `agents` · `tools` · `knowledge` · `memory` · `evaluations` · `approvals` · `security`.
+
+Stack: React → NestJS API → `AiService` → `LLMProvider` → OpenAI (never call OpenAI from React).
+
 - No unrestricted system access for agents
 - Orchestrate Supervisor → specialist; do not call OpenAI from random services
 - Use `LLMProvider` / `EmbeddingProvider` / `VectorStore` only
