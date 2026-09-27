@@ -13,6 +13,11 @@ import {
   CUSTOMER_SUPPORT_TOOLS,
   type CustomerSupportToolName,
 } from "./customer-support-tools";
+import {
+  HOSTING_TOOL_NAMES,
+  HOSTING_TOOLS,
+  type HostingToolName,
+} from "./hosting-tools";
 import type { AiToolDefinition, AiToolInvokeContext } from "./types";
 
 export type { AiToolDefinition, AiToolInvokeContext, AiToolRisk } from "./types";
@@ -26,10 +31,16 @@ export {
   CUSTOMER_SUPPORT_TOOLS,
   type CustomerSupportToolName,
 } from "./customer-support-tools";
+export {
+  HOSTING_TOOL_NAMES,
+  HOSTING_TOOLS,
+  type HostingToolName,
+} from "./hosting-tools";
 
 export const AI_TOOL_REGISTRY: readonly AiToolDefinition[] = [
   ...CUSTOMER_SUPPORT_TOOLS,
   ...CODING_TOOLS,
+  ...HOSTING_TOOLS,
 ] as const;
 
 export class AiToolUnwiredError extends Error {
@@ -60,6 +71,10 @@ export function isCustomerSupportTool(
 
 export function isCodingTool(name: string): name is CodingToolName {
   return (CODING_TOOL_NAMES as readonly string[]).includes(name);
+}
+
+export function isHostingTool(name: string): name is HostingToolName {
+  return (HOSTING_TOOL_NAMES as readonly string[]).includes(name);
 }
 
 /**

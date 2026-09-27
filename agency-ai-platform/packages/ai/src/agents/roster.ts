@@ -18,6 +18,7 @@
 import {
   CODING_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOL_NAMES,
+  HOSTING_TOOL_NAMES,
 } from "../tools/registry";
 
 export const AI_AGENT_CODES = [
@@ -93,7 +94,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "Hosting diagnostics and WHM-safe recommendations.",
     reportsTo: "supervisor",
     tier: "primary",
-    toolAllowlist: ["getCustomerHosting", "searchKnowledge"],
+    toolAllowlist: [...HOSTING_TOOL_NAMES],
   },
   {
     code: "sales",

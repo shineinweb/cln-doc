@@ -24,3 +24,17 @@ export type {
   CodingPipelineStage,
   CodingPipelineStageDefinition,
 } from "./coding-pipeline";
+
+export {
+  HOSTING_PIPELINE,
+  HOSTING_PIPELINE_DIAGRAM,
+  HOSTING_PIPELINE_STAGES,
+  getHostingPipelineStage,
+  getNextHostingPipelineStage,
+  isHostingPipelineReadOnly,
+  isHostingPipelineStage,
+} from "./hosting-pipeline";
+export type {
+  HostingPipelineStage,
+  HostingPipelineStageDefinition,
+} from "./hosting-pipeline";

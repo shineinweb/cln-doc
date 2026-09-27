@@ -10,8 +10,14 @@ import {
   CODING_PIPELINE_STAGES,
   CODING_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOL_NAMES,
+  HOSTING_PIPELINE_DIAGRAM,
+  HOSTING_PIPELINE_STAGES,
+  HOSTING_TOOL_NAMES,
+  HOSTING_TOOLS,
   canCodingAiActAtStage,
   getNextCodingPipelineStage,
+  getNextHostingPipelineStage,
+  isHostingPipelineReadOnly,
   DEFAULT_AI_SECURITY_POLICY,
   DEFAULT_MEMORY_POLICIES,
   FORBIDDEN_AI_PATHS,
@@ -43,7 +49,9 @@ describe("package module map", () => {
     expect(AI_AGENT_ROSTER.map((agent) => agent.code)).toContain("supervisor");
     expect(getAgentDefinition("support").label).toContain("Support");
     expect(AI_TOOL_REGISTRY.length).toBe(
-      CUSTOMER_SUPPORT_TOOL_NAMES.length + CODING_TOOL_NAMES.length,
+      CUSTOMER_SUPPORT_TOOL_NAMES.length +
+        CODING_TOOL_NAMES.length +
+        HOSTING_TOOLS.length,
     );
     expect(getTool("searchKnowledge")?.risk).toBe("read");
     expect(getTool("createTicket")?.risk).toBe("write");
@@ -76,6 +84,44 @@ describe("package module map", () => {
       ...CUSTOMER_SUPPORT_TOOL_NAMES,
     ]);
     expect(getTool("replyTicket")?.parameters.body?.required).toBe(true);
+  });
+
+  it("registers hosting diagnostic tools on the hosting agent", () => {
+    expect([...HOSTING_TOOL_NAMES]).toEqual([
+      "identifyHostingAccount",
+      "checkServer",
+      "checkDns",
+      "checkSsl",
+      "checkServiceStatus",
+      "readSafeLogs",
+      "searchKnowledge",
+      "diagnoseHosting",
+    ]);
+    expect(getAgentDefinition("hosting").toolAllowlist).toEqual([...HOSTING_TOOL_NAMES]);
+    expect(getTool("readSafeLogs")?.risk).toBe("read");
+    expect(getTool("diagnoseHosting")?.risk).toBe("read");
+    expect(HOSTING_TOOLS.every((tool) => tool.risk === "read")).toBe(true);
+  });
+
+  it("encodes the Hosting AI diagnostic pipeline", () => {
+    expect([...HOSTING_PIPELINE_STAGES]).toEqual([
+      "customer_request",
+      "hosting_ai",
+      "identify_hosting_account",
+      "check_server",
+      "check_dns",
+      "check_ssl",
+      "check_service_status",
+      "read_safe_logs",
+      "search_knowledge",
+      "diagnosis",
+    ]);
+    expect(HOSTING_PIPELINE_DIAGRAM).toContain("Read safe logs");
+    expect(getNextHostingPipelineStage("customer_request")).toBe("hosting_ai");
+    expect(getNextHostingPipelineStage("search_knowledge")).toBe("diagnosis");
+    expect(getNextHostingPipelineStage("diagnosis")).toBeNull();
+    expect(isHostingPipelineReadOnly("read_safe_logs")).toBe(true);
+    expect(isHostingPipelineReadOnly("diagnosis")).toBe(true);
   });
 
   it("registers coding tools on the coding agent", () => {

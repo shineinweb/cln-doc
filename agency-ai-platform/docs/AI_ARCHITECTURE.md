@@ -258,6 +258,45 @@ DEPLOY
 
 \* Branch and PR creation still require human approval gates. Source of truth: `CODING_PIPELINE` in `@agency/ai`.
 
+### 5.6 Hosting diagnostic pipeline
+
+```text
+Customer request
+        ↓
+Hosting AI
+        ↓
+Identify hosting account
+        ↓
+Check server
+        ↓
+Check DNS
+        ↓
+Check SSL
+        ↓
+Check service status
+        ↓
+Read safe logs
+        ↓
+Search knowledge
+        ↓
+Diagnosis
+```
+
+| Stage                      | Codename                   | Tool                     | Notes                                      |
+| -------------------------- | -------------------------- | ------------------------ | ------------------------------------------ |
+| Customer request           | `customer_request`         | —                        | Supervisor routes                          |
+| Hosting AI                 | `hosting_ai`               | —                        | Specialist handoff                         |
+| Identify hosting account   | `identify_hosting_account` | `identifyHostingAccount` | HostingProvider lookup                     |
+| Check server               | `check_server`             | `checkServer`            | Read-only host health                      |
+| Check DNS                  | `check_dns`                | `checkDns`               | DnsProvider                                |
+| Check SSL                  | `check_ssl`                | `checkSsl`               | Cert status                                |
+| Check service status       | `check_service_status`     | `checkServiceStatus`     | HTTP/service probe                         |
+| Read safe logs             | `read_safe_logs`           | `readSafeLogs`           | Allowlisted + redacted only                |
+| Search knowledge           | `search_knowledge`         | `searchKnowledge`        | RAG runbooks                               |
+| Diagnosis                  | `diagnosis`                | `diagnoseHosting`        | Synthesize; **no mutations**               |
+
+All stages are **read-only**. Source of truth: `HOSTING_PIPELINE` / `HOSTING_TOOL_NAMES` in `@agency/ai`. Still forbidden: `AI → production server → randomly change files`.
+
 **Also planned (other agents):** `quote.create_draft`, `hosting.restart_service` (approval), `dns.apply_record_change` (approval), `billing.issue_refund` (approval).
 
 ---

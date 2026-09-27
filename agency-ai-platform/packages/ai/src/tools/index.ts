@@ -6,10 +6,13 @@ export {
   CODING_TOOLS,
   CUSTOMER_SUPPORT_TOOL_NAMES,
   CUSTOMER_SUPPORT_TOOLS,
+  HOSTING_TOOL_NAMES,
+  HOSTING_TOOLS,
   getTool,
   invokeTool,
   isCodingTool,
   isCustomerSupportTool,
+  isHostingTool,
   listTools,
 } from "./registry";
 export type {
@@ -18,4 +21,5 @@ export type {
   AiToolRisk,
   CodingToolName,
   CustomerSupportToolName,
+  HostingToolName,
 } from "./registry";
