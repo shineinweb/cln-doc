@@ -14,4 +14,4 @@ alwaysApply: true
 - Third-party systems only via provider interfaces (LLM, Embedding, VectorStore, Payment, Hosting, Domain, Email, Storage).
 - Prefer TypeScript strict mode; extend `tsconfig.base.json`.
 - Add `.env.example` when introducing new env vars; never commit secrets.
-- Before large features, read `docs/ARCHITECTURE.md` and the relevant companion doc.
+- Before architectural or large feature work, read `DEVELOPMENT_RULES.md`, then `docs/ARCHITECTURE.md` and the relevant companion doc.
