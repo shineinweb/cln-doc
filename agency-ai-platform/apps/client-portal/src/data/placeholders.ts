@@ -77,4 +77,32 @@ export const PORTAL_NAV = [
   { to: "/", label: "Home" },
   { to: "/hosting", label: "Hosting" },
   { to: "/tickets", label: "Tickets" },
+  { to: "/ai", label: "Ask AI" },
 ] as const;
+
+/** Home dashboard PLACEHOLDER — matches portal welcome wireframe. */
+export const PLACEHOLDER_DASHBOARD = {
+  stats: [
+    { key: "websites", label: "Websites", value: 3, to: "/" },
+    { key: "domains", label: "Domains", value: 8, to: "/" },
+    { key: "hosting", label: "Hosting", value: 3, to: "/hosting" },
+    { key: "open_tickets", label: "Open Tickets", value: 1, to: "/tickets" },
+  ],
+  projects: [
+    {
+      id: "proj_company_site",
+      name: "Company Website",
+      progressPercent: 72,
+    },
+  ],
+  services: [
+    { id: "svc_1", name: "example.com", detail: "Hosting Active" },
+    { id: "svc_2", name: "company.com", detail: "Domain Active" },
+    { id: "svc_3", name: "SEO Management", detail: "Active" },
+  ],
+  invoice: {
+    amountLabel: "$248",
+    dueLabel: "due Oct 1",
+  },
+  aiPromptPlaceholder: "Ask AI anything about your account...",
+} as const;

@@ -7,7 +7,7 @@ export function LoginPage() {
   const { user, error, login, enterDemoSession, clearError } = useAuth();
 
   if (user) {
-    return <Navigate to="/hosting" replace />;
+    return <Navigate to="/" replace />;
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {

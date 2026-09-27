@@ -1,10 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { formatUsagePair } from "@agency/hosting";
 import {
+  PLACEHOLDER_DASHBOARD,
   PLACEHOLDER_HOSTING_ACCOUNTS,
   PLACEHOLDER_NEW_TICKET,
   PORTAL_NAV,
 } from "./data/placeholders";
+
+describe("client portal home dashboard", () => {
+  it("exposes welcome dashboard stats, project, services, and AI entry", () => {
+    expect(PORTAL_NAV.map((item) => item.to)).toContain("/ai");
+    expect(PLACEHOLDER_DASHBOARD.stats.map((s) => s.label)).toEqual([
+      "Websites",
+      "Domains",
+      "Hosting",
+      "Open Tickets",
+    ]);
+    expect(PLACEHOLDER_DASHBOARD.stats.map((s) => s.value)).toEqual([3, 8, 3, 1]);
+    expect(PLACEHOLDER_DASHBOARD.projects[0]?.name).toBe("Company Website");
+    expect(PLACEHOLDER_DASHBOARD.projects[0]?.progressPercent).toBe(72);
+    expect(PLACEHOLDER_DASHBOARD.services[0]?.name).toBe("example.com");
+    expect(PLACEHOLDER_DASHBOARD.invoice.amountLabel).toBe("$248");
+  });
+});
 
 describe("client portal hosting placeholders", () => {
   it("exposes hosting nav and example.com Business Hosting card data", () => {
