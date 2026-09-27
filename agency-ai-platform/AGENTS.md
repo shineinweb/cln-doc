@@ -34,7 +34,7 @@ When asked to implement, follow the roadmap order and the docs below.
 | 5 | [docs/AI_ARCHITECTURE.md](./docs/AI_ARCHITECTURE.md) | Agents, RAG, tools, approvals |
 | 6 | [docs/ROADMAP.md](./docs/ROADMAP.md) | What to build next |
 
-Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/) (includes `development.mdc`).
+Index: [docs/README.md](./docs/README.md). Cursor rules: [`.cursor/rules/`](./.cursor/rules/).
 
 ---
 
@@ -209,4 +209,16 @@ Follow the full workflow in [DEVELOPMENT_RULES.md](./DEVELOPMENT_RULES.md):
 
 ## 13. Cursor rules
 
-Project rules in [`.cursor/rules/`](./.cursor/rules/) reinforce monorepo, frontend, and API constraints. If a rule conflicts with these docs, **docs win** — then update the rule to match.
+Concise always/glob rules in [`.cursor/rules/`](./.cursor/rules/):
+
+| Rule | Scope |
+| --- | --- |
+| `architecture.mdc` | Always — stack, boundaries, providers |
+| `security.mdc` | Always — authZ, tenancy, secrets, audit |
+| `frontend.mdc` | Website, portal, admin, UI |
+| `backend.mdc` | API + domain integration packages |
+| `database.mdc` | Prisma / MariaDB |
+| `testing.mdc` | Tests + verification workflow |
+| `ai.mdc` | Agents, RAG, tools, approvals |
+
+If a rule conflicts with `DEVELOPMENT_RULES.md` or `docs/`, **docs win** — then update the rule to match.

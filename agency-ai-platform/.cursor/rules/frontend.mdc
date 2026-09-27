@@ -1,5 +1,5 @@
 ---
-description: React/Vite frontend conventions for website, portal, admin
+description: React/Vite frontend rules for website, portal, admin, UI
 globs:
   - "apps/website/**"
   - "apps/client-portal/**"
@@ -8,10 +8,13 @@ globs:
 alwaysApply: false
 ---
 
-# Frontend rules
+# Frontend
 
-- React + Vite + TypeScript.
-- Prefer shared primitives from `@agency/ui` over duplicating components.
-- Use `@agency/shared` for types/constants used by more than one app.
-- Keep route/page files focused; extract hooks and presentational pieces.
-- Do not call Nest internals directly — go through the API / package clients.
+- React + Vite + TypeScript strict
+- UI primitives from `@agency/ui`; shared types from `@agency/shared`
+- No business logic duplication — call the API; do not reimplement domain rules in components
+- Never import Nest internals, Prisma, or vendor SDKs (Stripe, OpenAI, WHM, etc.)
+- Never put backend secrets or API keys in frontend code or Vite env that is exposed to the client
+- Keep route/page files thin; extract hooks and presentational pieces
+- Respect surface boundaries: no admin capabilities in portal; no portal billing UI on the public site (login entry is OK)
+- Auth UX may use HTTP-only cookies; do not store long-lived tokens in `localStorage` by default

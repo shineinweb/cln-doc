@@ -1,0 +1,20 @@
+---
+description: MariaDB and Prisma schema/migration rules
+globs:
+  - "packages/database/**"
+  - "**/schema.prisma"
+  - "**/prisma/**"
+alwaysApply: false
+---
+
+# Database
+
+- MariaDB is the only primary DB; Prisma `provider = "mysql"`
+- Never introduce PostgreSQL, `pg`, or `pgvector`
+- All schema changes via Prisma migrations in `@agency/database`
+- Never manually alter production schema
+- Customer-owned rows carry `organizationId`; index tenant + list filters
+- Transactions for financial and other critical operations
+- Money as integer minor units; unique constraints on provider external IDs where needed
+- Soft delete (`deletedAt`) for CRM/content unless erasure requires hard delete
+- Embeddings/RAG chunks stay in MariaDB (`VectorStore` adapter) — see `docs/DATABASE.md`

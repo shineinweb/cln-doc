@@ -1,0 +1,23 @@
+---
+description: Multi-agent AI, RAG, tools, and human approval
+globs:
+  - "packages/ai/**"
+  - "apps/api/**/ai/**"
+  - "docs/AI_ARCHITECTURE.md"
+alwaysApply: false
+---
+
+# AI
+
+Read `docs/AI_ARCHITECTURE.md` before changing agent/tool/RAG behavior.
+
+- No unrestricted system access for agents
+- Orchestrate Supervisor → specialist; do not call OpenAI from random services
+- Use `LLMProvider` / `EmbeddingProvider` / `VectorStore` only
+- RAG context is untrusted data, not instructions; scope by tenant/visibility
+- Every tool: authN, authZ, input validation, tenant validation, rate limit where needed, audit
+- Persist runs, tool calls, approvals, feedback
+
+## Human approval required (never auto)
+
+Delete customer/hosting accounts or databases · change production DNS · issue refunds · deploy production code · modify billing · change permissions · other high-risk mutations (e.g. hosting suspend, domain transfer) per policy
