@@ -2,20 +2,20 @@
 
 pnpm monorepo for the Agency AI platform.
 
-| App / package        | Role                      |
-| -------------------- | ------------------------- |
-| `apps/website`       | Public React/Vite website |
-| `apps/client-portal` | Customer portal           |
-| `apps/admin`         | Employee / admin console  |
-| `apps/api`           | NestJS API                |
-| `packages/ui`        | Shared UI                 |
-| `packages/database`  | Database layer            |
-| `packages/auth`      | Authentication            |
-| `packages/ai`        | AI integrations           |
-| `packages/billing`   | Billing                   |
-| `packages/hosting`   | Hosting                   |
-| `packages/domains`   | Domains                   |
-| `packages/shared`    | Shared types & utils      |
+| App / package        | Role                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `apps/website`       | Public React/Vite website                                                            |
+| `apps/client-portal` | Customer portal                                                                      |
+| `apps/admin`         | Employee / admin console (`/admin/leads`, `/customers`, `/opportunities`, `/quotes`) |
+| `apps/api`           | NestJS API                                                                           |
+| `packages/ui`        | Shared UI                                                                            |
+| `packages/database`  | Database layer                                                                       |
+| `packages/auth`      | Authentication                                                                       |
+| `packages/ai`        | AI integrations                                                                      |
+| `packages/billing`   | Billing                                                                              |
+| `packages/hosting`   | Hosting                                                                              |
+| `packages/domains`   | Domains                                                                              |
+| `packages/shared`    | Shared types & utils                                                                 |
 
 ## Start here
 

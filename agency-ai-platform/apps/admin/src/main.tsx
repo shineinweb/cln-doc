@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { webEnv } from "./env";
-import "./styles.css";
+import "./index.css";
 
 document.documentElement.dataset.apiUrl = webEnv.VITE_API_URL;
 
