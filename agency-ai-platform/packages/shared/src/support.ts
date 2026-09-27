@@ -53,10 +53,32 @@ export const SUPPORT_TICKET_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as 
 
 export type SupportTicketPriorityValue = (typeof SUPPORT_TICKET_PRIORITIES)[number];
 
+/** Portal/admin department keys stored on SupportTicket.category. */
+export const SUPPORT_TICKET_DEPARTMENTS = [
+  { key: "hosting", label: "Hosting" },
+  { key: "domains", label: "Domains" },
+  { key: "billing", label: "Billing" },
+  { key: "website", label: "Website" },
+  { key: "general", label: "General" },
+] as const;
+
+export type SupportTicketDepartmentKey = (typeof SUPPORT_TICKET_DEPARTMENTS)[number]["key"];
+
+export const SUPPORT_TICKET_PRIORITY_LABELS: Record<SupportTicketPriorityValue, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
+};
+
 export function isSupportTicketStatus(value: string): value is SupportTicketStatusValue {
   return (SUPPORT_TICKET_STATUSES as readonly string[]).includes(value);
 }
 
 export function isSupportTicketPriority(value: string): value is SupportTicketPriorityValue {
   return (SUPPORT_TICKET_PRIORITIES as readonly string[]).includes(value);
+}
+
+export function isSupportTicketDepartment(value: string): value is SupportTicketDepartmentKey {
+  return SUPPORT_TICKET_DEPARTMENTS.some((item) => item.key === value);
 }

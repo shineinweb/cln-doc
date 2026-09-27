@@ -367,6 +367,127 @@ a {
   background: color-mix(in oklab, var(--accent) 10%, transparent);
 }
 
+.portal-page__header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+}
+
+.ticket-form {
+  display: grid;
+  gap: 1.1rem;
+  background: var(--elevated);
+  border: 1px solid var(--mist);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 18px 40px -28px rgba(15, 23, 42, 0.35);
+  animation: rise 640ms var(--ease) 80ms both;
+  max-width: 36rem;
+}
+
+.ticket-form--success {
+  max-width: 36rem;
+}
+
+.ticket-form__success-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.5rem;
+}
+
+.ticket-form__success-subject {
+  margin: 0.75rem 0 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.ticket-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ticket-field__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.ticket-field input,
+.ticket-field select,
+.ticket-field textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--mist);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ticket-field textarea {
+  resize: vertical;
+  min-height: 8rem;
+  line-height: 1.5;
+}
+
+.ticket-field input:focus,
+.ticket-field select:focus,
+.ticket-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.ticket-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.ticket-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ticket-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--mist);
+  border-radius: 14px;
+  background: var(--elevated);
+  animation: rise 560ms var(--ease) both;
+}
+
+.ticket-row__meta {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.ticket-row__subject {
+  margin: 0.3rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.ticket-row__status {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
 @media (max-width: 640px) {
   .portal-top {
     padding: 1rem;
@@ -376,7 +497,8 @@ a {
     padding: 1.25rem 1rem 2.5rem;
   }
 
-  .hosting-card {
+  .hosting-card,
+  .ticket-form {
     padding: 1.2rem;
   }
 }
@@ -387,7 +509,9 @@ a {
   .actions,
   .animate-rise,
   .hosting-card,
-  .hosting-meter__fill {
+  .hosting-meter__fill,
+  .ticket-form,
+  .ticket-row {
     animation: none !important;
   }
 

@@ -13,6 +13,7 @@ import {
   QUOTE_CUSTOMER_ACTIONS,
   REFUND_WORKFLOW,
   REFUND_WORKFLOW_STAGES,
+  SUPPORT_TICKET_DEPARTMENTS,
   SUPPORT_TICKET_DOMAIN_MODELS,
   SUPPORT_TICKET_STATUS_PIPELINE,
   SUPPORT_TICKET_STATUSES,
@@ -20,6 +21,7 @@ import {
   formatUsdFromCents,
   isProjectStatusStage,
   isRefundWorkflowStage,
+  isSupportTicketDepartment,
   isSupportTicketStatus,
   nextQuoteStatusAfterAction,
 } from "./index";
@@ -189,5 +191,8 @@ describe("SUPPORT_TICKET_DOMAIN", () => {
     ]);
     expect(isSupportTicketStatus("OPEN")).toBe(true);
     expect(isSupportTicketStatus("DONE")).toBe(false);
+    expect(SUPPORT_TICKET_DEPARTMENTS.map((item) => item.label)).toContain("Hosting");
+    expect(isSupportTicketDepartment("hosting")).toBe(true);
+    expect(isSupportTicketDepartment("sales")).toBe(false);
   });
 });

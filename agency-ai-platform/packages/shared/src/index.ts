@@ -65,14 +65,18 @@ export {
 export type { BillingDomainModel, RefundWorkflowStage } from "./billing";
 
 export {
+  SUPPORT_TICKET_DEPARTMENTS,
   SUPPORT_TICKET_DOMAIN_MODELS,
   SUPPORT_TICKET_PRIORITIES,
+  SUPPORT_TICKET_PRIORITY_LABELS,
   SUPPORT_TICKET_STATUSES,
   SUPPORT_TICKET_STATUS_PIPELINE,
+  isSupportTicketDepartment,
   isSupportTicketPriority,
   isSupportTicketStatus,
 } from "./support";
 export type {
+  SupportTicketDepartmentKey,
   SupportTicketDomainModel,
   SupportTicketPriorityValue,
   SupportTicketStatusValue,

@@ -1,12 +1,14 @@
 /**
- * DEVELOPMENT PLACEHOLDER DATA for client portal hosting views.
- * Replace with API / HostingProvider-backed data before production.
+ * DEVELOPMENT PLACEHOLDER DATA for client portal views.
+ * Replace with API / provider-backed data before production.
  */
+
+import type { SupportTicketPriorityValue } from "@agency/shared";
 
 const GIB = 1024 ** 3;
 
 export const PLACEHOLDER_NOTICE =
-  "Development placeholder — not live WHM/cPanel usage data.";
+  "Development placeholder — not loaded from the portal API.";
 
 export type PortalHostingAccountView = {
   id: string;
@@ -32,7 +34,38 @@ export const PLACEHOLDER_HOSTING_ACCOUNTS: PortalHostingAccountView[] = [
   },
 ];
 
+/** Prefill for the New Ticket form demo (matches product mock). */
+export const PLACEHOLDER_NEW_TICKET = {
+  department: "hosting",
+  priority: "HIGH" as SupportTicketPriorityValue,
+  subject: "Website unavailable",
+  message:
+    "Our site at example.com is returning errors for visitors. It started this morning after a deploy.",
+} as const;
+
+export const PLACEHOLDER_PORTAL_TICKETS = [
+  {
+    id: "tkt_portal_1",
+    number: 1002,
+    department: "domains",
+    priority: "MEDIUM" as SupportTicketPriorityValue,
+    subject: "DNS change for www.example.com",
+    status: "WAITING_ON_CUSTOMER",
+    statusLabel: "Waiting on customer",
+  },
+  {
+    id: "tkt_portal_2",
+    number: 998,
+    department: "billing",
+    priority: "LOW" as SupportTicketPriorityValue,
+    subject: "Invoice copy request",
+    status: "RESOLVED",
+    statusLabel: "Resolved",
+  },
+] as const;
+
 export const PORTAL_NAV = [
   { to: "/", label: "Home" },
   { to: "/hosting", label: "Hosting" },
+  { to: "/tickets", label: "Tickets" },
 ] as const;

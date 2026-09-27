@@ -5,6 +5,8 @@ import { HomePage } from "./pages/HomePage";
 import { HostingManagePage } from "./pages/HostingManagePage";
 import { HostingPage } from "./pages/HostingPage";
 import { LoginPage } from "./pages/LoginPage";
+import { NewTicketPage } from "./pages/NewTicketPage";
+import { TicketsPage } from "./pages/TicketsPage";
 
 export function App() {
   return (
@@ -16,6 +18,8 @@ export function App() {
             <Route index element={<HomePage />} />
             <Route path="hosting" element={<HostingPage />} />
             <Route path="hosting/:accountId/manage" element={<HostingManagePage />} />
+            <Route path="tickets" element={<TicketsPage />} />
+            <Route path="tickets/new" element={<NewTicketPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

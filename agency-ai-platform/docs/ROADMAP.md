@@ -146,7 +146,8 @@ Companion docs: [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.m
 - [x] Support schema: `SupportTicket`, `TicketMessage`, `TicketAttachment`, `TicketAssignment`, `TicketStatusHistory`
 - SLA fields / assignment (schema fields landed; enforcement jobs pending)
 - KB CMS (public + internal)
-- Portal + admin ticket UX (admin list PLACEHOLDER)
+- [x] Portal New Ticket form + tickets list shell (PLACEHOLDER submit — API not wired)
+- Admin ticket UX (admin list PLACEHOLDER)
 - Macro/canned replies
 
 **Exit criteria:** customer opens ticket; staff resolves with KB-linked answer.
