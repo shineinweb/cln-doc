@@ -15,6 +15,8 @@
  *       SEO                              Knowledge
  */
 
+import { CUSTOMER_SUPPORT_TOOL_NAMES } from "../tools/registry";
+
 export const AI_AGENT_CODES = [
   "supervisor",
   "support",
@@ -72,7 +74,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "Tickets, KB answers, troubleshooting.",
     reportsTo: "supervisor",
     tier: "primary",
-    toolAllowlist: [],
+    toolAllowlist: [...CUSTOMER_SUPPORT_TOOL_NAMES],
   },
   {
     code: "coding",
@@ -88,7 +90,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "Hosting diagnostics and WHM-safe recommendations.",
     reportsTo: "supervisor",
     tier: "primary",
-    toolAllowlist: [],
+    toolAllowlist: ["getCustomerHosting", "searchKnowledge"],
   },
   {
     code: "sales",
@@ -97,7 +99,12 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
       "Cross-cutting qualification, quote drafts, plan recommendations.",
     reportsTo: "supervisor",
     tier: "cross_cutting",
-    toolAllowlist: [],
+    toolAllowlist: [
+      "getCurrentCustomer",
+      "getCustomerServices",
+      "getCustomerInvoices",
+      "searchKnowledge",
+    ],
   },
   {
     code: "seo",
@@ -105,7 +112,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "Audits, content recommendations, keyword assist.",
     reportsTo: "supervisor",
     tier: "specialty",
-    toolAllowlist: [],
+    toolAllowlist: ["searchKnowledge"],
   },
   {
     code: "knowledge",
@@ -113,7 +120,7 @@ export const AI_AGENT_ROSTER: readonly AiAgentDefinition[] = [
     description: "RAG curation, collection scoping, retrieval quality assist.",
     reportsTo: "supervisor",
     tier: "specialty",
-    toolAllowlist: [],
+    toolAllowlist: ["searchKnowledge"],
   },
 ] as const;
 

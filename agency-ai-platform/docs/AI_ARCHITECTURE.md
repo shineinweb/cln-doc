@@ -166,23 +166,37 @@ Tools are typed functions registered in a **tool registry**, exposed to the LLM 
 3. Arguments validated with schemas; outputs size-limited before returning to the model.
 4. Every invocation stored as `AiToolCall` with latency, status, error.
 
-### 5.3 Example tool surface (illustrative)
+### 5.3 Customer Support tool surface (v1)
+
+Portal-scoped tools on the **Customer Support** agent (`CUSTOMER_SUPPORT_TOOL_NAMES`):
 
 ```text
-kb.search
-kb.get_article
-ticket.get / ticket.list_related
-project.get_status
-billing.get_invoice
-hosting.get_account
-dns.list_records
-crm.find_lead          (admin/sales only)
-quote.create_draft     (sales)
-hosting.restart_service  (approval)
-hosting.suspend_account  (approval)
-dns.apply_record_change  (approval)
-billing.issue_refund     (approval)
+getCurrentCustomer()
+getCustomerServices()
+getCustomerDomains()
+getCustomerHosting()
+getCustomerInvoices()
+getCustomerTickets()
+searchKnowledge()
+createTicket()
+replyTicket()
 ```
+
+| Tool                   | Risk  | Approval                                      |
+| ---------------------- | ----- | -------------------------------------------- |
+| `getCurrentCustomer`   | read  | Session customer profile                     |
+| `getCustomerServices`  | read  | Active / pending services                    |
+| `getCustomerDomains`   | read  | Customer domains                             |
+| `getCustomerHosting`   | read  | Hosting accounts + status                    |
+| `getCustomerInvoices`  | read  | Invoices (optional status filter)            |
+| `getCustomerTickets`   | read  | Tickets (optional status filter)             |
+| `searchKnowledge`      | read  | RAG over published KB chunks                 |
+| `createTicket`         | write | New ticket (dept, subject, body, priority)   |
+| `replyTicket`          | write | Customer reply on own ticket                 |
+
+Handlers are PLACEHOLDER (`invokeTool` → `AiToolUnwiredError`) until Nest binds domain services. AuthZ always uses the initiating customer principal — no cross-tenant reads.
+
+**Also planned (staff / other agents):** `quote.create_draft`, `hosting.restart_service` (approval), `dns.apply_record_change` (approval), `billing.issue_refund` (approval).
 
 ---
 

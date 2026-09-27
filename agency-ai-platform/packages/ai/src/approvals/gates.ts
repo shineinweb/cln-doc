@@ -16,9 +16,13 @@ export type ApprovalRequest = {
   status: ApprovalDecision;
 };
 
+/**
+ * Destructive tools always need approval. Write tools only when the
+ * registry marks `requiresApproval` (customer self-service writes do not).
+ */
 export function requiresApproval(risk: AiToolRisk, toolRequiresApproval: boolean): boolean {
   if (toolRequiresApproval) return true;
-  return risk === "destructive" || risk === "write";
+  return risk === "destructive";
 }
 
 /** PLACEHOLDER — always returns pending; Nest must persist AiApproval records. */
