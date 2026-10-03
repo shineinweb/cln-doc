@@ -4,11 +4,14 @@ import {
   createSopSchema,
   createTeamSchema,
   createWorkflowTemplateSchema,
+  recordRemovedSchema,
   sopSummarySchema,
   teamSummarySchema,
   workflowDirectorySchema,
   workflowTemplateViewSchema,
   type CreateWorkflowTemplate,
+  type SopEdit,
+  type WorkflowTemplateView,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -16,6 +19,7 @@ import { useForm } from 'react-hook-form';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 
 const emptyTask = {
   taskKey: 'scout',
@@ -90,33 +94,21 @@ export function WorkflowsPage() {
         title="Workflows"
         lede="A template is applied when a cycle starts. Editing it creates a new version and leaves existing cycles on the version they already have."
       />
-      {data.templates.length === 0 ? (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          No workflow templates yet.
-        </Alert>
-      ) : (
-        data.templates.map((template) => (
-          <Card key={template.id} sx={{ mb: 2 }} data-testid="workflow-template">
-            <CardContent>
-              <Typography variant="h3" sx={{ fontSize: 24 }}>
-                {template.name}
-              </Typography>
-              <Typography sx={{ color: 'text.secondary', mb: 1 }} data-testid="workflow-version">
-                Version {template.currentVersion.versionNumber} of {template.versionCount} · {template.currentVersion.durationDays} days · starts at {template.currentVersion.startingEvent}
-                {template.cultivar ? ` · Cultivar ${template.cultivar}` : ''}
-                {template.medium ? ` · Medium ${template.medium}` : ''}
-              </Typography>
-              {template.currentVersion.tasks.map((item) => (
-                <Typography key={item.id}>
-                  Day {item.offsetDays + 1} · {item.title} · {item.assigneeLabel}
-                  {item.dependsOnKey ? ` · after ${item.dependsOnKey}` : ''}
-                  {item.requiresApproval ? ' · approval' : ''}
-                </Typography>
-              ))}
-            </CardContent>
-          </Card>
-        ))
-      )}
+      <PagedList
+        items={data.templates}
+        empty="No workflow templates yet."
+        testId="workflow-templates"
+        render={(template) => <TemplateRow key={template.id} template={template} />}
+      />
+      <Typography variant="h2" sx={{ fontSize: 28, mt: 3, mb: 1 }}>
+        SOP records
+      </Typography>
+      <PagedList
+        items={data.sops}
+        empty="No SOP records yet."
+        testId="sop-records"
+        render={(sop) => <SopRow key={sop.id} sop={sop} />}
+      />
       {user?.isOrgAdmin ? (
         <Box sx={{ display: 'grid', gap: 2, mt: 3 }}>
           <SopForm />
@@ -202,6 +194,99 @@ export function WorkflowsPage() {
         <Typography sx={{ color: 'text.secondary' }}>Managers create templates. You can still work the assignments they generate.</Typography>
       )}
     </Box>
+  );
+}
+
+function TemplateRow({ template }: { template: WorkflowTemplateView }) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['workflow-directory'] });
+  const save = useMutation({
+    mutationFn: (body: { name: string; cultivar: string | null; medium: string | null }) =>
+      apiSend(`/workflows/templates/${template.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/workflows/templates/${template.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <Card sx={{ mb: 2 }} data-testid="workflow-template">
+      <CardContent>
+        <RecordActions
+          summary={<Typography variant="h3" sx={{ fontSize: 24 }}>{template.name}</Typography>}
+          detail={
+            <Box>
+              <Typography sx={{ color: 'text.secondary', mb: 1 }} data-testid="workflow-version">
+                Version {template.currentVersion.versionNumber} of {template.versionCount} · {template.currentVersion.durationDays} days · starts at {template.currentVersion.startingEvent}
+                {template.cultivar ? ` · Cultivar ${template.cultivar}` : ''}
+                {template.medium ? ` · Medium ${template.medium}` : ''}
+              </Typography>
+              {template.currentVersion.tasks.map((item) => (
+                <Typography key={item.id}>
+                  Day {item.offsetDays + 1} · {item.title} · {item.assigneeLabel}
+                  {item.dependsOnKey ? ` · after ${item.dependsOnKey}` : ''}
+                  {item.requiresApproval ? ' · approval' : ''}
+                </Typography>
+              ))}
+            </Box>
+          }
+          editor={
+            <Box
+              component="form"
+              sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+              onSubmit={(event) => {
+                event.preventDefault();
+                const form = new FormData(event.currentTarget);
+                const cultivar = String(form.get('cultivar') ?? '').trim();
+                const medium = String(form.get('medium') ?? '').trim();
+                save.mutate({ name: String(form.get('name') ?? ''), cultivar: cultivar || null, medium: medium || null });
+              }}
+            >
+              <TextField label="Name" name="name" defaultValue={template.name} required />
+              <TextField label="Cultivar" name="cultivar" defaultValue={template.cultivar ?? ''} />
+              <TextField label="Medium" name="medium" defaultValue={template.medium ?? ''} />
+              <SaveChanges pending={save.isPending} />
+            </Box>
+          }
+          onDelete={() => remove.mutate()}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function SopRow({ sop }: { sop: SopEdit & { id: string } }) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['workflow-directory'] });
+  const save = useMutation({
+    mutationFn: (body: SopEdit) => apiSend(`/workflows/sops/${sop.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/workflows/sops/${sop.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      summary={<Typography data-testid="sop-record">{sop.title}</Typography>}
+      detail={<Typography>{sop.summary}</Typography>}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1, maxWidth: 480 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            save.mutate({ title: String(form.get('title') ?? ''), summary: String(form.get('summary') ?? '') });
+          }}
+        >
+          <TextField label="Title" name="title" defaultValue={sop.title} required />
+          <TextField label="Summary" name="summary" defaultValue={sop.summary} required multiline minRows={2} />
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
   );
 }
 

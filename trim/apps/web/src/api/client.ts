@@ -65,8 +65,16 @@ export function apiGet<T>(path: string, schema: ZodType<T>): Promise<T> {
   return apiRequest(path, schema, { method: 'GET' });
 }
 
-export function apiSend<T>(path: string, schema: ZodType<T>, payload: unknown): Promise<T> {
-  return apiRequest(path, schema, { method: 'POST', body: JSON.stringify(payload) });
+export function apiSend<T>(
+  path: string,
+  schema: ZodType<T>,
+  payload?: unknown,
+  method: 'POST' | 'PATCH' | 'DELETE' = 'POST',
+): Promise<T> {
+  return apiRequest(path, schema, {
+    method,
+    body: payload === undefined ? undefined : JSON.stringify(payload),
+  });
 }
 
 export async function apiUpload<T>(path: string, schema: ZodType<T>, file: File): Promise<T> {

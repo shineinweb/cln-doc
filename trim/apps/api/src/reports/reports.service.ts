@@ -25,9 +25,9 @@ type CycleRow = {
   harvests: Array<{
     id: string;
     plants: Array<{ id: string }>;
-    steps: Array<{ kind: string; occurredAt: Date; weightGrams: number | null }>;
-    wastes: Array<{ weightGrams: number }>;
-    packages: Array<{ weightGrams: number }>;
+    steps: Array<{ kind: string; occurredAt: Date; weightGrams: number | null; voidedAt: Date | null }>;
+    wastes: Array<{ weightGrams: number; voidedAt: Date | null }>;
+    packages: Array<{ weightGrams: number; voidedAt: Date | null }>;
   }>;
 };
 
@@ -68,11 +68,12 @@ export class ReportsService {
         laborEntries: { orderBy: { occurredOn: 'asc' } },
         inputCosts: { orderBy: { description: 'asc' } },
         harvests: {
+          where: { voidedAt: null },
           include: {
             plants: { select: { id: true } },
-            steps: true,
-            wastes: true,
-            packages: true,
+            steps: { where: { voidedAt: null } },
+            wastes: { where: { voidedAt: null } },
+            packages: { where: { voidedAt: null } },
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -190,10 +191,13 @@ export class ReportsService {
       };
     }
     const plantCount = harvest.plants.length;
-    const wet = harvest.steps.find((step) => step.kind === 'wet_weight')?.weightGrams ?? null;
-    const dry = harvest.steps.find((step) => step.kind === 'dry_weight')?.weightGrams ?? null;
-    const packageWeightGrams = harvest.packages.reduce((sum, row) => sum + row.weightGrams, 0);
-    const wasteWeightGrams = harvest.wastes.reduce((sum, row) => sum + row.weightGrams, 0);
+    const steps = harvest.steps.filter((step) => !step.voidedAt);
+    const packages = harvest.packages.filter((row) => !row.voidedAt);
+    const wastes = harvest.wastes.filter((row) => !row.voidedAt);
+    const wet = steps.find((step) => step.kind === 'wet_weight')?.weightGrams ?? null;
+    const dry = steps.find((step) => step.kind === 'dry_weight')?.weightGrams ?? null;
+    const packageWeightGrams = packages.reduce((sum, row) => sum + row.weightGrams, 0);
+    const wasteWeightGrams = wastes.reduce((sum, row) => sum + row.weightGrams, 0);
     const unaccountedGrams = dry === null ? null : dry - packageWeightGrams - wasteWeightGrams;
     const gramsPerPlant = dry !== null && plantCount > 0 ? dry / plantCount : null;
     const present = gramsPerPlant !== null;

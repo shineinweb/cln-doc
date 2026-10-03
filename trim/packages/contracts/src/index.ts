@@ -177,6 +177,84 @@ export const createRoomSchema = z.object({
   roomType: z.enum(ROOM_TYPES),
 });
 
+export const recordRemovedSchema = z.object({
+  id: z.string(),
+  removed: z.boolean(),
+  voided: z.boolean(),
+});
+
+export const zoneInputSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+});
+
+export const cycleEditSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  cultivar: z.string().trim().min(1).max(191),
+  expectedHarvestDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const taskEditSchema = z.object({
+  title: z.string().trim().min(1).max(191),
+  dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const taskCreateSchema = taskEditSchema;
+
+export const plantEditSchema = z.object({
+  stage: z.string().trim().min(1).max(191),
+});
+
+export const batchInputSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  strainName: z.string().trim().min(1).max(191),
+});
+
+export const plantCreateSchema = z.object({
+  batchId: z.string().min(1),
+  tag: z.string().trim().min(1).max(191),
+  stage: z.string().trim().min(1).max(191),
+});
+
+export const templateEditSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  cultivar: z.string().trim().max(191).nullable().optional(),
+  medium: z.string().trim().max(191).nullable().optional(),
+});
+
+export const sopEditSchema = z.object({
+  title: z.string().trim().min(1).max(191),
+  summary: z.string().trim().min(1).max(4000),
+});
+
+export const readingEditSchema = z.object({
+  value: z.number(),
+  unit: z.string().trim().min(1).max(40),
+  quality: z.enum(['good', 'suspect', 'bad']),
+});
+
+export const alertRuleEditSchema = z.object({
+  minValue: z.number().nullable(),
+  maxValue: z.number().nullable(),
+  enabled: z.boolean(),
+});
+
+export const harvestEditSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+});
+
+export const weightEditSchema = z.object({
+  grams: z.number().int().positive().max(1_000_000),
+  note: z.string().trim().max(500).nullable().optional(),
+});
+
+export const packageEditSchema = z.object({
+  label: z.string().trim().min(1).max(191),
+});
+
+export const submissionEditSchema = z.object({
+  rejectionNote: z.string().trim().max(500).nullable(),
+});
+
 export const roomSchema = z.object({
   id: z.string(),
   siteId: z.string(),
@@ -189,6 +267,13 @@ export const roomSchema = z.object({
   currentCycle: cropCycleSummarySchema.nullable(),
 });
 
+export const roomPageSchema = z.object({
+  items: z.array(roomSchema),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  total: z.number().int(),
+});
+
 export const roomDetailSchema = roomSchema.extend({
   siteName: z.string(),
   siteCode: z.string(),
@@ -199,6 +284,7 @@ export const roomDetailSchema = roomSchema.extend({
   activeAlerts: z.array(roomAlertSchema),
   latestReadings: z.array(latestReadingSlotSchema),
   readingHistory: z.array(environmentalReadingSchema),
+  alertRules: z.array(alertRuleSchema),
   lastMetrcSync: metrcSyncSchema.nullable(),
 });
 
@@ -619,6 +705,12 @@ export const inventoryPlantSchema = z.object({
   cycleName: z.string().nullable(),
 });
 
+export const inventoryBatchSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  strainName: z.string(),
+});
+
 export const licenseInventorySchema = z.object({
   id: z.string(),
   licenseNumber: z.string(),
@@ -626,7 +718,11 @@ export const licenseInventorySchema = z.object({
   siteNames: z.array(z.string()),
   plantCount: z.number().int(),
   listedCount: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  total: z.number().int(),
   plants: z.array(inventoryPlantSchema),
+  batches: z.array(inventoryBatchSchema),
   latestImport: metrcImportSummarySchema.nullable(),
 });
 
@@ -1095,6 +1191,21 @@ export type Zone = z.infer<typeof zoneSchema>;
 export type CropCycleSummary = z.infer<typeof cropCycleSummarySchema>;
 export type OperatingHistory = z.infer<typeof operatingHistorySchema>;
 export type CreateRoom = z.infer<typeof createRoomSchema>;
+export type RecordRemoved = z.infer<typeof recordRemovedSchema>;
+export type ZoneInput = z.infer<typeof zoneInputSchema>;
+export type CycleEdit = z.infer<typeof cycleEditSchema>;
+export type TaskEdit = z.infer<typeof taskEditSchema>;
+export type PlantEdit = z.infer<typeof plantEditSchema>;
+export type BatchInput = z.infer<typeof batchInputSchema>;
+export type PlantCreate = z.infer<typeof plantCreateSchema>;
+export type TemplateEdit = z.infer<typeof templateEditSchema>;
+export type SopEdit = z.infer<typeof sopEditSchema>;
+export type ReadingEdit = z.infer<typeof readingEditSchema>;
+export type AlertRuleEdit = z.infer<typeof alertRuleEditSchema>;
+export type HarvestEdit = z.infer<typeof harvestEditSchema>;
+export type WeightEdit = z.infer<typeof weightEditSchema>;
+export type PackageEdit = z.infer<typeof packageEditSchema>;
+export type SubmissionEdit = z.infer<typeof submissionEditSchema>;
 export type Room = z.infer<typeof roomSchema>;
 export type RoomDetail = z.infer<typeof roomDetailSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;

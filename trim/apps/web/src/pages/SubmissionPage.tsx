@@ -1,13 +1,15 @@
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
-import { submissionViewSchema } from '@trim/contracts';
-import { useQuery } from '@tanstack/react-query';
+import { Alert, Box, Skeleton, TextField, Typography } from '@mui/material';
+import { recordRemovedSchema, submissionViewSchema } from '@trim/contracts';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
-import { ApiError, apiGet } from '../api/client';
+import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
+import { RecordActions, SaveChanges } from '../records/RecordControls';
 
 export function SubmissionPage() {
   const { submissionId = '' } = useParams();
+  const queryClient = useQueryClient();
   const submission = useQuery({
     queryKey: ['submission', submissionId],
     queryFn: () => apiGet(`/submissions/${submissionId}`, submissionViewSchema),
@@ -39,7 +41,32 @@ export function SubmissionPage() {
         title={row.packageLabel ?? row.plantTag ?? 'Submission'}
         lede={`${row.eventType} · ${row.status}`}
       />
-      <Typography data-testid="submission-status">{row.status}</Typography>
+      <RecordActions
+        keepsHistory
+        summary={<Typography data-testid="submission-status">{row.status}</Typography>}
+        detail={<Typography>{row.eventNote}</Typography>}
+        editor={
+          <Box
+            component="form"
+            sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const rejectionNote = String(new FormData(event.currentTarget).get('rejectionNote') ?? '');
+              void apiSend(`/submissions/${row.id}`, recordRemovedSchema, { rejectionNote: rejectionNote || null }, 'PATCH').then(() =>
+                queryClient.invalidateQueries({ queryKey: ['submission', submissionId] }),
+              );
+            }}
+          >
+            <TextField label="Rejection note" name="rejectionNote" defaultValue={row.rejectionNote ?? ''} />
+            <SaveChanges />
+          </Box>
+        }
+        onDelete={() => {
+          void apiSend(`/submissions/${row.id}`, recordRemovedSchema, undefined, 'DELETE').then(() =>
+            queryClient.invalidateQueries({ queryKey: ['submission', submissionId] }),
+          );
+        }}
+      />
       <Typography sx={{ mt: 1 }}>{row.eventNote}</Typography>
       {row.attempt ? (
         <Typography data-testid="submission-attempt" sx={{ mt: 2 }}>

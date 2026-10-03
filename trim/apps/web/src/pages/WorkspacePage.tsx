@@ -1,9 +1,11 @@
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
-import { workspaceTodaySchema } from '@trim/contracts';
-import { useQuery } from '@tanstack/react-query';
-import { apiGet } from '../api/client';
+import { Alert, Box, Skeleton, TextField, Typography } from '@mui/material';
+import { recordRemovedSchema, workspaceTodaySchema, type CycleTaskDetail } from '@trim/contracts';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
+import { apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { AssignmentCard } from '../tasks/AssignmentCard';
 
 export function WorkspacePage() {
@@ -26,13 +28,52 @@ export function WorkspacePage() {
         title="Employee workspace"
         lede={`Assignments due ${formatCalendarDate(workspace.data.date)}. Tasks from another facility stay off this list.`}
       />
-      {workspace.data.tasks.length === 0 ? (
-        <Typography data-testid="workspace-empty" sx={{ color: 'text.secondary' }}>
-          Nothing is assigned to you today.
-        </Typography>
-      ) : (
-        workspace.data.tasks.map((task) => <AssignmentCard key={task.id} task={task} />)
-      )}
+      <PagedList
+        items={workspace.data.tasks}
+        empty="Nothing is assigned to you today."
+        testId="workspace-list"
+        render={(task) => <WorkspaceRow key={task.id} task={task} />}
+      />
     </Box>
+  );
+}
+
+function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['workspace'] });
+  const save = useMutation({
+    mutationFn: (body: { title: string; dueOn: string }) => apiSend(`/tasks/${task.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/tasks/${task.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      summary={
+        <Typography>
+          <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
+          {` · ${task.roomName} · ${formatCalendarDate(task.dueOn)}`}
+        </Typography>
+      }
+      detail={<AssignmentCard task={task} />}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            save.mutate({ title: String(form.get('title') ?? ''), dueOn: String(form.get('dueOn') ?? '') });
+          }}
+        >
+          <TextField label="Title" name="title" defaultValue={task.title} required />
+          <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
   );
 }

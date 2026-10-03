@@ -270,10 +270,12 @@ model Plant {
   cycleId   String?  @map("cycle_id")
   roomId    String?  @map("room_id")
   tag       String
-  stage     String
-  status    String   @default("active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  stage        String
+  status       String    @default("active")
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   license License      @relation(fields: [licenseId], references: [id], onDelete: Cascade)
   batch   PlantBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
@@ -322,9 +324,11 @@ model Harvest {
   siteId    String?  @map("site_id")
   cycleId   String?  @map("cycle_id")
   roomId    String?  @map("room_id")
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  name         String
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   license  License          @relation(fields: [licenseId], references: [id], onDelete: Cascade)
   site     Site?            @relation(fields: [siteId], references: [id], onDelete: SetNull)
@@ -366,10 +370,12 @@ model HarvestStep {
   actorUserId String   @map("actor_user_id")
   occurredAt  DateTime @map("occurred_at")
   weightGrams Int?     @map("weight_grams")
-  roomId      String?  @map("room_id")
-  note        String?  @db.VarChar(500)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  roomId       String?   @map("room_id")
+  note         String?   @db.VarChar(500)
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
   actor   User    @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
@@ -384,10 +390,12 @@ model HarvestWaste {
   harvestId   String   @map("harvest_id")
   weightGrams Int      @map("weight_grams")
   note        String?  @db.VarChar(500)
-  actorUserId String   @map("actor_user_id")
-  recordedAt  DateTime @map("recorded_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  actorUserId  String    @map("actor_user_id")
+  recordedAt   DateTime  @map("recorded_at")
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
   actor   User    @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
@@ -402,10 +410,12 @@ model HarvestPackage {
   licenseId   String   @map("license_id")
   label       String
   weightGrams Int      @map("weight_grams")
-  actorUserId String   @map("actor_user_id")
-  recordedAt  DateTime @map("recorded_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  actorUserId  String    @map("actor_user_id")
+  recordedAt   DateTime  @map("recorded_at")
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   harvest     Harvest               @relation(fields: [harvestId], references: [id], onDelete: Cascade)
   license     License               @relation(fields: [licenseId], references: [id], onDelete: Cascade)
@@ -497,6 +507,8 @@ model MetrcSubmission {
   reviewerId      String?   @map("reviewer_id")
   reviewedAt      DateTime? @map("reviewed_at")
   rejectionNote   String?   @map("rejection_note") @db.VarChar(500)
+  voidedAt        DateTime? @map("voided_at")
+  voidedByName    String?   @map("voided_by_name") @db.VarChar(191)
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 

@@ -1,5 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { CreateRoom, OrganizationSummary, Room, RoomDetail, SessionUser, Site, Zone } from '@trim/contracts';
+import type {
+  CreateRoom,
+  OrganizationSummary,
+  RecordRemoved,
+  Room,
+  RoomDetail,
+  SessionUser,
+  Site,
+  Zone,
+  ZoneInput,
+} from '@trim/contracts';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
@@ -88,6 +98,70 @@ export class FacilitiesService {
     }
   }
 
+  async pageRooms(user: SessionUser, siteId: string, pageRaw: string, pageSizeRaw: string) {
+    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+    assertSiteAccess(user, site);
+    const window = pageWindow(pageRaw, pageSizeRaw);
+    const where = { siteId };
+    const [total, rooms] = await Promise.all([
+      this.prisma.room.count({ where }),
+      this.prisma.room.findMany({
+        where,
+        include: roomInclude,
+        orderBy: { name: 'asc' },
+        skip: window.skip,
+        take: window.take,
+      }),
+    ]);
+    return {
+      items: rooms.map((room) => this.toRoom(room, site.timezone)),
+      page: window.page,
+      pageSize: window.pageSize,
+      total,
+    };
+  }
+
+  async updateRoom(user: SessionUser, siteId: string, roomId: string, input: CreateRoom): Promise<Room> {
+    const room = await this.ownedRoom(user, siteId, roomId);
+    const updated = await this.prisma.room.update({
+      where: { id: room.id },
+      data: { name: input.name, roomType: input.roomType },
+      include: roomInclude,
+    });
+    return this.toRoom(updated, room.site.timezone);
+  }
+
+  async deleteRoom(user: SessionUser, siteId: string, roomId: string): Promise<RecordRemoved> {
+    const room = await this.ownedRoom(user, siteId, roomId);
+    await this.prisma.room.delete({ where: { id: room.id } });
+    return { id: room.id, removed: true, voided: false };
+  }
+
+  async createZone(user: SessionUser, roomId: string, input: ZoneInput): Promise<Zone> {
+    const room = await this.roomForChange(user, roomId);
+    const existing = await this.prisma.zone.findMany({ where: { roomId: room.id }, select: { code: true } });
+    const zone = await this.prisma.zone.create({
+      data: {
+        roomId: room.id,
+        name: input.name,
+        code: uniqueRoomCode(input.name, existing.map((row) => row.code)),
+      },
+    });
+    return this.toZone(zone);
+  }
+
+  async updateZone(user: SessionUser, zoneId: string, input: ZoneInput): Promise<Zone> {
+    const zone = await this.ownedZone(user, zoneId);
+    const updated = await this.prisma.zone.update({ where: { id: zone.id }, data: { name: input.name } });
+    return this.toZone(updated);
+  }
+
+  async deleteZone(user: SessionUser, zoneId: string): Promise<RecordRemoved> {
+    const zone = await this.ownedZone(user, zoneId);
+    await this.prisma.zone.delete({ where: { id: zone.id } });
+    return { id: zone.id, removed: true, voided: false };
+  }
+
   async getRoom(user: SessionUser, roomId: string): Promise<RoomDetail> {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
@@ -123,6 +197,33 @@ export class FacilitiesService {
       slug: organization.slug,
       siteCount,
     };
+  }
+
+  private async ownedRoom(user: SessionUser, siteId: string, roomId: string) {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId }, include: { site: true } });
+    if (!room || room.siteId !== siteId) {
+      throw new NotFoundException('Room not found');
+    }
+    assertSiteAccess(user, room.site);
+    return room;
+  }
+
+  private async roomForChange(user: SessionUser, roomId: string) {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId }, include: { site: true } });
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+    assertSiteAccess(user, room.site);
+    return room;
+  }
+
+  private async ownedZone(user: SessionUser, zoneId: string) {
+    const zone = await this.prisma.zone.findUnique({ where: { id: zoneId }, include: { room: { include: { site: true } } } });
+    if (!zone) {
+      throw new NotFoundException('Zone not found');
+    }
+    assertSiteAccess(user, zone.room.site);
+    return zone;
   }
 
   private toSite(
@@ -190,6 +291,12 @@ export class FacilitiesService {
       updatedAt: zone.updatedAt.toISOString(),
     };
   }
+}
+
+function pageWindow(pageRaw: string, pageSizeRaw: string) {
+  const page = Math.max(1, Number.parseInt(pageRaw, 10) || 1);
+  const pageSize = Math.min(50, Math.max(1, Number.parseInt(pageSizeRaw, 10) || 5));
+  return { page, pageSize, skip: (page - 1) * pageSize, take: pageSize };
 }
 
 function uniqueRoomCode(name: string, takenCodes: string[]): string {

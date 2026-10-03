@@ -1,6 +1,7 @@
 import { Alert, Box, Button, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material';
 import {
   operationsOverviewSchema,
+  recordRemovedSchema,
   recurringViewSchema,
   sopLibrarySchema,
   type OperationsOverview,
@@ -12,6 +13,7 @@ import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 
 const AREAS = [
   ['irrigation', 'Irrigation and feed'],
@@ -115,6 +117,7 @@ function useRefresh(siteId: string) {
 
 function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'irrigation');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/irrigation`, operationsOverviewSchema, body),
@@ -128,13 +131,48 @@ function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="irrigation-list" empty="No irrigation or feed records yet.">
         {overview.irrigation.map((row) => (
-          <Typography key={row.id} data-testid="irrigation-row">
-            {row.recordedOn} · {row.roomName} · {row.kind === 'feed' ? 'Feed' : 'Irrigation'} · {row.method}
-            {row.volumeLiters != null ? ` · ${row.volumeLiters} L` : ''}
-            {row.nutrientName ? ` · ${row.nutrientName}` : ''}
-            {row.ec != null ? ` · EC ${row.ec}` : ''}
-            {row.ph != null ? ` · pH ${row.ph}` : ''} · {row.actorName}
-          </Typography>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="irrigation-row">
+                {row.recordedOn} · {row.roomName} · {row.kind === 'feed' ? 'Feed' : 'Irrigation'} · {row.method}
+                {row.volumeLiters != null ? ` · ${row.volumeLiters} L` : ''}
+                {row.nutrientName ? ` · ${row.nutrientName}` : ''} · {row.actorName}
+              </Typography>
+            }
+            detail={
+              <Typography>
+                EC {row.ec ?? '—'} · pH {row.ph ?? '—'} · {row.note || 'No note'}
+              </Typography>
+            }
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const method = String(new FormData(event.currentTarget).get('method') ?? '');
+                  rows.save.mutate({
+                    id: row.id,
+                    body: {
+                      roomId: row.roomId,
+                      recordedOn: row.recordedOn,
+                      kind: row.kind,
+                      method,
+                      volumeLiters: row.volumeLiters,
+                      ec: row.ec,
+                      ph: row.ph,
+                      nutrientName: row.nutrientName,
+                      note: row.note,
+                    },
+                  });
+                }}
+              >
+                <TextField label="Method" name="method" defaultValue={row.method} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       <Card>
@@ -183,6 +221,7 @@ function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
 
 function IpmPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'ipm');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/ipm`, operationsOverviewSchema, body),
@@ -196,9 +235,31 @@ function IpmPanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="ipm-list" empty="No IPM records yet.">
         {overview.ipm.map((row) => (
-          <Typography key={row.id} data-testid="ipm-row">
-            {row.recordedOn} · {row.roomName} · {row.target} · {row.finding === 'present' ? 'Present' : 'Clear'} · {row.response} · {row.actorName}
-          </Typography>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="ipm-row">
+                {row.recordedOn} · {row.roomName} · {row.target} · {row.finding === 'present' ? 'Present' : 'Clear'} · {row.response} · {row.actorName}
+              </Typography>
+            }
+            detail={<Typography>{row.note || 'No note'}</Typography>}
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, response: String(new FormData(event.currentTarget).get('response') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Response" name="response" defaultValue={row.response} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       <Card>
@@ -241,6 +302,7 @@ function IpmPanel({ overview }: { overview: OperationsOverview }) {
 
 function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'maintenance');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/maintenance`, operationsOverviewSchema, body),
@@ -254,11 +316,32 @@ function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="maintenance-list" empty="No maintenance records yet.">
         {overview.maintenance.map((row) => (
-          <Typography key={row.id} data-testid="maintenance-row">
-            {row.recordedOn} · {row.assetName} · {row.kind === 'repair' ? 'Repair' : 'Preventive'} · {row.summary}
-            {row.roomName ? ` · ${row.roomName}` : ''}
-            {row.nextDueOn ? ` · next due ${row.nextDueOn}` : ''} · {row.actorName}
-          </Typography>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="maintenance-row">
+                {row.recordedOn} · {row.assetName} · {row.kind === 'repair' ? 'Repair' : 'Preventive'} · {row.summary}
+                {row.roomName ? ` · ${row.roomName}` : ''}
+              </Typography>
+            }
+            detail={<Typography>{row.nextDueOn ? `Next due ${row.nextDueOn}` : 'No next due date'}</Typography>}
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, summary: String(new FormData(event.currentTarget).get('summary') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Summary" name="summary" defaultValue={row.summary} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       <Card>
@@ -309,6 +392,7 @@ function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
 
 function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'purchasing');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/purchasing`, operationsOverviewSchema, body),
@@ -322,10 +406,32 @@ function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="purchase-list" empty="No purchases yet.">
         {overview.purchasing.map((row) => (
-          <Typography key={row.id} data-testid="purchase-row">
-            {row.orderedOn} · {row.vendorName} · {row.description} · {row.quantity} · {row.unitCostCents} cents ·{' '}
-            {row.status === 'received' ? 'Received' : 'Requested'}
-          </Typography>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="purchase-row">
+                {row.orderedOn} · {row.vendorName} · {row.description} · {row.quantity} · {row.unitCostCents} cents ·{' '}
+                {row.status === 'received' ? 'Received' : 'Requested'}
+              </Typography>
+            }
+            detail={<Typography>{row.vendorName}</Typography>}
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, description: String(new FormData(event.currentTarget).get('description') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Description" name="description" defaultValue={row.description} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       <Card>
@@ -368,6 +474,7 @@ function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
 
 function SanitationPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'sanitation');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/sanitation`, operationsOverviewSchema, body),
@@ -381,9 +488,31 @@ function SanitationPanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="sanitation-list" empty="No sanitation records yet.">
         {overview.sanitation.map((row) => (
-          <Typography key={row.id} data-testid="sanitation-row">
-            {row.recordedOn} · {row.roomName} · {row.area} · {row.method} · {row.outcome === 'done' ? 'Done' : 'Needs follow-up'} · {row.actorName}
-          </Typography>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="sanitation-row">
+                {row.recordedOn} · {row.roomName} · {row.area} · {row.method} · {row.outcome === 'done' ? 'Done' : 'Needs follow-up'} · {row.actorName}
+              </Typography>
+            }
+            detail={<Typography>{row.actorName}</Typography>}
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, method: String(new FormData(event.currentTarget).get('method') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Method" name="method" defaultValue={row.method} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       <Card>
@@ -424,6 +553,7 @@ function SanitationPanel({ overview }: { overview: OperationsOverview }) {
 
 function TrainingPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'training');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/training`, operationsOverviewSchema, body),
@@ -437,11 +567,33 @@ function TrainingPanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="training-list" empty="No training records yet.">
         {overview.training.map((row) => (
-          <Typography key={row.id} data-testid="training-row">
-            {row.traineeName} · {row.title}
-            {row.sopTitle ? ` · ${row.sopTitle}` : ''} · {row.status === 'completed' ? 'Completed' : 'Assigned'}
-            {row.completedOn ? ` · ${row.completedOn}` : ''}
-          </Typography>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="training-row">
+                {row.traineeName} · {row.title}
+                {row.sopTitle ? ` · ${row.sopTitle}` : ''} · {row.status === 'completed' ? 'Completed' : 'Assigned'}
+                {row.completedOn ? ` · ${row.completedOn}` : ''}
+              </Typography>
+            }
+            detail={<Typography>{row.actorName}</Typography>}
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, title: String(new FormData(event.currentTarget).get('title') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Title" name="title" defaultValue={row.title} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       <Card>
@@ -482,6 +634,7 @@ function TrainingPanel({ overview }: { overview: OperationsOverview }) {
 
 function CalendarPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'stays');
   const [message, setMessage] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/stays`, operationsOverviewSchema, body),
@@ -499,7 +652,35 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
       <Typography sx={{ mb: 1 }} data-testid="calendar-month">
         {month}
       </Typography>
-      {overview.stays.length === 0 ? <Alert severity="info">No room stays are recorded for this facility.</Alert> : null}
+      <RecordList testId="stay-list" empty="No room stays are recorded for this facility.">
+        {overview.stays.map((row) => (
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="stay-row">
+                {row.roomName} · {row.label} · {row.cultivar} · {row.medium} · {row.startsOn} – {row.endsOn}
+              </Typography>
+            }
+            detail={<Typography>{row.roomName}</Typography>}
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, label: String(new FormData(event.currentTarget).get('label') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Label" name="label" defaultValue={row.label} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
+        ))}
+      </RecordList>
       <Box data-testid="room-calendar" sx={{ display: 'grid', gap: 1, mb: 2 }}>
         {Array.from({ length: days }, (_, index) => {
           const day = String(index + 1).padStart(2, '0');
@@ -550,6 +731,7 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
 
 function RecurringPanel({ overview }: { overview: OperationsOverview }) {
   const refresh = useRefresh(overview.siteId);
+  const rows = useOpsChange(overview.siteId, 'recurring');
   const [message, setMessage] = useState<string | null>(null);
   const complete = useMutation({
     mutationFn: (dutyId: string) => apiSend(`/operations/sites/${overview.siteId}/recurring/${dutyId}/complete`, recurringViewSchema, {}),
@@ -571,16 +753,37 @@ function RecurringPanel({ overview }: { overview: OperationsOverview }) {
     <Box>
       <RecordList testId="recurring-list" empty="No recurring tasks yet.">
         {overview.recurring.map((row) => (
-          <Box key={row.id} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', mb: 1 }}>
-            <Typography data-testid="recurring-row">
-              {row.nextDueOn} · {row.title} · {row.cadence === 'weekly' ? 'Weekly' : 'Daily'} · {row.assigneeLabel}
-              {row.roomName ? ` · ${row.roomName}` : ''}
-              {row.sopTitle ? ` · ${row.sopTitle}` : ''}
-            </Typography>
-            <Button size="small" data-testid="complete-recurring" onClick={() => complete.mutate(row.id)} disabled={complete.isPending}>
-              Mark done
-            </Button>
-          </Box>
+          <RecordActions
+            key={row.id}
+            summary={
+              <Typography data-testid="recurring-row">
+                {row.nextDueOn} · {row.title} · {row.cadence === 'weekly' ? 'Weekly' : 'Daily'} · {row.assigneeLabel}
+                {row.roomName ? ` · ${row.roomName}` : ''}
+                {row.sopTitle ? ` · ${row.sopTitle}` : ''}
+              </Typography>
+            }
+            detail={
+              <Button size="small" data-testid="complete-recurring" onClick={() => complete.mutate(row.id)} disabled={complete.isPending}>
+                Mark done
+              </Button>
+            }
+            editor={
+              <Box
+                component="form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  rows.save.mutate({
+                    id: row.id,
+                    body: { ...row, title: String(new FormData(event.currentTarget).get('title') ?? '') },
+                  });
+                }}
+              >
+                <TextField label="Title" name="title" defaultValue={row.title} required />
+                <SaveChanges pending={rows.save.isPending} />
+              </Box>
+            }
+            onDelete={() => rows.remove.mutate(row.id)}
+          />
         ))}
       </RecordList>
       {message ? <Alert sx={{ mb: 2 }}>{message}</Alert> : null}
@@ -630,6 +833,20 @@ function RecurringPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function LibraryView({ library, error, pending }: { library: SopLibrary | undefined; error: Error | null; pending: boolean }) {
+  const queryClient = useQueryClient();
+  const save = useMutation({
+    mutationFn: (input: { id: string; title: string; summary: string }) =>
+      apiSend(`/workflows/sops/${input.id}`, recordRemovedSchema, { title: input.title, summary: input.summary }, 'PATCH'),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sop-library'] });
+    },
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => apiSend(`/workflows/sops/${id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sop-library'] });
+    },
+  });
   if (pending) {
     return <Typography>Loading procedures…</Typography>;
   }
@@ -640,44 +857,84 @@ function LibraryView({ library, error, pending }: { library: SopLibrary | undefi
     return <Alert severity="info">No procedures are stored yet.</Alert>;
   }
   return (
-    <Box data-testid="sop-library">
-      {library.entries.map((entry) => (
+    <PagedList
+      items={library.entries}
+      empty="No procedures are stored yet."
+      testId="sop-library"
+      render={(entry) => (
         <Card key={entry.id} sx={{ mb: 2 }} data-testid="sop-library-entry">
           <CardContent>
-            <Typography variant="h3" sx={{ fontSize: 22 }}>
-              {entry.title}
-            </Typography>
-            <Typography sx={{ color: 'text.secondary', mb: 1 }}>{entry.summary}</Typography>
-            {entry.templateTasks.length === 0 && entry.cycleTasks.length === 0 ? (
-              <Typography>Not linked to a task yet.</Typography>
-            ) : null}
-            {entry.templateTasks.map((task) => (
-              <Typography key={`${task.templateName}-${task.taskTitle}`} data-testid="sop-template-link">
-                Template {task.templateName}
-                {task.cultivar ? ` · ${task.cultivar}` : ''}
-                {task.medium ? ` · ${task.medium}` : ''} · {task.taskTitle}
-              </Typography>
-            ))}
-            {entry.cycleTasks.map((task) => (
-              <Typography key={`${task.siteName}-${task.roomName}-${task.taskTitle}`} data-testid="sop-cycle-link">
-                {task.siteName} · {task.roomName} · {task.cycleName} · {task.taskTitle}
-              </Typography>
-            ))}
+            <RecordActions
+              summary={
+                <Typography variant="h3" sx={{ fontSize: 22 }}>
+                  {entry.title}
+                </Typography>
+              }
+              detail={
+                <Box>
+                  <Typography sx={{ color: 'text.secondary', mb: 1 }}>{entry.summary}</Typography>
+                  {entry.templateTasks.length === 0 && entry.cycleTasks.length === 0 ? (
+                    <Typography>Not linked to a task yet.</Typography>
+                  ) : null}
+                  {entry.templateTasks.map((task) => (
+                    <Typography key={`${task.templateName}-${task.taskTitle}`} data-testid="sop-template-link">
+                      Template {task.templateName}
+                      {task.cultivar ? ` · ${task.cultivar}` : ''}
+                      {task.medium ? ` · ${task.medium}` : ''} · {task.taskTitle}
+                    </Typography>
+                  ))}
+                  {entry.cycleTasks.map((task) => (
+                    <Typography key={`${task.siteName}-${task.roomName}-${task.taskTitle}`} data-testid="sop-cycle-link">
+                      {task.siteName} · {task.roomName} · {task.cycleName} · {task.taskTitle}
+                    </Typography>
+                  ))}
+                </Box>
+              }
+              editor={
+                <Box
+                  component="form"
+                  sx={{ display: 'grid', gap: 1 }}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const form = new FormData(event.currentTarget);
+                    save.mutate({
+                      id: entry.id,
+                      title: String(form.get('title') ?? ''),
+                      summary: String(form.get('summary') ?? ''),
+                    });
+                  }}
+                >
+                  <TextField label="Title" name="title" defaultValue={entry.title} required />
+                  <TextField label="Summary" name="summary" defaultValue={entry.summary} required multiline minRows={2} />
+                  <SaveChanges pending={save.isPending} />
+                </Box>
+              }
+              onDelete={() => remove.mutate(entry.id)}
+            />
           </CardContent>
         </Card>
-      ))}
-    </Box>
+      )}
+    />
   );
 }
 
 function RecordList({ testId, empty, children }: { testId: string; empty: string; children: ReactNode }) {
-  const list = Array.isArray(children) ? children : [children];
-  const present = list.some(Boolean);
-  return (
-    <Box data-testid={testId} sx={{ mb: 2 }}>
-      {present ? children : <Alert severity="info">{empty}</Alert>}
-    </Box>
-  );
+  const list = (Array.isArray(children) ? children : [children]).filter(Boolean);
+  return <PagedList items={list} empty={empty} testId={testId} render={(item) => item} />;
+}
+
+function useOpsChange(siteId: string, kind: string) {
+  const refresh = useRefresh(siteId);
+  const save = useMutation({
+    mutationFn: (input: { id: string; body: unknown }) =>
+      apiSend(`/operations/sites/${siteId}/${kind}/${input.id}`, operationsOverviewSchema, input.body, 'PATCH'),
+    onSuccess: () => refresh(),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => apiSend(`/operations/sites/${siteId}/${kind}/${id}`, operationsOverviewSchema, undefined, 'DELETE'),
+    onSuccess: () => refresh(),
+  });
+  return { save, remove };
 }
 
 function numberOrNull(value: FormDataEntryValue | null): number | null {

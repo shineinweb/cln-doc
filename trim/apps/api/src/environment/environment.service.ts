@@ -56,6 +56,7 @@ export class EnvironmentService {
     activeAlerts: RoomAlert[];
     latestReadings: LatestReadingSlot[];
     readingHistory: EnvironmentalReading[];
+    alertRules: AlertRule[];
   }> {
     await this.evaluate(roomId);
     const room = await this.prisma.room.findUniqueOrThrow({
@@ -63,6 +64,7 @@ export class EnvironmentService {
       include: {
         readings: { orderBy: { recordedAt: 'asc' } },
         alerts: { where: { active: true }, orderBy: { createdAt: 'desc' } },
+        alertRules: { orderBy: { createdAt: 'asc' } },
       },
     });
     const newest = new Map<string, ReadingRow>();
@@ -83,6 +85,7 @@ export class EnvironmentService {
       })),
       latestReadings: METRICS.map((metric) => this.toSlot(metric, newest.get(metric) ?? null, room.staleAfterMinutes, now)),
       readingHistory: room.readings.map((reading) => this.toReading(reading)),
+      alertRules: room.alertRules.map((rule) => this.toRule(rule)),
     };
   }
 

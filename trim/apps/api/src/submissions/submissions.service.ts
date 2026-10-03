@@ -47,7 +47,7 @@ export class SubmissionsService {
 
   async listForLicense(licenseId: string): Promise<SubmissionView[]> {
     const rows = await this.prisma.metrcSubmission.findMany({
-      where: { licenseId },
+      where: { licenseId, voidedAt: null },
       include: submissionInclude,
       orderBy: { requestedAt: 'asc' },
     });
@@ -268,7 +268,9 @@ export class SubmissionsService {
 
   private async queueBlockReason(subject: { plantEventId?: string | null; packageId?: string | null }): Promise<string | null> {
     const rows = await this.prisma.metrcSubmission.findMany({
-      where: subject.packageId ? { packageId: subject.packageId } : { plantEventId: subject.plantEventId },
+      where: subject.packageId
+        ? { packageId: subject.packageId, voidedAt: null }
+        : { plantEventId: subject.plantEventId, voidedAt: null },
       include: { attempts: true },
     });
     if (rows.some((row) => row.status === 'uncertain')) {
@@ -292,7 +294,7 @@ export class SubmissionsService {
   private async toView(row: SubmissionRecord): Promise<SubmissionView> {
     const attempt = row.attempts[0] ?? null;
     const siblings = await this.prisma.metrcSubmission.findMany({
-      where: row.packageId ? { packageId: row.packageId } : { plantEventId: row.plantEventId },
+      where: row.packageId ? { packageId: row.packageId, voidedAt: null } : { plantEventId: row.plantEventId, voidedAt: null },
       orderBy: { requestedAt: 'desc' },
       select: { id: true },
     });

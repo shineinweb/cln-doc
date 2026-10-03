@@ -1,5 +1,5 @@
-import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, Typography } from '@mui/material';
-import { complianceOverviewSchema, submissionViewSchema, type SubmissionView } from '@trim/contracts';
+import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, TextField, Typography } from '@mui/material';
+import { complianceOverviewSchema, recordRemovedSchema, submissionViewSchema, type SubmissionView } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 
 function discrepancyLabel(kind: 'extra_tag' | 'missing_tag'): string {
   return kind === 'extra_tag' ? 'In the file, not in Trim' : 'In Trim, not in the file';
@@ -107,11 +108,11 @@ export function CompliancePage() {
               <Typography variant="h3" sx={{ fontSize: 22, mt: 3, mb: 1 }}>
                 Submissions
               </Typography>
-              {license.submissions.length === 0 ? (
-                <Typography sx={{ color: 'text.secondary' }}>No submissions for this license.</Typography>
-              ) : (
-                license.submissions.map((submission) => <SubmissionCard key={submission.id} submission={submission} />)
-              )}
+              <PagedList
+                items={license.submissions}
+                empty="No submissions for this license."
+                render={(submission) => <SubmissionCard key={submission.id} submission={submission} />}
+              />
             </CardContent>
           </Card>
         ))
@@ -155,6 +156,17 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
     },
     onError: (error: Error) => setMessage(error.message),
   });
+  const voidSubmission = useMutation({
+    mutationFn: () => apiSend(`/submissions/${submission.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+    onError: (error: Error) => setMessage(error.message),
+  });
+  const editNote = useMutation({
+    mutationFn: (rejectionNote: string) =>
+      apiSend(`/submissions/${submission.id}`, recordRemovedSchema, { rejectionNote: rejectionNote || null }, 'PATCH'),
+    onSuccess: refresh,
+    onError: (error: Error) => setMessage(error.message),
+  });
   const queueAgain = useMutation({
     mutationFn: () =>
       apiSend('/submissions', submissionViewSchema, {
@@ -170,10 +182,30 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
 
   return (
     <Box data-testid="submission-card" sx={{ borderTop: '1px solid', borderColor: 'divider', pt: 1.5, mt: 1.5 }}>
-      <Typography sx={{ fontWeight: 600 }}>
-        <RouterLink to={`/submissions/${submission.id}`}>{submission.packageLabel ?? submission.plantTag}</RouterLink>
-        {` · ${submission.eventType}`}
-      </Typography>
+      <RecordActions
+        keepsHistory
+        summary={
+          <Typography sx={{ fontWeight: 600 }}>
+            <RouterLink to={`/submissions/${submission.id}`}>{submission.packageLabel ?? submission.plantTag}</RouterLink>
+            {` · ${submission.eventType}`}
+          </Typography>
+        }
+        detail={<Typography>{statusLabel(submission.status)}</Typography>}
+        editor={
+          <Box
+            component="form"
+            sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              editNote.mutate(String(new FormData(event.currentTarget).get('rejectionNote') ?? ''));
+            }}
+          >
+            <TextField label="Rejection note" name="rejectionNote" defaultValue={submission.rejectionNote ?? ''} />
+            <SaveChanges pending={editNote.isPending} />
+          </Box>
+        }
+        onDelete={() => voidSubmission.mutate()}
+      />
       <Typography data-testid="submission-note">{submission.eventNote}</Typography>
       <Typography data-testid="submission-status" sx={{ mt: 0.5 }}>
         {statusLabel(submission.status)}

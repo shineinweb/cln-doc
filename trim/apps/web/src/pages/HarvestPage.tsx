@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Card, CardContent, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
-import { harvestDetailSchema, packageDetailSchema, scaleSampleViewSchema, tagSampleViewSchema, type HarvestDetail } from '@trim/contracts';
+import { harvestDetailSchema, packageDetailSchema, recordRemovedSchema, scaleSampleViewSchema, tagSampleViewSchema, type HarvestDetail } from '@trim/contracts';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -7,6 +7,7 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 
 const stepLabel: Record<string, string> = {
   harvested: 'Harvested',
@@ -65,45 +66,164 @@ export function HarvestPage() {
           <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
             Steps
           </Typography>
-          {row.steps.map((step) => (
-            <Typography key={step.id} data-testid="harvest-step" sx={{ mb: 0.75 }}>
-              {stepLabel[step.kind] ?? step.kind}
-              {step.weightGrams !== null ? ` · ${step.weightGrams} g` : ''}
-              {step.roomName ? ` · ${step.roomName}` : ''} · {step.actorName} · {formatTimestamp(step.occurredAt)}
-            </Typography>
-          ))}
-          {row.wastes.map((waste) => (
-            <Typography key={waste.id} data-testid="harvest-waste" sx={{ mb: 0.75 }}>
-              Waste · {waste.weightGrams} g · {waste.actorName} · {formatTimestamp(waste.recordedAt)}
-              {waste.note ? ` · ${waste.note}` : ''}
-            </Typography>
-          ))}
+          <PagedList
+            items={row.steps}
+            empty="No steps are recorded."
+            render={(step) => (
+              <WeightRow
+                key={step.id}
+                testId="harvest-step"
+                harvestId={row.id}
+                path={`/harvest-steps/${step.id}`}
+                summary={`${stepLabel[step.kind] ?? step.kind}${step.weightGrams !== null ? ` · ${step.weightGrams} g` : ''}${step.roomName ? ` · ${step.roomName}` : ''} · ${step.actorName} · ${formatTimestamp(step.occurredAt)}`}
+                grams={step.weightGrams}
+                note={step.note}
+              />
+            )}
+          />
+          <PagedList
+            items={row.wastes}
+            empty="No waste is recorded."
+            render={(waste) => (
+              <WeightRow
+                key={waste.id}
+                testId="harvest-waste"
+                harvestId={row.id}
+                path={`/wastes/${waste.id}`}
+                summary={`Waste · ${waste.weightGrams} g · ${waste.actorName} · ${formatTimestamp(waste.recordedAt)}${waste.note ? ` · ${waste.note}` : ''}`}
+                grams={waste.weightGrams}
+                note={waste.note}
+              />
+            )}
+          />
         </CardContent>
       </Card>
       <Typography variant="h3" sx={{ fontSize: 22, mt: 3, mb: 1 }}>
         Source tags
       </Typography>
-      <Box sx={{ maxHeight: 280, overflow: 'auto' }}>
-        {row.plants.map((plant) => (
+      <PagedList
+        items={row.plants}
+        empty="No source tags are recorded."
+        testId="harvest-tags"
+        render={(plant) => (
           <Typography key={plant.plantId} data-testid="harvest-tag">
-            {plant.tag}
+            <RouterLink to={`/plants/${plant.plantId}`}>{plant.tag}</RouterLink>
           </Typography>
-        ))}
+        )}
+      />
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
+          Packages
+        </Typography>
+        <PagedList
+          items={row.packages}
+          empty="No packages are recorded."
+          render={(item) => (
+            <PackageRow key={item.id} harvestId={row.id} item={item} />
+          )}
+        />
       </Box>
-      {row.packages.length > 0 ? (
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
-            Packages
-          </Typography>
-          {row.packages.map((item) => (
-            <Typography key={item.id}>
-              <RouterLink to={`/packages/${item.id}`}>{item.label}</RouterLink>
-              {` · ${item.weightGrams} g · ${item.sourceTagCount} source tags`}
-            </Typography>
-          ))}
-        </Box>
-      ) : null}
     </Box>
+  );
+}
+
+function WeightRow({
+  testId,
+  harvestId,
+  path,
+  summary,
+  grams,
+  note,
+}: {
+  testId: string;
+  harvestId: string;
+  path: string;
+  summary: string;
+  grams: number | null;
+  note: string | null;
+}) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['harvest', harvestId] });
+  const save = useMutation({
+    mutationFn: (body: { grams: number; note: string | null }) => apiSend(path, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(path, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      keepsHistory
+      summary={<Typography data-testid={testId}>{summary}</Typography>}
+      detail={<Typography>{note ?? 'No note'}</Typography>}
+      editor={
+        grams === null ? (
+          <Typography>This step has no weight to change.</Typography>
+        ) : (
+          <Box
+            component="form"
+            sx={{ display: 'grid', gap: 1, maxWidth: 320 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              const nextNote = String(form.get('note') ?? '').trim();
+              save.mutate({ grams: Number(form.get('grams')), note: nextNote || null });
+            }}
+          >
+            <TextField label="Grams" name="grams" type="number" defaultValue={grams} required />
+            <TextField label="Note" name="note" defaultValue={note ?? ''} />
+            <SaveChanges pending={save.isPending} />
+          </Box>
+        )
+      }
+      onDelete={() => remove.mutate()}
+    />
+  );
+}
+
+function PackageRow({
+  harvestId,
+  item,
+}: {
+  harvestId: string;
+  item: { id: string; label: string; weightGrams: number; sourceTagCount: number };
+}) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['harvest', harvestId] });
+  const save = useMutation({
+    mutationFn: (label: string) => apiSend(`/packages/${item.id}`, recordRemovedSchema, { label }, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/packages/${item.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      keepsHistory
+      summary={
+        <Typography>
+          <RouterLink to={`/packages/${item.id}`}>{item.label}</RouterLink>
+          {` · ${item.weightGrams} g · ${item.sourceTagCount} source tags`}
+        </Typography>
+      }
+      detail={<Typography>{item.weightGrams} g</Typography>}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1, maxWidth: 320 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            save.mutate(String(new FormData(event.currentTarget).get('label') ?? ''));
+          }}
+        >
+          <TextField label="Label" name="label" defaultValue={item.label} required />
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
   );
 }
 

@@ -14,7 +14,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SubmissionsService } from '../submissions/submissions.service';
 import { compareTags } from './reconcile';
 
-const PLANT_LIST_LIMIT = 12;
+const ACTIVE_PLANT = { voidedAt: null } as const;
 
 type LicenseAccess = {
   id: string;
@@ -36,15 +36,24 @@ export class InventoryService {
     return { licenses: await Promise.all(licenses.map((license) => this.toComplianceLicense(license))) };
   }
 
-  async licenseInventory(user: SessionUser, licenseId: string): Promise<LicenseInventory> {
+  async licenseInventory(user: SessionUser, licenseId: string, pageRaw = '1', pageSizeRaw = '5'): Promise<LicenseInventory> {
     const license = await this.assertLicenseAccess(user, licenseId);
-    const [plantCount, plants, latestImport] = await Promise.all([
-      this.prisma.plant.count({ where: { licenseId: license.id } }),
+    const page = Math.max(1, Number.parseInt(pageRaw, 10) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number.parseInt(pageSizeRaw, 10) || 5));
+    const where = { licenseId: license.id, ...ACTIVE_PLANT };
+    const [plantCount, plants, batches, latestImport] = await Promise.all([
+      this.prisma.plant.count({ where }),
       this.prisma.plant.findMany({
-        where: { licenseId: license.id },
+        where,
         include: { strain: true, room: true, cycle: true },
         orderBy: { tag: 'asc' },
-        take: PLANT_LIST_LIMIT,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.plantBatch.findMany({
+        where: { licenseId: license.id },
+        include: { strain: true },
+        orderBy: { name: 'asc' },
       }),
       this.latestImport(license.id),
     ]);
@@ -55,6 +64,9 @@ export class InventoryService {
       siteNames: license.sites.map((link) => link.site.name),
       plantCount,
       listedCount: plants.length,
+      page,
+      pageSize,
+      total: plantCount,
       plants: plants.map((plant) => ({
         id: plant.id,
         tag: plant.tag,
@@ -63,6 +75,11 @@ export class InventoryService {
         status: plant.status,
         roomName: plant.room?.name ?? null,
         cycleName: plant.cycle?.name ?? null,
+      })),
+      batches: batches.map((batch) => ({
+        id: batch.id,
+        name: batch.name,
+        strainName: batch.strain.name,
       })),
       latestImport,
     };
@@ -140,9 +157,9 @@ export class InventoryService {
     if (payload.LicenseNumber !== license.licenseNumber) {
       throw new BadRequestException('The file license number does not match this license');
     }
-    const local = await this.prisma.plant.findMany({
-      where: { licenseId: license.id },
-      select: { tag: true },
+    const local = await       this.prisma.plant.findMany({
+        where: { licenseId: license.id, ...ACTIVE_PLANT },
+        select: { tag: true },
       orderBy: { tag: 'asc' },
     });
     const comparison = compareTags(
@@ -256,7 +273,7 @@ export class InventoryService {
 
   private async toComplianceLicense(license: LicenseAccess): Promise<ComplianceOverview['licenses'][number]> {
     const [plantCount, latestImport, submissions] = await Promise.all([
-      this.prisma.plant.count({ where: { licenseId: license.id } }),
+      this.prisma.plant.count({ where: { licenseId: license.id, ...ACTIVE_PLANT } }),
       this.latestImport(license.id),
       this.submissions.listForLicense(license.id),
     ]);

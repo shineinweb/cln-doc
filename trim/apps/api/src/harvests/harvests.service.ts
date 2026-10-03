@@ -46,6 +46,7 @@ type HarvestRecord = {
     note: string | null;
     actor: { name: string };
     room: { name: string } | null;
+    voidedAt: Date | null;
   }>;
   wastes: Array<{
     id: string;
@@ -54,12 +55,14 @@ type HarvestRecord = {
     note: string | null;
     recordedAt: Date;
     actor: { name: string };
+    voidedAt: Date | null;
   }>;
   packages: Array<{
     id: string;
     label: string;
     weightGrams: number;
     plants: Array<{ tag: string }>;
+    voidedAt: Date | null;
   }>;
 };
 
@@ -69,7 +72,7 @@ export class HarvestsService {
 
   async list(user: SessionUser): Promise<HarvestSummary[]> {
     const rows = await this.prisma.harvest.findMany({
-      where: this.visibleWhere(user),
+      where: { ...this.visibleWhere(user), voidedAt: null },
       include: harvestInclude,
       orderBy: { createdAt: 'asc' },
     });
@@ -89,7 +92,7 @@ export class HarvestsService {
 
   async listWaste(user: SessionUser, harvestId: string): Promise<HarvestWasteView[]> {
     const harvest = await this.loadAuthorized(user, harvestId);
-    return harvest.wastes.map((waste) => this.toWaste(waste));
+    return harvest.wastes.filter((waste) => !waste.voidedAt).map((waste) => this.toWaste(waste));
   }
 
   async getPackage(user: SessionUser, packageId: string): Promise<PackageDetail> {
@@ -368,10 +371,13 @@ export class HarvestsService {
   }
 
   private ledger(harvest: Pick<HarvestRecord, 'steps' | 'wastes' | 'packages'>): WeightLedger {
-    const wet = harvest.steps.find((step) => step.kind === 'wet_weight')?.weightGrams ?? null;
-    const dry = harvest.steps.find((step) => step.kind === 'dry_weight')?.weightGrams ?? null;
-    const packageWeightGrams = harvest.packages.reduce((sum, row) => sum + row.weightGrams, 0);
-    const wasteWeightGrams = harvest.wastes.reduce((sum, row) => sum + row.weightGrams, 0);
+    const steps = harvest.steps.filter((step) => !step.voidedAt);
+    const wastes = harvest.wastes.filter((row) => !row.voidedAt);
+    const packages = harvest.packages.filter((row) => !row.voidedAt);
+    const wet = steps.find((step) => step.kind === 'wet_weight')?.weightGrams ?? null;
+    const dry = steps.find((step) => step.kind === 'dry_weight')?.weightGrams ?? null;
+    const packageWeightGrams = packages.reduce((sum, row) => sum + row.weightGrams, 0);
+    const wasteWeightGrams = wastes.reduce((sum, row) => sum + row.weightGrams, 0);
     return {
       wetWeightGrams: wet,
       dryWeightGrams: dry,
@@ -424,7 +430,7 @@ export class HarvestsService {
       roomName: harvest.room?.name ?? null,
       plantCount: harvest.plants.length,
       plants: harvest.plants.map((plant) => ({ plantId: plant.plantId, tag: plant.tag })),
-      steps: harvest.steps.map((step) => ({
+      steps: harvest.steps.filter((step) => !step.voidedAt).map((step) => ({
         id: step.id,
         kind: step.kind,
         actorName: step.actor.name,
@@ -433,8 +439,8 @@ export class HarvestsService {
         roomName: step.room?.name ?? null,
         note: step.note,
       })),
-      wastes: harvest.wastes.map((waste) => this.toWaste(waste)),
-      packages: harvest.packages.map((item) => ({
+      wastes: harvest.wastes.filter((waste) => !waste.voidedAt).map((waste) => this.toWaste(waste)),
+      packages: harvest.packages.filter((item) => !item.voidedAt).map((item) => ({
         id: item.id,
         label: item.label,
         weightGrams: item.weightGrams,

@@ -1,10 +1,11 @@
-import { Alert, Box, Button, Card, CardActionArea, CardContent, Chip, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
-import { ROOM_TYPES, roomSchema } from '@trim/contracts';
+import { Alert, Box, Button, Card, CardContent, Chip, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
+import { ROOM_TYPES, recordRemovedSchema, roomSchema, type Room } from '@trim/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { useSites } from '../layout/SiteProvider';
 import { ROOM_TYPE_LABELS, roomTypeLabel } from '../theme';
 
@@ -24,28 +25,90 @@ export function RoomsPage() {
       {site ? (
         <Box sx={{ display: 'grid', gap: 1.5 }}>
           <AddRoomForm siteId={site.id} />
-          {site.rooms.map((room) => (
-            <Card key={room.id}>
-              <CardActionArea component={RouterLink} to={`/rooms/${room.id}`}>
-                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'center' }}>
-                  <Box>
-                    <Typography variant="h3" sx={{ fontSize: 24 }}>
-                      {room.name}
-                    </Typography>
-                    <Typography sx={{ color: 'text.secondary' }}>
-                      {room.currentCycle
-                        ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants`
-                        : 'No active crop'}
-                    </Typography>
-                  </Box>
-                  <Chip label={roomTypeLabel(room.roomType)} />
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          ))}
+          <PagedList
+            items={site.rooms}
+            empty="No rooms are recorded for this facility."
+            testId="room-list"
+            render={(room) => <RoomRow key={room.id} siteId={site.id} room={room} />}
+          />
         </Box>
       ) : null}
     </Box>
+  );
+}
+
+function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const save = useMutation({
+    mutationFn: (body: { name: string; roomType: string }) =>
+      apiSend(`/sites/${siteId}/rooms/${room.id}`, roomSchema, body, 'PATCH'),
+    onSuccess: async () => {
+      setError(null);
+      await queryClient.invalidateQueries({ queryKey: ['sites'] });
+    },
+    onError: (caught) => setError(caught instanceof ApiError ? caught.message : 'The room could not be saved.'),
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/sites/${siteId}/rooms/${room.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sites'] });
+    },
+    onError: (caught) => setError(caught instanceof ApiError ? caught.message : 'The room could not be deleted.'),
+  });
+  return (
+    <Card>
+      <CardContent>
+        <RecordActions
+          summary={
+            <Box>
+              <Typography variant="h3" sx={{ fontSize: 24 }} data-testid="room-row-name">
+                <RouterLink to={`/rooms/${room.id}`}>{room.name}</RouterLink>
+              </Typography>
+              <Typography sx={{ color: 'text.secondary' }}>
+                {room.currentCycle ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants` : 'No active crop'}
+              </Typography>
+            </Box>
+          }
+          detail={
+            <Box>
+              <Chip label={roomTypeLabel(room.roomType)} sx={{ mr: 1 }} />
+              <Button component={RouterLink} to={`/rooms/${room.id}`} data-testid="open-room">
+                Open room
+              </Button>
+              {room.zones.length > 0 ? (
+                <Typography sx={{ mt: 1 }}>{room.zones.map((zone) => zone.name).join(', ')}</Typography>
+              ) : (
+                <Typography sx={{ mt: 1 }}>No zones yet.</Typography>
+              )}
+            </Box>
+          }
+          editor={
+            <Box
+              component="form"
+              sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+              onSubmit={(event) => {
+                event.preventDefault();
+                const form = new FormData(event.currentTarget);
+                save.mutate({ name: String(form.get('name') ?? ''), roomType: String(form.get('roomType') ?? '') });
+              }}
+            >
+              <TextField label="Name" name="name" defaultValue={room.name} required inputProps={{ 'data-testid': 'edit-room-name' }} />
+              <TextField select label="Type" name="roomType" defaultValue={room.roomType}>
+                {ROOM_TYPES.map((roomType) => (
+                  <MenuItem key={roomType} value={roomType}>
+                    {ROOM_TYPE_LABELS[roomType]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <SaveChanges pending={save.isPending} />
+            </Box>
+          }
+          onDelete={() => remove.mutate()}
+        />
+        {error ? <Alert severity="error">{error}</Alert> : null}
+      </CardContent>
+    </Card>
   );
 }
 

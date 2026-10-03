@@ -8,13 +8,14 @@ import { InventoryModule } from './inventory/inventory.module';
 import { OperationsModule } from './operations/operations.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { RecordsModule } from './records/records.module';
 import { ReportsModule } from './reports/reports.module';
 import { StorageModule } from './storage/storage.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule, SubmissionsModule, InventoryModule, HarvestsModule, ReportsModule, AdaptersModule, OperationsModule],
+  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule, SubmissionsModule, InventoryModule, HarvestsModule, ReportsModule, AdaptersModule, OperationsModule, RecordsModule],
   controllers: [HealthController],
 })
 export class AppModule {}

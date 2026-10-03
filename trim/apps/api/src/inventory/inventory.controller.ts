@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import {
   changePlantStageSchema,
   metrcInventoryPayloadSchema,
@@ -26,8 +26,13 @@ export class InventoryController {
   }
 
   @Get('licenses/:licenseId')
-  license(@CurrentUser() user: SessionUser, @Param('licenseId') licenseId: string) {
-    return this.inventory.licenseInventory(user, licenseId);
+  license(
+    @CurrentUser() user: SessionUser,
+    @Param('licenseId') licenseId: string,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '5',
+  ) {
+    return this.inventory.licenseInventory(user, licenseId, page, pageSize);
   }
 
   @Post('licenses/:licenseId/imports')

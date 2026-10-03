@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
 import { useSites } from '../layout/SiteProvider';
+import { PagedList } from '../records/RecordControls';
 import { roomTypeLabel } from '../theme';
 
 export function FacilityPage() {
@@ -25,11 +26,12 @@ export function FacilityPage() {
         title={site.name}
         lede={[site.addressLine1, site.city, site.region, site.postalCode].filter(Boolean).join(', ') || 'Rooms at this facility.'}
       />
-      {site.rooms.length === 0 ? (
-        <Alert severity="info">No rooms are recorded at this facility yet.</Alert>
-      ) : (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-          {site.rooms.map((room) => (
+      <PagedList
+        items={site.rooms}
+        empty="No rooms are recorded at this facility yet."
+        testId="facility-rooms"
+        render={(room) => (
+          <Box key={room.id} sx={{ mb: 2 }}>
             <Card key={room.id} data-testid="facility-room-card">
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
@@ -62,9 +64,9 @@ export function FacilityPage() {
                 </Button>
               </CardContent>
             </Card>
-          ))}
-        </Box>
-      )}
+          </Box>
+        )}
+      />
     </Box>
   );
 }

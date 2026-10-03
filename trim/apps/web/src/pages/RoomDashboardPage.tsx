@@ -1,7 +1,7 @@
-import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, Typography } from '@mui/material';
-import { harvestDetailSchema, roomDetailSchema, type RoomDetail } from '@trim/contracts';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, TextField, Typography } from '@mui/material';
+import { harvestDetailSchema, recordRemovedSchema, roomDetailSchema, zoneSchema, type RoomDetail, type Zone } from '@trim/contracts';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
@@ -10,6 +10,7 @@ import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { roomTypeLabel, workbench } from '../theme';
 
 export function RoomDashboardPage() {
@@ -62,11 +63,7 @@ export function RoomDashboardPage() {
         title={room.data.name}
         lede="The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records."
       />
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
-        {room.data.zones.map((zone) => (
-          <Chip key={zone.id} label={zone.name} />
-        ))}
-      </Box>
+      <ZoneList roomId={room.data.id} zones={room.data.zones} />
       {cycle ? (
         <Card sx={{ mb: 2 }} data-testid="current-cycle">
           <CardContent>
@@ -114,15 +111,13 @@ export function RoomDashboardPage() {
       )}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 3 }}>
         <SignalCard title="Tasks due today" testId="tasks-due">
-          {room.data.tasksDueToday.length === 0 ? (
-            <Typography sx={{ color: 'text.secondary' }}>No tasks are due today.</Typography>
-          ) : (
-            room.data.tasksDueToday.map((task) => (
-              <Typography key={task.id} data-testid="task-due-today">
-                {task.title} · {task.assigneeLabel} · {formatCalendarDate(task.dueOn)}
-              </Typography>
-            ))
-          )}
+          <PagedList
+            items={room.data.tasksDueToday}
+            empty="No tasks are due today."
+            render={(task) => (
+              <TaskDueRow key={task.id} task={task} />
+            )}
+          />
         </SignalCard>
         <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
           <MetrcSync sync={room.data.lastMetrcSync} />
@@ -143,6 +138,117 @@ export function RoomDashboardPage() {
         </Box>
       ) : null}
     </Box>
+  );
+}
+
+function ZoneList({ roomId, zones }: { roomId: string; zones: Zone[] }) {
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
+  const add = useMutation({
+    mutationFn: (name: string) => apiSend(`/rooms/${roomId}/zones`, zoneSchema, { name }),
+    onSuccess: async () => {
+      setMessage('Zone added.');
+      await refresh();
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+  return (
+    <Box sx={{ mb: 3 }}>
+      <PagedList
+        items={zones}
+        empty="No zones yet."
+        testId="zone-list"
+        render={(zone) => <ZoneRow key={zone.id} zone={zone} onChanged={refresh} />}
+      />
+      <Box
+        component="form"
+        sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          add.mutate(String(new FormData(form).get('name') ?? ''));
+          form.reset();
+        }}
+      >
+        <TextField label="Zone name" name="name" required size="small" />
+        <Button type="submit" variant="contained" disabled={add.isPending}>
+          Add zone
+        </Button>
+      </Box>
+      {message ? <Alert sx={{ mt: 1 }}>{message}</Alert> : null}
+    </Box>
+  );
+}
+
+function ZoneRow({ zone, onChanged }: { zone: Zone; onChanged: () => Promise<void> }) {
+  const save = useMutation({
+    mutationFn: (name: string) => apiSend(`/zones/${zone.id}`, zoneSchema, { name }, 'PATCH'),
+    onSuccess: () => onChanged(),
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/zones/${zone.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: () => onChanged(),
+  });
+  return (
+    <RecordActions
+      summary={<Chip label={zone.name} />}
+      detail={<Typography>{zone.code}</Typography>}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1, maxWidth: 320 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            save.mutate(String(new FormData(event.currentTarget).get('name') ?? ''));
+          }}
+        >
+          <TextField label="Name" name="name" defaultValue={zone.name} required />
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
+  );
+}
+
+function TaskDueRow({ task }: { task: { id: string; title: string; assigneeLabel: string; dueOn: string } }) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['room'] });
+  const save = useMutation({
+    mutationFn: (body: { title: string; dueOn: string }) => apiSend(`/tasks/${task.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/tasks/${task.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      summary={
+        <Typography data-testid="task-due-today">
+          <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
+          {` · ${task.assigneeLabel} · ${formatCalendarDate(task.dueOn)}`}
+        </Typography>
+      }
+      detail={<Typography>{task.assigneeLabel}</Typography>}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            save.mutate({ title: String(form.get('title') ?? ''), dueOn: String(form.get('dueOn') ?? '') });
+          }}
+        >
+          <TextField label="Title" name="title" defaultValue={task.title} required />
+          <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
   );
 }
 

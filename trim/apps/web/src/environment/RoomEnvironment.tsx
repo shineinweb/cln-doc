@@ -3,12 +3,14 @@ import {
   alertRuleSchema,
   environmentalReadingSchema,
   importReadingsResultSchema,
+  recordRemovedSchema,
   type RoomDetail,
 } from '@trim/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { apiSend } from '../api/client';
 import { formatTimestamp } from '../crops/format';
+import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { workbench } from '../theme';
 
 const METRICS = [
@@ -132,6 +134,25 @@ export function RoomEnvironment({ room }: { room: RoomDetail }) {
             </Box>
           </Box>
           <ReadingChart history={room.readingHistory} metric={metric} />
+          <PagedList
+            items={room.readingHistory.filter((reading) => reading.metric === metric)}
+            empty="No readings are stored for this metric."
+            testId="reading-list"
+            render={(reading) => <ReadingRecord key={reading.id} reading={reading} roomId={room.id} />}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <Typography variant="h3" sx={{ fontSize: 20, mb: 1 }}>
+            Alert rules
+          </Typography>
+          <PagedList
+            items={room.alertRules}
+            empty="No alert rules are stored for this room."
+            testId="alert-rule-list"
+            render={(rule) => <RuleRecord key={rule.id} rule={rule} roomId={room.id} />}
+          />
         </CardContent>
       </Card>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
@@ -263,6 +284,97 @@ export function RoomEnvironment({ room }: { room: RoomDetail }) {
   );
 }
 
+function ReadingRecord({ reading, roomId }: { reading: RoomDetail['readingHistory'][number]; roomId: string }) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
+  const save = useMutation({
+    mutationFn: (body: { value: number; unit: string; quality: 'good' | 'suspect' | 'bad' }) =>
+      apiSend(`/readings/${reading.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/readings/${reading.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      summary={
+        <Typography>
+          <a href={`/readings/${reading.id}`}>{reading.value} {reading.unit}</a>
+          {` · ${reading.deviceId} · ${reading.quality}`}
+          {reading.isSample ? ' · Sample data' : ''}
+        </Typography>
+      }
+      detail={<Typography>{formatTimestamp(reading.recordedAt)}</Typography>}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1, maxWidth: 320 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            const quality = String(form.get('quality') ?? 'good');
+            save.mutate({
+              value: Number(form.get('value')),
+              unit: String(form.get('unit') ?? ''),
+              quality: quality === 'suspect' || quality === 'bad' ? quality : 'good',
+            });
+          }}
+        >
+          <Field label="Value" name="value" defaultValue={String(reading.value)} type="number" />
+          <Field label="Unit" name="unit" defaultValue={reading.unit} />
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
+  );
+}
+
+function RuleRecord({ rule, roomId }: { rule: RoomDetail['alertRules'][number]; roomId: string }) {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
+  const save = useMutation({
+    mutationFn: (body: { minValue: number | null; maxValue: number | null; enabled: boolean }) =>
+      apiSend(`/alert-rules/${rule.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: refresh,
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/alert-rules/${rule.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: refresh,
+  });
+  return (
+    <RecordActions
+      summary={
+        <Typography>
+          {rule.metric} · {rule.kind} · {rule.enabled ? 'Enabled' : 'Off'}
+          {rule.minValue !== null ? ` · min ${rule.minValue}` : ''}
+          {rule.maxValue !== null ? ` · max ${rule.maxValue}` : ''}
+        </Typography>
+      }
+      detail={<Typography>{rule.enabled ? 'Enabled' : 'Off'}</Typography>}
+      editor={
+        <Box
+          component="form"
+          sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const enabled = new FormData(event.currentTarget).get('enabled') === 'on';
+            save.mutate({ minValue: rule.minValue, maxValue: rule.maxValue, enabled });
+          }}
+        >
+          <Typography component="label" sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <input type="checkbox" name="enabled" defaultChecked={rule.enabled} />
+            Enabled
+          </Typography>
+          <SaveChanges pending={save.isPending} />
+        </Box>
+      }
+      onDelete={() => remove.mutate()}
+    />
+  );
+}
+
 function ReadingRow({ slot, timeZone }: { slot: RoomDetail['latestReadings'][number]; timeZone: string }) {
   const label = METRICS.find((item) => item.value === slot.metric)?.label ?? slot.metric;
   return (
@@ -357,16 +469,26 @@ function Field({
   name,
   testId,
   type = 'text',
+  defaultValue,
 }: {
   label: string;
   name: string;
-  testId: string;
+  testId?: string;
   type?: string;
+  defaultValue?: string;
 }) {
   return (
     <Typography component="label" sx={{ display: 'grid', gap: 0.5 }}>
       {label}
-      <Box component="input" name={name} type={type} data-testid={testId} required={type !== 'number' || name === 'value'} sx={fieldStyle} />
+      <Box
+        component="input"
+        name={name}
+        type={type}
+        data-testid={testId}
+        defaultValue={defaultValue}
+        required={type !== 'number' || name === 'value'}
+        sx={fieldStyle}
+      />
     </Typography>
   );
 }

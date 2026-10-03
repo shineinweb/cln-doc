@@ -176,7 +176,7 @@ export class CyclesService {
             template: { include: { versions: { orderBy: { versionNumber: 'desc' as const }, take: 1 } } },
           },
         },
-        _count: { select: { plants: true } },
+        _count: { select: { plants: { where: { voidedAt: null } } } },
       },
     });
     if (!cycle) {
@@ -219,5 +219,5 @@ export const activeCycleInclude = {
   where: { status: 'active' },
   orderBy: { startDate: 'desc' as const },
   take: 1,
-  include: { ...historyInclude, _count: { select: { plants: true } } },
+  include: { ...historyInclude, _count: { select: { plants: { where: { voidedAt: null } } } } },
 };

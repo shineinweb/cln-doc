@@ -41,6 +41,18 @@ A Harbor House gateway cannot post a reading into a Hill Works room. The message
 
 Workspace says “Tasks from another facility stay off this list.” Times on a room use that facility’s timezone, `America/Los_Angeles`. A timestamp you type without a timezone is read as local time at the facility.
 
+## Changing a record
+
+Lists show one page of rows. **Previous** and **Next** move between pages. The line between them reads “Page 1 of 2 · 6 rows.” **View** opens the row. **Edit** opens the stored fields. **Save changes** writes that row. **Delete** asks “Delete this record?” **Cancel** closes the question. Confirming uses **Delete** again.
+
+You can change a row only for a facility you can open. Avery Chen can edit or delete a Hill Works room. Blake Ortiz cannot. The same rule covers zones, crop cycles, tasks, readings, alert rules, harvests, and every Operations list.
+
+Rooms, zones, and Operations rows are removed. Plants, packages, harvest weights, and compliance submissions stay in history. Delete there says “This leaves the active list. The row and its actor stay in history.” A removed room says “This removes the row.”
+
+Reports stay calculated. A report total has no **Delete**.
+
+Add forms that were already on a page keep their buttons: **Add room**, **Save record**, **Save purchase**, **Save training**, **Save stay**, **Save recurring task**, **Save template**, **Save SOP**, **Save reading**, **Save alert rule**, and **Mark done**. New add buttons are **Add zone**, **Start cycle**, **Add task**, **Add batch**, and **Add plant**.
+
 ## Company
 
 **Company** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility.
@@ -64,7 +76,7 @@ Flower 1’s current crop is Cedar Nights flower. The plants from that crop have
 
 **Rooms** is titled Rooms, with the kicker Center. The introduction says “Open a room to see its current crop, cycle day, and operating history.” Each row shows the room name, cultivar and plant count or “No active crop,” and the room type. Choose the row to open the dashboard.
 
-**Add a room** is the form above the list. Enter a name and choose a type: Flower, Vegetative, Mother, Dry, or Clone. **Add room** saves the room on the facility selected in the switcher and shows it in the list. You can add a room only for a facility you can open. Avery Chen can add a room at Harbor House and at Hill Works. Blake Ortiz can add a room at Harbor House. Opening Hill Works is outside Blake’s access, so he cannot add a room there.
+**Add a room** is the form above the list. Enter a name and choose a type: Flower, Vegetative, Mother, Dry, or Clone. **Add room** saves the room on the facility selected in the switcher and shows it in the list. **View**, **Edit**, **Save changes**, and **Delete** sit on each room. **Previous** and **Next** page the list. You can add, edit, or delete a room only for a facility you can open. Avery Chen can change a room at Harbor House and at Hill Works. Blake Ortiz can change a room at Harbor House. He cannot edit or delete a Hill Works room.
 
 The room dashboard introduction says “The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records.”
 
