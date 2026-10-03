@@ -3,7 +3,7 @@ import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './layout/AppShell';
 import { SiteProvider } from './layout/SiteProvider';
-import { CompanyPage } from './pages/CompanyPage';
+import { FacilityPage } from './pages/FacilityPage';
 import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
 import { CropCyclesPage } from './pages/CropCyclesPage';
@@ -39,7 +39,7 @@ const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <CompanyPage /> },
+      { index: true, element: <FacilityPage /> },
       { path: 'facility', element: <Navigate to="/rooms" replace /> },
       { path: 'rooms', element: <RoomsPage /> },
       { path: 'rooms/:roomId', element: <RoomDashboardPage /> },

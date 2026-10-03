@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The left side of the page says “Know which rooms are yours before the day starts” and “Access follows the site.”
 
-After sign-in, the left navigation is Company, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
+After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
 
 The top bar has a **Facility** switcher, your name, and **Sign out**.
 
@@ -22,9 +22,9 @@ These are the seeded accounts for this workspace.
 
 ## Site access
 
-A facility stays hidden until you have a membership, unless you are an organization admin. Company says that in the page introduction.
+A facility stays hidden until you have a membership, unless you are an organization admin. Facility says that in the page introduction.
 
-Avery sees Harbor House (Astoria, OR, code HARBOR) and Hill Works (Hood River, OR, code HILL). Blake’s Company page lists Harbor House. Casey’s lists Hill Works. Choosing a card in Company sets the Facility switcher and opens Rooms.
+Avery sees Harbor House (Astoria, OR, code HARBOR) and Hill Works (Hood River, OR, code HILL). Blake’s Facility page lists Harbor House. Casey’s lists Hill Works. Choosing a card on Facility sets the top-bar Facility switcher and opens Rooms.
 
 Opening a room, crop cycle, harvest, package, plant, reading, or facility report for the other site does not show that site’s data. The page says you do not have access, or that it is not on a facility you can open. Examples:
 
@@ -53,9 +53,9 @@ Reports stay calculated. A report total has no **Delete**.
 
 Add forms that were already on a page keep their buttons: **Add room**, **Save record**, **Save purchase**, **Save training**, **Save stay**, **Save recurring task**, **Save template**, **Save SOP**, **Save reading**, **Save alert rule**, and **Mark done**. New add buttons are **Add zone**, **Start cycle**, **Add task**, **Add batch**, and **Add plant**.
 
-## Company
+## Facility
 
-**Company** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility.
+**Facility** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility. The top bar also has a **Facility** switcher that chooses the same site and opens Rooms.
 
 If an account has no membership, the page says “No facilities are assigned to this account.”
 

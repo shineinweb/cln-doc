@@ -5,7 +5,7 @@ import { apiGet } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
 
-export function CompanyPage() {
+export function FacilityPage() {
   const { sites, loading, error, setSiteId } = useSites();
   const organization = useQuery({
     queryKey: ['organization'],
@@ -16,8 +16,8 @@ export function CompanyPage() {
   return (
     <Box>
       <PageHeader
-        kicker="Company"
-        title={organization.data?.name ?? 'Company'}
+        kicker="Facility"
+        title={organization.data?.name ?? 'Facility'}
         lede="Facilities you can open are listed here. A site stays hidden until you have a membership, unless you are an organization admin."
       />
       {error ? <Alert severity="error">{error.message}</Alert> : null}

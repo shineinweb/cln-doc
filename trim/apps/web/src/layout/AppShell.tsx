@@ -24,7 +24,7 @@ import { useSites } from './SiteProvider';
 const DRAWER_WIDTH = 232;
 
 const NAV = [
-  { to: '/', label: 'Company', end: true },
+  { to: '/', label: 'Facility', end: true },
   { to: '/rooms', label: 'Rooms', end: false, hint: 'Center' },
   { to: '/crop-cycles', label: 'Crop cycles', end: true },
   { to: '/workflows', label: 'Workflows', end: true },

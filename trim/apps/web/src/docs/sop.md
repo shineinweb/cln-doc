@@ -12,7 +12,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 **Steps.**
 
-1. Open **Company** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
+1. Open **Facility** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
 2. Open **Rooms** and choose the room. The page says “Open a room to see its current crop, cycle day, and operating history.”
 3. On the room dashboard, read **Current crop**: Cultivar, Plants, Stage, Cycle day, and Expected harvest. Cycle day counts the start date as day 1 in `America/Los_Angeles`.
 4. Read **Tasks due today**. On October 3, 2026, Flower 1 lists Lower-leaf pass and Veg 1 lists Scout the canopy.
