@@ -14,6 +14,7 @@ import { HarvestPage } from './pages/HarvestPage';
 import { HarvestsPage } from './pages/HarvestsPage';
 import { LicenseInventoryPage } from './pages/LicenseInventoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { OperationsPage } from './pages/OperationsPage';
 import { PackagePage } from './pages/PackagePage';
 import { PlantPage } from './pages/PlantPage';
 import { ReadingPage } from './pages/ReadingPage';
@@ -56,6 +57,8 @@ const router = createBrowserRouter([
       { path: 'licenses/:licenseId', element: <LicenseInventoryPage /> },
       { path: 'plants/:plantId', element: <PlantPage /> },
       { path: 'readings/:readingId', element: <ReadingPage /> },
+      { path: 'operations', element: <OperationsPage /> },
+      { path: 'operations/:area', element: <OperationsPage /> },
       { path: 'reports', element: <ReportsPage /> },
       { path: 'user-manual', element: <UserManualPage /> },
       { path: 'sop', element: <SopPage /> },

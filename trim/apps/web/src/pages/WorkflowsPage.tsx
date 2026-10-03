@@ -48,6 +48,8 @@ export function WorkflowsPage() {
     resolver: zodResolver(createWorkflowTemplateSchema),
     defaultValues: {
       name: '',
+      cultivar: '',
+      medium: '',
       durationDays: 28,
       startingEvent: 'cycle_start',
       tasks: [emptyTask],
@@ -99,8 +101,10 @@ export function WorkflowsPage() {
               <Typography variant="h3" sx={{ fontSize: 24 }}>
                 {template.name}
               </Typography>
-              <Typography sx={{ color: 'text.secondary', mb: 1 }}>
+              <Typography sx={{ color: 'text.secondary', mb: 1 }} data-testid="workflow-version">
                 Version {template.currentVersion.versionNumber} of {template.versionCount} · {template.currentVersion.durationDays} days · starts at {template.currentVersion.startingEvent}
+                {template.cultivar ? ` · Cultivar ${template.cultivar}` : ''}
+                {template.medium ? ` · Medium ${template.medium}` : ''}
               </Typography>
               {template.currentVersion.tasks.map((item) => (
                 <Typography key={item.id}>
@@ -128,6 +132,8 @@ export function WorkflowsPage() {
                 sx={{ display: 'grid', gap: 2 }}
               >
                 <TextField label="Template name" {...form.register('name')} />
+                <TextField label="Cultivar" helperText="Leave blank when this template is not for one cultivar." {...form.register('cultivar')} />
+                <TextField label="Medium" helperText="Leave blank when this template is not for one medium." {...form.register('medium')} />
                 <TextField label="Duration in days" type="number" {...form.register('durationDays', { valueAsNumber: true })} />
                 <TextField label="Starting event" helperText="Use cycle_start, or the title of a timeline event." {...form.register('startingEvent')} />
                 <TextField label="Task key" {...form.register('tasks.0.taskKey')} />

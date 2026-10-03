@@ -1,5 +1,5 @@
-import { Alert, Box, Button, Card, CardContent, Skeleton, TextField, Typography } from '@mui/material';
-import { harvestDetailSchema, packageDetailSchema, scaleSampleViewSchema, type HarvestDetail } from '@trim/contracts';
+import { Alert, Box, Button, Card, CardContent, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
+import { harvestDetailSchema, packageDetailSchema, scaleSampleViewSchema, tagSampleViewSchema, type HarvestDetail } from '@trim/contracts';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -50,9 +50,15 @@ export function HarvestPage() {
       <Typography data-testid="harvest-plant-count" sx={{ mb: 2 }}>
         {row.plantCount} plants
       </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 2, alignItems: 'start' }}>
-        <WeightLedger ledger={row.ledger} />
-        <ScaleSamples harvestId={row.id} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ order: { xs: 1, md: 2 } }}>
+          <NextStep harvest={row} />
+          <TagSamples harvestId={row.id} />
+        </Box>
+        <Box sx={{ order: { xs: 2, md: 1 }, display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 2, alignItems: 'start' }}>
+          <WeightLedger ledger={row.ledger} />
+          <ScaleSamples harvestId={row.id} />
+        </Box>
       </Box>
       <Card sx={{ mb: 2 }}>
         <CardContent>
@@ -74,7 +80,6 @@ export function HarvestPage() {
           ))}
         </CardContent>
       </Card>
-      <NextStep harvest={row} />
       <Typography variant="h3" sx={{ fontSize: 22, mt: 3, mb: 1 }}>
         Source tags
       </Typography>
@@ -126,6 +131,73 @@ function ScaleSamples({ harvestId }: { harvestId: string }) {
         ) : (
           <Typography sx={{ color: 'text.secondary' }}>No sample scale weight is stored.</Typography>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TagSamples({ harvestId }: { harvestId: string }) {
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
+  const samples = useQuery({
+    queryKey: ['tag-samples', harvestId],
+    queryFn: () => apiGet(`/adapters/tags/harvests/${harvestId}/samples`, z.array(tagSampleViewSchema)),
+    retry: false,
+  });
+  const save = useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiSend(`/adapters/tags/harvests/${harvestId}/samples`, tagSampleViewSchema, body),
+    onSuccess: async () => {
+      setMessage('Sample tag stored. The ledger and plant tags are unchanged.');
+      await queryClient.invalidateQueries({ queryKey: ['tag-samples', harvestId] });
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+  return (
+    <Card data-testid="tag-samples" sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h3" sx={{ fontSize: 20, mb: 1 }}>
+          Sample tag
+        </Typography>
+        <Typography sx={{ color: 'text.secondary', mb: 1 }}>
+          This sample sits beside the harvest. It does not change plant tags, packages, or the weight ledger.
+        </Typography>
+        {samples.data && samples.data.length > 0 ? (
+          samples.data.map((sample) => (
+            <Typography key={sample.id} data-testid="tag-sample">
+              {sample.deviceId} · {sample.tag} · {sample.quality} · {formatTimestamp(sample.recordedAt)} · Sample data
+            </Typography>
+          ))
+        ) : (
+          <Typography sx={{ color: 'text.secondary' }}>No sample tag is stored.</Typography>
+        )}
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1.5, mt: 2 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            save.mutate({
+              deviceId: String(form.get('deviceId')),
+              tag: String(form.get('tag')),
+              recordedAt: String(form.get('recordedAt')),
+              quality: String(form.get('quality')),
+              isSample: true,
+            });
+          }}
+        >
+          <TextField label="Device" name="deviceId" required fullWidth inputProps={{ 'data-testid': 'tag-device' }} />
+          <TextField label="Tag" name="tag" required fullWidth inputProps={{ 'data-testid': 'tag-value' }} />
+          <TextField label="Timestamp" name="recordedAt" type="datetime-local" required fullWidth InputLabelProps={{ shrink: true }} />
+          <TextField select label="Quality" name="quality" defaultValue="good" fullWidth>
+            <MenuItem value="good">Good</MenuItem>
+            <MenuItem value="suspect">Suspect</MenuItem>
+            <MenuItem value="bad">Bad</MenuItem>
+          </TextField>
+          <Button type="submit" variant="outlined" fullWidth disabled={save.isPending}>
+            Save sample tag
+          </Button>
+        </Box>
+        {message ? <Alert sx={{ mt: 1 }}>{message}</Alert> : null}
       </CardContent>
     </Card>
   );
@@ -217,7 +289,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
   };
 
   return (
-    <Card>
+    <Card data-testid="harvest-capture">
       <CardContent>
         {!kinds.has('wet_weight') ? (
           <WeightAction
@@ -232,7 +304,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
           />
         ) : null}
         {kinds.has('wet_weight') && !kinds.has('drying') ? (
-          <Button data-testid="start-drying" variant="contained" onClick={() => send.mutate('drying')} disabled={send.isPending}>
+          <Button data-testid="start-drying" variant="contained" onClick={() => send.mutate('drying')} disabled={send.isPending} sx={{ width: { xs: '100%', sm: 'auto' } }}>
             Start drying
           </Button>
         ) : null}
@@ -249,13 +321,13 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
           />
         ) : null}
         {kinds.has('dry_weight') && !kinds.has('trimming') ? (
-          <Button data-testid="record-trimming" variant="contained" onClick={() => send.mutate('trim')} disabled={send.isPending}>
+          <Button data-testid="record-trimming" variant="contained" onClick={() => send.mutate('trim')} disabled={send.isPending} sx={{ width: { xs: '100%', sm: 'auto' } }}>
             Record trimming
           </Button>
         ) : null}
         {kinds.has('trimming') ? (
           <Box sx={{ display: 'grid', gap: 1.5 }}>
-            <TextField label="Waste note" value={note} onChange={(event) => setNote(event.target.value)} inputProps={{ 'data-testid': 'waste-note' }} />
+            <TextField label="Waste note" value={note} onChange={(event) => setNote(event.target.value)} fullWidth inputProps={{ 'data-testid': 'waste-note' }} />
             <WeightAction
               testId="waste-weight"
               buttonId="record-waste"
@@ -272,6 +344,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
               type="number"
               value={packageGrams}
               onChange={(event) => setPackageGrams(event.target.value)}
+              fullWidth
               inputProps={{ 'data-testid': 'package-weight-input' }}
             />
             <Box
@@ -286,7 +359,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
                   event.preventDefault();
                 }
               }}
-              sx={{ font: 'inherit', py: 1, px: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+              sx={{ width: '100%', font: 'inherit', py: 1, px: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
             />
             <Box
               component="input"
@@ -301,9 +374,9 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
                   addTag(scan);
                 }
               }}
-              sx={{ font: 'inherit', py: 1, px: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+              sx={{ width: '100%', font: 'inherit', py: 1, px: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
             />
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, flexWrap: 'wrap' }}>
               <Button data-testid="include-harvested-tags" onClick={() => setTags(harvest.plants.map((plant) => plant.tag))}>
                 Include harvested tags
               </Button>
@@ -349,15 +422,16 @@ function WeightAction({
   button: string;
 }) {
   return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, alignItems: { xs: 'stretch', sm: 'center' } }}>
       <TextField
         label={label}
         type="number"
         value={grams}
         onChange={(event) => onGrams(event.target.value)}
+        fullWidth
         inputProps={{ 'data-testid': testId }}
       />
-      <Button data-testid={buttonId} variant="contained" onClick={onSubmit} disabled={pending}>
+      <Button data-testid={buttonId} variant="contained" onClick={onSubmit} disabled={pending} sx={{ width: { xs: '100%', sm: 'auto' } }}>
         {button}
       </Button>
     </Box>

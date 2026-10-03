@@ -257,6 +257,14 @@ async function main(): Promise<void> {
     blakeId: blake.id,
   });
   await seedAdapters(harbor.id, hill.id, flower.id);
+  await seedOperations({
+    organizationId: organization.id,
+    harborSiteId: harbor.id,
+    hillSiteId: hill.id,
+    flowerRoomId: flower.id,
+    vegRoomId: veg.id,
+    operatorRoleId: siteOperator.id,
+  });
 
   console.log('Seeded Harbor & Hill Cultivation.');
   console.log('Dev-only logins (also listed in the README):');
@@ -1144,6 +1152,324 @@ async function seedAdapters(harborSiteId: string, hillSiteId: string, flowerRoom
       quality: 'good',
       isSample: true,
       recordedAt: new Date('2026-10-03T22:30:00.000Z'),
+    },
+  });
+  await prisma.harvestTagSample.deleteMany({
+    where: { harvestId: harvest.id, deviceId: 'hh-sample-rfid' },
+  });
+  await prisma.harvestTagSample.create({
+    data: {
+      harvestId: harvest.id,
+      deviceId: 'hh-sample-rfid',
+      tag: '1A4HH000000000000000001',
+      quality: 'good',
+      isSample: true,
+      recordedAt: new Date('2026-10-03T22:40:00.000Z'),
+    },
+  });
+}
+
+async function seedOperations(input: {
+  organizationId: string;
+  harborSiteId: string;
+  hillSiteId: string;
+  flowerRoomId: string;
+  vegRoomId: string;
+  operatorRoleId: string;
+}): Promise<void> {
+  const irrigationSop = await prisma.sopRecord.upsert({
+    where: { organizationId_title: { organizationId: input.organizationId, title: 'Irrigation pass' } },
+    create: {
+      organizationId: input.organizationId,
+      title: 'Irrigation pass',
+      summary: 'Confirm the drip lines are open, then record volume, EC, and pH before you leave the room.',
+    },
+    update: {},
+  });
+  const ipmSop = await prisma.sopRecord.upsert({
+    where: { organizationId_title: { organizationId: input.organizationId, title: 'IPM scout' } },
+    create: {
+      organizationId: input.organizationId,
+      title: 'IPM scout',
+      summary: 'Check leaves and medium. Record the target even when the room is clear. Do not apply a spray on this pass.',
+    },
+    update: {},
+  });
+  await prisma.sopRecord.upsert({
+    where: { organizationId_title: { organizationId: input.organizationId, title: 'Room sanitation' } },
+    create: {
+      organizationId: input.organizationId,
+      title: 'Room sanitation',
+      summary: 'Wipe benches and floors after the plants are clear of the aisle. Record the method and whether a follow-up is needed.',
+    },
+    update: {},
+  });
+
+  await seedCultivarTemplate({
+    organizationId: input.organizationId,
+    name: 'Cedar Nights coco week',
+    cultivar: 'Cedar Nights',
+    medium: 'coco',
+    roleId: input.operatorRoleId,
+    taskKey: 'runoff',
+    taskTitle: 'Check runoff',
+    sopId: irrigationSop.id,
+  });
+  await seedCultivarTemplate({
+    organizationId: input.organizationId,
+    name: 'Glass Orchard soil week',
+    cultivar: 'Glass Orchard',
+    medium: 'soil',
+    roleId: input.operatorRoleId,
+    taskKey: 'scout',
+    taskTitle: 'Scout the benches',
+    sopId: ipmSop.id,
+  });
+
+  const siteIds = [input.harborSiteId, input.hillSiteId];
+  await prisma.irrigationRecord.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.ipmRecord.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.maintenanceRecord.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.purchaseRecord.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.sanitationRecord.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.trainingRecord.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.roomStay.deleteMany({ where: { siteId: { in: siteIds } } });
+  await prisma.recurringDuty.deleteMany({ where: { siteId: { in: siteIds } } });
+
+  await prisma.irrigationRecord.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        roomId: input.flowerRoomId,
+        recordedOn: new Date('2026-10-02T00:00:00.000Z'),
+        kind: 'feed',
+        method: 'Drip',
+        volumeLiters: 12,
+        ec: 1.8,
+        ph: 5.9,
+        nutrientName: 'Flower nutrients',
+        actorName: 'Blake Ortiz',
+      },
+      {
+        siteId: input.hillSiteId,
+        roomId: input.vegRoomId,
+        recordedOn: new Date('2026-10-02T00:00:00.000Z'),
+        kind: 'irrigation',
+        method: 'Hand',
+        volumeLiters: 8,
+        ec: 1.2,
+        ph: 6.1,
+        nutrientName: 'Veg media',
+        actorName: 'Casey Nguyen',
+      },
+    ],
+  });
+  await prisma.ipmRecord.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        roomId: input.flowerRoomId,
+        recordedOn: new Date('2026-10-01T00:00:00.000Z'),
+        target: 'Thrips',
+        finding: 'clear',
+        response: 'Monitor',
+        actorName: 'Blake Ortiz',
+      },
+      {
+        siteId: input.hillSiteId,
+        roomId: input.vegRoomId,
+        recordedOn: new Date('2026-10-01T00:00:00.000Z'),
+        target: 'Fungus gnats',
+        finding: 'present',
+        response: 'Release beneficials',
+        actorName: 'Casey Nguyen',
+      },
+    ],
+  });
+  await prisma.maintenanceRecord.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        roomId: input.flowerRoomId,
+        recordedOn: new Date('2026-09-30T00:00:00.000Z'),
+        assetName: 'Flower 1 dehumidifier',
+        kind: 'preventive',
+        summary: 'Cleaned the filter and checked the drain.',
+        nextDueOn: new Date('2026-10-30T00:00:00.000Z'),
+        actorName: 'Blake Ortiz',
+      },
+      {
+        siteId: input.hillSiteId,
+        roomId: input.vegRoomId,
+        recordedOn: new Date('2026-09-29T00:00:00.000Z'),
+        assetName: 'Veg 1 circulation fan',
+        kind: 'repair',
+        summary: 'Replaced the worn guard.',
+        nextDueOn: new Date('2026-11-01T00:00:00.000Z'),
+        actorName: 'Casey Nguyen',
+      },
+    ],
+  });
+  await prisma.purchaseRecord.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        vendorName: 'Harbor supply',
+        orderedOn: new Date('2026-09-28T00:00:00.000Z'),
+        status: 'received',
+        description: 'Flower nutrients',
+        quantity: 2,
+        unitCostCents: 1500,
+      },
+      {
+        siteId: input.hillSiteId,
+        vendorName: 'Ridge supply',
+        orderedOn: new Date('2026-09-27T00:00:00.000Z'),
+        status: 'requested',
+        description: 'Veg media',
+        quantity: 1,
+        unitCostCents: 4200,
+      },
+    ],
+  });
+  await prisma.sanitationRecord.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        roomId: input.flowerRoomId,
+        recordedOn: new Date('2026-10-01T00:00:00.000Z'),
+        area: 'Floor and drains',
+        method: 'Quaternary',
+        outcome: 'done',
+        actorName: 'Blake Ortiz',
+      },
+      {
+        siteId: input.hillSiteId,
+        roomId: input.vegRoomId,
+        recordedOn: new Date('2026-10-01T00:00:00.000Z'),
+        area: 'Benches',
+        method: 'Peroxide',
+        outcome: 'follow_up',
+        actorName: 'Casey Nguyen',
+      },
+    ],
+  });
+  await prisma.trainingRecord.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        traineeName: 'Blake Ortiz',
+        title: 'Canopy scout',
+        sopTitle: 'Canopy scout',
+        status: 'completed',
+        completedOn: new Date('2026-09-25T00:00:00.000Z'),
+        actorName: 'Avery Chen',
+      },
+      {
+        siteId: input.hillSiteId,
+        traineeName: 'Casey Nguyen',
+        title: 'IPM scout',
+        sopTitle: 'IPM scout',
+        status: 'assigned',
+        actorName: 'Avery Chen',
+      },
+    ],
+  });
+  await prisma.roomStay.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        roomId: input.flowerRoomId,
+        label: 'Cedar Nights flower',
+        cultivar: 'Cedar Nights',
+        medium: 'coco',
+        startsOn: new Date('2026-09-12T00:00:00.000Z'),
+        endsOn: new Date('2026-10-24T00:00:00.000Z'),
+      },
+      {
+        siteId: input.hillSiteId,
+        roomId: input.vegRoomId,
+        label: 'Glass Orchard veg',
+        cultivar: 'Glass Orchard',
+        medium: 'soil',
+        startsOn: new Date('2026-09-20T00:00:00.000Z'),
+        endsOn: new Date('2026-11-15T00:00:00.000Z'),
+      },
+    ],
+  });
+  await prisma.recurringDuty.createMany({
+    data: [
+      {
+        siteId: input.harborSiteId,
+        roomId: input.flowerRoomId,
+        title: 'Check drip lines',
+        cadence: 'weekly',
+        nextDueOn: new Date('2026-10-04T00:00:00.000Z'),
+        assigneeLabel: 'Blake Ortiz',
+        sopTitle: 'Irrigation pass',
+      },
+      {
+        siteId: input.hillSiteId,
+        roomId: input.vegRoomId,
+        title: 'Wipe tables',
+        cadence: 'daily',
+        nextDueOn: new Date('2026-10-03T00:00:00.000Z'),
+        assigneeLabel: 'Casey Nguyen',
+        sopTitle: 'Room sanitation',
+      },
+    ],
+  });
+}
+
+async function seedCultivarTemplate(input: {
+  organizationId: string;
+  name: string;
+  cultivar: string;
+  medium: string;
+  roleId: string;
+  taskKey: string;
+  taskTitle: string;
+  sopId: string;
+}): Promise<void> {
+  const template = await prisma.workflowTemplate.upsert({
+    where: { organizationId_name: { organizationId: input.organizationId, name: input.name } },
+    create: {
+      organizationId: input.organizationId,
+      name: input.name,
+      cultivar: input.cultivar,
+      medium: input.medium,
+    },
+    update: { cultivar: input.cultivar, medium: input.medium },
+  });
+  const version = await prisma.workflowTemplateVersion.upsert({
+    where: { templateId_versionNumber: { templateId: template.id, versionNumber: 1 } },
+    create: {
+      templateId: template.id,
+      versionNumber: 1,
+      durationDays: 28,
+      startingEvent: 'cycle_start',
+    },
+    update: {},
+  });
+  const existing = await prisma.workflowTaskTemplate.findFirst({
+    where: { versionId: version.id, taskKey: input.taskKey },
+  });
+  if (existing) {
+    return;
+  }
+  await prisma.workflowTaskTemplate.create({
+    data: {
+      versionId: version.id,
+      taskKey: input.taskKey,
+      title: input.taskTitle,
+      offsetDays: 0,
+      sortOrder: 0,
+      assigneeType: 'role',
+      roleId: input.roleId,
+      instructions: input.taskTitle,
+      sopRecordId: input.sopId,
+      requiresNotes: true,
+      checklist: { create: [{ label: 'Record the result', sortOrder: 0 }] },
     },
   });
 }

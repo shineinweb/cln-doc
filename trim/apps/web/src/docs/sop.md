@@ -224,4 +224,103 @@ A controller sample is not this procedure. It stays on **Controller sample**, la
 
 The comparison page has no link to a single-facility report. That page is **Facility report** at `/reports/sites/` plus the facility id, and it uses the same sections for the cycles on that facility.
 
-**Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples and the 510 g scale sample are not in these totals. Hill Works prior lot is not a Glass Orchard yield.
+**Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples, the 510 g scale sample, and the sample tag are not in these totals. Hill Works prior lot is not a Glass Orchard yield.
+
+## Recording irrigation and feed
+
+**Who.** Anyone who can open the room. Blake records Harbor House. Casey records Hill Works. Avery can record either.
+
+**When.** After a water or nutrient pass.
+
+**Steps.**
+
+1. Open **Operations**, then **Irrigation and feed**.
+2. Read the stored rows for the facility in the switcher.
+3. Choose the room, date, Irrigation or Feed, method, volume, EC, pH, and nutrient.
+4. Choose **Save record**.
+
+**Done.** The new row is on the list with your name. The page says “Irrigation and feed record saved.” Flower 1’s stored feed is Drip, 12 L, Flower nutrients, EC 1.8, pH 5.9.
+
+## Recording an IPM scout
+
+**Who.** Anyone who can open the room.
+
+**When.** After walking the room, including when you find nothing.
+
+**Steps.**
+
+1. Open **Operations**, then **IPM**.
+2. Choose the room, date, target, Clear or Present, and the response.
+3. Choose **Save record**.
+
+**Done.** The list shows the target, Clear or Present, and the response. Flower 1 shows Thrips, Clear, Monitor. A clear scout stays on the list.
+
+## Completing a recurring task
+
+**Who.** The assignee named on the row, or anyone who can open that facility.
+
+**When.** On or after the next due date.
+
+**Steps.**
+
+1. Open **Operations**, then **Recurring tasks**.
+2. Read the next due date, Daily or Weekly, the room, and the procedure name.
+3. Choose **Mark done**.
+
+**Done.** The page says “Next due date moved.” A weekly task moves seven days later. A daily task moves one day later. Check drip lines on Flower 1 is weekly and starts at 2026-10-04.
+
+## Reading the room calendar
+
+**Who.** Anyone who can open the facility.
+
+**When.** Before you plan a room, or when you need the cultivar and medium for the dates a crop occupies it.
+
+**Steps.**
+
+1. Open **Operations**, then **Room calendar**.
+2. Read the month, then the day lines. A stay names the room, cultivar, and medium. An empty day says open.
+
+**Done.** You can name the cultivar and medium for a date. In October 2026, Flower 1 is Cedar Nights coco and Veg 1 is Glass Orchard soil.
+
+## Using a cultivar or medium template
+
+**Who.** Avery, when saving a template. Blake and Casey can read the template cards.
+
+**When.** The work belongs to one cultivar or one medium.
+
+**Steps.**
+
+1. Open **Workflows**.
+2. Read the card. **Cedar Nights coco week** says Cultivar Cedar Nights and Medium coco. **Glass Orchard soil week** says Cultivar Glass Orchard and Medium soil. Canopy week has no cultivar or medium.
+3. To add one, use **New template**. Fill **Cultivar**, **Medium**, or leave either blank, then **Save template**.
+
+**Done.** The new card shows the cultivar and medium you entered. Existing cycles stay on the version they already have.
+
+## Reading the SOP library
+
+**Who.** Any signed-in user. Cycle tasks from another facility stay off the list.
+
+**When.** You need the procedure tied to a task.
+
+**Steps.**
+
+1. Open **Operations**, then **SOP library**.
+2. Read the procedure title and summary.
+3. Read the template line or the facility, room, cycle, and task line under it.
+
+**Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The **SOP** item in the left navigation remains the operating document.
+
+## Capturing a harvest on a phone
+
+**Who.** Anyone who can open the harvest.
+
+**When.** You are recording weights or a sample tag on a narrow screen.
+
+**Steps.**
+
+1. Open the harvest.
+2. Use the capture card at the top. Enter the weight the next step asks for. The fields and buttons use the width of the screen.
+3. To store a scanner sample, fill Device, Tag, Timestamp, and Quality under **Sample tag**, then **Save sample tag**.
+4. Type source tags in **Scan a source tag** and press Enter only when you are creating a package. That field is the package step. The sample tag is separate.
+
+**Done.** The ledger shows the weights you typed. A sample tag shows Sample data and leaves wet, dry, packaged, waste, unaccounted, and the plant tags unchanged. The seeded sample is `hh-sample-rfid`, tag `1A4HH000000000000000001`, beside the Cedar Nights ledger.

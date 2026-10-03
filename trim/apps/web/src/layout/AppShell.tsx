@@ -32,6 +32,7 @@ const NAV = [
   { to: '/workspace', label: 'Workspace', end: true },
   { to: '/compliance', label: 'Compliance', end: true },
   { to: '/harvests', label: 'Harvests', end: false },
+  { to: '/operations', label: 'Operations', end: false },
   { to: '/reports', label: 'Reports', end: false },
   { to: '/user-manual', label: 'User manual', end: true },
   { to: '/sop', label: 'SOP', end: true },

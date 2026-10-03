@@ -153,6 +153,14 @@ model Site {
   harvests       Harvest[]
   metrcSyncs     MetrcSync[]
   sensorGateways SensorGateway[]
+  irrigationRecords  IrrigationRecord[]
+  ipmRecords         IpmRecord[]
+  maintenanceRecords MaintenanceRecord[]
+  purchaseRecords    PurchaseRecord[]
+  sanitationRecords  SanitationRecord[]
+  trainingRecords    TrainingRecord[]
+  roomStays          RoomStay[]
+  recurringDuties    RecurringDuty[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -327,6 +335,7 @@ model Harvest {
   wastes       HarvestWaste[]
   packages     HarvestPackage[]
   scaleSamples ScaleSample[]
+  tagSamples   HarvestTagSample[]
 
   @@index([licenseId])
   @@index([siteId])
@@ -573,6 +582,12 @@ model Room {
   harvests           Harvest[]
   dryingSteps        HarvestStep[]
   controllerReadings ControllerReading[]
+  irrigationRecords  IrrigationRecord[]
+  ipmRecords         IpmRecord[]
+  maintenanceRecords MaintenanceRecord[]
+  sanitationRecords  SanitationRecord[]
+  roomStays          RoomStay[]
+  recurringDuties    RecurringDuty[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -767,7 +782,7 @@ model TeamMember {
   @@map("team_members")
 }
 
-/// A single procedure a workflow task may cite. This is not a training library.
+/// A procedure a workflow task, recurring duty, or training row may cite.
 model SopRecord {
   id             String   @id @default(cuid())
   organizationId String   @map("organization_id")
@@ -790,6 +805,10 @@ model WorkflowTemplate {
   id             String   @id @default(cuid())
   organizationId String   @map("organization_id")
   name           String
+  /// Empty when the template is not written for one cultivar.
+  cultivar       String?  @db.VarChar(191)
+  /// Empty when the template is not written for one medium.
+  medium         String?  @db.VarChar(191)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -1091,6 +1110,181 @@ model ScaleSample {
 
   @@index([harvestId, recordedAt])
   @@map("scale_samples")
+}
+
+/// A sample tag read from a harvest scanner. It never changes plants, packages, or the weight ledger.
+model HarvestTagSample {
+  id         String   @id @default(cuid())
+  harvestId  String   @map("harvest_id")
+  deviceId   String   @map("device_id")
+  tag        String
+  recordedAt DateTime @map("recorded_at")
+  quality    String
+  isSample   Boolean  @default(true) @map("is_sample")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId, recordedAt])
+  @@map("harvest_tag_samples")
+}
+
+model IrrigationRecord {
+  id           String   @id @default(cuid())
+  siteId       String   @map("site_id")
+  roomId       String   @map("room_id")
+  recordedOn   DateTime @map("recorded_on") @db.Date
+  kind         String
+  method       String
+  volumeLiters Decimal? @map("volume_liters") @db.Decimal(8, 2)
+  ec           Decimal? @db.Decimal(4, 2)
+  ph           Decimal? @db.Decimal(4, 2)
+  nutrientName String?  @map("nutrient_name")
+  note         String?  @db.VarChar(500)
+  actorName    String   @map("actor_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, recordedOn])
+  @@map("irrigation_records")
+}
+
+model IpmRecord {
+  id         String   @id @default(cuid())
+  siteId     String   @map("site_id")
+  roomId     String   @map("room_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  target     String
+  finding    String
+  response   String
+  note       String?  @db.VarChar(500)
+  actorName  String   @map("actor_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, recordedOn])
+  @@map("ipm_records")
+}
+
+model MaintenanceRecord {
+  id         String    @id @default(cuid())
+  siteId     String    @map("site_id")
+  roomId     String?   @map("room_id")
+  recordedOn DateTime  @map("recorded_on") @db.Date
+  assetName  String    @map("asset_name")
+  kind       String
+  summary    String    @db.VarChar(500)
+  nextDueOn  DateTime? @map("next_due_on") @db.Date
+  actorName  String    @map("actor_name")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  site Site  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, recordedOn])
+  @@map("maintenance_records")
+}
+
+model PurchaseRecord {
+  id            String   @id @default(cuid())
+  siteId        String   @map("site_id")
+  vendorName    String   @map("vendor_name")
+  orderedOn     DateTime @map("ordered_on") @db.Date
+  status        String
+  description   String
+  quantity      Decimal  @db.Decimal(8, 2)
+  unitCostCents Int      @map("unit_cost_cents")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, orderedOn])
+  @@map("purchase_records")
+}
+
+model SanitationRecord {
+  id         String   @id @default(cuid())
+  siteId     String   @map("site_id")
+  roomId     String   @map("room_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  area       String
+  method     String
+  outcome    String
+  actorName  String   @map("actor_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, recordedOn])
+  @@map("sanitation_records")
+}
+
+model TrainingRecord {
+  id          String    @id @default(cuid())
+  siteId      String    @map("site_id")
+  traineeName String    @map("trainee_name")
+  title       String
+  sopTitle    String?   @map("sop_title")
+  status      String
+  completedOn DateTime? @map("completed_on") @db.Date
+  actorName   String    @map("actor_name")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("training_records")
+}
+
+/// A room's planned occupancy. This is the calendar, not a second crop cycle.
+model RoomStay {
+  id        String   @id @default(cuid())
+  siteId    String   @map("site_id")
+  roomId    String   @map("room_id")
+  label     String
+  cultivar  String
+  medium    String
+  startsOn  DateTime @map("starts_on") @db.Date
+  endsOn    DateTime @map("ends_on") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, startsOn])
+  @@map("room_stays")
+}
+
+model RecurringDuty {
+  id            String   @id @default(cuid())
+  siteId        String   @map("site_id")
+  roomId        String?  @map("room_id")
+  title         String
+  cadence       String
+  nextDueOn     DateTime @map("next_due_on") @db.Date
+  assigneeLabel String   @map("assignee_label")
+  sopTitle      String?  @map("sop_title")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  site Site  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, nextDueOn])
+  @@map("recurring_duties")
 }
 
 /// A recorded sync outcome. Phase 2 does not call Metrc.

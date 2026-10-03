@@ -259,6 +259,8 @@ export const workflowVersionInputSchema = z.object({
 
 export const createWorkflowTemplateSchema = workflowVersionInputSchema.extend({
   name: z.string().trim().min(1).max(191),
+  cultivar: z.string().trim().max(191).optional().nullable(),
+  medium: z.string().trim().max(191).optional().nullable(),
 });
 
 export const createSopSchema = z.object({
@@ -349,6 +351,8 @@ export const workflowVersionViewSchema = z.object({
 export const workflowTemplateViewSchema = z.object({
   id: z.string(),
   name: z.string(),
+  cultivar: z.string().nullable(),
+  medium: z.string().nullable(),
   currentVersion: workflowVersionViewSchema,
   versionCount: z.number().int(),
 });
@@ -902,6 +906,183 @@ export const comparisonReportSchema = z.object({
   cycles: z.array(cycleReportSchema),
 });
 
+const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const optionalRoomSchema = z.string().trim().min(1).optional().nullable();
+
+export const tagSampleSchema = z.object({
+  deviceId: z.string().trim().min(1).max(120),
+  tag: z.string().trim().min(1).max(80),
+  recordedAt: z.string().trim().min(1),
+  quality: readingQualitySchema,
+  isSample: z.literal(true).default(true),
+});
+
+export const tagSampleViewSchema = z.object({
+  id: z.string(),
+  harvestId: z.string(),
+  deviceId: z.string(),
+  tag: z.string(),
+  recordedAt: z.string(),
+  quality: z.string(),
+  isSample: z.literal(true),
+});
+
+export const irrigationInputSchema = z.object({
+  roomId: z.string().min(1),
+  recordedOn: dateKeySchema,
+  kind: z.enum(['irrigation', 'feed']),
+  method: z.string().trim().min(1).max(80),
+  volumeLiters: z.number().positive().nullable().optional(),
+  ec: z.number().positive().nullable().optional(),
+  ph: z.number().positive().nullable().optional(),
+  nutrientName: z.string().trim().max(191).optional().nullable(),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
+export const irrigationViewSchema = irrigationInputSchema.extend({
+  id: z.string(),
+  roomName: z.string(),
+  actorName: z.string(),
+});
+
+export const ipmInputSchema = z.object({
+  roomId: z.string().min(1),
+  recordedOn: dateKeySchema,
+  target: z.string().trim().min(1).max(191),
+  finding: z.enum(['clear', 'present']),
+  response: z.string().trim().min(1).max(191),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
+export const ipmViewSchema = ipmInputSchema.extend({
+  id: z.string(),
+  roomName: z.string(),
+  actorName: z.string(),
+});
+
+export const maintenanceInputSchema = z.object({
+  roomId: optionalRoomSchema,
+  recordedOn: dateKeySchema,
+  assetName: z.string().trim().min(1).max(191),
+  kind: z.enum(['preventive', 'repair']),
+  summary: z.string().trim().min(1).max(500),
+  nextDueOn: dateKeySchema.nullable().optional(),
+});
+
+export const maintenanceViewSchema = maintenanceInputSchema.extend({
+  id: z.string(),
+  roomName: z.string().nullable(),
+  actorName: z.string(),
+});
+
+export const purchaseInputSchema = z.object({
+  vendorName: z.string().trim().min(1).max(191),
+  orderedOn: dateKeySchema,
+  status: z.enum(['requested', 'received']),
+  description: z.string().trim().min(1).max(191),
+  quantity: z.number().positive(),
+  unitCostCents: z.number().int().nonnegative(),
+});
+
+export const purchaseViewSchema = purchaseInputSchema.extend({
+  id: z.string(),
+});
+
+export const sanitationInputSchema = z.object({
+  roomId: z.string().min(1),
+  recordedOn: dateKeySchema,
+  area: z.string().trim().min(1).max(191),
+  method: z.string().trim().min(1).max(191),
+  outcome: z.enum(['done', 'follow_up']),
+});
+
+export const sanitationViewSchema = sanitationInputSchema.extend({
+  id: z.string(),
+  roomName: z.string(),
+  actorName: z.string(),
+});
+
+export const trainingInputSchema = z.object({
+  traineeName: z.string().trim().min(1).max(191),
+  title: z.string().trim().min(1).max(191),
+  sopTitle: z.string().trim().max(191).optional().nullable(),
+  status: z.enum(['assigned', 'completed']),
+  completedOn: dateKeySchema.nullable().optional(),
+});
+
+export const trainingViewSchema = trainingInputSchema.extend({
+  id: z.string(),
+  actorName: z.string(),
+});
+
+export const roomStayInputSchema = z.object({
+  roomId: z.string().min(1),
+  label: z.string().trim().min(1).max(191),
+  cultivar: z.string().trim().min(1).max(191),
+  medium: z.string().trim().min(1).max(191),
+  startsOn: dateKeySchema,
+  endsOn: dateKeySchema,
+});
+
+export const roomStayViewSchema = roomStayInputSchema.extend({
+  id: z.string(),
+  roomName: z.string(),
+});
+
+export const recurringInputSchema = z.object({
+  roomId: optionalRoomSchema,
+  title: z.string().trim().min(1).max(191),
+  cadence: z.enum(['daily', 'weekly']),
+  nextDueOn: dateKeySchema,
+  assigneeLabel: z.string().trim().min(1).max(191),
+  sopTitle: z.string().trim().max(191).optional().nullable(),
+});
+
+export const recurringViewSchema = recurringInputSchema.extend({
+  id: z.string(),
+  roomName: z.string().nullable(),
+});
+
+export const operationsOverviewSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  rooms: z.array(z.object({ id: z.string(), name: z.string() })),
+  irrigation: z.array(irrigationViewSchema),
+  ipm: z.array(ipmViewSchema),
+  maintenance: z.array(maintenanceViewSchema),
+  purchasing: z.array(purchaseViewSchema),
+  sanitation: z.array(sanitationViewSchema),
+  training: z.array(trainingViewSchema),
+  stays: z.array(roomStayViewSchema),
+  recurring: z.array(recurringViewSchema),
+});
+
+export const sopLibraryEntrySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  summary: z.string(),
+  templateTasks: z.array(
+    z.object({
+      templateName: z.string(),
+      cultivar: z.string().nullable(),
+      medium: z.string().nullable(),
+      taskTitle: z.string(),
+    }),
+  ),
+  cycleTasks: z.array(
+    z.object({
+      siteName: z.string(),
+      roomName: z.string(),
+      cycleName: z.string(),
+      taskTitle: z.string(),
+    }),
+  ),
+});
+
+export const sopLibrarySchema = z.object({
+  entries: z.array(sopLibraryEntrySchema),
+});
+
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type Zone = z.infer<typeof zoneSchema>;
 export type CropCycleSummary = z.infer<typeof cropCycleSummarySchema>;
@@ -973,3 +1154,15 @@ export type ControllerSample = z.infer<typeof controllerSampleSchema>;
 export type ControllerReading = z.infer<typeof controllerReadingSchema>;
 export type ScaleSampleInput = z.infer<typeof scaleSampleSchema>;
 export type ScaleSampleView = z.infer<typeof scaleSampleViewSchema>;
+export type TagSampleInput = z.infer<typeof tagSampleSchema>;
+export type TagSampleView = z.infer<typeof tagSampleViewSchema>;
+export type IrrigationInput = z.infer<typeof irrigationInputSchema>;
+export type IpmInput = z.infer<typeof ipmInputSchema>;
+export type MaintenanceInput = z.infer<typeof maintenanceInputSchema>;
+export type PurchaseInput = z.infer<typeof purchaseInputSchema>;
+export type SanitationInput = z.infer<typeof sanitationInputSchema>;
+export type TrainingInput = z.infer<typeof trainingInputSchema>;
+export type RoomStayInput = z.infer<typeof roomStayInputSchema>;
+export type RecurringInput = z.infer<typeof recurringInputSchema>;
+export type OperationsOverview = z.infer<typeof operationsOverviewSchema>;
+export type SopLibrary = z.infer<typeof sopLibrarySchema>;

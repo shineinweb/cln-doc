@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The left side of the page says “Know which rooms are yours before the day starts” and “Access follows the site.”
 
-After sign-in, the left navigation is Company, Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
+After sign-in, the left navigation is Company, Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
 
 The top bar has a **Facility** switcher, your name, and **Sign out**.
 
@@ -121,7 +121,9 @@ Avery can save three things on this page:
 
 - **SOP record**, with Title, Summary, and **Save SOP**. The seeded note is Canopy scout: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.”
 - **Team**, with Team name, Member, and **Save team**. The seeded team is Canopy crew.
-- **New template**, then **Save template**. Fields are Template name, Duration in days, Starting event, Task key, Task title, Days after the starting event, Instructions, Assign to (Role, Team, or Employee), and Linked SOP. The starting-event hint says “Use cycle_start, or the title of a timeline event.” Saving a name that already exists reports “A workflow template with that name already exists.” This form creates a new template. It does not edit Canopy week in place, and the page has no separate Start cycle button.
+- **New template**, then **Save template**. Fields are Template name, Cultivar, Medium, Duration in days, Starting event, Task key, Task title, Days after the starting event, Instructions, Assign to (Role, Team, or Employee), and Linked SOP. The starting-event hint says “Use cycle_start, or the title of a timeline event.” Saving a name that already exists reports “A workflow template with that name already exists.” This form creates a new template. It does not edit Canopy week in place, and the page has no separate Start cycle button.
+
+**Cultivar** and **Medium** are optional. Leave them blank when the template is not for one cultivar or one medium. A filled card adds “Cultivar …” and “Medium …”. The seeded templates are **Cedar Nights coco week** (Cultivar Cedar Nights, Medium coco, task Check runoff, linked to Irrigation pass) and **Glass Orchard soil week** (Cultivar Glass Orchard, Medium soil, task Scout the benches, linked to IPM scout). Canopy week has neither, so it stays a general template.
 
 ## Workspace
 
@@ -186,7 +188,9 @@ The next action follows what is already stored:
 5. **Waste note**, **Waste (g)**, and **Record waste**
 6. Package: **Package weight (g)**, the package tag field, **Scan a source tag** (type or wedge-scan a tag and press Enter), **Include harvested tags**, and **Create package**
 
-**Create package** stays off until a label, a weight, and at least one source tag are present. The line under the buttons counts source tags selected. A package cannot weigh more than the dry weight still unaccounted. A plant that is not on the harvest cannot be packaged. This scan field is a keyboard-style tag entry. It is not an RFID reader.
+**Create package** stays off until a label, a weight, and at least one source tag are present. The line under the buttons counts source tags selected. A package cannot weigh more than the dry weight still unaccounted. A plant that is not on the harvest cannot be packaged. This scan field is a keyboard-style tag entry. It is not a live RFID reader. On a narrow screen the capture card, with the weight fields and **Save sample tag**, is the first block on the page. Buttons and fields use the full width.
+
+**Sample tag** sits with that capture card. It says the sample does not change plant tags, packages, or the weight ledger. The seeded Cedar Nights harvest shows `hh-sample-rfid` and tag `1A4HH000000000000000001`, labeled Sample data. Saving a sample tag stores the device, tag, timestamp, and quality. The ledger numbers stay the same.
 
 The package page shows the label, grams, actor, time, the ledger line, **Open harvest**, and the source tags. **Queue for review** sends it to the same sandbox queue as a plant move. Choose Success, Definite failure, or Uncertain first. After queueing, the page says “Queued for review. Nothing has been sent.” once. The seeded package label is `1A4PKGCEDARNIGHTS00001`.
 
@@ -207,6 +211,30 @@ Each crop card has Yield, Cycle duration, Labor, Input costs, and Total cost.
 - Total cost is labor cost plus input cost: 18400 cents for Cedar Nights and 14600 cents for Glass Orchard.
 
 The card also says “Sample environmental readings are excluded. This report does not use their values.” Controller samples and scale samples are not part of these totals.
+
+## Operations
+
+**Operations** is in the left navigation after Harvests. The page opens on the facility in the switcher. Blake sees Harbor House rows. Casey sees Hill Works rows. Avery can switch facilities and open both. A facility you cannot open says you do not have access.
+
+The buttons under the title are Irrigation and feed, IPM, Maintenance, Purchasing, Sanitation, Training, Room calendar, Recurring tasks, and SOP library. SOP library is the list of stored procedures. The **SOP** item in the left navigation is this operating document, not that list.
+
+**Irrigation and feed** lists the date, room, Irrigation or Feed, method, volume in liters, nutrient, EC, pH, and the person who saved it. Harbor House Flower 1 has a Feed row: Drip, 12 L, Flower nutrients, EC 1.8, pH 5.9, Blake Ortiz, on 2026-10-02. **Save record** stores a new row.
+
+**IPM** lists the date, room, target, Clear or Present, the response, and the person. Flower 1 has Thrips, Clear, Monitor. Veg 1 has Fungus gnats, Present, Release beneficials.
+
+**Maintenance** lists the date, asset, Preventive or Repair, the summary, the room, and a next due date when one is stored. Flower 1 dehumidifier is preventive and next due 2026-10-30.
+
+**Purchasing** lists the order date, vendor, description, quantity, unit cost in cents, and Requested or Received. Harbor supply received Flower nutrients. Ridge supply requested Veg media.
+
+**Sanitation** lists the date, room, area, method, and Done or Needs follow-up. Flower 1 floor and drains used Quaternary and is Done. Veg 1 benches used Peroxide and Needs follow-up.
+
+**Training** lists the trainee, the title, the procedure name, and Assigned or Completed. Blake Ortiz completed Canopy scout on 2026-09-25. Casey Nguyen is assigned IPM scout.
+
+**Room calendar** shows the month in `America/Los_Angeles` and one line per day. A day inside a stay names the room, cultivar, and medium. Flower 1 is Cedar Nights coco from 2026-09-12 through 2026-10-24. Veg 1 is Glass Orchard soil from 2026-09-20 through 2026-11-15. A day with no stay says open. **Save stay** adds another occupancy. The end date has to be on or after the start date.
+
+**Recurring tasks** lists the next due date, title, Daily or Weekly, assignee, room, and procedure. **Mark done** moves a weekly task forward seven days and a daily task forward one day. Flower 1 has Check drip lines, weekly, Blake Ortiz, Irrigation pass, next due 2026-10-04. Veg 1 has Wipe tables, daily, Casey Nguyen, Room sanitation.
+
+**SOP library** lists each procedure and the template or cycle task that cites it. A template line can include the cultivar and medium. Cycle tasks from another facility stay off the list. Canopy scout is linked to Scout the canopy. Irrigation pass is linked to Check runoff on Cedar Nights coco week. IPM scout is linked to Scout the benches on Glass Orchard soil week.
 
 ## Gateway
 

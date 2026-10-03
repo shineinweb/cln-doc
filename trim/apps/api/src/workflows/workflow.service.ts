@@ -71,7 +71,9 @@ export class WorkflowService {
       })),
       employees: employees.map((employee) => ({ id: employee.id, name: employee.name, email: employee.email })),
       sops: sops.map((sop) => ({ id: sop.id, title: sop.title, summary: sop.summary })),
-      templates: templates.map((template) => this.toTemplateView(template.versions, template.id, template.name)),
+      templates: templates.map((template) =>
+        this.toTemplateView(template.versions, template.id, template.name, template.cultivar, template.medium),
+      ),
     };
   }
 
@@ -115,11 +117,13 @@ export class WorkflowService {
         data: {
           organizationId: user.organizationId,
           name: input.name,
+          cultivar: this.optionalLabel(input.cultivar),
+          medium: this.optionalLabel(input.medium),
           versions: { create: this.versionCreate(1, input) },
         },
         include: { versions: { include: versionInclude, orderBy: { versionNumber: 'desc' } } },
       });
-      return this.toTemplateView(template.versions, template.id, template.name);
+      return this.toTemplateView(template.versions, template.id, template.name, template.cultivar, template.medium);
     } catch (error) {
       this.rethrowUnique(error, 'A workflow template with that name already exists.');
     }
@@ -369,13 +373,20 @@ export class WorkflowService {
       where: { id: templateId },
       include: { versions: { include: versionInclude, orderBy: { versionNumber: 'desc' } } },
     });
-    return this.toTemplateView(template.versions, template.id, template.name);
+    return this.toTemplateView(template.versions, template.id, template.name, template.cultivar, template.medium);
+  }
+
+  private optionalLabel(value: string | null | undefined): string | null {
+    const trimmed = value?.trim() ?? '';
+    return trimmed.length === 0 ? null : trimmed;
   }
 
   private toTemplateView(
     versions: VersionRecord[],
     id: string,
     name: string,
+    cultivar: string | null,
+    medium: string | null,
   ): WorkflowTemplateView {
     const current = versions[0];
     if (!current) {
@@ -384,6 +395,8 @@ export class WorkflowService {
     return {
       id,
       name,
+      cultivar,
+      medium,
       versionCount: versions.length,
       currentVersion: {
         id: current.id,
