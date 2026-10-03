@@ -127,6 +127,61 @@ describe('TrolMaster credentials', () => {
     }
   });
 
+  it('uses test mode for the sample chart and does not call Trolmaster', async () => {
+    const standIn = await listen();
+    const previous = process.env.TROLMASTER_API_BASE;
+    process.env.TROLMASTER_API_BASE = standIn.url;
+    try {
+      const denied = await request(app.getHttpServer())
+        .patch(`/rooms/${fixture.roomBId}/trolmaster`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ enabled: true, testMode: true });
+      expect(denied.status).toBe(403);
+      expect(denied.body.message).toBe('You do not have access to this site');
+
+      const testing = await request(app.getHttpServer())
+        .patch(`/rooms/${fixture.roomAId}/trolmaster`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ enabled: true, testMode: true });
+      expect(testing.status).toBe(200);
+      expect(testing.body).toEqual({ enabled: true, testMode: true });
+
+      const chart = await request(app.getHttpServer())
+        .get(`/rooms/${fixture.roomAId}/trolmaster/chart`)
+        .set('Authorization', `Bearer ${tokenA}`);
+      expect(chart.status).toBe(200);
+      expect(chart.body.enabled).toBe(true);
+      expect(chart.body.testMode).toBe(true);
+      expect(chart.body.series).toEqual([]);
+      expect(chart.body.message).toBe('Sample readings. Trim is not calling Trolmaster.');
+      expect(standIn.requests).toEqual([]);
+
+      const off = await request(app.getHttpServer())
+        .patch(`/rooms/${fixture.roomAId}/trolmaster`)
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({ enabled: false, testMode: true });
+      expect(off.status).toBe(200);
+      expect(off.body).toEqual({ enabled: false, testMode: false });
+
+      const hidden = await request(app.getHttpServer())
+        .get(`/rooms/${fixture.roomAId}/trolmaster/chart`)
+        .set('Authorization', `Bearer ${tokenA}`);
+      expect(hidden.body.message).toBe('Trolmaster is off.');
+      expect(hidden.body.series).toEqual([]);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.TROLMASTER_API_BASE;
+      } else {
+        process.env.TROLMASTER_API_BASE = previous;
+      }
+      await standIn.close();
+      await prisma.room.update({
+        where: { id: fixture.roomAId },
+        data: { trolmasterEnabled: true, trolmasterTest: false },
+      });
+    }
+  });
+
   async function listen(): Promise<{ url: string; close: () => Promise<void>; requests: Array<{ key?: string; body: unknown }> }> {
     const requests: Array<{ key?: string; body: unknown }> = [];
     const server: Server = createServer((req, res) => {

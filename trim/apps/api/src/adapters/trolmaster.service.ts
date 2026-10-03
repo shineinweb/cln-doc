@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { SessionUser, TrolmasterChart, TrolmasterConnection, TrolmasterInput } from '@trim/contracts';
+import type { SessionUser, TrolmasterChart, TrolmasterConnection, TrolmasterInput, TrolmasterMode } from '@trim/contracts';
 import { assertSiteAccess } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
 import { fetchTrolmasterHistory, parseTrolmasterHistory, type TrolmasterMetric } from './trolmaster-client';
@@ -41,6 +41,21 @@ export class TrolmasterService {
     return this.toView(row);
   }
 
+  async setMode(user: SessionUser, roomId: string, input: TrolmasterMode): Promise<TrolmasterMode> {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId }, include: { site: true } });
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+    assertSiteAccess(user, room.site);
+    const enabled = input.enabled;
+    const testMode = enabled && input.testMode;
+    await this.prisma.room.update({
+      where: { id: room.id },
+      data: { trolmasterEnabled: enabled, trolmasterTest: testMode },
+    });
+    return { enabled, testMode };
+  }
+
   async chart(user: SessionUser, roomId: string): Promise<TrolmasterChart> {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
@@ -51,14 +66,14 @@ export class TrolmasterService {
     }
     assertSiteAccess(user, room.site);
     const connection = room.trolmasterConnection;
+    if (!room.trolmasterEnabled) {
+      return blankChart(connection?.controllerId ?? null, false, false, 'Trolmaster is off.');
+    }
+    if (room.trolmasterTest) {
+      return blankChart(connection?.controllerId ?? 'Sample', true, true, 'Sample readings. Trim is not calling Trolmaster.');
+    }
     if (!connection) {
-      return {
-        controllerId: null,
-        connected: false,
-        message: 'Save a Trolmaster controller on Trolmaster settings.',
-        latest: [],
-        series: [],
-      };
+      return blankChart(null, true, false, 'Save a Trolmaster controller on Trolmaster settings.');
     }
     const end = new Date();
     const start = new Date(end.getTime() - 4 * 24 * 60 * 60 * 1000);
@@ -79,19 +94,15 @@ export class TrolmasterService {
       return {
         controllerId: connection.controllerId,
         connected: true,
+        enabled: true,
+        testMode: false,
         message: series.length > 0 ? null : 'Trolmaster returned no chart points.',
         latest: latestReadings(series),
         series,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Trolmaster did not return a chart.';
-      return {
-        controllerId: connection.controllerId,
-        connected: true,
-        message,
-        latest: [],
-        series: [],
-      };
+      return blankChart(connection.controllerId, true, false, message, true);
     }
   }
 
@@ -110,6 +121,16 @@ export class TrolmasterService {
       credentialSaved: true,
     };
   }
+}
+
+function blankChart(
+  controllerId: string | null,
+  enabled: boolean,
+  testMode: boolean,
+  message: string,
+  connected = false,
+): TrolmasterChart {
+  return { controllerId, connected, enabled, testMode, message, latest: [], series: [] };
 }
 
 function latestReadings(

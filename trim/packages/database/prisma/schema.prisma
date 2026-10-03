@@ -620,6 +620,8 @@ model Room {
   code      String
   roomType          String   @map("room_type")
   staleAfterMinutes Int      @default(60) @map("stale_after_minutes")
+  trolmasterEnabled Boolean  @default(true) @map("trolmaster_enabled")
+  trolmasterTest    Boolean  @default(false) @map("trolmaster_test")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

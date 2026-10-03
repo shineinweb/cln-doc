@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { z } from 'zod';
 import { apiGet, apiSend } from '../api/client';
+import { TrolmasterSwitches } from './TrolmasterChart';
 
 const trolmasterListSchema = z.array(trolmasterConnectionSchema);
 
@@ -39,8 +40,11 @@ export function TrolmasterPanel({ siteId, roomId }: { siteId: string; roomId: st
         Trolmaster settings
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 2 }}>
-        This stores the controller id and credential for this room. The Room tab reads the chart from Trolmaster.
+        Turn Trolmaster on to read this room’s chart. Test draws sample EC and VWC lines and does not call Trolmaster. Save a controller id and API credential for the live chart.
       </Typography>
+      <Box sx={{ mb: 2 }}>
+        <TrolmasterSwitches roomId={roomId} />
+      </Box>
       <Box
         component="form"
         sx={{ display: 'grid', gap: 1.5, maxWidth: 480 }}

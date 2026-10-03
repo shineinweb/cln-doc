@@ -1,8 +1,8 @@
-import { Alert, Box, Button, Typography } from '@mui/material';
-import { trolmasterChartSchema, type TrolmasterChart } from '@trim/contracts';
-import { useQuery } from '@tanstack/react-query';
+import { Alert, Box, FormControlLabel, Switch, Typography } from '@mui/material';
+import { trolmasterChartSchema, trolmasterModeSchema, type TrolmasterChart, type TrolmasterMode } from '@trim/contracts';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { apiGet } from '../api/client';
+import { apiGet, apiSend } from '../api/client';
 
 const EC_COLORS = ['#e6b84a', '#f6d78a', '#c9942a', '#ffe3a3', '#a67c2a'];
 const VWC_COLORS = ['#7eb6f0', '#4f8fd6', '#b9d7f8', '#2f6eae', '#9ec8ef'];
@@ -11,13 +11,37 @@ const HEIGHT = 420;
 const PAD_X = 28;
 const PAD_BOTTOM = 42;
 
+export function TrolmasterSwitches({ roomId }: { roomId: string }) {
+  const mode = useTrolmasterMode(roomId);
+  if (!mode.current) {
+    return null;
+  }
+  return (
+    <Box data-testid="trolmaster-switches" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <ModeSwitch
+        testId="trolmaster-enabled"
+        label={mode.current.enabled ? 'Trolmaster on' : 'Trolmaster off'}
+        checked={mode.current.enabled}
+        disabled={mode.pending}
+        onChange={(checked) => mode.save({ enabled: checked, testMode: checked ? mode.current?.testMode ?? false : false })}
+      />
+      <ModeSwitch
+        testId="trolmaster-test"
+        label={mode.current.testMode ? 'Test on' : 'Test off'}
+        checked={mode.current.testMode}
+        disabled={mode.pending}
+        onChange={(checked) => mode.save({ enabled: checked ? true : (mode.current?.enabled ?? true), testMode: checked })}
+      />
+    </Box>
+  );
+}
+
 export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone: string }) {
   const chart = useQuery({
     queryKey: ['trolmaster-chart', roomId],
     queryFn: () => apiGet(`/rooms/${roomId}/trolmaster/chart`, trolmasterChartSchema),
   });
   const [hoverAt, setHoverAt] = useState<string | null>(null);
-  const [preview, setPreview] = useState(false);
   const sample = useMemo(() => sampleChart(), []);
 
   if (chart.isPending) {
@@ -25,69 +49,93 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
   }
 
   const live = chart.data ?? emptyChart(chart.error?.message ?? 'Trolmaster did not return a chart.');
-  const showingSample = preview && live.series.length === 0;
+  const showingSample = live.enabled && live.testMode;
   const data = showingSample ? sample : live;
   const domain = timeDomain(data);
   const hovered = hoverAt ? readingsAt(data, hoverAt) : data.latest;
+  const plot = live.enabled && data.series.length > 0;
 
   return (
     <Box data-testid="trolmaster-chart-card" sx={{ bgcolor: '#0b1d3a', color: '#e8eef8', borderRadius: 2, p: 2 }}>
+      <Box sx={{ mb: 1.5 }}>
+        <TrolmasterSwitches roomId={roomId} />
+      </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'center', mb: 1.5 }}>
         <Typography sx={{ fontWeight: 700, fontSize: 22 }} data-testid="trolmaster-controller">
-          {data.controllerId ?? 'Trolmaster'}
+          {live.enabled ? (data.controllerId ?? 'Trolmaster') : 'Trolmaster'}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {hovered.map((reading) => (
-            <Box
-              key={reading.metric}
-              data-testid={reading.metric === 'ec' ? 'trolmaster-ec' : 'trolmaster-vwc'}
-              sx={{ bgcolor: '#163056', borderRadius: 2, px: 1.5, py: 0.75, display: 'flex', gap: 1, alignItems: 'baseline' }}
-            >
-              <Typography sx={{ color: reading.metric === 'ec' ? '#e6b84a' : '#7eb6f0', fontSize: 13 }}>{reading.label}</Typography>
-              <Typography sx={{ fontWeight: 700 }}>
-                {formatReading(reading.value)} {reading.unit}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      </Box>
-      {data.series.length === 0 ? (
-        <Box>
-          <Alert severity={chart.error && !chart.data ? 'error' : 'info'} data-testid="trolmaster-chart-empty">
-            {data.message ?? 'Trolmaster returned no chart points.'}
-          </Alert>
-          <Button
-            variant="outlined"
-            data-testid="trolmaster-preview-sample"
-            onClick={() => setPreview(true)}
-            sx={{ mt: 2, color: '#e8eef8', borderColor: '#7eb6f0' }}
-          >
-            Preview sample chart
-          </Button>
-        </Box>
-      ) : (
-        <>
-          {showingSample ? (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'center', mb: 1 }}>
-              <Typography data-testid="trolmaster-sample-note" sx={{ color: '#f6d78a', fontSize: 14 }}>
-                Sample readings. Trim is not calling Trolmaster.
-              </Typography>
-              <Button
-                data-testid="trolmaster-hide-sample"
-                onClick={() => {
-                  setPreview(false);
-                  setHoverAt(null);
-                }}
-                sx={{ color: '#e8eef8' }}
+        {plot ? (
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {hovered.map((reading) => (
+              <Box
+                key={reading.metric}
+                data-testid={reading.metric === 'ec' ? 'trolmaster-ec' : 'trolmaster-vwc'}
+                sx={{ bgcolor: '#163056', borderRadius: 2, px: 1.5, py: 0.75, display: 'flex', gap: 1, alignItems: 'baseline' }}
               >
-                Hide sample
-              </Button>
-            </Box>
-          ) : null}
-          <ChartPlot data={data} domain={domain} timeZone={timeZone} hoverAt={hoverAt} onHover={setHoverAt} />
-        </>
+                <Typography sx={{ color: reading.metric === 'ec' ? '#e6b84a' : '#7eb6f0', fontSize: 13 }}>{reading.label}</Typography>
+                <Typography sx={{ fontWeight: 700 }}>
+                  {formatReading(reading.value)} {reading.unit}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : null}
+      </Box>
+      {showingSample ? (
+        <Typography data-testid="trolmaster-sample-note" sx={{ color: '#f6d78a', fontSize: 14, mb: 1 }}>
+          Sample readings. Trim is not calling Trolmaster.
+        </Typography>
+      ) : null}
+      {plot ? (
+        <ChartPlot data={data} domain={domain} timeZone={timeZone} hoverAt={hoverAt} onHover={setHoverAt} />
+      ) : (
+        <Alert severity={chart.error && !chart.data ? 'error' : 'info'} data-testid="trolmaster-chart-empty">
+          {live.message ?? 'Trolmaster returned no chart points.'}
+        </Alert>
       )}
     </Box>
+  );
+}
+
+function useTrolmasterMode(roomId: string) {
+  const queryClient = useQueryClient();
+  const chart = useQuery({
+    queryKey: ['trolmaster-chart', roomId],
+    queryFn: () => apiGet(`/rooms/${roomId}/trolmaster/chart`, trolmasterChartSchema),
+  });
+  const save = useMutation({
+    mutationFn: (mode: TrolmasterMode) => apiSend(`/rooms/${roomId}/trolmaster`, trolmasterModeSchema, mode, 'PATCH'),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['trolmaster-chart', roomId] });
+    },
+  });
+  return {
+    current: chart.data ? { enabled: chart.data.enabled, testMode: chart.data.testMode } : null,
+    pending: save.isPending,
+    save: (mode: TrolmasterMode) => save.mutate(mode),
+  };
+}
+
+function ModeSwitch({
+  testId,
+  label,
+  checked,
+  disabled,
+  onChange,
+}: {
+  testId: string;
+  label: string;
+  checked: boolean;
+  disabled: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <FormControlLabel
+      data-testid={testId}
+      sx={{ color: 'inherit', m: 0 }}
+      label={label}
+      control={<Switch checked={checked} disabled={disabled} onChange={(_event, next) => onChange(next)} />}
+    />
   );
 }
 
@@ -160,7 +208,7 @@ function ChartPlot({
 }
 
 function emptyChart(message: string): TrolmasterChart {
-  return { controllerId: null, connected: false, message, latest: [], series: [] };
+  return { controllerId: null, connected: false, enabled: true, testMode: false, message, latest: [], series: [] };
 }
 
 function sampleChart(now = Date.now()): TrolmasterChart {
@@ -179,6 +227,8 @@ function sampleChart(now = Date.now()): TrolmasterChart {
   return {
     controllerId: 'Sample',
     connected: false,
+    enabled: true,
+    testMode: true,
     message: 'Sample readings. Trim is not calling Trolmaster.',
     latest: [
       { metric: 'ec', label: 'EC PW', value: 4.31, unit: 'dS/m' },

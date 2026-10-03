@@ -1092,11 +1092,18 @@ export const trolmasterConnectionSchema = z.object({
   credentialSaved: z.literal(true),
 });
 
+export const trolmasterModeSchema = z.object({
+  enabled: z.boolean(),
+  testMode: z.boolean(),
+});
+
 export const trolmasterMetricSchema = z.enum(['ec', 'vwc', 'other']);
 
 export const trolmasterChartSchema = z.object({
   controllerId: z.string().nullable(),
   connected: z.boolean(),
+  enabled: z.boolean(),
+  testMode: z.boolean(),
   message: z.string().nullable(),
   latest: z.array(
     z.object({
@@ -1524,6 +1531,7 @@ export type AuditLogView = z.infer<typeof auditLogSchema>;
 export type AccessDirectory = z.infer<typeof accessDirectorySchema>;
 export type TrolmasterInput = z.infer<typeof trolmasterInputSchema>;
 export type TrolmasterConnection = z.infer<typeof trolmasterConnectionSchema>;
+export type TrolmasterMode = z.infer<typeof trolmasterModeSchema>;
 export type TrolmasterChart = z.infer<typeof trolmasterChartSchema>;
 export type ControllerSample = z.infer<typeof controllerSampleSchema>;
 export type ControllerReading = z.infer<typeof controllerReadingSchema>;

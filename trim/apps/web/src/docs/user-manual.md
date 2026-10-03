@@ -80,7 +80,7 @@ The room dashboard introduction says “The room opens on the Trolmaster chart a
 
 The room opens on **Room**. Beside it are **Tasks**, **Notes**, **Zones**, and **Settings**. A flower room also has **Trolmaster settings**.
 
-**Room** shows the **Trolmaster** chart and **Operating history**. The chart plots EC in gold and VWC in blue for the last four days, and the chips show the latest EC and VWC. Move across the chart to read the time. When a crop has history, operating history has Timeline, Movements, Labor, and Harvest result. Observations for that crop are on **Notes**. A room with no history says “This room has no operating history.” A room with no saved controller says “Save a Trolmaster controller on Trolmaster settings.” **Preview sample chart** draws sample EC and VWC lines on that room and does not call Trolmaster. **Hide sample** returns to the message. The room does not show a current-crop card.
+**Room** shows the **Trolmaster** chart and **Operating history**. The chart plots EC in gold and VWC in blue for the last four days, and the chips show the latest EC and VWC. Move across the chart to read the time. When a crop has history, operating history has Timeline, Movements, Labor, and Harvest result. Observations for that crop are on **Notes**. A room with no history says “This room has no operating history.” The chart has **Trolmaster** and **Test** switches. **Trolmaster on** reads a saved controller. **Test on** draws sample EC and VWC lines and does not call Trolmaster. **Trolmaster off** says “Trolmaster is off.” A room with no saved controller says “Save a Trolmaster controller on Trolmaster settings.” The room does not show a current-crop card.
 
 **Zones** lists the room’s zones. **Add zone** adds a zone. **View**, **Edit**, **Save changes**, and **Delete** sit on each zone.
 
@@ -92,7 +92,7 @@ The room opens on **Room**. Beside it are **Tasks**, **Notes**, **Zones**, and *
 
 **Notes** has **Add note**. The form asks for a **Category**, a **Date**, a **Time**, and a **Note**. Categories are General, Environment, Irrigation, Canopy, Pests, Nutrients, Equipment, and Harvest. The date and time start at the current moment and can be changed. **Add note** saves it on the current crop, with the signed-in person’s name, so it can be read later. Each line shows the date and time, the author, the category, and the note. If none are stored, it says “No notes are recorded for this crop.” A room with no crop says “This room has no active crop cycle.”
 
-**Trolmaster settings** is on a flower room. The form asks for **TrolMaster controller id** and **API credential**. It saves them for the room that is open. **Save** stores the controller id and credential. The page then says “Credential saved.” and lists the room name, the controller id, and “Credential saved.” The credential is not shown again. The Room tab sends that credential to Trolmaster and draws the chart. A room that is not a flower room does not show this tab.
+**Trolmaster settings** is on a flower room. The form asks for **TrolMaster controller id** and **API credential**. It saves them for the room that is open. **Save** stores the controller id and credential. The page then says “Credential saved.” and lists the room name, the controller id, and “Credential saved.” The credential is not shown again. The Room tab sends that credential to Trolmaster and draws the chart when Trolmaster is on and Test is off. The same **Trolmaster** and **Test** switches are on this tab. A room that is not a flower room does not show this tab.
 
 ## Settings
 
