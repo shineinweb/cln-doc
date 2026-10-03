@@ -96,6 +96,55 @@ export const theme = createTheme({
         root: { backgroundImage: 'none' },
       },
     },
+    MuiTable: {
+      styleOverrides: {
+        root: { minWidth: 560 },
+      },
+    },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'rgba(38, 31, 66, 0.92)',
+          '& .MuiTableCell-root': {
+            color: '#C4B6E4',
+            fontWeight: 700,
+            fontSize: 13,
+            borderBottom: `1px solid ${workbench.line}`,
+            whiteSpace: 'nowrap',
+          },
+        },
+      },
+    },
+    MuiTableBody: {
+      styleOverrides: {
+        root: {
+          '& .MuiTableRow-root:nth-of-type(even)': {
+            backgroundColor: 'rgba(38, 31, 66, 0.35)',
+          },
+          '& .MuiTableRow-root:hover': {
+            backgroundColor: 'rgba(124, 92, 255, 0.12)',
+          },
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: `1px solid ${workbench.line}`,
+          color: workbench.ink,
+          fontSize: 14,
+          paddingTop: 12,
+          paddingBottom: 12,
+        },
+      },
+    },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'transparent',
+        },
+      },
+    },
   },
 });
 

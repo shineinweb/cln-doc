@@ -1,7 +1,72 @@
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TableContainer,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { useState, type ReactNode } from 'react';
+import { workbench } from '../theme';
 
 export const PAGE_SIZE = 5;
+
+export function SectionToolbar({ title, action }: { title: string; action?: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 1.5,
+        mb: 1.5,
+      }}
+    >
+      <Typography variant="h2" sx={{ fontSize: 26, m: 0 }}>
+        {title}
+      </Typography>
+      {action ? <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>{action}</Box> : null}
+    </Box>
+  );
+}
+
+export function TablePanel({ children, testId }: { children: ReactNode; testId?: string }) {
+  return (
+    <Card
+      data-testid={testId}
+      sx={{
+        overflow: 'hidden',
+        mb: 0,
+        backgroundImage: 'none',
+        bgcolor: workbench.paper,
+      }}
+    >
+      <TableContainer sx={{ overflowX: 'auto' }}>{children}</TableContainer>
+    </Card>
+  );
+}
+
+export function RowActions({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 0.5,
+        justifyContent: 'flex-end',
+        flexWrap: 'nowrap',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
 
 export function PagedList<T>({
   items,
@@ -20,7 +85,12 @@ export function PagedList<T>({
   const slice = items.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
     <Box data-testid={testId} sx={{ display: 'grid', gap: 1, mb: 2 }}>
-      {items.length === 0 ? <Alert severity="info">{empty}</Alert> : slice.map(render)}
+      {items.length === 0 ? <Alert severity="info">{empty}</Alert> : null}
+      {items.length > 0 ? (
+        <Card sx={{ backgroundImage: 'none', bgcolor: workbench.paper, overflow: 'hidden' }}>
+          <Box sx={{ display: 'grid' }}>{slice.map(render)}</Box>
+        </Card>
+      ) : null}
       <Pager page={safePage} pageCount={pageCount} total={items.length} onPage={setPage} />
     </Box>
   );
@@ -37,15 +107,39 @@ export function Pager({
   total: number;
   onPage: (page: number) => void;
 }) {
+  if (total <= 0) {
+    return null;
+  }
   return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1 }}>
-      <Button variant="outlined" data-testid="page-previous" disabled={page <= 1} onClick={() => onPage(page - 1)}>
+    <Box
+      sx={{
+        display: 'flex',
+        gap: 1,
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        mt: 1.5,
+        px: 0.5,
+      }}
+    >
+      <Button
+        size="small"
+        variant="outlined"
+        data-testid="page-previous"
+        disabled={page <= 1}
+        onClick={() => onPage(page - 1)}
+      >
         Previous
       </Button>
-      <Typography data-testid="page-status">
+      <Typography data-testid="page-status" sx={{ color: 'text.secondary', fontSize: 14, flex: 1, textAlign: 'center' }}>
         Page {page} of {pageCount} · {total} {total === 1 ? 'row' : 'rows'}
       </Typography>
-      <Button variant="outlined" data-testid="page-next" disabled={page >= pageCount} onClick={() => onPage(page + 1)}>
+      <Button
+        size="small"
+        variant="outlined"
+        data-testid="page-next"
+        disabled={page >= pageCount}
+        onClick={() => onPage(page + 1)}
+      >
         Next
       </Button>
     </Box>
@@ -67,16 +161,18 @@ export function RecordActions({
 }) {
   const [mode, setMode] = useState<'closed' | 'view' | 'edit'>('closed');
   return (
-    <Box sx={{ py: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+    <Box sx={{ py: 1.25, px: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
         <Box sx={{ flex: 1, minWidth: 180 }}>{summary}</Box>
-        <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
-          View
-        </Button>
-        <Button size="small" data-testid="edit-record" onClick={() => setMode(mode === 'edit' ? 'closed' : 'edit')}>
-          Edit
-        </Button>
-        <DeleteRecord keepsHistory={keepsHistory} onConfirm={onDelete} />
+        <RowActions>
+          <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
+            View
+          </Button>
+          <Button size="small" data-testid="edit-record" onClick={() => setMode(mode === 'edit' ? 'closed' : 'edit')}>
+            Edit
+          </Button>
+          <DeleteRecord keepsHistory={keepsHistory} onConfirm={onDelete} />
+        </RowActions>
       </Box>
       {mode === 'view' ? <Box sx={{ mt: 1 }}>{detail}</Box> : null}
       {mode === 'edit' ? <Box sx={{ mt: 1 }}>{editor}</Box> : null}

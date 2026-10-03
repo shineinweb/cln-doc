@@ -34,7 +34,7 @@ import { useState, type InputHTMLAttributes } from 'react';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
-import { DeleteRecord, Pager, PAGE_SIZE } from '../records/RecordControls';
+import { DeleteRecord, Pager, PAGE_SIZE, RowActions, SectionToolbar, TablePanel } from '../records/RecordControls';
 import { UserActivityDashboard } from './UserActivityDashboard';
 
 const MANAGER_ONLY = 'Only a manager can change users, roles, and permissions.';
@@ -76,32 +76,23 @@ function UsersTab({ directory, canManage }: { directory: AccessDirectory; canMan
   return (
     <Box>
       <UserActivityDashboard directory={directory} />
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1.5,
-          mb: 1.5,
-        }}
-      >
-        <Typography variant="h2" sx={{ fontSize: 26, m: 0 }}>
-          Users
-        </Typography>
-        {canManage && !adding ? (
-          <Button
-            variant="contained"
-            data-testid="add-user"
-            onClick={() => {
-              setAddedMessage(null);
-              setAdding(true);
-            }}
-          >
-            Add user
-          </Button>
-        ) : null}
-      </Box>
+      <SectionToolbar
+        title="Users"
+        action={
+          canManage && !adding ? (
+            <Button
+              variant="contained"
+              data-testid="add-user"
+              onClick={() => {
+                setAddedMessage(null);
+                setAdding(true);
+              }}
+            >
+              Add user
+            </Button>
+          ) : null
+        }
+      />
       {canManage && adding ? (
         <AddUserForm
           directory={directory}
@@ -118,13 +109,13 @@ function UsersTab({ directory, canManage }: { directory: AccessDirectory; canMan
         </Alert>
       ) : null}
       <UserTable directory={directory} canManage={canManage} />
-      <Typography variant="h2" sx={{ fontSize: 26, mt: 3, mb: 0.5 }}>
-        Audit logs
-      </Typography>
-      <Typography sx={{ mb: 1.5, color: 'text.secondary' }}>
-        Sign-ins and changes to users, roles, and permissions.
-      </Typography>
-      <AuditTable directory={directory} />
+      <Box sx={{ mt: 3 }}>
+        <SectionToolbar title="Audit logs" />
+        <Typography sx={{ mb: 1.5, color: 'text.secondary' }}>
+          Sign-ins and changes to users, roles, and permissions.
+        </Typography>
+        <AuditTable directory={directory} />
+      </Box>
     </Box>
   );
 }
@@ -179,25 +170,27 @@ function UserTable({ directory, canManage }: { directory: AccessDirectory; canMa
   const slice = directory.users.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
     <Box data-testid="user-table">
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Facilities</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {slice.map((person) => (
-              <UserRow key={person.id} person={person} directory={directory} canManage={canManage} />
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
       {directory.users.length === 0 ? <Alert severity="info">No users are recorded.</Alert> : null}
+      {directory.users.length > 0 ? (
+        <TablePanel>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Facilities</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {slice.map((person) => (
+                <UserRow key={person.id} person={person} directory={directory} canManage={canManage} />
+              ))}
+            </TableBody>
+          </Table>
+        </TablePanel>
+      ) : null}
       <Pager page={safePage} pageCount={pageCount} total={directory.users.length} onPage={setPage} />
     </Box>
   );
@@ -235,12 +228,14 @@ function UserRow({
   return (
     <>
       <TableRow data-testid="user-row" hover>
-        <TableCell data-testid="user-row-name">{person.name}</TableCell>
-        <TableCell>{person.email}</TableCell>
+        <TableCell data-testid="user-row-name" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+          {person.name}
+        </TableCell>
+        <TableCell sx={{ color: 'text.secondary' }}>{person.email}</TableCell>
         <TableCell>{person.roleName}</TableCell>
         <TableCell>{facilityLabel(person)}</TableCell>
-        <TableCell>
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+        <TableCell align="right">
+          <RowActions>
             <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
               View
             </Button>
@@ -250,7 +245,7 @@ function UserRow({
               </Button>
             ) : null}
             {canManage ? <DeleteRecord keepsHistory={false} onConfirm={() => remove.mutate()} /> : null}
-          </Box>
+          </RowActions>
         </TableCell>
       </TableRow>
       {mode === 'view' ? (
@@ -396,7 +391,7 @@ function AuditTable({ directory }: { directory: AccessDirectory }) {
     <Box data-testid="audit-log">
       {directory.audit.length === 0 ? <Alert severity="info">No activity is recorded.</Alert> : null}
       {directory.audit.length > 0 ? (
-        <Box sx={{ overflowX: 'auto' }}>
+        <TablePanel>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -408,16 +403,16 @@ function AuditTable({ directory }: { directory: AccessDirectory }) {
             </TableHead>
             <TableBody>
               {slice.map((entry) => (
-                <TableRow key={entry.id} data-testid="audit-row">
-                  <TableCell>{formatWhen(entry.at)}</TableCell>
+                <TableRow key={entry.id} data-testid="audit-row" hover>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatWhen(entry.at)}</TableCell>
                   <TableCell>{entry.actorName}</TableCell>
-                  <TableCell>{entry.action}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{entry.action}</TableCell>
                   <TableCell>{entry.summary}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </Box>
+        </TablePanel>
       ) : null}
       <Pager page={safePage} pageCount={pageCount} total={directory.audit.length} onPage={setPage} />
     </Box>
@@ -426,80 +421,103 @@ function AuditTable({ directory }: { directory: AccessDirectory }) {
 
 function RolesTab({ directory, canManage }: { directory: AccessDirectory; canManage: boolean }) {
   const [page, setPage] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [addedMessage, setAddedMessage] = useState<string | null>(null);
   const pageCount = Math.max(1, Math.ceil(directory.roles.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const slice = directory.roles.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
-    <Box>
-      <Typography variant="h2" sx={{ fontSize: 28, mb: 1.5 }}>
-        Roles
-      </Typography>
-      {canManage ? <AddRoleForm directory={directory} /> : null}
-      <Box data-testid="role-table" sx={{ overflowX: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Permissions</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {slice.map((role) => (
-              <RoleRow key={role.id} role={role} directory={directory} canManage={canManage} />
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
+    <Box data-testid="role-table">
+      <SectionToolbar
+        title="Roles"
+        action={
+          canManage && !adding ? (
+            <Button
+              variant="contained"
+              data-testid="add-role"
+              onClick={() => {
+                setAddedMessage(null);
+                setAdding(true);
+              }}
+            >
+              Add role
+            </Button>
+          ) : null
+        }
+      />
+      {canManage && adding ? (
+        <AddRoleForm
+          directory={directory}
+          onClose={() => setAdding(false)}
+          onAdded={() => {
+            setAddedMessage('Role added.');
+            setAdding(false);
+          }}
+        />
+      ) : null}
+      {addedMessage ? <Alert sx={{ mb: 1.5 }}>{addedMessage}</Alert> : null}
       {directory.roles.length === 0 ? <Alert severity="info">No roles are recorded.</Alert> : null}
+      {directory.roles.length > 0 ? (
+        <TablePanel>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>Permissions</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {slice.map((role) => (
+                <RoleRow key={role.id} role={role} directory={directory} canManage={canManage} />
+              ))}
+            </TableBody>
+          </Table>
+        </TablePanel>
+      ) : null}
       <Pager page={safePage} pageCount={pageCount} total={directory.roles.length} onPage={setPage} />
     </Box>
   );
 }
 
-function AddRoleForm({ directory }: { directory: AccessDirectory }) {
+function AddRoleForm({
+  directory,
+  onClose,
+  onAdded,
+}: {
+  directory: AccessDirectory;
+  onClose: () => void;
+  onAdded: () => void;
+}) {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: AccessRoleInput) => apiSend('/access/roles', accessRoleSchema, body),
     onSuccess: async () => {
       setError(null);
-      setMessage('Role added.');
-      setOpen(false);
+      onAdded();
       await queryClient.invalidateQueries({ queryKey: ['access'] });
     },
     onError: (caught) => {
-      setMessage(null);
       setError(caught instanceof ApiError ? caught.message : 'The role could not be saved.');
     },
   });
   return (
-    <Box sx={{ mb: 2 }}>
-      {open ? (
-        <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
-          <Typography variant="h3" sx={{ fontSize: 22 }}>
-            Add role
-          </Typography>
-          <RoleFields
-            directory={directory}
-            initial={{ name: '', description: '', opensEveryFacility: false, permissionIds: [] }}
-            pending={save.isPending}
-            submitLabel="Add role"
-            submitTestId="role-save"
-            onSubmit={(body) => save.mutate(body)}
-            onCancel={() => setOpen(false)}
-          />
-          {error ? <Alert severity="error">{error}</Alert> : null}
-        </Box>
-      ) : (
-        <Button variant="contained" data-testid="add-role" onClick={() => { setMessage(null); setOpen(true); }}>
-          Add role
-        </Button>
-      )}
-      {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
+    <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
+      <Typography variant="h3" sx={{ fontSize: 22 }}>
+        Add role
+      </Typography>
+      <RoleFields
+        directory={directory}
+        initial={{ name: '', description: '', opensEveryFacility: false, permissionIds: [] }}
+        pending={save.isPending}
+        submitLabel="Add role"
+        submitTestId="role-save"
+        onSubmit={(body) => save.mutate(body)}
+        onCancel={onClose}
+      />
+      {error ? <Alert severity="error">{error}</Alert> : null}
     </Box>
   );
 }
@@ -535,11 +553,13 @@ function RoleRow({
   return (
     <>
       <TableRow data-testid="role-row" hover>
-        <TableCell data-testid="role-row-name">{role.name}</TableCell>
+        <TableCell data-testid="role-row-name" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+          {role.name}
+        </TableCell>
         <TableCell>{role.description}</TableCell>
-        <TableCell>{role.permissionKeys.join(', ') || 'None'}</TableCell>
-        <TableCell>
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+        <TableCell sx={{ color: 'text.secondary', maxWidth: 360 }}>{role.permissionKeys.join(', ') || 'None'}</TableCell>
+        <TableCell align="right">
+          <RowActions>
             <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
               View
             </Button>
@@ -549,7 +569,7 @@ function RoleRow({
               </Button>
             ) : null}
             {canManage ? <DeleteRecord keepsHistory={false} onConfirm={() => remove.mutate()} /> : null}
-          </Box>
+          </RowActions>
         </TableCell>
       </TableRow>
       {mode === 'view' ? (
@@ -670,78 +690,92 @@ function RoleFields({
 
 function PermissionsTab({ directory, canManage }: { directory: AccessDirectory; canManage: boolean }) {
   const [page, setPage] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [addedMessage, setAddedMessage] = useState<string | null>(null);
   const pageCount = Math.max(1, Math.ceil(directory.permissions.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const slice = directory.permissions.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
-    <Box>
-      <Typography variant="h2" sx={{ fontSize: 28, mb: 1.5 }}>
-        Permissions
-      </Typography>
-      {canManage ? <AddPermissionForm /> : null}
-      <Box data-testid="permission-table" sx={{ overflowX: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Key</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {slice.map((permission) => (
-              <PermissionRow key={permission.id} permission={permission} canManage={canManage} />
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
+    <Box data-testid="permission-table">
+      <SectionToolbar
+        title="Permissions"
+        action={
+          canManage && !adding ? (
+            <Button
+              variant="contained"
+              data-testid="add-permission"
+              onClick={() => {
+                setAddedMessage(null);
+                setAdding(true);
+              }}
+            >
+              Add permission
+            </Button>
+          ) : null
+        }
+      />
+      {canManage && adding ? (
+        <AddPermissionForm
+          onClose={() => setAdding(false)}
+          onAdded={() => {
+            setAddedMessage('Permission added.');
+            setAdding(false);
+          }}
+        />
+      ) : null}
+      {addedMessage ? <Alert sx={{ mb: 1.5 }}>{addedMessage}</Alert> : null}
       {directory.permissions.length === 0 ? <Alert severity="info">No permissions are recorded.</Alert> : null}
+      {directory.permissions.length > 0 ? (
+        <TablePanel>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Key</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {slice.map((permission) => (
+                <PermissionRow key={permission.id} permission={permission} canManage={canManage} />
+              ))}
+            </TableBody>
+          </Table>
+        </TablePanel>
+      ) : null}
       <Pager page={safePage} pageCount={pageCount} total={directory.permissions.length} onPage={setPage} />
     </Box>
   );
 }
 
-function AddPermissionForm() {
+function AddPermissionForm({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: AccessPermissionInput) => apiSend('/access/permissions', accessPermissionSchema, body),
     onSuccess: async () => {
       setError(null);
-      setMessage('Permission added.');
-      setOpen(false);
+      onAdded();
       await queryClient.invalidateQueries({ queryKey: ['access'] });
     },
     onError: (caught) => {
-      setMessage(null);
       setError(caught instanceof ApiError ? caught.message : 'The permission could not be saved.');
     },
   });
   return (
-    <Box sx={{ mb: 2 }}>
-      {open ? (
-        <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
-          <Typography variant="h3" sx={{ fontSize: 22 }}>
-            Add permission
-          </Typography>
-          <PermissionFields
-            initial={{ key: '', description: '' }}
-            pending={save.isPending}
-            submitLabel="Add permission"
-            submitTestId="permission-save"
-            onSubmit={(body) => save.mutate(body)}
-            onCancel={() => setOpen(false)}
-          />
-          {error ? <Alert severity="error">{error}</Alert> : null}
-        </Box>
-      ) : (
-        <Button variant="contained" data-testid="add-permission" onClick={() => { setMessage(null); setOpen(true); }}>
-          Add permission
-        </Button>
-      )}
-      {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
+    <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
+      <Typography variant="h3" sx={{ fontSize: 22 }}>
+        Add permission
+      </Typography>
+      <PermissionFields
+        initial={{ key: '', description: '' }}
+        pending={save.isPending}
+        submitLabel="Add permission"
+        submitTestId="permission-save"
+        onSubmit={(body) => save.mutate(body)}
+        onCancel={onClose}
+      />
+      {error ? <Alert severity="error">{error}</Alert> : null}
     </Box>
   );
 }
@@ -770,10 +804,12 @@ function PermissionRow({ permission, canManage }: { permission: AccessPermission
   return (
     <>
       <TableRow data-testid="permission-row" hover>
-        <TableCell data-testid="permission-row-key">{permission.key}</TableCell>
+        <TableCell data-testid="permission-row-key" sx={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', whiteSpace: 'nowrap' }}>
+          {permission.key}
+        </TableCell>
         <TableCell>{permission.description}</TableCell>
-        <TableCell>
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+        <TableCell align="right">
+          <RowActions>
             <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
               View
             </Button>
@@ -783,7 +819,7 @@ function PermissionRow({ permission, canManage }: { permission: AccessPermission
               </Button>
             ) : null}
             {canManage ? <DeleteRecord keepsHistory={false} onConfirm={() => remove.mutate()} /> : null}
-          </Box>
+          </RowActions>
         </TableCell>
       </TableRow>
       {mode === 'view' ? (
