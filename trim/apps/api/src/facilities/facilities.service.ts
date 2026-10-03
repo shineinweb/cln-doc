@@ -1,15 +1,39 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { OrganizationSummary, Room, RoomDetail, SessionUser, Site, Zone } from '@trim/contracts';
+import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
 
 const roomInclude = {
   zones: { orderBy: { name: 'asc' as const } },
+  cycles: activeCycleInclude,
+};
+
+type RoomRecord = {
+  id: string;
+  siteId: string;
+  name: string;
+  code: string;
+  roomType: string;
+  createdAt: Date;
+  updatedAt: Date;
+  zones: Array<{
+    id: string;
+    roomId: string;
+    name: string;
+    code: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+  cycles: Parameters<CyclesService['summary']>[0][];
 };
 
 @Injectable()
 export class FacilitiesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cycles: CyclesService,
+  ) {}
 
   async listSites(user: SessionUser): Promise<Site[]> {
     const sites = await this.prisma.site.findMany({
@@ -17,7 +41,7 @@ export class FacilitiesService {
       include: { rooms: { include: roomInclude, orderBy: { name: 'asc' } } },
       orderBy: { name: 'asc' },
     });
-    return sites.map((site) => this.toSite(site));
+    return sites.map((site) => this.toSite(site, site.timezone));
   }
 
   async getSite(user: SessionUser, siteId: string): Promise<Site> {
@@ -26,7 +50,7 @@ export class FacilitiesService {
       include: { rooms: { include: roomInclude, orderBy: { name: 'asc' } } },
     });
     assertSiteAccess(user, site);
-    return this.toSite(site);
+    return this.toSite(site, site.timezone);
   }
 
   async listRooms(user: SessionUser, siteId: string): Promise<Room[]> {
@@ -37,16 +61,21 @@ export class FacilitiesService {
   async getRoom(user: SessionUser, roomId: string): Promise<RoomDetail> {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
-      include: { zones: { orderBy: { name: 'asc' } }, site: true },
+      include: { ...roomInclude, site: true },
     });
     if (!room) {
       throw new NotFoundException('Room not found');
     }
     assertSiteAccess(user, room.site);
+    const current = room.cycles[0] ?? null;
+    const signals = await this.cycles.roomSignals(room.id, room.site.id, room.site.timezone);
     return {
-      ...this.toRoom(room),
+      ...this.toRoom(room, room.site.timezone),
       siteName: room.site.name,
       siteCode: room.site.code,
+      siteTimezone: room.site.timezone,
+      operatingHistory: current ? this.cycles.history(current) : null,
+      ...signals,
     };
   }
 
@@ -66,20 +95,23 @@ export class FacilitiesService {
     };
   }
 
-  private toSite(site: {
-    id: string;
-    organizationId: string;
-    name: string;
-    code: string;
-    addressLine1: string | null;
-    city: string | null;
-    region: string | null;
-    postalCode: string | null;
-    timezone: string;
-    createdAt: Date;
-    updatedAt: Date;
-    rooms: Array<Parameters<FacilitiesService['toRoom']>[0]>;
-  }): Site {
+  private toSite(
+    site: {
+      id: string;
+      organizationId: string;
+      name: string;
+      code: string;
+      addressLine1: string | null;
+      city: string | null;
+      region: string | null;
+      postalCode: string | null;
+      timezone: string;
+      createdAt: Date;
+      updatedAt: Date;
+      rooms: RoomRecord[];
+    },
+    timeZone: string,
+  ): Site {
     return {
       id: site.id,
       organizationId: site.organizationId,
@@ -92,27 +124,12 @@ export class FacilitiesService {
       timezone: site.timezone,
       createdAt: site.createdAt.toISOString(),
       updatedAt: site.updatedAt.toISOString(),
-      rooms: site.rooms.map((room) => this.toRoom(room)),
+      rooms: site.rooms.map((room) => this.toRoom(room, timeZone)),
     };
   }
 
-  private toRoom(room: {
-    id: string;
-    siteId: string;
-    name: string;
-    code: string;
-    roomType: string;
-    createdAt: Date;
-    updatedAt: Date;
-    zones: Array<{
-      id: string;
-      roomId: string;
-      name: string;
-      code: string;
-      createdAt: Date;
-      updatedAt: Date;
-    }>;
-  }): Room {
+  private toRoom(room: RoomRecord, timeZone: string): Room {
+    const current = room.cycles[0] ?? null;
     return {
       id: room.id,
       siteId: room.siteId,
@@ -122,6 +139,7 @@ export class FacilitiesService {
       createdAt: room.createdAt.toISOString(),
       updatedAt: room.updatedAt.toISOString(),
       zones: room.zones.map((zone) => this.toZone(zone)),
+      currentCycle: current ? this.cycles.summary(current, timeZone) : null,
     };
   }
 

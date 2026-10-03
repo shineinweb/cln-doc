@@ -130,6 +130,7 @@ model Site {
   rooms        Room[]
   memberships  SiteMembership[]
   licenses     LicenseSite[]
+  metrcSyncs   MetrcSync[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -196,8 +197,12 @@ model Room {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  site  Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  zones Zone[]
+  site     Site                  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  zones    Zone[]
+  cycles   CropCycle[]
+  tasks    RoomTask[]
+  alerts   RoomAlert[]
+  readings EnvironmentalReading[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -217,4 +222,169 @@ model Zone {
   @@unique([roomId, code])
   @@index([roomId])
   @@map("zones")
+}
+
+/// A crop occupying a room. Cycle day is not stored; it is derived from startDate and the site timezone.
+model CropCycle {
+  id                  String   @id @default(cuid())
+  roomId              String   @map("room_id")
+  name                String
+  cultivar            String
+  plantCount          Int      @map("plant_count")
+  stage               String
+  startDate           DateTime @map("start_date") @db.Date
+  expectedHarvestDate DateTime @map("expected_harvest_date") @db.Date
+  status              String
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  room            Room                  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  events          CycleEvent[]
+  movements       CycleMovement[]
+  observations    CycleObservation[]
+  laborEntries    CycleLaborEntry[]
+  harvestSummary  HarvestResultSummary?
+
+  @@index([roomId, status])
+  @@map("crop_cycles")
+}
+
+model CycleEvent {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  title      String
+  detail     String?  @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_events")
+}
+
+model CycleMovement {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  fromLabel  String   @map("from_label")
+  toLabel    String   @map("to_label")
+  plantCount Int      @map("plant_count")
+  note       String?  @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_movements")
+}
+
+model CycleObservation {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  authorName String   @map("author_name")
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_observations")
+}
+
+model CycleLaborEntry {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  personName String   @map("person_name")
+  hours      Decimal  @db.Decimal(5, 2)
+  note       String?  @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_labor_entries")
+}
+
+/// A written result for the cycle page. This is not the harvest workflow.
+model HarvestResultSummary {
+  id         String   @id @default(cuid())
+  cycleId    String   @unique @map("cycle_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  summary    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@map("harvest_result_summaries")
+}
+
+/// Later phases will generate these. Phase 2 only reads rows that already exist.
+model RoomTask {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  title     String
+  dueOn     DateTime @map("due_on") @db.Date
+  status    String   @default("open")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, dueOn])
+  @@map("room_tasks")
+}
+
+model RoomAlert {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  message   String   @db.VarChar(500)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, active])
+  @@map("room_alerts")
+}
+
+model EnvironmentalReading {
+  id         String   @id @default(cuid())
+  roomId     String   @map("room_id")
+  recordedAt DateTime @map("recorded_at")
+  metric     String
+  value      Decimal  @db.Decimal(10, 2)
+  unit       String
+  isSample   Boolean  @default(false) @map("is_sample")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, recordedAt])
+  @@map("environmental_readings")
+}
+
+/// A recorded sync outcome. Phase 2 does not call Metrc.
+model MetrcSync {
+  id          String    @id @default(cuid())
+  siteId      String    @map("site_id")
+  status      String
+  succeededAt DateTime? @map("succeeded_at")
+  isSample    Boolean   @default(false) @map("is_sample")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, succeededAt])
+  @@map("metrc_syncs")
 }

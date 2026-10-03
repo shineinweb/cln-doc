@@ -1,6 +1,6 @@
 # Trim
 
-Trim is a multi-site cannabis cultivation workspace. Phase 1 covers the monorepo, local infrastructure, the organization → site → room → zone model, email/password sign-in, and site access checks. The room dashboard is the navigation center; this phase shows real facilities and rooms and leaves later modules as placeholders.
+Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and makes the room dashboard the working center: company → facility → room → crop cycle. Employee workspace and compliance stay placeholders.
 
 The product lives in this `trim/` directory.
 
@@ -65,7 +65,16 @@ These accounts exist only after `pnpm db:seed`. They belong to **Harbor & Hill C
 | Blake Ortiz | `blake.ortiz@harborhill.example` | `HarborHouse-only` | Harbor House only |
 | Casey Nguyen | `casey.nguyen@harborhill.example` | `HillWorks-only` | Hill Works only |
 
-Harbor House (Astoria) has Flower 1 and Dry Room. Hill Works (Hood River) has Veg 1 and Mother Room. A producer license row (`OR-CULT-44821`) is stored and linked to both sites. The API does not expose licenses in this phase.
+Harbor House (Astoria) has Flower 1 and Dry Room. Hill Works (Hood River) has Veg 1 and Mother Room. A producer license row (`OR-CULT-44821`) is stored and linked to both sites. The API does not expose licenses.
+
+Active cycles, both in `America/Los_Angeles`:
+
+| Room | Cycle | Cultivar | Plants | Stage | Start | Expected harvest |
+| --- | --- | --- | --- | --- | --- | --- |
+| Harbor House · Flower 1 | Cedar Nights flower | Cedar Nights | 144 | flower | 2026-09-12 | 2026-10-24 |
+| Hill Works · Veg 1 | Glass Orchard veg | Glass Orchard | 86 | veg | 2026-09-20 | 2026-11-15 |
+
+Each cycle has timeline, movement, observation, and labor rows. Neither has a harvest result. Dry Room and Mother Room have no active cycle. No tasks, alerts, environmental readings, or Metrc sync rows are seeded.
 
 ## Authentication
 
@@ -88,6 +97,9 @@ pnpm build
 - the Site A list contains only Site A, and the Site B list contains only Site B
 - the organization admin can read both sites and their rooms
 - a site in another organization is hidden (`404`) and does not appear in the admin list
+- a Site A user cannot read a Site B crop cycle or its history (`403`)
+- cycle day matches the stored start date in the site timezone
+- facility and room crop fields match the database row
 
 The access tests create their own users. They do not depend on the seed passwords above.
 
@@ -99,6 +111,6 @@ DATABASE_URL=mysql://trim:trim@127.0.0.1:3306/trim_test pnpm db:migrate
 
 `dotenv` does not override a `DATABASE_URL` already set in the shell.
 
-## Phase 1 boundaries
+## Boundaries
 
-Not built: crop-cycle workflow, plant tracking, Metrc calls, harvest, environmental charts, analytics, device adapters, email/SMS, attachment uploads, and BullMQ business jobs. The worker only connects to Redis and opens the `trim.infrastructure` queue.
+Not built: workflow templates, task generation, the employee workspace, plant tags, Metrc API calls, harvest operations, charts, analytics, device adapters, email/SMS, attachment uploads, and BullMQ business jobs. The worker only connects to Redis and opens the `trim.infrastructure` queue.

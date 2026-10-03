@@ -12,7 +12,7 @@ export function RoomsPage() {
       <PageHeader
         kicker="Center"
         title="Rooms"
-        lede="The room dashboard is where daily work will live. This release lists the rooms on the selected facility. Tasks, climate, and crop stage are not here yet."
+        lede="Open a room to see its current crop, cycle day, and operating history."
       />
       {loading ? <Skeleton variant="rounded" height={180} /> : null}
       {error ? <Alert severity="error">{error.message}</Alert> : null}
@@ -27,7 +27,11 @@ export function RoomsPage() {
                     <Typography variant="h3" sx={{ fontSize: 24 }}>
                       {room.name}
                     </Typography>
-                    <Typography sx={{ color: 'text.secondary' }}>{site.name}</Typography>
+                    <Typography sx={{ color: 'text.secondary' }}>
+                      {room.currentCycle
+                        ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants`
+                        : 'No active crop'}
+                    </Typography>
                   </Box>
                   <Chip label={roomTypeLabel(room.roomType)} />
                 </CardContent>

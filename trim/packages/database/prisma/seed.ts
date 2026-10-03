@@ -117,16 +117,101 @@ async function main(): Promise<void> {
     timezone: 'America/Los_Angeles',
   });
 
-  await upsertRoom(harbor.id, 'FL1', 'Flower 1', 'flower', [
+  const flower = await upsertRoom(harbor.id, 'FL1', 'Flower 1', 'flower', [
     ['EAST', 'East canopy'],
     ['WEST', 'West canopy'],
   ]);
   await upsertRoom(harbor.id, 'DRY', 'Dry Room', 'dry', [['HANG', 'Hang bay']]);
-  await upsertRoom(hill.id, 'VG1', 'Veg 1', 'veg', [
+  const veg = await upsertRoom(hill.id, 'VG1', 'Veg 1', 'veg', [
     ['NORTH', 'North tables'],
     ['SOUTH', 'South tables'],
   ]);
   await upsertRoom(hill.id, 'MOM', 'Mother Room', 'mother', [['STOCK', 'Stock bench']]);
+
+  await upsertActiveCycle(flower.id, {
+    name: 'Cedar Nights flower',
+    cultivar: 'Cedar Nights',
+    plantCount: 144,
+    stage: 'flower',
+    startDate: new Date('2026-09-12T00:00:00.000Z'),
+    expectedHarvestDate: new Date('2026-10-24T00:00:00.000Z'),
+    events: [
+      {
+        occurredOn: new Date('2026-09-12T00:00:00.000Z'),
+        title: 'Cycle opened',
+        detail: 'Plants were counted onto the flower tables.',
+      },
+      {
+        occurredOn: new Date('2026-09-19T00:00:00.000Z'),
+        title: 'Flower flip',
+        detail: 'Photoperiod set to 12 hours.',
+      },
+    ],
+    movements: [
+      {
+        occurredOn: new Date('2026-09-12T00:00:00.000Z'),
+        fromLabel: 'Mother Room',
+        toLabel: 'Flower 1',
+        plantCount: 144,
+        note: 'Counted at the door.',
+      },
+    ],
+    observations: [
+      {
+        occurredOn: new Date('2026-09-28T00:00:00.000Z'),
+        authorName: 'Blake Ortiz',
+        body: 'East canopy is even. No pests on the scout.',
+      },
+    ],
+    laborEntries: [
+      {
+        occurredOn: new Date('2026-09-26T00:00:00.000Z'),
+        personName: 'Blake Ortiz',
+        hours: 5.5,
+        note: 'Lower-leaf cleanup',
+      },
+    ],
+  });
+
+  await upsertActiveCycle(veg.id, {
+    name: 'Glass Orchard veg',
+    cultivar: 'Glass Orchard',
+    plantCount: 86,
+    stage: 'veg',
+    startDate: new Date('2026-09-20T00:00:00.000Z'),
+    expectedHarvestDate: new Date('2026-11-15T00:00:00.000Z'),
+    events: [
+      {
+        occurredOn: new Date('2026-09-20T00:00:00.000Z'),
+        title: 'Cycle opened',
+        detail: 'Rooted cuts moved under the veg lights.',
+      },
+    ],
+    movements: [
+      {
+        occurredOn: new Date('2026-09-20T00:00:00.000Z'),
+        fromLabel: 'Mother Room',
+        toLabel: 'Veg 1',
+        plantCount: 86,
+        note: 'One tray held back for a weak root.',
+      },
+    ],
+    observations: [
+      {
+        occurredOn: new Date('2026-10-01T00:00:00.000Z'),
+        authorName: 'Casey Nguyen',
+        body: 'South tables need another day before topping.',
+      },
+    ],
+    laborEntries: [
+      {
+        occurredOn: new Date('2026-10-02T00:00:00.000Z'),
+        personName: 'Casey Nguyen',
+        hours: 4,
+        note: 'Topping and stake check',
+      },
+    ],
+  });
 
   const license = await prisma.license.upsert({
     where: {
@@ -204,7 +289,7 @@ async function upsertRoom(
   name: string,
   roomType: string,
   zones: Array<[string, string]>,
-): Promise<void> {
+) {
   const room = await prisma.room.upsert({
     where: { siteId_code: { siteId, code } },
     create: { siteId, code, name, roomType },
@@ -218,6 +303,69 @@ async function upsertRoom(
       update: { name: zoneName },
     });
   }
+
+  return room;
+}
+
+async function upsertActiveCycle(
+  roomId: string,
+  input: {
+    name: string;
+    cultivar: string;
+    plantCount: number;
+    stage: string;
+    startDate: Date;
+    expectedHarvestDate: Date;
+    events: Array<{ occurredOn: Date; title: string; detail: string }>;
+    movements: Array<{ occurredOn: Date; fromLabel: string; toLabel: string; plantCount: number; note: string }>;
+    observations: Array<{ occurredOn: Date; authorName: string; body: string }>;
+    laborEntries: Array<{ occurredOn: Date; personName: string; hours: number; note: string }>;
+  },
+): Promise<void> {
+  const existing = await prisma.cropCycle.findFirst({ where: { roomId, name: input.name } });
+  const cycle = existing
+    ? await prisma.cropCycle.update({
+        where: { id: existing.id },
+        data: {
+          cultivar: input.cultivar,
+          plantCount: input.plantCount,
+          stage: input.stage,
+          startDate: input.startDate,
+          expectedHarvestDate: input.expectedHarvestDate,
+          status: 'active',
+        },
+      })
+    : await prisma.cropCycle.create({
+        data: {
+          roomId,
+          name: input.name,
+          cultivar: input.cultivar,
+          plantCount: input.plantCount,
+          stage: input.stage,
+          startDate: input.startDate,
+          expectedHarvestDate: input.expectedHarvestDate,
+          status: 'active',
+        },
+      });
+
+  await prisma.cycleEvent.deleteMany({ where: { cycleId: cycle.id } });
+  await prisma.cycleMovement.deleteMany({ where: { cycleId: cycle.id } });
+  await prisma.cycleObservation.deleteMany({ where: { cycleId: cycle.id } });
+  await prisma.cycleLaborEntry.deleteMany({ where: { cycleId: cycle.id } });
+  await prisma.harvestResultSummary.deleteMany({ where: { cycleId: cycle.id } });
+
+  await prisma.cycleEvent.createMany({
+    data: input.events.map((event) => ({ ...event, cycleId: cycle.id })),
+  });
+  await prisma.cycleMovement.createMany({
+    data: input.movements.map((movement) => ({ ...movement, cycleId: cycle.id })),
+  });
+  await prisma.cycleObservation.createMany({
+    data: input.observations.map((observation) => ({ ...observation, cycleId: cycle.id })),
+  });
+  await prisma.cycleLaborEntry.createMany({
+    data: input.laborEntries.map((entry) => ({ ...entry, cycleId: cycle.id })),
+  });
 }
 
 async function upsertUser(

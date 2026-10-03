@@ -1,18 +1,14 @@
-import { Alert, Box, Card, CardContent, Chip, Skeleton, Typography } from '@mui/material';
-import { roomDetailSchema } from '@trim/contracts';
+import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, Typography } from '@mui/material';
+import { roomDetailSchema, type RoomDetail } from '@trim/contracts';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError, apiGet } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
+import { cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
+import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { useSites } from '../layout/SiteProvider';
 import { roomTypeLabel, workbench } from '../theme';
-
-const LATER = [
-  { title: 'Tasks', body: 'Nothing is recorded here yet.' },
-  { title: 'Climate', body: 'Sensor history is not part of this release.' },
-  { title: 'Crop stage', body: 'Crop cycles are not part of this release.' },
-];
 
 export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
@@ -24,11 +20,13 @@ export function RoomDashboardPage() {
     retry: false,
   });
 
+  const setSiteIdRef = useRef(setSiteId);
+  setSiteIdRef.current = setSiteId;
   useEffect(() => {
     if (room.data) {
-      setSiteId(room.data.siteId, { navigate: false });
+      setSiteIdRef.current(room.data.siteId, { navigate: false });
     }
-  }, [room.data, setSiteId]);
+  }, [room.data]);
 
   if (room.isPending) {
     return <Skeleton variant="rounded" height={240} />;
@@ -48,30 +46,140 @@ export function RoomDashboardPage() {
     return <Alert severity="error">{room.error?.message ?? 'This room could not be loaded.'}</Alert>;
   }
 
+  const cycle = room.data.currentCycle;
+
   return (
     <Box>
       <PageHeader
         kicker={`${room.data.siteName} · ${roomTypeLabel(room.data.roomType)}`}
         title={room.data.name}
-        lede="This is the room dashboard shell. The room, its facility, and its zones come from the database. The work panels below are placeholders."
+        lede="The room dashboard is the daily workspace. Crop figures below are stored records. Empty panels mean no row exists yet."
       />
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
         {room.data.zones.map((zone) => (
           <Chip key={zone.id} label={zone.name} />
         ))}
       </Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
-        {LATER.map((panel) => (
-          <Card key={panel.title} sx={{ bgcolor: workbench.mist }}>
-            <CardContent>
-              <Typography variant="h3" sx={{ fontSize: 22 }}>
-                {panel.title}
+      {cycle ? (
+        <Card sx={{ mb: 2 }} data-testid="current-cycle">
+          <CardContent>
+            <Typography variant="overline" sx={{ color: 'primary.main', letterSpacing: '0.14em' }}>
+              Current crop
+            </Typography>
+            <Typography variant="h2" sx={{ fontSize: 32 }} data-testid="room-crop-name">
+              {cycle.name}
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2, mt: 2 }}>
+              <Metric label="Cultivar" value={cycle.cultivar} testId="room-cultivar" />
+              <Metric label="Plants" value={String(cycle.plantCount)} testId="room-plant-count" />
+              <Metric label="Stage" value={roomTypeLabel(cycle.stage)} testId="room-stage" />
+              <Metric label="Cycle day" value={cycleDayLabel(cycle.cycleDay)} testId="room-cycle-day" />
+            </Box>
+            <Typography sx={{ mt: 2 }} data-testid="room-expected-harvest">
+              Expected harvest {formatCalendarDate(cycle.expectedHarvestDate)}
+            </Typography>
+            <Button
+              component={RouterLink}
+              to={`/rooms/${room.data.id}/cycles/${cycle.id}`}
+              variant="contained"
+              sx={{ mt: 2 }}
+              data-testid="open-cycle"
+            >
+              Open crop cycle
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          This room has no active crop cycle.
+        </Alert>
+      )}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 3 }}>
+        <SignalCard title="Tasks due today" testId="tasks-due">
+          {room.data.tasksDueToday.length === 0 ? (
+            <Typography sx={{ color: 'text.secondary' }}>No tasks are due today.</Typography>
+          ) : (
+            room.data.tasksDueToday.map((task) => (
+              <Typography key={task.id}>
+                {task.title} · {formatCalendarDate(task.dueOn)}
               </Typography>
-              <Typography sx={{ mt: 1, color: 'text.secondary' }}>{panel.body}</Typography>
-            </CardContent>
-          </Card>
-        ))}
+            ))
+          )}
+        </SignalCard>
+        <SignalCard title="Active alerts" testId="active-alerts">
+          {room.data.activeAlerts.length === 0 ? (
+            <Typography sx={{ color: 'text.secondary' }}>No active alerts.</Typography>
+          ) : (
+            room.data.activeAlerts.map((alert) => <Typography key={alert.id}>{alert.message}</Typography>)
+          )}
+        </SignalCard>
+        <SignalCard title="Latest environmental readings" testId="latest-readings">
+          <Readings readings={room.data.latestReadings} />
+        </SignalCard>
+        <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
+          <MetrcSync sync={room.data.lastMetrcSync} />
+        </SignalCard>
       </Box>
+      {room.data.operatingHistory ? (
+        <Box>
+          <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
+            Operating history
+          </Typography>
+          <OperatingHistoryView history={room.data.operatingHistory} />
+        </Box>
+      ) : null}
     </Box>
+  );
+}
+
+function Metric({ label, value, testId }: { label: string; value: string; testId: string }) {
+  return (
+    <Box>
+      <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{label}</Typography>
+      <Typography sx={{ fontWeight: 600 }} data-testid={testId}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function SignalCard({ title, testId, children }: { title: string; testId: string; children: ReactNode }) {
+  return (
+    <Card sx={{ bgcolor: workbench.mist }} data-testid={testId}>
+      <CardContent>
+        <Typography variant="h3" sx={{ fontSize: 20, mb: 1 }}>
+          {title}
+        </Typography>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Readings({ readings }: { readings: RoomDetail['latestReadings'] }) {
+  if (readings.length === 0) {
+    return <Typography sx={{ color: 'text.secondary' }}>No environmental readings are recorded.</Typography>;
+  }
+  return (
+    <Box>
+      {readings.map((reading) => (
+        <Typography key={reading.id} sx={{ mb: 0.5 }}>
+          {reading.metric} {reading.value} {reading.unit} · {formatTimestamp(reading.recordedAt)}
+          {reading.isSample ? ' · Sample data' : ''}
+        </Typography>
+      ))}
+    </Box>
+  );
+}
+
+function MetrcSync({ sync }: { sync: RoomDetail['lastMetrcSync'] }) {
+  if (!sync) {
+    return <Typography sx={{ color: 'text.secondary' }}>No successful Metrc sync is recorded.</Typography>;
+  }
+  return (
+    <Typography>
+      {formatTimestamp(sync.succeededAt)}
+      {sync.isSample ? ' · Sample data' : ''}
+    </Typography>
   );
 }

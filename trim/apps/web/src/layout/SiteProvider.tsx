@@ -1,6 +1,6 @@
 import { siteListSchema, type Site } from '@trim/contracts';
 import { useQuery } from '@tanstack/react-query';
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../api/client';
 import { SITE_KEY } from '../auth/storage';
@@ -40,6 +40,14 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     }
   }, [sitesQuery.data]);
 
+  const setSiteId = useCallback((id: string, options?: { navigate?: boolean }) => {
+    sessionStorage.setItem(SITE_KEY, id);
+    setSiteIdState(id);
+    if (options?.navigate !== false) {
+      navigate('/facility');
+    }
+  }, [navigate]);
+
   const value = useMemo<SiteContextValue>(() => {
     const sites = sitesQuery.data ?? [];
     return {
@@ -48,15 +56,9 @@ export function SiteProvider({ children }: { children: ReactNode }) {
       siteId,
       loading: sitesQuery.isPending,
       error: sitesQuery.error,
-      setSiteId: (id: string, options?: { navigate?: boolean }) => {
-        sessionStorage.setItem(SITE_KEY, id);
-        setSiteIdState(id);
-        if (options?.navigate !== false) {
-          navigate('/facility');
-        }
-      },
+      setSiteId,
     };
-  }, [navigate, siteId, sitesQuery.data, sitesQuery.error, sitesQuery.isPending]);
+  }, [setSiteId, siteId, sitesQuery.data, sitesQuery.error, sitesQuery.isPending]);
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;
 }

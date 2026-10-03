@@ -4,6 +4,8 @@ import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './layout/AppShell';
 import { SiteProvider } from './layout/SiteProvider';
 import { CompanyPage } from './pages/CompanyPage';
+import { CropCyclePage } from './pages/CropCyclePage';
+import { CropCyclesPage } from './pages/CropCyclesPage';
 import { FacilityPage } from './pages/FacilityPage';
 import { LoginPage } from './pages/LoginPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
@@ -26,16 +28,8 @@ const router = createBrowserRouter([
       { path: 'facility', element: <FacilityPage /> },
       { path: 'rooms', element: <RoomsPage /> },
       { path: 'rooms/:roomId', element: <RoomDashboardPage /> },
-      {
-        path: 'crop-cycles',
-        element: (
-          <PlaceholderPage
-            kicker="Later"
-            title="Crop cycles"
-            lede="Cycle planning, stage changes, and harvest handoff are not part of this release."
-          />
-        ),
-      },
+      { path: 'rooms/:roomId/cycles/:cycleId', element: <CropCyclePage /> },
+      { path: 'crop-cycles', element: <CropCyclesPage /> },
       {
         path: 'workspace',
         element: (
