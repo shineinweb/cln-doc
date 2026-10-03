@@ -67,12 +67,16 @@ export function RoomDashboardPage() {
   const cycle = room.data.currentCycle;
 
   return (
+    <ResetRoom roomId={room.data.id} roomType={room.data.roomType} enabled={Boolean(user?.isOrgAdmin)}>
+      {({ button, panel }) => (
     <Box>
       <PageHeader
         kicker={`${room.data.siteName} · ${roomTypeLabel(room.data.roomType)}`}
         title={room.data.name}
         lede="The dashboard opens on the Trolmaster chart and operating history. Zones, Trolmaster settings, and room settings are on their own tabs."
+        action={button}
       />
+      {panel}
       <Tabs value={tab} onChange={(_event, value: RoomTab) => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="room" label="Dashboard" data-testid="room-tab-room" />
         <Tab value="tasks" label="Tasks" data-testid="room-tab-tasks" />
@@ -117,7 +121,6 @@ export function RoomDashboardPage() {
         <Box data-testid="room-settings" sx={{ display: 'grid', gap: 3 }}>
           <RoomAlertRules room={room.data} />
           {room.data.roomType === 'dry' ? null : <DefoliationSchedule room={room.data} />}
-          {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
           ) : null}
@@ -129,12 +132,24 @@ export function RoomDashboardPage() {
         </Box>
       ) : null}
     </Box>
+      )}
+    </ResetRoom>
   );
 }
 
 type RoomTab = 'room' | 'tasks' | 'notes' | 'zones' | 'trolmaster' | 'settings';
 
-function ResetRoomForm({ roomId, roomType }: { roomId: string; roomType: string }) {
+function ResetRoom({
+  roomId,
+  roomType,
+  enabled,
+  children,
+}: {
+  roomId: string;
+  roomType: string;
+  enabled: boolean;
+  children: (parts: { button: ReactNode; panel: ReactNode }) => ReactNode;
+}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -159,18 +174,12 @@ function ResetRoomForm({ roomId, roomType }: { roomId: string; roomType: string 
   });
   const stage = roomType in ROOM_TYPE_LABELS ? roomType : 'flower';
 
-  if (!open) {
-    return (
-      <Box sx={{ mb: 2 }}>
-        <Button variant="contained" data-testid="reset-room" onClick={() => setOpen(true)}>
-          Reset room
-        </Button>
-        {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
-      </Box>
-    );
-  }
-
-  return (
+  const button = enabled && !open ? (
+    <Button variant="contained" data-testid="reset-room" onClick={() => setOpen(true)} sx={{ whiteSpace: 'nowrap' }}>
+      Reset room
+    </Button>
+  ) : null;
+  const panel = enabled && open ? (
     <Card sx={{ mb: 2 }}>
       <CardContent>
         <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
@@ -250,7 +259,11 @@ function ResetRoomForm({ roomId, roomType }: { roomId: string; roomType: string 
         {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
       </CardContent>
     </Card>
-  );
+  ) : enabled && message ? (
+    <Alert sx={{ mb: 2 }}>{message}</Alert>
+  ) : null;
+
+  return children({ button, panel });
 }
 
 function ArchivedCrops({ roomId, cycles }: { roomId: string; cycles: RoomDetail['archivedCycles'] }) {
