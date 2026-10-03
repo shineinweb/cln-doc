@@ -34,6 +34,15 @@ export class SitesController {
     return this.facilities.createSite(user, body);
   }
 
+  @Patch(':siteId')
+  update(
+    @CurrentUser() user: SessionUser,
+    @Param('siteId') siteId: string,
+    @Body(new ZodValidationPipe(createSiteSchema)) body: CreateSite,
+  ): Promise<Site> {
+    return this.facilities.updateSite(user, siteId, body);
+  }
+
   @Delete(':siteId')
   async remove(@CurrentUser() user: SessionUser, @Param('siteId') siteId: string): Promise<RecordRemoved> {
     return recordRemovedSchema.parse(await this.facilities.deleteSite(user, siteId));

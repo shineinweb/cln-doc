@@ -75,6 +75,23 @@ export class FacilitiesService {
     }
   }
 
+  async updateSite(user: SessionUser, siteId: string, input: CreateSite): Promise<Site> {
+    const existing = await this.prisma.site.findUnique({ where: { id: siteId } });
+    assertSiteAccess(user, existing);
+    const site = await this.prisma.site.update({
+      where: { id: existing.id },
+      data: {
+        name: input.name,
+        addressLine1: input.addressLine1,
+        city: input.city,
+        region: input.region,
+        postalCode: input.postalCode,
+      },
+      include: { rooms: { include: roomInclude, orderBy: { name: 'asc' } } },
+    });
+    return this.toSite(site, site.timezone);
+  }
+
   async deleteSite(user: SessionUser, siteId: string): Promise<RecordRemoved> {
     const site = await this.prisma.site.findUnique({ where: { id: siteId } });
     assertSiteAccess(user, site);

@@ -57,7 +57,7 @@ Add forms that were already on a page keep their buttons: **Add room**, **Save r
 
 **Facility** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility. The top bar also has a **Facility** switcher that chooses the same site and opens Rooms.
 
-**Add a facility** asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. The code is taken from the name. **Delete** asks “Delete this record?” and then removes the facility and its rooms. You can delete a facility you can open. Avery Chen can add a facility and can delete Harbor House or Hill Works. Blake Ortiz can add a facility, and it appears on his list. He cannot delete Hill Works.
+**Add facility** opens the form. The form asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. **Cancel** closes the form without saving. The code is taken from the name. **Edit** opens the stored name and address. **Save changes** writes them, and the code stays the same. **Delete** asks “Delete this record?” and then removes the facility and its rooms. You can edit or delete a facility you can open. Avery Chen can add a facility and can edit or delete Harbor House or Hill Works. Blake Ortiz can add a facility, and it appears on his list. He can edit Harbor House. He cannot edit or delete Hill Works.
 
 If an account has no membership, the page says “No facilities are assigned to this account.”
 

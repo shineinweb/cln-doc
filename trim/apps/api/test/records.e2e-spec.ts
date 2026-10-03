@@ -107,6 +107,33 @@ describe('record changes', () => {
     const listed = await request(app.getHttpServer()).get('/sites').set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
     expect(listed.body.map((site: { id: string }) => site.id)).toContain(created.body.id);
 
+    const edited = await request(app.getHttpServer())
+      .patch(`/sites/${created.body.id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        name: 'North Glass East',
+        addressLine1: '10 Orchard Road',
+        city: 'Seaside',
+        region: 'OR',
+        postalCode: '97138',
+      })
+      .expect(200);
+    expect(edited.body.name).toBe('North Glass East');
+    expect(edited.body.city).toBe('Seaside');
+    expect(edited.body.code).toBe('NORTHGLASS');
+    const stored = await request(app.getHttpServer())
+      .get(`/sites/${created.body.id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+    expect(stored.body.name).toBe('North Glass East');
+
+    const deniedEdit = await request(app.getHttpServer())
+      .patch(`/sites/${fixture.siteBId}`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ name: 'Taken' })
+      .expect(403);
+    expect(deniedEdit.body.message).toBe('You do not have access to this site');
+
     const denied = await request(app.getHttpServer())
       .delete(`/sites/${fixture.siteBId}`)
       .set('Authorization', `Bearer ${tokenA}`)
