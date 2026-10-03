@@ -94,7 +94,12 @@ export const managedTaskInputSchema = z.object({
   cadence: z.enum(['daily', 'weekly']).optional().nullable(),
   weekdays: z.array(weekdaySchema).optional().nullable(),
   dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  assigneeId: z.string().trim().max(191).optional().nullable(),
+  assigneeIds: z.array(z.string().trim().min(1).max(191)).optional().nullable(),
+});
+
+export const taskAssigneeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
 });
 
 export const managedTaskSchema = z.object({
@@ -105,8 +110,7 @@ export const managedTaskSchema = z.object({
   cadence: z.enum(['daily', 'weekly']).nullable(),
   weekdays: z.array(weekdaySchema),
   dueOn: z.string(),
-  assigneeId: z.string().nullable(),
-  assigneeName: z.string().nullable(),
+  assignees: z.array(taskAssigneeSchema),
 });
 
 export const environmentMetricSchema = z.enum(['temperature', 'relative_humidity', 'co2', 'substrate']);

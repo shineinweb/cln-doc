@@ -43,20 +43,20 @@ describe('room tasks', () => {
     const denied = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenB}`)
-      .send({ title: 'Denied', kind: 'one_time', dueOn: '2026-10-03', assigneeId: null });
+      .send({ title: 'Denied', kind: 'one_time', dueOn: '2026-10-03', assigneeIds: [] });
     expect(denied.status).toBe(403);
 
     const missingCadence = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenAdmin}`)
-      .send({ title: 'Scout', kind: 'recurring', dueOn: '2026-10-03', assigneeId: null });
+      .send({ title: 'Scout', kind: 'recurring', dueOn: '2026-10-03', assigneeIds: [] });
     expect(missingCadence.status).toBe(400);
     expect(missingCadence.body.message).toBe('Choose daily or weekly for a recurring task.');
 
     const missingDays = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenAdmin}`)
-      .send({ title: 'Scout', kind: 'recurring', cadence: 'weekly', dueOn: '2026-10-06', assigneeId: null });
+      .send({ title: 'Scout', kind: 'recurring', cadence: 'weekly', dueOn: '2026-10-06', assigneeIds: [] });
     expect(missingDays.status).toBe(400);
     expect(missingDays.body.message).toBe('Choose at least one day of the week.');
 
@@ -69,7 +69,7 @@ describe('room tasks', () => {
         cadence: 'weekly',
         weekdays: ['tue', 'fri'],
         dueOn: '2026-10-07',
-        assigneeId: null,
+        assigneeIds: [],
       });
     expect(wrongDay.status).toBe(400);
     expect(wrongDay.body.message).toBe('Next due must be one of the selected days.');
@@ -78,7 +78,7 @@ describe('room tasks', () => {
     const wrongPerson = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenAdmin}`)
-      .send({ title: 'Wrong person', kind: 'one_time', dueOn: '2026-10-03', assigneeId: siteBUser.id });
+      .send({ title: 'Wrong person', kind: 'one_time', dueOn: '2026-10-03', assigneeIds: [siteBUser.id] });
     expect(wrongPerson.status).toBe(400);
     expect(wrongPerson.body.message).toBe('That person cannot open this facility.');
 
@@ -90,7 +90,7 @@ describe('room tasks', () => {
         description: '  Look under the bench.  ',
         kind: 'one_time',
         dueOn: '2026-10-03',
-        assigneeId: null,
+        assigneeIds: [],
       });
     expect(created.status).toBe(201);
     expect(created.body).toMatchObject({
@@ -100,8 +100,7 @@ describe('room tasks', () => {
       cadence: null,
       weekdays: [],
       dueOn: '2026-10-03',
-      assigneeId: null,
-      assigneeName: null,
+      assignees: [],
     });
 
     const recurring = await request(app.getHttpServer())
@@ -113,14 +112,13 @@ describe('room tasks', () => {
         cadence: 'weekly',
         weekdays: ['sat'],
         dueOn: '2026-10-10',
-        assigneeId: siteAUserId,
+        assigneeIds: [siteAUserId],
       });
     expect(recurring.status).toBe(201);
     expect(recurring.body.kind).toBe('recurring');
     expect(recurring.body.cadence).toBe('weekly');
     expect(recurring.body.weekdays).toEqual(['sat']);
-    expect(recurring.body.assigneeId).toBe(siteAUserId);
-    expect(recurring.body.assigneeName).toBe('Site A Operator');
+    expect(recurring.body.assignees).toEqual([{ id: siteAUserId, name: 'Site A Operator' }]);
 
     const onDays = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
@@ -131,11 +129,29 @@ describe('room tasks', () => {
         cadence: 'weekly',
         weekdays: ['fri', 'tue', 'tue'],
         dueOn: '2026-10-06',
-        assigneeId: null,
+        assigneeIds: [],
       });
     expect(onDays.status).toBe(201);
     expect(onDays.body.weekdays).toEqual(['tue', 'fri']);
     expect(onDays.body.dueOn).toBe('2026-10-06');
+
+    const admin = await prisma.user.findUniqueOrThrow({ where: { email: fixture.adminUser.email } });
+    const shared = await request(app.getHttpServer())
+      .patch(`/rooms/${fixture.roomAId}/tasks/${onDays.body.id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        title: 'Defoliate',
+        kind: 'recurring',
+        cadence: 'weekly',
+        weekdays: ['tue', 'fri'],
+        dueOn: '2026-10-06',
+        assigneeIds: [siteAUserId, admin.id, siteAUserId],
+      })
+      .expect(200);
+    expect(shared.body.assignees).toEqual([
+      { id: admin.id, name: 'Org Admin' },
+      { id: siteAUserId, name: 'Site A Operator' },
+    ]);
 
     const edited = await request(app.getHttpServer())
       .patch(`/rooms/${fixture.roomAId}/tasks/${created.body.id}`)
@@ -145,7 +161,7 @@ describe('room tasks', () => {
         kind: 'recurring',
         cadence: 'daily',
         dueOn: '2026-10-04',
-        assigneeId: siteAUserId,
+        assigneeIds: [siteAUserId],
       })
       .expect(200);
     expect(edited.body).toMatchObject({
@@ -153,7 +169,7 @@ describe('room tasks', () => {
       kind: 'recurring',
       cadence: 'daily',
       weekdays: [],
-      assigneeName: 'Site A Operator',
+      assignees: [{ id: siteAUserId, name: 'Site A Operator' }],
     });
 
     const cleared = await request(app.getHttpServer())
@@ -163,10 +179,10 @@ describe('room tasks', () => {
         title: 'Check the east drain',
         kind: 'one_time',
         dueOn: '2026-10-04',
-        assigneeId: null,
+        assigneeIds: [],
       })
       .expect(200);
-    expect(cleared.body.assigneeId).toBeNull();
+    expect(cleared.body.assignees).toEqual([]);
     expect(cleared.body.kind).toBe('one_time');
     expect(cleared.body.description).toBeNull();
 
@@ -191,10 +207,11 @@ describe('room tasks', () => {
         cadence: 'weekly',
         weekdays: ['fri'],
         dueOn: '2026-10-09',
-        assigneeId: null,
+        assigneeIds: [siteAUserId, admin.id],
       })
       .expect(200);
     expect(fridayOnly.body.weekdays).toEqual(['fri']);
+    expect(fridayOnly.body.assignees.map((person: { name: string }) => person.name)).toEqual(['Org Admin', 'Site A Operator']);
 
     await request(app.getHttpServer())
       .delete(`/rooms/${fixture.roomAId}/tasks/${created.body.id}`)

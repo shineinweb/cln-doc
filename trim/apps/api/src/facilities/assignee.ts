@@ -24,3 +24,20 @@ export async function assigneeForSite(
   }
   return { id: person.id, name: person.name };
 }
+
+export async function assigneesForSite(
+  prisma: PrismaService,
+  organizationId: string,
+  siteId: string,
+  assigneeIds: string[] | null | undefined,
+): Promise<{ id: string; name: string }[]> {
+  const ids = [...new Set((assigneeIds ?? []).map((id) => id.trim()).filter(Boolean))];
+  const people = [];
+  for (const id of ids) {
+    const person = await assigneeForSite(prisma, organizationId, siteId, id);
+    if (person) {
+      people.push(person);
+    }
+  }
+  return people.sort((left, right) => left.name.localeCompare(right.name));
+}

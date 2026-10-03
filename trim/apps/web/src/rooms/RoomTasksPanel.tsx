@@ -32,7 +32,7 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
             Tasks
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. Description and employee are optional.
+            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. Description is optional, and you can assign more than one employee.
           </Typography>
           <AddTaskForm roomId={roomId} siteId={siteId} />
           <PagedList
@@ -86,7 +86,7 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
           </Typography>
           <TaskFields
             siteId={siteId}
-            initial={{ title: '', description: '', kind: 'one_time', cadence: 'weekly', weekdays: [], dueOn: todayKey(), assigneeId: '' }}
+            initial={{ title: '', description: '', kind: 'one_time', cadence: 'weekly', weekdays: [], dueOn: todayKey(), assigneeIds: [] }}
             pending={save.isPending}
             submitLabel="Add task"
             submitTestId="task-save"
@@ -135,7 +135,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
         detail={
           <Box>
             <Typography>
-              {scheduleLabel(task)} · {task.assigneeName ?? 'Unassigned'} · {formatCalendarDate(task.dueOn)}
+              {scheduleLabel(task)} · {peopleLabel(task.assignees)} · {formatCalendarDate(task.dueOn)}
             </Typography>
             <Typography sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{task.description ?? 'No description.'}</Typography>
           </Box>
@@ -150,7 +150,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
               cadence: task.cadence ?? 'weekly',
               weekdays: task.weekdays,
               dueOn: task.dueOn,
-              assigneeId: task.assigneeId ?? '',
+              assigneeIds: task.assignees.map((person) => person.id),
             }}
             pending={save.isPending}
             submitLabel="Save changes"
@@ -227,7 +227,7 @@ function TaskFields({
   onCancel,
 }: {
   siteId: string;
-  initial: { title: string; description: string; kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly'; weekdays: Weekday[]; dueOn: string; assigneeId: string };
+  initial: { title: string; description: string; kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly'; weekdays: Weekday[]; dueOn: string; assigneeIds: string[] };
   pending?: boolean;
   submitLabel: string;
   submitTestId: string;
@@ -240,7 +240,7 @@ function TaskFields({
   const [cadence, setCadence] = useState(initial.cadence);
   const [weekdays, setWeekdays] = useState<Weekday[]>(initial.weekdays);
   const [dueOn, setDueOn] = useState(initial.dueOn);
-  const [assigneeId, setAssigneeId] = useState(initial.assigneeId);
+  const [assigneeIds, setAssigneeIds] = useState(initial.assigneeIds);
   const [formError, setFormError] = useState<string | null>(null);
   return (
     <Box
@@ -267,7 +267,7 @@ function TaskFields({
           cadence: kind === 'recurring' ? cadence : null,
           weekdays: kind === 'recurring' && cadence === 'weekly' ? selected : [],
           dueOn,
-          assigneeId: assigneeId || null,
+          assigneeIds,
         });
       }}
     >
@@ -340,7 +340,7 @@ function TaskFields({
         InputLabelProps={{ shrink: true }}
         inputProps={{ 'data-testid': 'task-due' }}
       />
-      <EmployeeSelect siteId={siteId} value={assigneeId} onChange={setAssigneeId} />
+      <EmployeeChecks siteId={siteId} value={assigneeIds} onChange={setAssigneeIds} />
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Button type="submit" variant="contained" data-testid={submitTestId} disabled={pending}>
           {submitLabel}
@@ -384,9 +384,53 @@ function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: st
   );
 }
 
+function EmployeeChecks({ siteId, value, onChange }: { siteId: string; value: string[]; onChange: (value: string[]) => void }) {
+  const access = useQuery({
+    queryKey: ['access'],
+    queryFn: () => apiGet('/access', accessDirectorySchema),
+  });
+  const people = (access.data?.users ?? []).filter((person) => person.opensEveryFacility || person.siteIds.includes(siteId));
+  return (
+    <Box>
+      <Typography sx={{ fontSize: 14, mb: 0.5 }}>Employees</Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1 }}>
+        {people.map((person) => (
+          <FormControlLabel
+            key={person.id}
+            control={
+              <Checkbox
+                checked={value.includes(person.id)}
+                onChange={() => {
+                  onChange(value.includes(person.id) ? value.filter((id) => id !== person.id) : [...value, person.id]);
+                }}
+                inputProps={{ 'data-testid': `task-employee-${person.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` } as InputHTMLAttributes<HTMLInputElement>}
+              />
+            }
+            label={person.name}
+          />
+        ))}
+      </Box>
+      <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>Optional. Choose one or more.</Typography>
+    </Box>
+  );
+}
+
 function taskLine(task: ManagedTask): string {
-  const who = task.assigneeName ?? 'Unassigned';
-  return `${task.title} · ${scheduleLabel(task)} · ${who} · ${formatCalendarDate(task.dueOn)}`;
+  return `${task.title} · ${scheduleLabel(task)} · ${peopleLabel(task.assignees)} · ${formatCalendarDate(task.dueOn)}`;
+}
+
+function peopleLabel(people: { name: string }[]): string {
+  const names = people.map((person) => person.name);
+  if (names.length === 0) {
+    return 'Unassigned';
+  }
+  if (names.length === 1) {
+    return names[0];
+  }
+  if (names.length === 2) {
+    return `${names[0]} and ${names[1]}`;
+  }
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
 }
 
 function scheduleLabel(task: { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays?: Weekday[] }): string {

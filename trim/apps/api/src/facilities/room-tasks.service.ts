@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import type { ManagedTask, ManagedTaskInput, RecordRemoved, SessionUser, Weekday } from '@trim/contracts';
 import { dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
 import { PrismaService } from '../prisma/prisma.service';
-import { assigneeForSite } from './assignee';
+import { assigneesForSite } from './assignee';
 import { assertSiteAccess } from './site-access';
 
 @Injectable()
@@ -13,6 +13,7 @@ export class RoomTasksService {
     const rows = await this.prisma.roomTask.findMany({
       where: { roomId, status: 'open' },
       orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
+      include: assigneeInclude,
     });
     return rows.map(toManagedTask);
   }
@@ -20,7 +21,7 @@ export class RoomTasksService {
   async create(user: SessionUser, roomId: string, input: ManagedTaskInput): Promise<ManagedTask> {
     const room = await this.room(user, roomId);
     const schedule = this.schedule(input);
-    const assignee = await assigneeForSite(this.prisma, user.organizationId, room.siteId, input.assigneeId);
+    const assignees = await assigneesForSite(this.prisma, user.organizationId, room.siteId, input.assigneeIds);
     const created = await this.prisma.roomTask.create({
       data: {
         roomId: room.id,
@@ -31,9 +32,9 @@ export class RoomTasksService {
         weekdays: schedule.weekdays,
         dueOn: dbDateFromKey(input.dueOn),
         status: 'open',
-        assigneeUserId: assignee?.id ?? null,
-        assigneeLabel: assignee?.name ?? 'Unassigned',
+        assignees: { create: assignees.map((person) => ({ userId: person.id })) },
       },
+      include: assigneeInclude,
     });
     return toManagedTask(created);
   }
@@ -42,7 +43,7 @@ export class RoomTasksService {
     const room = await this.room(user, roomId);
     const existing = await this.owned(room.id, taskId);
     const schedule = this.schedule(input);
-    const assignee = await assigneeForSite(this.prisma, user.organizationId, room.siteId, input.assigneeId);
+    const assignees = await assigneesForSite(this.prisma, user.organizationId, room.siteId, input.assigneeIds);
     const updated = await this.prisma.roomTask.update({
       where: { id: existing.id },
       data: {
@@ -52,9 +53,12 @@ export class RoomTasksService {
         cadence: schedule.cadence,
         weekdays: schedule.weekdays,
         dueOn: dbDateFromKey(input.dueOn),
-        assigneeUserId: assignee?.id ?? null,
-        assigneeLabel: assignee?.name ?? 'Unassigned',
+        assignees: {
+          deleteMany: {},
+          create: assignees.map((person) => ({ userId: person.id })),
+        },
       },
+      include: assigneeInclude,
     });
     return toManagedTask(updated);
   }
@@ -113,8 +117,7 @@ function toManagedTask(row: {
   cadence: string | null;
   weekdays: string | null;
   dueOn: Date;
-  assigneeUserId: string | null;
-  assigneeLabel: string;
+  assignees: { user: { id: string; name: string } }[];
 }): ManagedTask {
   const kind = row.kind === 'recurring' ? 'recurring' : 'one_time';
   const cadence = row.cadence === 'daily' || row.cadence === 'weekly' ? row.cadence : null;
@@ -126,10 +129,13 @@ function toManagedTask(row: {
     cadence,
     weekdays: kind === 'recurring' && cadence === 'weekly' ? parseWeekdays(row.weekdays) : [],
     dueOn: dateKeyFromDbDate(row.dueOn),
-    assigneeId: row.assigneeUserId,
-    assigneeName: row.assigneeUserId ? row.assigneeLabel : null,
+    assignees: [...row.assignees]
+      .map((assignment) => ({ id: assignment.user.id, name: assignment.user.name }))
+      .sort((left, right) => left.name.localeCompare(right.name)),
   };
 }
+
+const assigneeInclude = { assignees: { include: { user: true } } } as const;
 
 const WEEKDAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 const WEEKDAY_FROM_UTC = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
