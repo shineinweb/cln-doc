@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardContent, Checkbox, FormControlLabel, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Checkbox, FormControlLabel, MenuItem, TextField, Typography } from '@mui/material';
 import {
   accessDirectorySchema,
   managedTaskSchema,
@@ -9,7 +9,7 @@ import {
   type Weekday,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type InputHTMLAttributes } from 'react';
+import { useState, type HTMLAttributes, type InputHTMLAttributes } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { formatCalendarDate } from '../crops/format';
@@ -370,16 +370,15 @@ function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: st
       helperText="Optional."
       InputLabelProps={{ shrink: true }}
       SelectProps={{
-        native: true,
-        inputProps: { 'data-testid': 'task-assignee' },
+        displayEmpty: true,
+        SelectDisplayProps: { 'data-testid': 'task-assignee' } as HTMLAttributes<HTMLDivElement>,
       }}
-      sx={{ '& .MuiNativeSelect-select': { minHeight: '1.4375em' } }}
     >
-      <option value="">Unassigned</option>
+      <MenuItem value="">Unassigned</MenuItem>
       {people.map((person) => (
-        <option key={person.id} value={person.id}>
+        <MenuItem key={person.id} value={person.id}>
           {person.name}
-        </option>
+        </MenuItem>
       ))}
     </TextField>
   );
