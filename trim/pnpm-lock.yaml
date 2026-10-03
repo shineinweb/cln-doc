@@ -41,6 +41,9 @@ importers:
       '@trim/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@trim/metrc-sandbox':
+        specifier: workspace:*
+        version: link:../../packages/metrc-sandbox
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -163,6 +166,12 @@ importers:
 
   apps/worker:
     dependencies:
+      '@trim/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@trim/metrc-sandbox':
+        specifier: workspace:*
+        version: link:../../packages/metrc-sandbox
       bullmq:
         specifier: ^5.56.0
         version: 5.81.5
@@ -214,6 +223,16 @@ importers:
       tsx:
         specifier: ^4.20.3
         version: 4.23.15
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
+  packages/metrc-sandbox:
+    dependencies:
+      '@trim/database':
+        specifier: workspace:*
+        version: link:../database
+    devDependencies:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3

@@ -17,6 +17,7 @@
     "@nestjs/platform-express": "^10.4.17",
     "@trim/contracts": "workspace:*",
     "@trim/database": "workspace:*",
+    "@trim/metrc-sandbox": "workspace:*",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.6.1",
     "jsonwebtoken": "^9.0.2",

@@ -515,6 +515,89 @@ async function seedInventory(input: {
       },
     });
   }
+
+  await seedPendingSubmissions(input);
+}
+
+async function seedPendingSubmissions(input: {
+  harborLicenseId: string;
+  hillLicenseId: string;
+  flowerRoomId: string;
+  blakeId: string;
+  caseyId: string;
+}) {
+  const flower = await prisma.room.findUniqueOrThrow({ where: { id: input.flowerRoomId } });
+  const dry = await prisma.room.findFirstOrThrow({ where: { siteId: flower.siteId, code: 'DRY' } });
+  const [harborMovePlant, harborStagePlant] = await prisma.plant.findMany({
+    where: { licenseId: input.harborLicenseId },
+    orderBy: { tag: 'asc' },
+    take: 2,
+  });
+  const hillPlant = await prisma.plant.findFirstOrThrow({
+    where: { licenseId: input.hillLicenseId },
+    orderBy: { tag: 'asc' },
+  });
+  if (!harborMovePlant || !harborStagePlant) {
+    throw new Error('Harbor plants were not seeded');
+  }
+
+  await prisma.plant.update({ where: { id: harborMovePlant.id }, data: { roomId: dry.id } });
+  const move = await prisma.plantEvent.create({
+    data: {
+      plantId: harborMovePlant.id,
+      licenseId: input.harborLicenseId,
+      eventType: 'moved',
+      actorUserId: input.blakeId,
+      occurredAt: new Date('2026-10-03T17:00:00.000Z'),
+      fromRoomId: input.flowerRoomId,
+      toRoomId: dry.id,
+      note: 'Submit the Harbor House move.',
+    },
+  });
+  await prisma.plant.update({ where: { id: hillPlant.id }, data: { stage: 'flower' } });
+  const hillStage = await prisma.plantEvent.create({
+    data: {
+      plantId: hillPlant.id,
+      licenseId: input.hillLicenseId,
+      eventType: 'stage_changed',
+      actorUserId: input.caseyId,
+      occurredAt: new Date('2026-10-03T17:05:00.000Z'),
+      fromStage: 'veg',
+      toStage: 'flower',
+      note: 'Submit the Hill Works stage change.',
+    },
+  });
+  await prisma.plant.update({ where: { id: harborStagePlant.id }, data: { stage: 'ripen' } });
+  const harborStage = await prisma.plantEvent.create({
+    data: {
+      plantId: harborStagePlant.id,
+      licenseId: input.harborLicenseId,
+      eventType: 'stage_changed',
+      actorUserId: input.blakeId,
+      occurredAt: new Date('2026-10-03T17:10:00.000Z'),
+      fromStage: 'flower',
+      toStage: 'ripen',
+      note: 'Submit the Harbor House stage change.',
+    },
+  });
+
+  const pending = [
+    { event: move, licenseId: input.harborLicenseId, requestedById: input.blakeId, sandboxOutcome: 'success', requestedAt: new Date('2026-10-03T17:01:00.000Z') },
+    { event: hillStage, licenseId: input.hillLicenseId, requestedById: input.caseyId, sandboxOutcome: 'failure', requestedAt: new Date('2026-10-03T17:06:00.000Z') },
+    { event: harborStage, licenseId: input.harborLicenseId, requestedById: input.blakeId, sandboxOutcome: 'uncertain', requestedAt: new Date('2026-10-03T17:11:00.000Z') },
+  ];
+  for (const row of pending) {
+    await prisma.metrcSubmission.create({
+      data: {
+        licenseId: row.licenseId,
+        plantEventId: row.event.id,
+        status: 'pending_review',
+        sandboxOutcome: row.sandboxOutcome,
+        requestedById: row.requestedById,
+        requestedAt: row.requestedAt,
+      },
+    });
+  }
 }
 
 async function recordFixtureImport(licenseId: string, localTags: string[], importedTags: string[], source: string) {

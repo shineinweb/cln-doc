@@ -456,6 +456,59 @@ export const metrcImportSummarySchema = z.object({
   discrepancies: z.array(metrcDiscrepancySchema),
 });
 
+export const sandboxOutcomeSchema = z.enum(['success', 'failure', 'uncertain']);
+
+export const queueSubmissionSchema = z.object({
+  plantEventId: z.string().min(1),
+  sandboxOutcome: sandboxOutcomeSchema,
+});
+
+export const reviewSubmissionSchema = z
+  .object({
+    decision: z.enum(['approve', 'reject']),
+    sandboxOutcome: sandboxOutcomeSchema.optional(),
+    note: z.string().trim().max(500).optional(),
+  })
+  .refine((value) => value.decision === 'reject' || value.sandboxOutcome, {
+    message: 'Choose a sandbox outcome.',
+  });
+
+export const reconcileSubmissionSchema = z.object({
+  finding: z.enum(['landed', 'not_landed']),
+});
+
+export const submissionAttemptSchema = z.object({
+  id: z.string(),
+  actorName: z.string(),
+  occurredAt: z.string(),
+  requestId: z.string(),
+  outcome: z.string(),
+  detail: z.string().nullable(),
+  reconciliationResult: z.enum(['landed', 'not_landed']).nullable(),
+  reconciledAt: z.string().nullable(),
+  reconciledByName: z.string().nullable(),
+});
+
+export const submissionViewSchema = z.object({
+  id: z.string(),
+  licenseId: z.string(),
+  licenseNumber: z.string(),
+  plantId: z.string(),
+  plantTag: z.string(),
+  plantEventId: z.string(),
+  eventType: z.string(),
+  eventNote: z.string().nullable(),
+  status: z.string(),
+  sandboxOutcome: z.string(),
+  requestedByName: z.string(),
+  requestedAt: z.string(),
+  reviewerName: z.string().nullable(),
+  reviewedAt: z.string().nullable(),
+  rejectionNote: z.string().nullable(),
+  canQueueAgain: z.boolean(),
+  attempt: submissionAttemptSchema.nullable(),
+});
+
 export const complianceLicenseSchema = z.object({
   id: z.string(),
   licenseNumber: z.string(),
@@ -463,6 +516,7 @@ export const complianceLicenseSchema = z.object({
   siteNames: z.array(z.string()),
   plantCount: z.number().int(),
   latestImport: metrcImportSummarySchema.nullable(),
+  submissions: z.array(submissionViewSchema),
 });
 
 export const complianceOverviewSchema = z.object({
@@ -561,3 +615,7 @@ export type ComplianceOverview = z.infer<typeof complianceOverviewSchema>;
 export type LicenseInventory = z.infer<typeof licenseInventorySchema>;
 export type PlantDetail = z.infer<typeof plantDetailSchema>;
 export type MetrcImportSummary = z.infer<typeof metrcImportSummarySchema>;
+export type QueueSubmission = z.infer<typeof queueSubmissionSchema>;
+export type ReviewSubmission = z.infer<typeof reviewSubmissionSchema>;
+export type ReconcileSubmission = z.infer<typeof reconcileSubmissionSchema>;
+export type SubmissionView = z.infer<typeof submissionViewSchema>;

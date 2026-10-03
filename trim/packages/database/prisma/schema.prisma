@@ -45,6 +45,10 @@ model User {
   workflowAssignments WorkflowTaskTemplate[] @relation("WorkflowAssignee")
   assignedCycleTasks  CycleTask[]            @relation("CycleTaskAssignee")
   plantEvents         PlantEvent[]
+  submissionsRequested MetrcSubmission[] @relation("SubmissionRequester")
+  submissionsReviewed  MetrcSubmission[] @relation("SubmissionReviewer")
+  metrcAttempts        MetrcAttempt[]    @relation("AttemptActor")
+  metrcReconciles      MetrcAttempt[]    @relation("AttemptReconciler")
 
   @@index([organizationId])
   @@map("users")
@@ -185,6 +189,8 @@ model License {
   metrcConnection MetrcConnection?
   imports        MetrcInventoryImport[]
   discrepancies  MetrcDiscrepancy[]
+  submissions    MetrcSubmission[]
+  outbox         MetrcOutbox[]
 
   @@unique([organizationId, licenseNumber])
   @@index([organizationId])
@@ -283,8 +289,9 @@ model PlantEvent {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  actor User  @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  plant       Plant             @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  actor       User              @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  submissions MetrcSubmission[]
 
   @@index([plantId, occurredAt])
   @@index([licenseId])
@@ -339,6 +346,79 @@ model MetrcDiscrepancy {
   @@index([importId])
   @@index([licenseId])
   @@map("metrc_discrepancies")
+}
+
+/// A local move or stage change waiting for review. Nothing is sent while this is pending or rejected.
+model MetrcSubmission {
+  id              String    @id @default(cuid())
+  licenseId       String    @map("license_id")
+  plantEventId    String    @map("plant_event_id")
+  status          String
+  sandboxOutcome  String    @map("sandbox_outcome")
+  requestedById   String    @map("requested_by_id")
+  requestedAt     DateTime  @map("requested_at")
+  reviewerId      String?   @map("reviewer_id")
+  reviewedAt      DateTime? @map("reviewed_at")
+  rejectionNote   String?   @map("rejection_note") @db.VarChar(500)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  license     License       @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  plantEvent  PlantEvent    @relation(fields: [plantEventId], references: [id], onDelete: Cascade)
+  requestedBy User          @relation("SubmissionRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  reviewer    User?         @relation("SubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  outbox      MetrcOutbox?
+  attempts    MetrcAttempt[]
+
+  @@index([licenseId, status])
+  @@index([plantEventId])
+  @@map("metrc_submissions")
+}
+
+/// Written in the same transaction as approval. The worker is the only sender.
+model MetrcOutbox {
+  id             String   @id @default(cuid())
+  submissionId   String   @unique @map("submission_id")
+  licenseId      String   @map("license_id")
+  requestId      String   @unique @map("request_id")
+  status         String
+  sandboxOutcome String   @map("sandbox_outcome")
+  payload        Json
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  submission MetrcSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  license    License         @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  attempts   MetrcAttempt[]
+
+  @@index([status, createdAt])
+  @@map("metrc_outbox")
+}
+
+/// One delivery or reconciliation fact. Rows are not overwritten except to record reconciliation on an uncertain attempt.
+model MetrcAttempt {
+  id                     String    @id @default(cuid())
+  submissionId           String    @map("submission_id")
+  outboxId               String    @map("outbox_id")
+  actorUserId            String    @map("actor_user_id")
+  occurredAt             DateTime  @map("occurred_at")
+  requestId              String    @map("request_id")
+  outcome                String
+  detail                 String?   @db.VarChar(500)
+  reconciliationResult   String?   @map("reconciliation_result")
+  reconciledAt           DateTime? @map("reconciled_at")
+  reconciledById         String?   @map("reconciled_by_id")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  submission   MetrcSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  outbox       MetrcOutbox     @relation(fields: [outboxId], references: [id], onDelete: Cascade)
+  actor        User            @relation("AttemptActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  reconciledBy User?           @relation("AttemptReconciler", fields: [reconciledById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId])
+  @@index([requestId])
+  @@map("metrc_attempts")
 }
 
 model Room {

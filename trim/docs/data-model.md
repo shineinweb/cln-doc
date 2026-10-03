@@ -26,7 +26,11 @@ A **site** is a physical facility (address, rooms, zones). A **license** is a re
 
 Strains belong to the organization. A plant has one strain, one batch, one tag unique on its license, a current room, and an optional crop cycle. Movements, stage changes, observations, and the original planting are `plant_events`. Each event stores the actor.
 
-`metrc_connections` holds server-side credentials and is not returned by the API. Inventory import does not read that table and does not call Metrc. `metrc_inventory_imports` and `metrc_discrepancies` record a comparison of a saved tag list with local plants. `metrc_syncs` stays empty; it is not an import.
+`metrc_connections` holds server-side credentials and is not returned by the API. Inventory import and submission delivery do not read that table and do not call Metrc.
+
+`metrc_submissions` queue a move or stage change for review. Rejection stores the reviewer and does not send. Approval writes one `metrc_outbox` row in the same transaction. The worker delivers pending outbox rows through the sandbox. Each delivery is a `metrc_attempts` row with the actor, time, request id, and outcome. An uncertain attempt is not sent again until reconciliation stores `landed` or `not_landed` on that attempt.
+
+`metrc_inventory_imports` and `metrc_discrepancies` record a comparison of a saved tag list with local plants. `metrc_syncs` stays empty; it is not an import.
 
 ## Access
 

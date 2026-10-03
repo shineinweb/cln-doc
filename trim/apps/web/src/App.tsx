@@ -14,6 +14,7 @@ import { PlantPage } from './pages/PlantPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
+import { SubmissionPage } from './pages/SubmissionPage';
 import { TaskPage } from './pages/TaskPage';
 import { WorkflowsPage } from './pages/WorkflowsPage';
 import { WorkspacePage } from './pages/WorkspacePage';
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
       { path: 'compliance', element: <CompliancePage /> },
       { path: 'licenses/:licenseId', element: <LicenseInventoryPage /> },
       { path: 'plants/:plantId', element: <PlantPage /> },
+      { path: 'submissions/:submissionId', element: <SubmissionPage /> },
       {
         path: '*',
         element: (

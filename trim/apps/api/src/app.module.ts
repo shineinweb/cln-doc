@@ -6,10 +6,11 @@ import { InventoryModule } from './inventory/inventory.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
+import { SubmissionsModule } from './submissions/submissions.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule, InventoryModule],
+  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule, SubmissionsModule, InventoryModule],
   controllers: [HealthController],
 })
 export class AppModule {}

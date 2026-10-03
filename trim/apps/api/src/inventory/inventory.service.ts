@@ -11,6 +11,7 @@ import type {
   SessionUser,
 } from '@trim/contracts';
 import { PrismaService } from '../prisma/prisma.service';
+import { SubmissionsService } from '../submissions/submissions.service';
 import { compareTags } from './reconcile';
 
 const PLANT_LIST_LIMIT = 12;
@@ -25,7 +26,10 @@ type LicenseAccess = {
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly submissions: SubmissionsService,
+  ) {}
 
   async compliance(user: SessionUser): Promise<ComplianceOverview> {
     const licenses = await this.visibleLicenses(user);
@@ -251,9 +255,10 @@ export class InventoryService {
   }
 
   private async toComplianceLicense(license: LicenseAccess): Promise<ComplianceOverview['licenses'][number]> {
-    const [plantCount, latestImport] = await Promise.all([
+    const [plantCount, latestImport, submissions] = await Promise.all([
       this.prisma.plant.count({ where: { licenseId: license.id } }),
       this.latestImport(license.id),
+      this.submissions.listForLicense(license.id),
     ]);
     return {
       id: license.id,
@@ -262,6 +267,7 @@ export class InventoryService {
       siteNames: license.sites.map((link) => link.site.name),
       plantCount,
       latestImport,
+      submissions,
     };
   }
 

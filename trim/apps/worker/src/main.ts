@@ -1,3 +1,5 @@
+import { PrismaClient } from '@trim/database';
+import { deliverPendingOutbox } from '@trim/metrc-sandbox';
 import { Queue } from 'bullmq';
 import { config } from 'dotenv';
 import IORedis from 'ioredis';
@@ -15,8 +17,21 @@ async function main(): Promise<void> {
   const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
   const queue = new Queue(INFRASTRUCTURE_QUEUE, { connection });
   await queue.waitUntilReady();
+  const prisma = new PrismaClient();
+  const deliver = async (): Promise<void> => {
+    const count = await deliverPendingOutbox(prisma);
+    if (count > 0) {
+      console.log(`Delivered ${count} Metrc sandbox outbox row${count === 1 ? '' : 's'}.`);
+    }
+  };
+  await deliver();
+  const timer = setInterval(() => {
+    void deliver().catch((error: unknown) => {
+      console.error(error);
+    });
+  }, 1000);
   console.log(
-    `Trim worker connected. Queue "${INFRASTRUCTURE_QUEUE}" is ready. No business jobs are registered.`,
+    `Trim worker connected. Queue "${INFRASTRUCTURE_QUEUE}" is ready. Pending Metrc outbox rows are delivered to the sandbox.`,
   );
 
   let closing = false;
@@ -26,7 +41,9 @@ async function main(): Promise<void> {
     }
     closing = true;
     console.log(`Trim worker received ${signal}. Closing the queue connection.`);
+    clearInterval(timer);
     await queue.close();
+    await prisma.$disconnect();
     await connection.quit();
     process.exit(0);
   };
