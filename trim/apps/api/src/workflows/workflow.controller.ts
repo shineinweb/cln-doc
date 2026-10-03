@@ -5,6 +5,7 @@ import {
   createTeamSchema,
   createWorkflowTemplateSchema,
   rescheduleCycleSchema,
+  resetRoomSchema,
   startCycleSchema,
   workflowVersionInputSchema,
   type ApplyWorkflow,
@@ -12,6 +13,7 @@ import {
   type CreateTeam,
   type CreateWorkflowTemplate,
   type RescheduleCycle,
+  type ResetRoom,
   type SessionUser,
   type StartCycle,
   type WorkflowVersionInput,
@@ -63,6 +65,15 @@ export class WorkflowController {
   @Post('cycles')
   startCycle(@CurrentUser() user: SessionUser, @Body(new ZodValidationPipe(startCycleSchema)) body: StartCycle) {
     return this.workflows.startCycle(user, body);
+  }
+
+  @Post('rooms/:roomId/reset')
+  resetRoom(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(resetRoomSchema)) body: ResetRoom,
+  ) {
+    return this.workflows.resetRoom(user, roomId, body);
   }
 
   @Post('cycles/:cycleId/workflow')

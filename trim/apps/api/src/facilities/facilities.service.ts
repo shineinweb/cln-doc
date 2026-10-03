@@ -11,6 +11,7 @@ import type {
   Zone,
   ZoneInput,
 } from '@trim/contracts';
+import { dateKeyFromDbDate } from '../cycles/cycle-day';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
@@ -234,12 +235,25 @@ export class FacilitiesService {
     assertSiteAccess(user, room.site);
     const current = room.cycles[0] ?? null;
     const signals = await this.cycles.roomSignals(room.id, room.site.id, room.site.timezone);
+    const archived = await this.prisma.cropCycle.findMany({
+      where: { roomId: room.id, status: 'archived' },
+      orderBy: { startDate: 'desc' },
+    });
     return {
       ...this.toRoom(room, room.site.timezone),
       siteName: room.site.name,
       siteCode: room.site.code,
       siteTimezone: room.site.timezone,
       operatingHistory: current ? this.cycles.history(current) : null,
+      archivedCycles: archived.map((cycle) => ({
+        id: cycle.id,
+        name: cycle.name,
+        cultivar: cycle.cultivar,
+        stage: cycle.stage,
+        startDate: dateKeyFromDbDate(cycle.startDate),
+        expectedHarvestDate: dateKeyFromDbDate(cycle.expectedHarvestDate),
+        harvestDate: cycle.harvestDate ? dateKeyFromDbDate(cycle.harvestDate) : null,
+      })),
       ...signals,
     };
   }

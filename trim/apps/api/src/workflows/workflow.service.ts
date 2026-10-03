@@ -8,6 +8,7 @@ import type {
   RescheduleCycle,
   ReschedulePreview,
   RescheduleResult,
+  ResetRoom,
   SessionUser,
   StartCycle,
   StartedCycle,
@@ -17,7 +18,7 @@ import type {
   WorkflowVersionInput,
 } from '@trim/contracts';
 import { Prisma } from '@trim/database';
-import { addCalendarDays, calendarDaysBetween, dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
+import { addCalendarDays, calendarDateInTimeZone, calendarDaysBetween, dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
 import { assertSiteAccess } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
 import { AttachmentsService } from '../storage/attachments.service';
@@ -184,6 +185,79 @@ export class WorkflowService {
     return { id: cycleId, tasks: await this.taskSummaries(cycleId) };
   }
 
+  async resetRoom(user: SessionUser, roomId: string, input: ResetRoom): Promise<StartedCycle> {
+    assertManager(user);
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        site: true,
+        cycles: { where: { status: 'active' }, orderBy: { startDate: 'desc' }, take: 1 },
+      },
+    });
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+    assertSiteAccess(user, room.site);
+    const current = room.cycles[0] ?? null;
+    if (input.harvestDate && !current) {
+      throw new BadRequestException('A harvest date needs a crop to close.');
+    }
+    if (input.harvestDate && current && input.harvestDate < dateKeyFromDbDate(current.startDate)) {
+      throw new BadRequestException('Harvest date must be on or after the crop start date.');
+    }
+    const expectedHarvestDate = addCalendarDays(input.startDate, input.durationDays - 1);
+    const versionId = current?.workflowVersionId ?? (await this.defaultVersionId(user.organizationId));
+    const version = await this.loadVersion(user, versionId);
+    const cycleId = await this.prisma.$transaction(async (tx) => {
+      if (current) {
+        await tx.cycleTask.updateMany({
+          where: { cycleId: current.id, status: 'open' },
+          data: { status: 'archived' },
+        });
+        await tx.cropCycle.update({
+          where: { id: current.id },
+          data: {
+            status: 'archived',
+            ...(input.harvestDate ? { harvestDate: dbDateFromKey(input.harvestDate) } : {}),
+          },
+        });
+        await tx.cycleEvent.create({
+          data: {
+            cycleId: current.id,
+            occurredOn: dbDateFromKey(input.harvestDate ?? calendarDateInTimeZone(new Date(), room.site.timezone)),
+            title: 'Archived',
+            detail: input.harvestDate
+              ? `Room reset. Harvest date ${input.harvestDate}.`
+              : 'Room reset. The crop left the active room.',
+          },
+        });
+      }
+      const cycle = await tx.cropCycle.create({
+        data: {
+          roomId: room.id,
+          name: input.strain,
+          cultivar: input.strain,
+          plantCount: input.plantCount,
+          stage: input.stage,
+          startDate: dbDateFromKey(input.startDate),
+          expectedHarvestDate: dbDateFromKey(expectedHarvestDate),
+          status: 'active',
+          workflowVersionId: version.id,
+          events: {
+            create: {
+              occurredOn: dbDateFromKey(input.startDate),
+              title: 'Cycle opened',
+              detail: 'The room was reset. Workflow tasks were generated from the template already on this room.',
+            },
+          },
+        },
+      });
+      await this.writeTasks(tx, cycle.id, cycle.roomId, input.startDate, version);
+      return cycle.id;
+    });
+    return { id: cycleId, tasks: await this.taskSummaries(cycleId) };
+  }
+
   async applyVersion(user: SessionUser, cycleId: string, input: ApplyWorkflow): Promise<StartedCycle> {
     assertManager(user);
     const cycle = await this.loadCycle(user, cycleId);
@@ -340,6 +414,19 @@ export class WorkflowService {
     }
     assertSiteAccess(user, cycle.room.site);
     return cycle;
+  }
+
+  private async defaultVersionId(organizationId: string): Promise<string> {
+    const template = await this.prisma.workflowTemplate.findFirst({
+      where: { organizationId },
+      orderBy: { name: 'asc' },
+      include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
+    });
+    const version = template?.versions[0];
+    if (!version) {
+      throw new BadRequestException('A workflow template is required before this room can be reset.');
+    }
+    return version.id;
   }
 
   private async loadVersion(user: SessionUser, versionId: string): Promise<VersionRecord> {

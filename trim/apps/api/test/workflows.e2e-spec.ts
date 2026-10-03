@@ -282,6 +282,115 @@ describe('workflow engine', () => {
     expect(own.body.tasks.some((task: { id: string; siteName: string }) => task.id === taskId)).toBe(true);
   });
 
+  it('archives the current crop and starts the next one when the room is reset', async () => {
+    const template = await request(app.getHttpServer())
+      .post('/workflows/templates')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        name: `Reset plan ${Date.now()}`,
+        durationDays: 28,
+        startingEvent: 'cycle_start',
+        tasks: [
+          {
+            ...sampleTask('reset-count'),
+            title: 'Count plants',
+            offsetDays: 0,
+            assigneeType: 'role',
+            roleId: operatorRoleId,
+          },
+        ],
+      })
+      .expect(201);
+    const room = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/rooms`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ name: `Reset Bay ${Date.now()}`, roomType: 'flower' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/rooms/${room.body.id}/reset`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        strain: 'First Strain',
+        plantCount: 4,
+        stage: 'flower',
+        startDate: '2026-09-12',
+        durationDays: 22,
+        harvestDate: '2026-10-03',
+      })
+      .expect(400);
+
+    const started = await request(app.getHttpServer())
+      .post('/cycles')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        roomId: room.body.id,
+        name: 'First Strain',
+        cultivar: 'First Strain',
+        plantCount: 4,
+        stage: 'flower',
+        startDate: '2026-09-01',
+        expectedHarvestDate: '2026-09-28',
+        templateVersionId: template.body.currentVersion.id,
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/rooms/${room.body.id}/reset`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({
+        strain: 'Next Strain',
+        plantCount: 8,
+        stage: 'veg',
+        startDate: '2026-10-04',
+        durationDays: 22,
+        harvestDate: '2026-10-03',
+      })
+      .expect(403);
+
+    const reset = await request(app.getHttpServer())
+      .post(`/rooms/${room.body.id}/reset`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        strain: 'Next Strain',
+        plantCount: 8,
+        stage: 'veg',
+        startDate: '2026-10-04',
+        durationDays: 22,
+        harvestDate: '2026-10-03',
+      })
+      .expect(201);
+
+    expect(reset.body.id).not.toBe(started.body.id);
+    expect(reset.body.tasks[0].dueOn).toBe('2026-10-04');
+    expect(reset.body.tasks[0].status).toBe('open');
+
+    const archived = await prisma.cropCycle.findUniqueOrThrow({ where: { id: started.body.id } });
+    expect(archived.status).toBe('archived');
+    expect(archived.harvestDate).not.toBeNull();
+    expect(dateKey(archived.harvestDate as Date)).toBe('2026-10-03');
+    const oldTasks = await prisma.cycleTask.findMany({ where: { cycleId: started.body.id } });
+    expect(oldTasks.length).toBeGreaterThan(0);
+    expect(oldTasks.every((task) => task.status === 'archived')).toBe(true);
+
+    const detail = await request(app.getHttpServer())
+      .get(`/rooms/${room.body.id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+    expect(detail.body.currentCycle.name).toBe('Next Strain');
+    expect(detail.body.currentCycle.cultivar).toBe('Next Strain');
+    expect(detail.body.currentCycle.stage).toBe('veg');
+    expect(detail.body.currentCycle.expectedHarvestDate).toBe('2026-10-25');
+    expect(detail.body.archivedCycles).toEqual([
+      expect.objectContaining({
+        id: started.body.id,
+        name: 'First Strain',
+        cultivar: 'First Strain',
+        harvestDate: '2026-10-03',
+      }),
+    ]);
+  });
+
   async function login(email: string, password: string): Promise<string> {
     const response = await request(app.getHttpServer()).post('/auth/login').send({ email, password }).expect(200);
     return response.body.accessToken as string;

@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
 import { addCalendarDays, cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
@@ -25,6 +26,7 @@ import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
 export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { setSiteId } = useSites();
   const [tab, setTab] = useState<'cycle' | 'room'>('cycle');
   const harvestCrop = useMutation({
@@ -79,6 +81,7 @@ export function RoomDashboardPage() {
       </Tabs>
       {tab === 'cycle' ? (
         <Box>
+          {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
           <StartCycleForm roomId={room.data.id} roomType={room.data.roomType} />
           {cycle ? (
             <Card sx={{ mb: 2 }} data-testid="current-cycle">
@@ -125,6 +128,9 @@ export function RoomDashboardPage() {
               This room has no active crop cycle.
             </Alert>
           )}
+          {room.data.archivedCycles.length > 0 ? (
+            <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
+          ) : null}
         </Box>
       ) : (
         <Box>
@@ -287,6 +293,142 @@ function StartCycleForm({ roomId, roomType }: { roomId: string; roomType: string
         {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
       </CardContent>
     </Card>
+  );
+}
+
+function ResetRoomForm({ roomId, roomType }: { roomId: string; roomType: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [durationDays, setDurationDays] = useState('');
+  const endDate = useMemo(() => {
+    const days = Number(durationDays);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !Number.isInteger(days) || days < 1) {
+      return null;
+    }
+    return addCalendarDays(startDate, days - 1);
+  }, [durationDays, startDate]);
+  const save = useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiSend(`/rooms/${roomId}/reset`, startedCycleSchema, body),
+    onSuccess: async () => {
+      setMessage('Room reset.');
+      setOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ['sites'] });
+      await queryClient.invalidateQueries({ queryKey: ['room', roomId] });
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+  const stage = roomType in ROOM_TYPE_LABELS ? roomType : 'flower';
+
+  if (!open) {
+    return (
+      <Box sx={{ mb: 2 }}>
+        <Button variant="contained" data-testid="reset-room" onClick={() => setOpen(true)}>
+          Reset room
+        </Button>
+        {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
+      </Box>
+    );
+  }
+
+  return (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
+          Reset room
+        </Typography>
+        <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
+          This closes the current crop and keeps it in the archive. Zones and readings stay on this room. The start date is day 1.
+        </Typography>
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1.5, maxWidth: 480 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!endDate) {
+              return;
+            }
+            const form = new FormData(event.currentTarget);
+            const harvestDate = String(form.get('harvestDate') ?? '');
+            save.mutate({
+              strain: String(form.get('strain') ?? ''),
+              plantCount: Number(form.get('plantCount')),
+              stage: String(form.get('stage') ?? ''),
+              startDate,
+              durationDays: Number(durationDays),
+              harvestDate: harvestDate || null,
+            });
+          }}
+        >
+          <TextField label="Strain" name="strain" required inputProps={{ 'data-testid': 'reset-strain' }} />
+          <TextField label="Plant count" name="plantCount" type="number" required inputProps={{ min: 1, 'data-testid': 'reset-plant-count' }} />
+          <TextField select label="Stage" name="stage" defaultValue={stage}>
+            {Object.entries(ROOM_TYPE_LABELS).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Start date"
+            name="startDate"
+            type="date"
+            required
+            value={startDate}
+            onChange={(event) => setStartDate(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'reset-start' }}
+          />
+          <TextField
+            label="Cycle duration in days"
+            name="durationDays"
+            type="number"
+            required
+            value={durationDays}
+            onChange={(event) => setDurationDays(event.target.value)}
+            inputProps={{ min: 1, step: 1, 'data-testid': 'reset-duration' }}
+          />
+          <Typography data-testid="reset-end-date" sx={{ color: endDate ? 'text.primary' : 'text.secondary' }}>
+            {endDate ? `End of cycle ${formatCalendarDate(endDate)}.` : 'End of cycle is calculated from the start date and the duration. The start date is day 1.'}
+          </Typography>
+          <TextField
+            label="Harvest date"
+            name="harvestDate"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'reset-harvest' }}
+            helperText="Optional. Stored on the crop being closed."
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !endDate} data-testid="reset-room">
+              Reset room
+            </Button>
+            <Button type="button" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+          </Box>
+        </Box>
+        {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ArchivedCrops({ roomId, cycles }: { roomId: string; cycles: RoomDetail['archivedCycles'] }) {
+  return (
+    <Box sx={{ mb: 2 }} data-testid="archived-crops">
+      <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
+        Archived crops
+      </Typography>
+      {cycles.map((cycle) => (
+        <Typography key={cycle.id} data-testid="archived-crop">
+          <RouterLink to={`/rooms/${roomId}/cycles/${cycle.id}`}>{cycle.name}</RouterLink>
+          {` · ${cycle.cultivar} · ${roomTypeLabel(cycle.stage)} · started ${formatCalendarDate(cycle.startDate)}`}
+          {cycle.harvestDate ? ` · harvest ${formatCalendarDate(cycle.harvestDate)}` : ' · no harvest date'}
+        </Typography>
+      ))}
+    </Box>
   );
 }
 

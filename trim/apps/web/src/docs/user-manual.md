@@ -82,6 +82,8 @@ Two tabs sit under that line: **Crop cycle** and **Room**.
 
 **Crop cycle** holds **Start a crop cycle** and the current crop. The form asks for Name, Cultivar, Plant count, Stage, Start, **Cycle duration in days**, and Template. The room is already open, so there is no room picker. The start date is day 1. The end of the cycle is that start date plus the duration, counting the start date as one of the days. A duration of 22 days that starts September 12, 2026 ends October 3, 2026, and the form shows “End of cycle Oct 3, 2026.” Choosing a template fills the duration from that template. Canopy week fills 28. **Start cycle** saves the cycle on this room. The stored expected harvest is that calculated date.
 
+**Reset room** is on the same tab for an organization admin. It opens a form: Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. The start date is day 1, and the form shows the calculated end date for the next crop. Saving closes the current crop, lists it under **Archived crops**, and starts the next crop from the strain. The harvest date, when entered, is stored on the crop being closed. Zones, readings, alerts, the gateway, and the controller sample stay on the **Room** tab. An employee does not see **Reset room**.
+
 When a crop is active, the **Current crop** card shows the crop name and four figures: Cultivar, Plants, Stage, and Cycle day. Cycle day counts the start date as day 1 in the facility timezone. It also shows “Expected harvest” and **Open crop cycle**. **Harvest this crop** appears only while the crop still has plants. Flower 1 does not show that button. Veg 1 does.
 
 If the room has no active crop, the **Crop cycle** tab says “This room has no active crop cycle.”

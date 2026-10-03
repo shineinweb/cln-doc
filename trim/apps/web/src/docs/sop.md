@@ -59,6 +59,8 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 
 Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. **Start cycle** is on the room dashboard **Crop cycle** tab, inside **Start a crop cycle**. It is not on **Crop cycles**, **Workflows**, or the cycle page. The form asks for **Cycle duration in days**. The start date is day 1, and the page shows the calculated end date. A duration of 22 days from September 12, 2026 ends October 3, 2026.
 
+**Reset room** is also on that tab, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones and readings stay.
+
 **Done.** The cycle page shows the template chip and the generated tasks. A cycle with no template says “This cycle has no workflow assignments yet.”
 
 ## Reschedule preview before confirm

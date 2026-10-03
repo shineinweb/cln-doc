@@ -629,8 +629,9 @@ model CropCycle {
   cultivar            String
   plantCount          Int      @map("plant_count")
   stage               String
-  startDate           DateTime @map("start_date") @db.Date
-  expectedHarvestDate DateTime @map("expected_harvest_date") @db.Date
+  startDate           DateTime  @map("start_date") @db.Date
+  expectedHarvestDate DateTime  @map("expected_harvest_date") @db.Date
+  harvestDate         DateTime? @map("harvest_date") @db.Date
   status              String
   workflowVersionId   String?  @map("workflow_version_id")
   createdAt           DateTime @default(now()) @map("created_at")

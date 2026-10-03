@@ -289,6 +289,16 @@ export const roomPageSchema = z.object({
   total: z.number().int(),
 });
 
+export const archivedCycleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  cultivar: z.string(),
+  stage: z.string(),
+  startDate: z.string(),
+  expectedHarvestDate: z.string(),
+  harvestDate: z.string().nullable(),
+});
+
 export const roomDetailSchema = roomSchema.extend({
   siteName: z.string(),
   siteCode: z.string(),
@@ -301,6 +311,7 @@ export const roomDetailSchema = roomSchema.extend({
   readingHistory: z.array(environmentalReadingSchema),
   alertRules: z.array(alertRuleSchema),
   lastMetrcSync: metrcSyncSchema.nullable(),
+  archivedCycles: z.array(archivedCycleSchema),
 });
 
 export const cycleTaskSummarySchema = z.object({
@@ -395,6 +406,22 @@ export const startCycleSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   expectedHarvestDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   templateVersionId: z.string().min(1),
+});
+
+const optionalDate = z
+  .string()
+  .trim()
+  .regex(/^$|^\d{4}-\d{2}-\d{2}$/)
+  .nullish()
+  .transform((value) => (value && value.length > 0 ? value : null));
+
+export const resetRoomSchema = z.object({
+  strain: z.string().trim().min(1).max(191),
+  plantCount: z.number().int().positive(),
+  stage: z.enum(['flower', 'veg', 'dry', 'mother', 'clone']),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  durationDays: z.number().int().positive().max(3650),
+  harvestDate: optionalDate,
 });
 
 export const applyWorkflowSchema = z.object({
@@ -1232,6 +1259,8 @@ export type CreateWorkflowTemplate = z.infer<typeof createWorkflowTemplateSchema
 export type CreateSop = z.infer<typeof createSopSchema>;
 export type CreateTeam = z.infer<typeof createTeamSchema>;
 export type StartCycle = z.infer<typeof startCycleSchema>;
+export type ResetRoom = z.infer<typeof resetRoomSchema>;
+export type ArchivedCycle = z.infer<typeof archivedCycleSchema>;
 export type ApplyWorkflow = z.infer<typeof applyWorkflowSchema>;
 export type RescheduleCycle = z.infer<typeof rescheduleCycleSchema>;
 export type TaskCommentInput = z.infer<typeof taskCommentSchema>;

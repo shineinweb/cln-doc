@@ -27,7 +27,7 @@ export class TasksService {
   async workspace(user: SessionUser): Promise<WorkspaceToday> {
     const context = await this.assignmentContext(user.id);
     const tasks = await this.prisma.cycleTask.findMany({
-      where: { room: { site: authorizedSiteWhere(user) } },
+      where: { status: 'open', room: { site: authorizedSiteWhere(user) } },
       include: taskInclude,
       orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
     });
