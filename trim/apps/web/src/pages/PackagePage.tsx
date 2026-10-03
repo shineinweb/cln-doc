@@ -24,12 +24,8 @@ export function PackagePage() {
         packageId,
         sandboxOutcome: outcome,
       }),
-    onSuccess: async (submission) => {
-      setMessage(
-        submission.status === 'pending_review'
-          ? 'Queued for review. Nothing has been sent.'
-          : `Submission is ${submission.status}.`,
-      );
+    onSuccess: async () => {
+      setMessage(null);
       await queryClient.invalidateQueries({ queryKey: ['package', packageId] });
       await queryClient.invalidateQueries({ queryKey: ['compliance'] });
     },
@@ -51,6 +47,12 @@ export function PackagePage() {
   }
 
   const row = detail.data;
+  const statusCopy =
+    row.submission?.status === 'pending_review'
+      ? 'Queued for review. Nothing has been sent.'
+      : row.submission
+        ? `Submission ${row.submission.status}.`
+        : null;
   return (
     <Box>
       <PageHeader
@@ -79,11 +81,9 @@ export function PackagePage() {
           </Typography>
         ))}
       </Box>
-      {row.submission ? (
+      {statusCopy ? (
         <Alert severity="info" sx={{ mt: 2 }} data-testid="package-submission-status">
-          {row.submission.status === 'pending_review'
-            ? 'Queued for review. Nothing has been sent.'
-            : `Submission ${row.submission.status}.`}
+          {statusCopy}
         </Alert>
       ) : (
         <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -103,7 +103,7 @@ export function PackagePage() {
           </Button>
         </Box>
       )}
-      {message ? (
+      {message && message !== statusCopy ? (
         <Alert severity="info" sx={{ mt: 1 }} data-testid="package-message">
           {message}
         </Alert>
