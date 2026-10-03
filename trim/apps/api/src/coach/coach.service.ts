@@ -185,11 +185,11 @@ export class CoachService {
         licenseNumber: license.licenseNumber,
         jurisdiction: license.jurisdiction,
         gaps: [
-          gap('untagged_plants', untagged, untagged === 0 ? 'No active plant is missing a tag.' : `${untagged} active plants have no tag.`),
-          gap('discrepancies', discrepancies, discrepancies === 0 ? 'No inventory discrepancies are stored.' : `${discrepancies} inventory discrepancies are stored.`),
-          gap('pending_submissions', pending, pending === 0 ? 'No submission is waiting for review.' : `${pending} submissions are waiting for review.`),
-          gap('unqueued_packages', unqueued, unqueued === 0 ? 'No package is waiting to be queued.' : `${unqueued} packages have not been queued for review.`),
-          gap('missing_waste', missingWaste, missingWaste === 0 ? 'No harvest with a dry weight is missing waste.' : `${missingWaste} harvests have a dry weight and no waste row.`),
+          gap('untagged_plants', untagged, untagged === 0 ? 'No active plant is missing a tag.' : `${countNoun(untagged, 'active plant has', 'active plants have')} no tag.`),
+          gap('discrepancies', discrepancies, discrepancies === 0 ? 'No inventory discrepancies are stored.' : `${countNoun(discrepancies, 'inventory discrepancy is', 'inventory discrepancies are')} stored.`),
+          gap('pending_submissions', pending, pending === 0 ? 'No submission is waiting for review.' : `${countNoun(pending, 'submission is', 'submissions are')} waiting for review.`),
+          gap('unqueued_packages', unqueued, unqueued === 0 ? 'No package is waiting to be queued.' : `${countNoun(unqueued, 'package has', 'packages have')} not been queued for review.`),
+          gap('missing_waste', missingWaste, missingWaste === 0 ? 'No harvest with a dry weight is missing waste.' : `${countNoun(missingWaste, 'harvest has', 'harvests have')} a dry weight and no waste row.`),
         ],
       });
     }
@@ -199,6 +199,10 @@ export class CoachService {
 
 function gap(kind: SiteCoach['licenses'][number]['gaps'][number]['kind'], count: number, detail: string) {
   return { kind, count, detail };
+}
+
+function countNoun(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 export function quoteSop(question: string, sops: Array<{ title: string; summary: string }>): CoachAnswer {
