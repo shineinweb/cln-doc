@@ -351,6 +351,16 @@ export const archivedCycleSchema = z.object({
   harvestDate: z.string().nullable(),
 });
 
+export const defoliationSchema = z.object({
+  id: z.string(),
+  dayNumber: z.number().int(),
+  date: z.string().nullable(),
+});
+
+export const defoliationInputSchema = z.object({
+  days: z.array(z.number().int().min(1).max(3650)).max(30),
+});
+
 export const roomDetailSchema = roomSchema.extend({
   siteName: z.string(),
   siteCode: z.string(),
@@ -365,6 +375,7 @@ export const roomDetailSchema = roomSchema.extend({
   alertRules: z.array(alertRuleSchema),
   lastMetrcSync: metrcSyncSchema.nullable(),
   archivedCycles: z.array(archivedCycleSchema),
+  defoliations: z.array(defoliationSchema),
 });
 
 export const cycleTaskSummarySchema = z.object({
@@ -1456,6 +1467,8 @@ export type PackageEdit = z.infer<typeof packageEditSchema>;
 export type SubmissionEdit = z.infer<typeof submissionEditSchema>;
 export type Room = z.infer<typeof roomSchema>;
 export type RoomDetail = z.infer<typeof roomDetailSchema>;
+export type Defoliation = z.infer<typeof defoliationSchema>;
+export type DefoliationInput = z.infer<typeof defoliationInputSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;
 export type CycleTaskSummary = z.infer<typeof cycleTaskSummarySchema>;
 export type WorkflowTaskInput = z.infer<typeof workflowTaskInputSchema>;

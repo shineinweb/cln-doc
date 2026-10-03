@@ -1,11 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import {
   cycleObservationSchema,
+  defoliationInputSchema,
+  defoliationSchema,
   managedTaskInputSchema,
   managedTaskSchema,
   recordRemovedSchema,
   roomNoteInputSchema,
   zoneInputSchema,
+  type Defoliation,
+  type DefoliationInput,
   type ManagedTaskInput,
   type RecordRemoved,
   type RoomDetail,
@@ -14,6 +18,7 @@ import {
   type Zone,
   type ZoneInput,
 } from '@trim/contracts';
+import { z } from 'zod';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -66,6 +71,15 @@ export class RoomsController {
     @Body(new ZodValidationPipe(roomNoteInputSchema)) body: RoomNoteInput,
   ) {
     return cycleObservationSchema.parse(await this.cycles.addRoomNote(user, roomId, body));
+  }
+
+  @Put(':roomId/defoliations')
+  async saveDefoliations(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(defoliationInputSchema)) body: DefoliationInput,
+  ): Promise<Defoliation[]> {
+    return z.array(defoliationSchema).parse(await this.facilities.saveDefoliations(user, roomId, body));
   }
 
   @Post(':roomId/zones')

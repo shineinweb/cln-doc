@@ -2,6 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import type {
   CreateRoom,
   CreateSite,
+  Defoliation,
+  DefoliationInput,
   OrganizationSummary,
   RecordRemoved,
   Room,
@@ -11,7 +13,7 @@ import type {
   Zone,
   ZoneInput,
 } from '@trim/contracts';
-import { dateKeyFromDbDate } from '../cycles/cycle-day';
+import { addCalendarDays, dateKeyFromDbDate } from '../cycles/cycle-day';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomTasksService } from './room-tasks.service';
@@ -258,7 +260,40 @@ export class FacilitiesService {
       })),
       ...signals,
       managedTasks: await this.roomTasks.list(room.id),
+      defoliations: await this.defoliationViews(room.id, current?.startDate ?? null),
     };
+  }
+
+  async saveDefoliations(user: SessionUser, roomId: string, input: DefoliationInput): Promise<Defoliation[]> {
+    const room = await this.roomForChange(user, roomId);
+    const days = [...input.days].sort((left, right) => left - right);
+    if (new Set(days).size !== days.length) {
+      throw new BadRequestException('Each defoliation day can be listed once.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.roomDefoliation.deleteMany({ where: { roomId: room.id } }),
+      this.prisma.roomDefoliation.createMany({
+        data: days.map((dayNumber) => ({ roomId: room.id, dayNumber })),
+      }),
+    ]);
+    const current = await this.prisma.cropCycle.findFirst({
+      where: { roomId: room.id, status: 'active' },
+      orderBy: { startDate: 'desc' },
+    });
+    return this.defoliationViews(room.id, current?.startDate ?? null);
+  }
+
+  private async defoliationViews(roomId: string, startDate: Date | null): Promise<Defoliation[]> {
+    const rows = await this.prisma.roomDefoliation.findMany({
+      where: { roomId },
+      orderBy: [{ dayNumber: 'asc' }, { createdAt: 'asc' }],
+    });
+    const startKey = startDate ? dateKeyFromDbDate(startDate) : null;
+    return rows.map((row) => ({
+      id: row.id,
+      dayNumber: row.dayNumber,
+      date: startKey ? addCalendarDays(startKey, row.dayNumber - 1) : null,
+    }));
   }
 
   async getOrganization(user: SessionUser): Promise<OrganizationSummary> {

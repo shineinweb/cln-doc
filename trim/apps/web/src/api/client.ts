@@ -69,7 +69,7 @@ export function apiSend<T>(
   path: string,
   schema: ZodType<T>,
   payload?: unknown,
-  method: 'POST' | 'PATCH' | 'DELETE' = 'POST',
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST',
 ): Promise<T> {
   return apiRequest(path, schema, {
     method,

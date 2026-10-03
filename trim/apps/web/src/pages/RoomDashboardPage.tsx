@@ -21,6 +21,7 @@ import { TrolmasterPanel } from '../adapters/TrolmasterPanel';
 import { RoomAlertRules, RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
+import { DefoliationSchedule } from '../rooms/DefoliationSchedule';
 import { RoomNotesPanel } from '../rooms/RoomNotesPanel';
 import { RoomTasksPanel } from '../rooms/RoomTasksPanel';
 import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
@@ -70,10 +71,10 @@ export function RoomDashboardPage() {
       <PageHeader
         kicker={`${room.data.siteName} · ${roomTypeLabel(room.data.roomType)}`}
         title={room.data.name}
-        lede="The room opens on the Trolmaster chart and operating history. Zones, Trolmaster settings, and room settings are on their own tabs."
+        lede="The dashboard opens on the Trolmaster chart and operating history. Zones, Trolmaster settings, and room settings are on their own tabs."
       />
       <Tabs value={tab} onChange={(_event, value: RoomTab) => setTab(value)} sx={{ mb: 2 }}>
-        <Tab value="room" label="Room" data-testid="room-tab-room" />
+        <Tab value="room" label="Dashboard" data-testid="room-tab-room" />
         <Tab value="tasks" label="Tasks" data-testid="room-tab-tasks" />
         <Tab value="notes" label="Notes" data-testid="room-tab-notes" />
         <Tab value="zones" label="Zones" data-testid="room-tab-zones" />
@@ -115,6 +116,7 @@ export function RoomDashboardPage() {
       {tab === 'settings' ? (
         <Box data-testid="room-settings" sx={{ display: 'grid', gap: 3 }}>
           <RoomAlertRules room={room.data} />
+          <DefoliationSchedule room={room.data} />
           {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
