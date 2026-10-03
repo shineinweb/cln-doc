@@ -3,6 +3,7 @@ import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './layout/AppShell';
 import { SiteProvider } from './layout/SiteProvider';
+import { AccessPage } from './pages/AccessPage';
 import { FacilityPage } from './pages/FacilityPage';
 import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
@@ -63,6 +64,7 @@ const router = createBrowserRouter([
       { path: 'user-manual', element: <UserManualPage /> },
       { path: 'sop', element: <SopPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'access', element: <AccessPage /> },
       { path: 'reports/sites/:siteId', element: <SiteReportPage /> },
       { path: 'submissions/:submissionId', element: <SubmissionPage /> },
       {

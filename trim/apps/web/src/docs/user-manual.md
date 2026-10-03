@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The left side of the page says “Know which rooms are yours before the day starts” and “Access follows the site.”
 
-After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, SOP, and Settings. Rooms is marked Center. User manual, SOP, and Settings open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
+After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, SOP, Settings, and Access. Rooms is marked Center. User manual, SOP, Settings, and Access open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
 
 The top bar has a **Facility** switcher, your name, and **Sign out**.
 
@@ -94,11 +94,25 @@ The room opens on **Room**. **Tasks** and **Notes** sit beside it. A flower room
 
 ## Settings
 
-**Settings** is the last item in the left navigation. It opens for every signed-in user. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
+**Settings** sits before Access. It opens for every signed-in user. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
 
 **General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. An employee sees the fields and “Only a manager can change settings.”
 
 **API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Trim does not call Metrc.
+
+## Access
+
+**Access** is the last item in the left navigation. It opens for every signed-in user. Three tabs sit under the title: **Users**, **Roles**, and **Permissions**. The page opens on **Users**.
+
+**Users** lists every person in a table: name, email, role, and facilities. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
+
+**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for changes to users, roles, and permissions.
+
+**Roles** lists each role with its description and permissions. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
+
+**Permissions** lists each key and description. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
+
+An employee sees the tables and “Only a manager can change users, roles, and permissions.”
 
 **Latest environmental readings** lists Temperature, Relative humidity, CO₂, and Substrate. The line under the title says a reading older than the room’s threshold is stale, and names the timezone. Flower 1 and Veg 1 use 60 minutes. A metric with no reading is stale. A reading marked sample shows **Sample data**. A stale reading shows **Stale**.
 

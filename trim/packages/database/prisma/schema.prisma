@@ -27,6 +27,7 @@ model Organization {
   strains           Strain[]
   laborRates        LaborRate[]
   metrcApiSetting   MetrcApiSetting?
+  auditLogs         AuditLog[]
 
   @@map("organizations")
 }
@@ -71,6 +72,7 @@ model User {
   submissionsReviewed  MetrcSubmission[] @relation("SubmissionReviewer")
   metrcAttempts        MetrcAttempt[]    @relation("AttemptActor")
   metrcReconciles      MetrcAttempt[]    @relation("AttemptReconciler")
+  auditLogs            AuditLog[]
 
   @@index([organizationId])
   @@map("users")
@@ -87,6 +89,25 @@ model Credential {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("credentials")
+}
+
+/// A sign-in, or a change to a user, role, or permission. The actor name stays if the user is removed.
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  actorId        String?  @map("actor_id")
+  actorName      String   @map("actor_name") @db.VarChar(191)
+  action         String   @db.VarChar(64)
+  entityType     String   @map("entity_type") @db.VarChar(64)
+  entityId       String?  @map("entity_id")
+  summary        String   @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
 }
 
 /// Global permission catalog. Roles grant these inside an organization.

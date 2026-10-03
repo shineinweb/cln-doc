@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { LoginRequest, LoginResponse, SessionUser } from '@trim/contracts';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { recordSignIn } from '../access/access.service';
 import { loadEnv } from '../env';
 import { PrismaService } from '../prisma/prisma.service';
 import { toSessionUser, userAccessInclude } from './session-user';
@@ -27,6 +28,8 @@ export class AuthService {
     if (!matches) {
       throw new UnauthorizedException('Invalid email or password');
     }
+
+    await recordSignIn(this.prisma, user);
 
     const env = loadEnv();
     const sessionUser = toSessionUser(user);

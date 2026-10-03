@@ -958,6 +958,75 @@ export const settingsViewSchema = z.object({
   metrc: metrcApiViewSchema,
 });
 
+export const accessUserInputSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  email: z.string().trim().min(1).max(191),
+  password: z.string().max(200).optional().default(''),
+  roleId: z.string().trim().min(1),
+  siteIds: z.array(z.string().trim().min(1)).default([]),
+});
+
+export const accessUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  roleId: z.string().nullable(),
+  roleName: z.string(),
+  opensEveryFacility: z.boolean(),
+  siteIds: z.array(z.string()),
+  siteNames: z.array(z.string()),
+});
+
+export const accessRoleInputSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  description: z.string().trim().min(1).max(500),
+  opensEveryFacility: z.boolean(),
+  permissionIds: z.array(z.string().trim().min(1)).default([]),
+});
+
+export const accessRoleSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  name: z.string(),
+  description: z.string(),
+  opensEveryFacility: z.boolean(),
+  permissionIds: z.array(z.string()),
+  permissionKeys: z.array(z.string()),
+});
+
+export const accessPermissionInputSchema = z.object({
+  key: z.string().trim().min(1).max(120),
+  description: z.string().trim().min(1).max(500),
+});
+
+export const accessPermissionSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  description: z.string(),
+});
+
+export const auditLogSchema = z.object({
+  id: z.string(),
+  at: z.string(),
+  actorName: z.string(),
+  action: z.string(),
+  summary: z.string(),
+});
+
+export const accessSiteSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  code: z.string(),
+});
+
+export const accessDirectorySchema = z.object({
+  users: z.array(accessUserSchema),
+  roles: z.array(accessRoleSchema),
+  permissions: z.array(accessPermissionSchema),
+  audit: z.array(auditLogSchema),
+  sites: z.array(accessSiteSchema),
+});
+
 export const trolmasterInputSchema = z.object({
   roomId: z.string().trim().min(1),
   controllerId: z.string().trim().min(1).max(191),
@@ -1359,6 +1428,14 @@ export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
 export type MetrcApiInput = z.infer<typeof metrcApiInputSchema>;
 export type MetrcApiView = z.infer<typeof metrcApiViewSchema>;
 export type SettingsView = z.infer<typeof settingsViewSchema>;
+export type AccessUserInput = z.infer<typeof accessUserInputSchema>;
+export type AccessUser = z.infer<typeof accessUserSchema>;
+export type AccessRoleInput = z.infer<typeof accessRoleInputSchema>;
+export type AccessRole = z.infer<typeof accessRoleSchema>;
+export type AccessPermissionInput = z.infer<typeof accessPermissionInputSchema>;
+export type AccessPermission = z.infer<typeof accessPermissionSchema>;
+export type AuditLogView = z.infer<typeof auditLogSchema>;
+export type AccessDirectory = z.infer<typeof accessDirectorySchema>;
 export type TrolmasterInput = z.infer<typeof trolmasterInputSchema>;
 export type TrolmasterConnection = z.infer<typeof trolmasterConnectionSchema>;
 export type ControllerSample = z.infer<typeof controllerSampleSchema>;

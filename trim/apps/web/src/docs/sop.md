@@ -312,6 +312,22 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The **SOP** item in the left navigation remains the operating document.
 
+## Adding a user
+
+**Who.** Avery, the organization admin. An employee sees **Access** and cannot save.
+
+**When.** A new person needs a sign-in.
+
+**Steps.**
+
+1. Open **Access**. The page opens on **Users**.
+2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters.
+3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
+4. Choose **Add user**. The person appears in the table. **Audit logs** records the change.
+5. **Edit** changes the person. **Delete** removes a person who has not recorded work. Do not delete your own account.
+
+**Done.** The new person is in the Users table, and the audit log names who added them.
+
 ## Capturing a harvest on a phone
 
 **Who.** Anyone who can open the harvest.
