@@ -35,6 +35,7 @@ const NAV = [
   { to: '/reports', label: 'Reports', end: false },
   { to: '/user-manual', label: 'User manual', end: true },
   { to: '/sop', label: 'SOP', end: true },
+  { to: '/settings', label: 'Settings', end: true },
 ];
 
 export function AppShell() {

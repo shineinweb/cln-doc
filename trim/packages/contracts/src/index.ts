@@ -933,6 +933,31 @@ export const gatewayReadingSchema = z.object({
   quality: readingQualitySchema,
 });
 
+export const generalSettingsSchema = z.object({
+  companyName: z.string().trim().min(1).max(191),
+  title: z.string().trim().max(191),
+  description: z.string().trim().max(4000),
+});
+
+export const generalSettingsViewSchema = generalSettingsSchema;
+
+export const metrcApiInputSchema = z.object({
+  integratorApiKey: z.string().trim().max(4000).optional().default(''),
+  userApiKey: z.string().trim().max(4000).optional().default(''),
+  licenseNumber: z.string().trim().max(191).optional().default(''),
+});
+
+export const metrcApiViewSchema = z.object({
+  integratorKeySaved: z.boolean(),
+  userKeySaved: z.boolean(),
+  licenseNumber: z.string(),
+});
+
+export const settingsViewSchema = z.object({
+  general: generalSettingsViewSchema,
+  metrc: metrcApiViewSchema,
+});
+
 export const trolmasterInputSchema = z.object({
   roomId: z.string().trim().min(1),
   controllerId: z.string().trim().min(1).max(191),
@@ -1330,6 +1355,10 @@ export type SiteReport = z.infer<typeof siteReportSchema>;
 export type ComparisonReport = z.infer<typeof comparisonReportSchema>;
 export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
 export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
+export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
+export type MetrcApiInput = z.infer<typeof metrcApiInputSchema>;
+export type MetrcApiView = z.infer<typeof metrcApiViewSchema>;
+export type SettingsView = z.infer<typeof settingsViewSchema>;
 export type TrolmasterInput = z.infer<typeof trolmasterInputSchema>;
 export type TrolmasterConnection = z.infer<typeof trolmasterConnectionSchema>;
 export type ControllerSample = z.infer<typeof controllerSampleSchema>;

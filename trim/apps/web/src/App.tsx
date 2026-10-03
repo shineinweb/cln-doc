@@ -21,6 +21,7 @@ import { ReportsPage } from './pages/ReportsPage';
 import { SiteReportPage } from './pages/SiteReportPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { RoomsPage } from './pages/RoomsPage';
 import { SubmissionPage } from './pages/SubmissionPage';
 import { TaskPage } from './pages/TaskPage';
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
       { path: 'reports', element: <ReportsPage /> },
       { path: 'user-manual', element: <UserManualPage /> },
       { path: 'sop', element: <SopPage /> },
+      { path: 'settings', element: <SettingsPage /> },
       { path: 'reports/sites/:siteId', element: <SiteReportPage /> },
       { path: 'submissions/:submissionId', element: <SubmissionPage /> },
       {

@@ -9,11 +9,13 @@ datasource db {
 
 /// A cultivation company. Users, sites, and licenses all belong to one organization.
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  title       String?  @db.VarChar(191)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   users             User[]
   sites             Site[]
@@ -24,8 +26,24 @@ model Organization {
   workflowTemplates WorkflowTemplate[]
   strains           Strain[]
   laborRates        LaborRate[]
+  metrcApiSetting   MetrcApiSetting?
 
   @@map("organizations")
+}
+
+/// Stored Metrc integrator key, user API key, and facility license. Trim does not call Metrc.
+model MetrcApiSetting {
+  id                String   @id @default(cuid())
+  organizationId    String   @unique @map("organization_id")
+  integratorApiKey  String   @map("integrator_api_key") @db.Text
+  userApiKey        String   @map("user_api_key") @db.Text
+  licenseNumber     String   @default("") @map("license_number")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("metrc_api_settings")
 }
 
 model User {

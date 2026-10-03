@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The left side of the page says “Know which rooms are yours before the day starts” and “Access follows the site.”
 
-After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
+After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, SOP, and Settings. Rooms is marked Center. User manual, SOP, and Settings open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
 
 The top bar has a **Facility** switcher, your name, and **Sign out**.
 
@@ -90,7 +90,15 @@ The room opens on **Room**. **Tasks** and **Notes** sit beside it. A flower room
 
 **Notes** lists notes recorded on the current crop. Each line shows the date, the author, and the note. If none are stored, it says “No notes are recorded for this crop.” A room with no crop says “This room has no active crop cycle.”
 
-**Trolmaster API's** is on a flower room. The form asks for **Your room**, **TrolMaster controller id**, and **API credential**. **Your room** lists the rooms on this facility. **Save** stores the controller id and credential. The page then says “Credential saved.” and lists the room name, the controller id, and “Credential saved.” The credential is not shown again. Trim does not call TrolMaster. A room that is not a flower room does not show this tab.
+**Trolmaster API's** is on a flower room. The form asks for **TrolMaster controller id** and **API credential**. It saves them for the room that is open. **Save** stores the controller id and credential. The page then says “Credential saved.” and lists the room name, the controller id, and “Credential saved.” The credential is not shown again. Trim does not call TrolMaster. A room that is not a flower room does not show this tab.
+
+## Settings
+
+**Settings** is the last item in the left navigation. It opens for every signed-in user. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
+
+**General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. An employee sees the fields and “Only a manager can change settings.”
+
+**API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Trim does not call Metrc.
 
 **Latest environmental readings** lists Temperature, Relative humidity, CO₂, and Substrate. The line under the title says a reading older than the room’s threshold is stale, and names the timezone. Flower 1 and Veg 1 use 60 minutes. A metric with no reading is stale. A reading marked sample shows **Sample data**. A stale reading shows **Stale**.
 

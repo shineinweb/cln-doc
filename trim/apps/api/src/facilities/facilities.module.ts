@@ -4,11 +4,13 @@ import { CyclesModule } from '../cycles/cycles.module';
 import { FacilitiesService } from './facilities.service';
 import { OrganizationController } from './organization.controller';
 import { RoomsController, ZonesController } from './rooms.controller';
+import { SettingsController } from './settings.controller';
+import { SettingsService } from './settings.service';
 import { SitesController } from './sites.controller';
 
 @Module({
   imports: [AuthModule, CyclesModule],
-  controllers: [SitesController, RoomsController, ZonesController, OrganizationController],
-  providers: [FacilitiesService],
+  controllers: [SitesController, RoomsController, ZonesController, OrganizationController, SettingsController],
+  providers: [FacilitiesService, SettingsService],
 })
 export class FacilitiesModule {}
