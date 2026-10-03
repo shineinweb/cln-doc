@@ -337,7 +337,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Steps.**
 
-1. Open **Users**, directly under **Dashboard**. The page opens on **Users**.
+1. Open **Users**, directly under **Dashboard**. The page opens on **Users**. **Activity** shows the last 14 days of sign-ins and access changes.
 2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters.
 3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
 4. Choose **Add user**. The person appears in the table. **Audit logs** records the change.
