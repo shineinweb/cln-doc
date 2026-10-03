@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The left side of the page says “Know which rooms are yours before the day starts” and “Access follows the site.”
 
-After sign-in, the left navigation is Company, Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
+After sign-in, the left navigation is Company, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, and SOP. Rooms is marked Center. User manual and SOP open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
 
 The top bar has a **Facility** switcher, your name, and **Sign out**.
 
@@ -24,7 +24,7 @@ These are the seeded accounts for this workspace.
 
 A facility stays hidden until you have a membership, unless you are an organization admin. Company says that in the page introduction.
 
-Avery sees Harbor House (Astoria, OR, code HARBOR) and Hill Works (Hood River, OR, code HILL). Blake’s Company page lists Harbor House. Casey’s lists Hill Works. Choosing a card in Company sets the Facility switcher.
+Avery sees Harbor House (Astoria, OR, code HARBOR) and Hill Works (Hood River, OR, code HILL). Blake’s Company page lists Harbor House. Casey’s lists Hill Works. Choosing a card in Company sets the Facility switcher and opens Rooms.
 
 Opening a room, crop cycle, harvest, package, plant, reading, or facility report for the other site does not show that site’s data. The page says you do not have access, or that it is not on a facility you can open. Examples:
 
@@ -59,22 +59,18 @@ Add forms that were already on a page keep their buttons: **Add room**, **Save r
 
 If an account has no membership, the page says “No facilities are assigned to this account.”
 
-## Facility
+## Rooms
 
-**Facility** is the facility selected in the top bar. The title is the facility name. Harbor House is 180 Cannery Road, Astoria, OR 97103. Hill Works is 42 Ridge Lane, Hood River, OR 97031.
+**Rooms** is titled Rooms. The kicker is the facility code, HARBOR or HILL. The line under the title names the facility and its address, then says “Open a room to see its current crop, cycle day, and operating history.” Harbor House is 180 Cannery Road, Astoria, OR 97103. Hill Works is 42 Ridge Lane, Hood River, OR 97031. Choosing a facility in the top bar opens this page.
 
-Each room card shows the room type, the current crop or “No active crop,” the cultivar and plant count, the expected harvest date, the zones, and **Open room dashboard**.
+Each row shows the room name, cultivar and plant count or “No active crop.” **View** shows the room type and **Open room**. Choose the room name to open the dashboard.
 
 Seeded rooms:
 
 - Harbor House: Flower 1 (Flower, East canopy and West canopy) and Dry Room (Dry, Hang bay).
 - Hill Works: Veg 1 (Vegetative, North tables and South tables) and Mother Room (Mother, Stock bench).
 
-Flower 1’s current crop is Cedar Nights flower. The plants from that crop have been harvested, so the card shows 0 plants. Veg 1’s current crop is Glass Orchard veg, with 86 plants still in the room. Dry Room and Mother Room say “No active crop.”
-
-## Rooms
-
-**Rooms** is titled Rooms, with the kicker Center. The introduction says “Open a room to see its current crop, cycle day, and operating history.” Each row shows the room name, cultivar and plant count or “No active crop,” and the room type. Choose the row to open the dashboard.
+Flower 1’s current crop is Cedar Nights flower. The plants from that crop have been harvested, so the row shows 0 plants. Veg 1’s current crop is Glass Orchard veg, with 86 plants still in the room. Dry Room and Mother Room say “No active crop.”
 
 **Add a room** is the form above the list. Enter a name and choose a type: Flower, Vegetative, Mother, Dry, or Clone. **Add room** saves the room on the facility selected in the switcher and shows it in the list. **View**, **Edit**, **Save changes**, and **Delete** sit on each room. **Previous** and **Next** page the list. You can add, edit, or delete a room only for a facility you can open. Avery Chen can change a room at Harbor House and at Hill Works. Blake Ortiz can change a room at Harbor House. He cannot edit or delete a Hill Works room.
 

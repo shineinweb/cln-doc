@@ -44,7 +44,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     sessionStorage.setItem(SITE_KEY, id);
     setSiteIdState(id);
     if (options?.navigate !== false) {
-      navigate('/facility');
+      navigate('/rooms');
     }
   }, [navigate]);
 

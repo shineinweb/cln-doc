@@ -7,7 +7,6 @@ import { CompanyPage } from './pages/CompanyPage';
 import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
 import { CropCyclesPage } from './pages/CropCyclesPage';
-import { FacilityPage } from './pages/FacilityPage';
 import { SopPage, UserManualPage } from './pages/GuidePages';
 import { GatewayPage } from './pages/GatewayPage';
 import { HarvestPage } from './pages/HarvestPage';
@@ -41,7 +40,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <CompanyPage /> },
-      { path: 'facility', element: <FacilityPage /> },
+      { path: 'facility', element: <Navigate to="/rooms" replace /> },
       { path: 'rooms', element: <RoomsPage /> },
       { path: 'rooms/:roomId', element: <RoomDashboardPage /> },
       { path: 'gateways/:gatewayId', element: <GatewayPage /> },
