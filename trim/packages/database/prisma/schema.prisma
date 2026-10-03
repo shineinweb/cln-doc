@@ -732,6 +732,8 @@ model CycleObservation {
   cycleId    String   @map("cycle_id")
   occurredOn DateTime @map("occurred_on") @db.Date
   authorName String   @map("author_name")
+  /// general, environment, irrigation, canopy, pests, nutrients, equipment, or harvest. Older notes may be empty.
+  category   String?  @db.VarChar(32)
   body       String   @db.Text
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")

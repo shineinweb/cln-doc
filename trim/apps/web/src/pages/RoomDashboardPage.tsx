@@ -20,6 +20,7 @@ import { TrolmasterPanel } from '../adapters/TrolmasterPanel';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
+import { RoomNotesPanel } from '../rooms/RoomNotesPanel';
 import { RoomTasksPanel } from '../rooms/RoomTasksPanel';
 import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
 
@@ -112,7 +113,9 @@ export function RoomDashboardPage() {
           managedTasks={room.data.managedTasks}
         />
       ) : null}
-      {tab === 'notes' ? <RoomNotes cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} /> : null}
+      {tab === 'notes' ? (
+        <RoomNotesPanel roomId={room.data.id} cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} />
+      ) : null}
       {tab === 'trolmaster' && room.data.roomType === 'flower' ? (
         <TrolmasterPanel siteId={room.data.siteId} roomId={room.data.id} />
       ) : null}
@@ -252,39 +255,6 @@ function ArchivedCrops({ roomId, cycles }: { roomId: string; cycles: RoomDetail[
           {cycle.harvestDate ? ` · harvest ${formatCalendarDate(cycle.harvestDate)}` : ' · no harvest date'}
         </Typography>
       ))}
-    </Box>
-  );
-}
-
-function RoomNotes({
-  cycleName,
-  notes,
-}: {
-  cycleName: string | null;
-  notes: { id: string; occurredOn: string; authorName: string; body: string }[];
-}) {
-  if (!cycleName) {
-    return <Alert severity="info">This room has no active crop cycle.</Alert>;
-  }
-
-  return (
-    <Box data-testid="room-notes">
-      <Typography variant="h2" sx={{ fontSize: 28, mb: 1 }}>
-        Notes
-      </Typography>
-      <Typography sx={{ color: 'text.secondary', mb: 2 }}>Notes recorded on {cycleName}.</Typography>
-      {notes.length === 0 ? (
-        <Alert severity="info">No notes are recorded for this crop.</Alert>
-      ) : (
-        notes.map((note) => (
-          <Box key={note.id} data-testid="room-note" sx={{ mb: 1.5 }}>
-            <Typography sx={{ fontWeight: 600 }}>
-              {formatCalendarDate(note.occurredOn)} · {note.authorName}
-            </Typography>
-            <Typography sx={{ color: 'text.secondary' }}>{note.body}</Typography>
-          </Box>
-        ))
-      )}
     </Box>
   );
 }

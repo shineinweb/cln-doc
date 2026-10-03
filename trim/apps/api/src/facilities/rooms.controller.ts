@@ -1,12 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import {
+  cycleObservationSchema,
   managedTaskInputSchema,
   managedTaskSchema,
   recordRemovedSchema,
+  roomNoteInputSchema,
   zoneInputSchema,
   type ManagedTaskInput,
   type RecordRemoved,
   type RoomDetail,
+  type RoomNoteInput,
   type SessionUser,
   type Zone,
   type ZoneInput,
@@ -14,6 +17,7 @@ import {
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { CyclesService } from '../cycles/cycles.service';
 import { FacilitiesService } from './facilities.service';
 import { RoomTasksService } from './room-tasks.service';
 
@@ -23,6 +27,7 @@ export class RoomsController {
   constructor(
     private readonly facilities: FacilitiesService,
     private readonly roomTasks: RoomTasksService,
+    private readonly cycles: CyclesService,
   ) {}
 
   @Get(':roomId')
@@ -52,6 +57,15 @@ export class RoomsController {
   @Delete(':roomId/tasks/:taskId')
   async deleteTask(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string, @Param('taskId') taskId: string) {
     return recordRemovedSchema.parse(await this.roomTasks.remove(user, roomId, taskId));
+  }
+
+  @Post(':roomId/notes')
+  async createNote(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(roomNoteInputSchema)) body: RoomNoteInput,
+  ) {
+    return cycleObservationSchema.parse(await this.cycles.addRoomNote(user, roomId, body));
   }
 
   @Post(':roomId/zones')

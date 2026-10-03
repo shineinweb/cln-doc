@@ -267,6 +267,52 @@ describe('crop cycles', () => {
     expect(siteBCycle.body.cycleDay).toBe(expectedCycleDay(siteBCycle.body.startDate, 'America/Los_Angeles'));
   });
 
+  it('adds a note on the current crop and refuses a room with no crop', async () => {
+    const denied = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/notes`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .send({ category: 'general', body: 'Not this facility.' });
+    expect(denied.status).toBe(403);
+
+    const blank = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/notes`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ category: 'general', body: '   ' });
+    expect(blank.status).toBe(400);
+    expect(blank.body.message).toBe('Enter a note.');
+
+    const created = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/notes`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ category: 'environment', body: '  East bench is dry.  ' })
+      .expect(201);
+    expect(created.body.authorName).toBe('Site A Operator');
+    expect(created.body.category).toBe('environment');
+    expect(created.body.body).toBe('East bench is dry.');
+    expect(created.body.occurredOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    const room = await request(app.getHttpServer())
+      .get(`/rooms/${fixture.roomAId}`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(200);
+    expect(room.body.operatingHistory.observations.map((note: { body: string; category: string | null }) => [note.body, note.category])).toEqual([
+      ['Looks even', null],
+      ['East bench is dry.', 'environment'],
+    ]);
+
+    const emptyRoom = await prisma.room.create({
+      data: { siteId: fixture.siteAId, name: 'Empty note room', code: `EN${cycleAId.slice(-6)}`, roomType: 'dry' },
+    });
+    const missing = await request(app.getHttpServer())
+      .post(`/rooms/${emptyRoom.id}/notes`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ category: 'general', body: 'Nothing to attach this to.' });
+    expect(missing.status).toBe(400);
+    expect(missing.body.message).toBe('This room has no active crop cycle.');
+    await prisma.room.delete({ where: { id: emptyRoom.id } });
+    await prisma.cycleObservation.delete({ where: { id: created.body.id } });
+  });
+
   it('hides a cycle that belongs to another organization', async () => {
     await request(app.getHttpServer())
       .get(`/cycles/${otherCycleId}`)

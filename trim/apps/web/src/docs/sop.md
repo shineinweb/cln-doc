@@ -16,11 +16,12 @@ A page for the other facility says you do not have access. Do not keep going on 
 2. Open **Rooms** and choose the room. The page says “Open a room to see its zones, readings, and operating history.”
 3. The room dashboard opens on **Room**. Read the zones and **Last successful Metrc sync**. The room does not show a current-crop card. Cycle day is on the crop cycle page, and it counts the start date as day 1 in `America/Los_Angeles`. A flower room also has **Trolmaster API's**. That tab stores a controller id and API credential and does not call TrolMaster.
 4. Open **Tasks**. **Add task** can save a one-time task with a due date, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task does not ask for a due date. The form has an optional description and can assign more than one employee. Then read **Tasks due today**. On October 3, 2026, Flower 1 lists Count plants onto the bench and Lower-leaf pass. Veg 1 lists Scout the canopy.
-5. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
-6. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
-7. Read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
-8. Read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
-9. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Notes**, and “No tasks are due today” on **Tasks**. The room list row says “No active crop.”
+5. Open **Notes**. **Add note** saves a note on the current crop. Choose a category, such as Environment or Pests, and write the note. The line shows the date, the author, the category, and the note. If none are stored, it says “No notes are recorded for this crop.”
+6. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
+7. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
+8. Read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
+9. Read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
+10. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Notes**, and “No tasks are due today” on **Tasks**. The room list row says “No active crop.”
 
 **Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on **Crop cycles**. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
 

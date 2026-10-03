@@ -47,11 +47,28 @@ export const cycleMovementSchema = z.object({
   note: z.string().nullable(),
 });
 
+export const noteCategorySchema = z.enum([
+  'general',
+  'environment',
+  'irrigation',
+  'canopy',
+  'pests',
+  'nutrients',
+  'equipment',
+  'harvest',
+]);
+
 export const cycleObservationSchema = z.object({
   id: z.string(),
   occurredOn: z.string(),
   authorName: z.string(),
+  category: z.string().nullable(),
   body: z.string(),
+});
+
+export const roomNoteInputSchema = z.object({
+  category: noteCategorySchema,
+  body: z.string().max(8000),
 });
 
 export const cycleLaborEntrySchema = z.object({
@@ -1382,6 +1399,8 @@ export type TaskEdit = z.infer<typeof taskEditSchema>;
 export type Weekday = z.infer<typeof weekdaySchema>;
 export type ManagedTaskInput = z.infer<typeof managedTaskInputSchema>;
 export type ManagedTask = z.infer<typeof managedTaskSchema>;
+export type NoteCategory = z.infer<typeof noteCategorySchema>;
+export type RoomNoteInput = z.infer<typeof roomNoteInputSchema>;
 export type PlantEdit = z.infer<typeof plantEditSchema>;
 export type BatchInput = z.infer<typeof batchInputSchema>;
 export type PlantCreate = z.infer<typeof plantCreateSchema>;

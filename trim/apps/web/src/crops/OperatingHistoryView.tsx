@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import type { OperatingHistory } from '@trim/contracts';
+import { noteCategoryLabel } from '../rooms/note-categories';
 import { formatCalendarDate } from './format';
 
 export function OperatingHistoryView({ history, hideObservations = false }: { history: OperatingHistory; hideObservations?: boolean }) {
@@ -41,14 +42,18 @@ export function OperatingHistoryView({ history, hideObservations = false }: { hi
           {history.observations.length === 0 ? (
             <EmptyLine>No observations are recorded.</EmptyLine>
           ) : (
-            history.observations.map((observation) => (
+            history.observations.map((observation) => {
+              const category = noteCategoryLabel(observation.category);
+              return (
               <Box key={observation.id} sx={{ mb: 1.5 }}>
                 <Typography sx={{ fontWeight: 600 }}>
                   {formatCalendarDate(observation.occurredOn)} · {observation.authorName}
+                  {category ? ` · ${category}` : ''}
                 </Typography>
                 <Typography sx={{ color: 'text.secondary' }}>{observation.body}</Typography>
               </Box>
-            ))
+              );
+            })
           )}
         </HistorySection>
       )}

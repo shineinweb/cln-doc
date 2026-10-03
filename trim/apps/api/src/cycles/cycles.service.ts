@@ -1,16 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   CropCycleDetail,
   CropCycleSummary,
   MetrcSync,
   OperatingHistory,
+  RoomNoteInput,
   RoomTask,
   SessionUser,
 } from '@trim/contracts';
 import { EnvironmentService } from '../environment/environment.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess } from '../facilities/site-access';
-import { calendarDateInTimeZone, cycleDayNumber, dateKeyFromDbDate } from './cycle-day';
+import { calendarDateInTimeZone, cycleDayNumber, dateKeyFromDbDate, dbDateFromKey } from './cycle-day';
 
 const historyInclude = {
   events: { orderBy: { occurredOn: 'asc' as const } },
@@ -39,7 +40,7 @@ type CycleWithHistory = {
     plantCount: number;
     note: string | null;
   }>;
-  observations: Array<{ id: string; occurredOn: Date; authorName: string; body: string }>;
+  observations: Array<{ id: string; occurredOn: Date; authorName: string; category: string | null; body: string }>;
   laborEntries: Array<{
     id: string;
     occurredOn: Date;
@@ -104,6 +105,7 @@ export class CyclesService {
         id: observation.id,
         occurredOn: dateKeyFromDbDate(observation.occurredOn),
         authorName: observation.authorName,
+        category: observation.category,
         body: observation.body,
       })),
       laborEntries: cycle.laborEntries.map((entry) => ({
@@ -212,6 +214,44 @@ export class CyclesService {
         assigneeLabel: task.assigneeLabel,
         offsetDays: task.offsetDays,
       })),
+    };
+  }
+
+  async addRoomNote(user: SessionUser, roomId: string, input: RoomNoteInput) {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId }, include: { site: true } });
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+    assertSiteAccess(user, room.site);
+    const cycle = await this.prisma.cropCycle.findFirst({
+      where: { roomId: room.id, status: 'active' },
+      orderBy: { startDate: 'desc' },
+    });
+    if (!cycle) {
+      throw new BadRequestException('This room has no active crop cycle.');
+    }
+    const note = input.body.trim();
+    if (!note) {
+      throw new BadRequestException('Enter a note.');
+    }
+    if (note.length > 4000) {
+      throw new BadRequestException('A note can be at most 4000 characters.');
+    }
+    const created = await this.prisma.cycleObservation.create({
+      data: {
+        cycleId: cycle.id,
+        occurredOn: dbDateFromKey(calendarDateInTimeZone(new Date(), room.site.timezone)),
+        authorName: user.name,
+        category: input.category,
+        body: note,
+      },
+    });
+    return {
+      id: created.id,
+      occurredOn: dateKeyFromDbDate(created.occurredOn),
+      authorName: created.authorName,
+      category: created.category,
+      body: created.body,
     };
   }
 }
