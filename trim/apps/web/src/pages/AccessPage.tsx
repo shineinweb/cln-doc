@@ -2,9 +2,12 @@ import {
   Alert,
   Box,
   Button,
+  Card,
+  CardContent,
   Checkbox,
   FormControlLabel,
   FormGroup,
+  MenuItem,
   Tab,
   Table,
   TableBody,
@@ -30,7 +33,7 @@ import {
   type AccessUserInput,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type InputHTMLAttributes } from 'react';
+import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
@@ -46,6 +49,7 @@ import {
   TablePanel,
   useListQuery,
 } from '../records/RecordControls';
+import { workbench } from '../theme';
 import { UserActivityDashboard } from './UserActivityDashboard';
 
 const MANAGER_ONLY = 'Only a manager can change users, roles, and permissions.';
@@ -155,10 +159,7 @@ function AddUserForm({
   });
   const initial = blankUser(directory);
   return (
-    <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
-      <Typography variant="h3" sx={{ fontSize: 22 }}>
-        Add user
-      </Typography>
+    <AccessFormShell title="Add user" testId="add-user-form">
       <UserFields
         directory={directory}
         initial={initial}
@@ -170,7 +171,7 @@ function AddUserForm({
         onCancel={onClose}
       />
       {error ? <Alert severity="error">{error}</Alert> : null}
-    </Box>
+    </AccessFormShell>
   );
 }
 
@@ -373,22 +374,39 @@ function UserFields({
   return (
     <Box
       component="form"
-      sx={{ display: 'grid', gap: 1.5, maxWidth: 560 }}
+      sx={{ display: 'grid', gap: 2, maxWidth: 560 }}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit({ name, email, password, roleId, siteIds });
       }}
     >
-      <TextField label="Name" value={name} onChange={(event) => setName(event.target.value)} required inputProps={{ 'data-testid': 'user-name' }} />
-      <TextField label="Email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required inputProps={{ 'data-testid': 'user-email' }} />
+      <TextField
+        label="Name"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        required
+        fullWidth
+        inputProps={{ 'data-testid': 'user-name' }}
+      />
+      <TextField
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        required
+        fullWidth
+        inputProps={{ 'data-testid': 'user-email' }}
+      />
       <TextField
         label="Password"
         type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         required={passwordRequired}
+        fullWidth
         autoComplete="new-password"
         helperText={passwordRequired ? 'At least 8 characters.' : 'Leave blank to keep the current password.'}
+        FormHelperTextProps={{ sx: { mx: 0, mt: 0.75 } }}
         inputProps={{ 'data-testid': 'user-password' }}
       />
       <TextField
@@ -397,22 +415,31 @@ function UserFields({
         value={roleId}
         onChange={(event) => setRoleId(event.target.value)}
         required
-        SelectProps={{ native: true, inputProps: { 'data-testid': 'user-role' } }}
+        fullWidth
+        inputProps={{ 'data-testid': 'user-role' }}
       >
         {directory.roles.map((item) => (
-          <option key={item.id} value={item.id}>
+          <MenuItem key={item.id} value={item.id}>
             {item.name}
-          </option>
+          </MenuItem>
         ))}
       </TextField>
-      <Box>
-        <Typography sx={{ fontWeight: 600 }}>Facilities</Typography>
-        <Typography sx={{ color: 'text.secondary', mb: 0.5 }}>
+      <Box
+        sx={{
+          border: `1px solid ${workbench.line}`,
+          borderRadius: 2,
+          bgcolor: workbench.mist,
+          px: 1.5,
+          py: 1.25,
+        }}
+      >
+        <Typography sx={{ fontWeight: 700, mb: 0.25 }}>Facilities</Typography>
+        <Typography sx={{ color: 'text.secondary', mb: 1, fontSize: 14 }}>
           {role?.opensEveryFacility
             ? 'This role opens every facility. Facility boxes are optional.'
             : 'Choose at least one facility.'}
         </Typography>
-        <FormGroup>
+        <FormGroup sx={{ gap: 0.25 }}>
           {directory.sites.map((site) => (
             <FormControlLabel
               key={site.id}
@@ -432,7 +459,7 @@ function UserFields({
           ))}
         </FormGroup>
       </Box>
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1, pt: 0.5 }}>
         <Button type="submit" variant="contained" data-testid={submitTestId} disabled={pending}>
           {submitLabel}
         </Button>
@@ -661,10 +688,7 @@ function AddRoleForm({
     },
   });
   return (
-    <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
-      <Typography variant="h3" sx={{ fontSize: 22 }}>
-        Add role
-      </Typography>
+    <AccessFormShell title="Add role" testId="add-role-form">
       <RoleFields
         directory={directory}
         initial={{ name: '', description: '', opensEveryFacility: false, permissionIds: [] }}
@@ -675,7 +699,7 @@ function AddRoleForm({
         onCancel={onClose}
       />
       {error ? <Alert severity="error">{error}</Alert> : null}
-    </Box>
+    </AccessFormShell>
   );
 }
 
@@ -953,10 +977,7 @@ function AddPermissionForm({ onClose, onAdded }: { onClose: () => void; onAdded:
     },
   });
   return (
-    <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
-      <Typography variant="h3" sx={{ fontSize: 22 }}>
-        Add permission
-      </Typography>
+    <AccessFormShell title="Add permission" testId="add-permission-form">
       <PermissionFields
         initial={{ key: '', description: '' }}
         pending={save.isPending}
@@ -966,7 +987,7 @@ function AddPermissionForm({ onClose, onAdded }: { onClose: () => void; onAdded:
         onCancel={onClose}
       />
       {error ? <Alert severity="error">{error}</Alert> : null}
-    </Box>
+    </AccessFormShell>
   );
 }
 
@@ -1090,6 +1111,36 @@ function PermissionFields({
         </Button>
       </Box>
     </Box>
+  );
+}
+
+function AccessFormShell({
+  title,
+  testId,
+  children,
+}: {
+  title: string;
+  testId: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card
+      data-testid={testId}
+      sx={{
+        mb: 2,
+        maxWidth: 640,
+        backgroundImage: 'none',
+        bgcolor: workbench.paper,
+        border: `1px solid ${workbench.line}`,
+      }}
+    >
+      <CardContent sx={{ display: 'grid', gap: 2, p: { xs: 2, sm: 2.5 }, '&:last-child': { pb: { xs: 2, sm: 2.5 } } }}>
+        <Typography variant="h3" sx={{ fontSize: 22, m: 0 }}>
+          {title}
+        </Typography>
+        {children}
+      </CardContent>
+    </Card>
   );
 }
 
