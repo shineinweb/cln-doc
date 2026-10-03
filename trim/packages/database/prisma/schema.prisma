@@ -1045,6 +1045,7 @@ model RoomTask {
   id             String   @id @default(cuid())
   roomId         String   @map("room_id")
   title          String
+  description    String?  @db.Text
   kind           String   @default("one_time")
   cadence        String?
   /// Chosen weekdays for a weekly task, stored as mon,tue,fri. Empty for one-time and daily tasks.

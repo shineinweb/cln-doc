@@ -89,6 +89,7 @@ export const weekdaySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', '
 
 export const managedTaskInputSchema = z.object({
   title: z.string().trim().min(1).max(191),
+  description: z.string().trim().max(4000).optional().nullable(),
   kind: z.enum(['one_time', 'recurring']),
   cadence: z.enum(['daily', 'weekly']).optional().nullable(),
   weekdays: z.array(weekdaySchema).optional().nullable(),
@@ -99,6 +100,7 @@ export const managedTaskInputSchema = z.object({
 export const managedTaskSchema = z.object({
   id: z.string(),
   title: z.string(),
+  description: z.string().nullable(),
   kind: z.enum(['one_time', 'recurring']),
   cadence: z.enum(['daily', 'weekly']).nullable(),
   weekdays: z.array(weekdaySchema),

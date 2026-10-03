@@ -32,7 +32,7 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
             Tasks
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. An employee is optional.
+            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. Description and employee are optional.
           </Typography>
           <AddTaskForm roomId={roomId} siteId={siteId} />
           <PagedList
@@ -86,7 +86,7 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
           </Typography>
           <TaskFields
             siteId={siteId}
-            initial={{ title: '', kind: 'one_time', cadence: 'weekly', weekdays: [], dueOn: todayKey(), assigneeId: '' }}
+            initial={{ title: '', description: '', kind: 'one_time', cadence: 'weekly', weekdays: [], dueOn: todayKey(), assigneeId: '' }}
             pending={save.isPending}
             submitLabel="Add task"
             submitTestId="task-save"
@@ -122,17 +122,30 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
   return (
     <Box>
       <RecordActions
-        summary={<Typography data-testid="room-task-title">{taskLine(task)}</Typography>}
+        summary={
+          <Box>
+            <Typography data-testid="room-task-title">{taskLine(task)}</Typography>
+            {task.description ? (
+              <Typography data-testid="room-task-description" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
+                {task.description}
+              </Typography>
+            ) : null}
+          </Box>
+        }
         detail={
-          <Typography>
-            {scheduleLabel(task)} · {task.assigneeName ?? 'Unassigned'} · {formatCalendarDate(task.dueOn)}
-          </Typography>
+          <Box>
+            <Typography>
+              {scheduleLabel(task)} · {task.assigneeName ?? 'Unassigned'} · {formatCalendarDate(task.dueOn)}
+            </Typography>
+            <Typography sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{task.description ?? 'No description.'}</Typography>
+          </Box>
         }
         editor={
           <TaskFields
             siteId={siteId}
             initial={{
               title: task.title,
+              description: task.description ?? '',
               kind: task.kind,
               cadence: task.cadence ?? 'weekly',
               weekdays: task.weekdays,
@@ -214,7 +227,7 @@ function TaskFields({
   onCancel,
 }: {
   siteId: string;
-  initial: { title: string; kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly'; weekdays: Weekday[]; dueOn: string; assigneeId: string };
+  initial: { title: string; description: string; kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly'; weekdays: Weekday[]; dueOn: string; assigneeId: string };
   pending?: boolean;
   submitLabel: string;
   submitTestId: string;
@@ -222,6 +235,7 @@ function TaskFields({
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState(initial.title);
+  const [description, setDescription] = useState(initial.description);
   const [kind, setKind] = useState(initial.kind);
   const [cadence, setCadence] = useState(initial.cadence);
   const [weekdays, setWeekdays] = useState<Weekday[]>(initial.weekdays);
@@ -248,6 +262,7 @@ function TaskFields({
         setFormError(null);
         onSubmit({
           title,
+          description,
           kind,
           cadence: kind === 'recurring' ? cadence : null,
           weekdays: kind === 'recurring' && cadence === 'weekly' ? selected : [],
@@ -257,6 +272,15 @@ function TaskFields({
       }}
     >
       <TextField label="Title" value={title} onChange={(event) => setTitle(event.target.value)} required inputProps={{ 'data-testid': 'task-title' }} />
+      <TextField
+        label="Description"
+        value={description}
+        onChange={(event) => setDescription(event.target.value)}
+        multiline
+        minRows={3}
+        helperText="Optional."
+        inputProps={{ 'data-testid': 'task-description' }}
+      />
       <TextField
         select
         label="Schedule"
@@ -344,7 +368,12 @@ function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: st
       value={value}
       onChange={(event) => onChange(event.target.value)}
       helperText="Optional."
-      SelectProps={{ native: true, inputProps: { 'data-testid': 'task-assignee' } }}
+      InputLabelProps={{ shrink: true }}
+      SelectProps={{
+        native: true,
+        inputProps: { 'data-testid': 'task-assignee' },
+      }}
+      sx={{ '& .MuiNativeSelect-select': { minHeight: '1.4375em' } }}
     >
       <option value="">Unassigned</option>
       {people.map((person) => (

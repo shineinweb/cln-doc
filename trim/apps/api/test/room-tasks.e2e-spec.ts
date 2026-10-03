@@ -85,10 +85,17 @@ describe('room tasks', () => {
     const created = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenA}`)
-      .send({ title: 'Check the drain', kind: 'one_time', dueOn: '2026-10-03', assigneeId: null });
+      .send({
+        title: 'Check the drain',
+        description: '  Look under the bench.  ',
+        kind: 'one_time',
+        dueOn: '2026-10-03',
+        assigneeId: null,
+      });
     expect(created.status).toBe(201);
     expect(created.body).toMatchObject({
       title: 'Check the drain',
+      description: 'Look under the bench.',
       kind: 'one_time',
       cadence: null,
       weekdays: [],
@@ -161,6 +168,7 @@ describe('room tasks', () => {
       .expect(200);
     expect(cleared.body.assigneeId).toBeNull();
     expect(cleared.body.kind).toBe('one_time');
+    expect(cleared.body.description).toBeNull();
 
     const room = await request(app.getHttpServer())
       .get(`/rooms/${fixture.roomAId}`)

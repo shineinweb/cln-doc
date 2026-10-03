@@ -25,6 +25,7 @@ export class RoomTasksService {
       data: {
         roomId: room.id,
         title: input.title,
+        description: blankDescription(input.description),
         kind: schedule.kind,
         cadence: schedule.cadence,
         weekdays: schedule.weekdays,
@@ -46,6 +47,7 @@ export class RoomTasksService {
       where: { id: existing.id },
       data: {
         title: input.title,
+        description: blankDescription(input.description),
         kind: schedule.kind,
         cadence: schedule.cadence,
         weekdays: schedule.weekdays,
@@ -106,6 +108,7 @@ export class RoomTasksService {
 function toManagedTask(row: {
   id: string;
   title: string;
+  description: string | null;
   kind: string;
   cadence: string | null;
   weekdays: string | null;
@@ -118,6 +121,7 @@ function toManagedTask(row: {
   return {
     id: row.id,
     title: row.title,
+    description: row.description?.trim() ? row.description.trim() : null,
     kind,
     cadence,
     weekdays: kind === 'recurring' && cadence === 'weekly' ? parseWeekdays(row.weekdays) : [],
@@ -138,6 +142,11 @@ function normalizeWeekdays(days: Weekday[] | null | undefined): Weekday[] {
 function parseWeekdays(value: string | null): Weekday[] {
   const chosen = new Set((value ?? '').split(','));
   return WEEKDAY_ORDER.filter((day) => chosen.has(day));
+}
+
+function blankDescription(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function weekdayOf(dateKey: string): Weekday {
