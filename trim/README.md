@@ -1,6 +1,6 @@
 # Trim
 
-Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and makes the room dashboard the working center: company → facility → room → crop cycle. Employee workspace and compliance stay placeholders.
+Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Compliance stays a placeholder.
 
 The product lives in this `trim/` directory.
 
@@ -74,7 +74,17 @@ Active cycles, both in `America/Los_Angeles`:
 | Harbor House · Flower 1 | Cedar Nights flower | Cedar Nights | 144 | flower | 2026-09-12 | 2026-10-24 |
 | Hill Works · Veg 1 | Glass Orchard veg | Glass Orchard | 86 | veg | 2026-09-20 | 2026-11-15 |
 
-Each cycle has timeline, movement, observation, and labor rows. Neither has a harvest result. Dry Room and Mother Room have no active cycle. No tasks, alerts, environmental readings, or Metrc sync rows are seeded.
+Each cycle has timeline, movement, observation, and labor rows. Neither has a harvest result. Dry Room and Mother Room have no active cycle. No alerts, environmental readings, or Metrc sync rows are seeded.
+
+The template **Canopy week** (28 days, anchored at `cycle_start`, assigned to the Site operator role) is applied to both active cycles:
+
+| Task | Offset | Due on Flower 1 (start 2026-09-12) | Due on Veg 1 (start 2026-09-20) |
+| --- | --- | --- | --- |
+| Count plants onto the bench | 0 | 2026-09-12 | 2026-09-20 |
+| Scout the canopy | 13 | 2026-09-25 | 2026-10-03 |
+| Lower-leaf pass | 21 | 2026-10-03 | 2026-10-11 |
+
+Scout the canopy links the SOP record “Canopy scout” and depends on the count. Lower-leaf pass depends on the scout and requires supervisor approval. On 2026-10-03 in `America/Los_Angeles`, Flower 1’s task due today is Lower-leaf pass and Veg 1’s is Scout the canopy. Blake sees the Harbor House assignment. Casey sees the Hill Works assignment. Avery can open both.
 
 ## Authentication
 
@@ -100,6 +110,10 @@ pnpm build
 - a Site A user cannot read a Site B crop cycle or its history (`403`)
 - cycle day matches the stored start date in the site timezone
 - facility and room crop fields match the database row
+- starting a cycle writes the expected assignees and due dates
+- editing a template does not change an existing cycle until a manager applies the new version
+- a reschedule preview does not write dates; confirming does
+- another site cannot read, comment on, or download a task attachment
 
 The access tests create their own users. They do not depend on the seed passwords above.
 
@@ -113,4 +127,4 @@ DATABASE_URL=mysql://trim:trim@127.0.0.1:3306/trim_test pnpm db:migrate
 
 ## Boundaries
 
-Not built: workflow templates, task generation, the employee workspace, plant tags, Metrc API calls, harvest operations, charts, analytics, device adapters, email/SMS, attachment uploads, and BullMQ business jobs. The worker only connects to Redis and opens the `trim.infrastructure` queue.
+Not built: plant tags, Metrc API calls, harvest operations, environmental charts, analytics, the SOP library, device adapters, email/SMS, and BullMQ business jobs. The worker only connects to Redis and opens the `trim.infrastructure` queue. Photo attachments use the configured S3 bucket.

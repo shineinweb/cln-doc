@@ -11,6 +11,9 @@ import { LoginPage } from './pages/LoginPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
+import { TaskPage } from './pages/TaskPage';
+import { WorkflowsPage } from './pages/WorkflowsPage';
+import { WorkspacePage } from './pages/WorkspacePage';
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -30,16 +33,9 @@ const router = createBrowserRouter([
       { path: 'rooms/:roomId', element: <RoomDashboardPage /> },
       { path: 'rooms/:roomId/cycles/:cycleId', element: <CropCyclePage /> },
       { path: 'crop-cycles', element: <CropCyclesPage /> },
-      {
-        path: 'workspace',
-        element: (
-          <PlaceholderPage
-            kicker="Later"
-            title="Employee workspace"
-            lede="Personal task lists and shift notes are not part of this release."
-          />
-        ),
-      },
+      { path: 'workflows', element: <WorkflowsPage /> },
+      { path: 'workspace', element: <WorkspacePage /> },
+      { path: 'tasks/:taskId', element: <TaskPage /> },
       {
         path: 'compliance',
         element: (

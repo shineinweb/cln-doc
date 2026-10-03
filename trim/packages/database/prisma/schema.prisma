@@ -15,10 +15,13 @@ model Organization {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  users    User[]
-  sites    Site[]
-  licenses License[]
-  roles    Role[]
+  users             User[]
+  sites             Site[]
+  licenses          License[]
+  roles             Role[]
+  teams             Team[]
+  sopRecords        SopRecord[]
+  workflowTemplates WorkflowTemplate[]
 
   @@map("organizations")
 }
@@ -31,10 +34,15 @@ model User {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  credential   Credential?
-  memberships  SiteMembership[]
-  userRoles    UserRole[]
+  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  credential      Credential?
+  memberships     SiteMembership[]
+  userRoles       UserRole[]
+  teamMemberships     TeamMember[]
+  taskComments        CycleTaskComment[]
+  taskAttachments     CycleTaskAttachment[]
+  workflowAssignments WorkflowTaskTemplate[] @relation("WorkflowAssignee")
+  assignedCycleTasks  CycleTask[]            @relation("CycleTaskAssignee")
 
   @@index([organizationId])
   @@map("users")
@@ -77,9 +85,11 @@ model Role {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  permissions  RolePermission[]
-  userRoles    UserRole[]
+  organization  Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions   RolePermission[]
+  userRoles     UserRole[]
+  workflowTasks WorkflowTaskTemplate[]
+  cycleTasks    CycleTask[]
 
   @@unique([organizationId, key])
   @@index([organizationId])
@@ -197,12 +207,13 @@ model Room {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  site     Site                  @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  zones    Zone[]
-  cycles   CropCycle[]
-  tasks    RoomTask[]
-  alerts   RoomAlert[]
-  readings EnvironmentalReading[]
+  site       Site                  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  zones      Zone[]
+  cycles     CropCycle[]
+  tasks      RoomTask[]
+  cycleTasks CycleTask[]
+  alerts     RoomAlert[]
+  readings   EnvironmentalReading[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -235,15 +246,18 @@ model CropCycle {
   startDate           DateTime @map("start_date") @db.Date
   expectedHarvestDate DateTime @map("expected_harvest_date") @db.Date
   status              String
+  workflowVersionId   String?  @map("workflow_version_id")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
-  room            Room                  @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  events          CycleEvent[]
-  movements       CycleMovement[]
-  observations    CycleObservation[]
-  laborEntries    CycleLaborEntry[]
-  harvestSummary  HarvestResultSummary?
+  room             Room                     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  workflowVersion  WorkflowTemplateVersion? @relation(fields: [workflowVersionId], references: [id])
+  events           CycleEvent[]
+  movements        CycleMovement[]
+  observations     CycleObservation[]
+  laborEntries     CycleLaborEntry[]
+  harvestSummary   HarvestResultSummary?
+  cycleTasks       CycleTask[]
 
   @@index([roomId, status])
   @@map("crop_cycles")
@@ -326,7 +340,238 @@ model HarvestResultSummary {
   @@map("harvest_result_summaries")
 }
 
-/// Later phases will generate these. Phase 2 only reads rows that already exist.
+/// A named group of employees. A workflow task can be assigned to the whole team.
+model Team {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      TeamMember[]
+  taskTemplates WorkflowTaskTemplate[]
+  cycleTasks   CycleTask[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("teams")
+}
+
+model TeamMember {
+  teamId    String   @map("team_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+/// A single procedure a workflow task may cite. This is not a training library.
+model SopRecord {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  title          String
+  summary        String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization  Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  taskTemplates WorkflowTaskTemplate[]
+  cycleTasks    CycleTask[]
+
+  @@unique([organizationId, title])
+  @@index([organizationId])
+  @@map("sop_records")
+}
+
+/// Stable template identity. Edits create a new WorkflowTemplateVersion.
+model WorkflowTemplate {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  versions     WorkflowTemplateVersion[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("workflow_templates")
+}
+
+model WorkflowTemplateVersion {
+  id             String   @id @default(cuid())
+  templateId     String   @map("template_id")
+  versionNumber  Int      @map("version_number")
+  durationDays   Int      @map("duration_days")
+  /// `cycle_start` anchors tasks to the cycle start date. Any other value must match a cycle event title.
+  startingEvent  String   @map("starting_event")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  template   WorkflowTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tasks      WorkflowTaskTemplate[]
+  cycles     CropCycle[]
+
+  @@unique([templateId, versionNumber])
+  @@index([templateId])
+  @@map("workflow_template_versions")
+}
+
+model WorkflowTaskTemplate {
+  id                  String   @id @default(cuid())
+  versionId           String   @map("version_id")
+  taskKey             String   @map("task_key")
+  title               String
+  offsetDays          Int      @map("offset_days")
+  sortOrder           Int      @map("sort_order")
+  assigneeType        String   @map("assignee_type")
+  teamId              String?  @map("team_id")
+  roleId              String?  @map("role_id")
+  userId              String?  @map("user_id")
+  instructions        String   @db.Text
+  sopRecordId         String?  @map("sop_record_id")
+  requiresNotes       Boolean  @default(false) @map("requires_notes")
+  requiresMeasurement Boolean  @default(false) @map("requires_measurement")
+  requiresPhoto       Boolean  @default(false) @map("requires_photo")
+  requiresSignOff     Boolean  @default(false) @map("requires_sign_off")
+  dependsOnKey        String?  @map("depends_on_key")
+  requiresApproval    Boolean  @default(false) @map("requires_approval")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  version    WorkflowTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  team       Team?                   @relation(fields: [teamId], references: [id])
+  role       Role?                   @relation(fields: [roleId], references: [id])
+  assignee   User?                   @relation("WorkflowAssignee", fields: [userId], references: [id])
+  sopRecord  SopRecord?              @relation(fields: [sopRecordId], references: [id])
+  checklist  WorkflowChecklistItem[]
+
+  @@unique([versionId, taskKey])
+  @@index([versionId])
+  @@map("workflow_task_templates")
+}
+
+model WorkflowChecklistItem {
+  id        String   @id @default(cuid())
+  taskId    String   @map("task_id")
+  label     String   @db.VarChar(500)
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  task WorkflowTaskTemplate @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("workflow_checklist_items")
+}
+
+/// A dated assignment generated from one template version. The cycle keeps that version until a manager applies another.
+model CycleTask {
+  id                  String    @id @default(cuid())
+  cycleId             String    @map("cycle_id")
+  roomId              String    @map("room_id")
+  sourceTemplateId    String?   @map("source_template_id")
+  taskKey             String    @map("task_key")
+  title               String
+  instructions        String    @db.Text
+  offsetDays          Int       @map("offset_days")
+  dueOn               DateTime  @map("due_on") @db.Date
+  status              String    @default("open")
+  assigneeType        String    @map("assignee_type")
+  teamId              String?   @map("team_id")
+  roleId              String?   @map("role_id")
+  userId              String?   @map("user_id")
+  assigneeLabel       String    @map("assignee_label")
+  sopRecordId         String?   @map("sop_record_id")
+  requiresNotes       Boolean   @default(false) @map("requires_notes")
+  requiresMeasurement Boolean   @default(false) @map("requires_measurement")
+  requiresPhoto       Boolean   @default(false) @map("requires_photo")
+  requiresSignOff     Boolean   @default(false) @map("requires_sign_off")
+  requiresApproval    Boolean   @default(false) @map("requires_approval")
+  dependsOnTaskId     String?   @map("depends_on_task_id")
+  notes               String?   @db.Text
+  measurementValue    Decimal?  @map("measurement_value") @db.Decimal(10, 2)
+  measurementUnit     String?   @map("measurement_unit")
+  signedOffAt         DateTime? @map("signed_off_at")
+  signedOffByName     String?   @map("signed_off_by_name")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  cycle       CropCycle                @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  room        Room                     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  team        Team?                    @relation(fields: [teamId], references: [id])
+  role        Role?                    @relation(fields: [roleId], references: [id])
+  assignee    User?                    @relation("CycleTaskAssignee", fields: [userId], references: [id])
+  sopRecord   SopRecord?               @relation(fields: [sopRecordId], references: [id])
+  dependsOn   CycleTask?               @relation("TaskDependency", fields: [dependsOnTaskId], references: [id], onDelete: SetNull)
+  dependents  CycleTask[]              @relation("TaskDependency")
+  checklist   CycleTaskChecklistItem[]
+  comments    CycleTaskComment[]
+  attachments CycleTaskAttachment[]
+
+  @@index([roomId, dueOn])
+  @@index([cycleId])
+  @@map("cycle_tasks")
+}
+
+model CycleTaskChecklistItem {
+  id        String   @id @default(cuid())
+  taskId    String   @map("task_id")
+  label     String   @db.VarChar(500)
+  sortOrder Int      @map("sort_order")
+  checked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  task CycleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("cycle_task_checklist_items")
+}
+
+model CycleTaskComment {
+  id         String   @id @default(cuid())
+  taskId     String   @map("task_id")
+  authorId   String   @map("author_id")
+  authorName String   @map("author_name")
+  body       String   @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  task   CycleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("cycle_task_comments")
+}
+
+model CycleTaskAttachment {
+  id           String   @id @default(cuid())
+  taskId       String   @map("task_id")
+  objectKey    String   @unique @map("object_key")
+  fileName     String   @map("file_name")
+  contentType  String   @map("content_type")
+  byteSize     Int      @map("byte_size")
+  uploadedById String   @map("uploaded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  task       CycleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("cycle_task_attachments")
+}
+
+/// Unused by the workflow engine. Generated assignments live on cycle_tasks.
 model RoomTask {
   id        String   @id @default(cuid())
   roomId    String   @map("room_id")

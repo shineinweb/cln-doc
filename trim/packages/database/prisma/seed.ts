@@ -257,6 +257,10 @@ async function main(): Promise<void> {
     await upsertUser(organization.id, user, sitesByCode, rolesByKey);
   }
 
+  const blake = await prisma.user.findUniqueOrThrow({ where: { email: DEV_USERS.harbor.email } });
+  const casey = await prisma.user.findUniqueOrThrow({ where: { email: DEV_USERS.hill.email } });
+  await seedCanopyWeek(organization.id, siteOperator.id, [blake.id, casey.id], [flower.id, veg.id]);
+
   console.log('Seeded Harbor & Hill Cultivation.');
   console.log('Dev-only logins (also listed in the README):');
   for (const user of Object.values(DEV_USERS)) {
@@ -414,6 +418,180 @@ async function upsertUser(
       update: {},
     });
   }
+}
+
+const CANOPY_TASKS = [
+  {
+    taskKey: 'count',
+    title: 'Count plants onto the bench',
+    offsetDays: 0,
+    instructions: 'Count every plant at the table and note gaps before the lights come up.',
+    checklist: ['Count the bench', 'Note missing plants', 'Initial the count sheet'],
+    requiresNotes: true,
+    requiresMeasurement: false,
+    requiresPhoto: false,
+    requiresSignOff: true,
+    dependsOnKey: null as string | null,
+    requiresApproval: false,
+    sopTitle: null as string | null,
+  },
+  {
+    taskKey: 'scout',
+    title: 'Scout the canopy',
+    offsetDays: 13,
+    instructions: 'Walk each table. Record pests, stretch, and any plant that is falling behind.',
+    checklist: ['Check the first half of the room', 'Check the second half of the room'],
+    requiresNotes: true,
+    requiresMeasurement: true,
+    requiresPhoto: true,
+    requiresSignOff: false,
+    dependsOnKey: 'count',
+    requiresApproval: false,
+    sopTitle: 'Canopy scout',
+  },
+  {
+    taskKey: 'defoliate',
+    title: 'Lower-leaf pass',
+    offsetDays: 21,
+    instructions: 'Remove fan leaves that shade the lower sites. Bag leaves before leaving the room.',
+    checklist: ['Clear the aisle', 'Bag the leaves'],
+    requiresNotes: false,
+    requiresMeasurement: false,
+    requiresPhoto: true,
+    requiresSignOff: true,
+    dependsOnKey: 'scout',
+    requiresApproval: true,
+    sopTitle: null as string | null,
+  },
+];
+
+async function seedCanopyWeek(
+  organizationId: string,
+  operatorRoleId: string,
+  memberIds: string[],
+  roomIds: string[],
+): Promise<void> {
+  const sop = await prisma.sopRecord.upsert({
+    where: { organizationId_title: { organizationId, title: 'Canopy scout' } },
+    create: {
+      organizationId,
+      title: 'Canopy scout',
+      summary: 'Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.',
+    },
+    update: {
+      summary: 'Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.',
+    },
+  });
+
+  const team = await prisma.team.upsert({
+    where: { organizationId_name: { organizationId, name: 'Canopy crew' } },
+    create: { organizationId, name: 'Canopy crew' },
+    update: {},
+  });
+  for (const userId of memberIds) {
+    await prisma.teamMember.upsert({
+      where: { teamId_userId: { teamId: team.id, userId } },
+      create: { teamId: team.id, userId },
+      update: {},
+    });
+  }
+
+  const template = await prisma.workflowTemplate.upsert({
+    where: { organizationId_name: { organizationId, name: 'Canopy week' } },
+    create: { organizationId, name: 'Canopy week' },
+    update: {},
+  });
+  const version = await prisma.workflowTemplateVersion.upsert({
+    where: { templateId_versionNumber: { templateId: template.id, versionNumber: 1 } },
+    create: {
+      templateId: template.id,
+      versionNumber: 1,
+      durationDays: 28,
+      startingEvent: 'cycle_start',
+    },
+    update: { durationDays: 28, startingEvent: 'cycle_start' },
+  });
+
+  await prisma.workflowChecklistItem.deleteMany({ where: { task: { versionId: version.id } } });
+  await prisma.workflowTaskTemplate.deleteMany({ where: { versionId: version.id } });
+  const created = new Map<string, string>();
+  for (const [index, task] of CANOPY_TASKS.entries()) {
+    const row = await prisma.workflowTaskTemplate.create({
+      data: {
+        versionId: version.id,
+        taskKey: task.taskKey,
+        title: task.title,
+        offsetDays: task.offsetDays,
+        sortOrder: index,
+        assigneeType: 'role',
+        roleId: operatorRoleId,
+        instructions: task.instructions,
+        sopRecordId: task.sopTitle ? sop.id : null,
+        requiresNotes: task.requiresNotes,
+        requiresMeasurement: task.requiresMeasurement,
+        requiresPhoto: task.requiresPhoto,
+        requiresSignOff: task.requiresSignOff,
+        dependsOnKey: task.dependsOnKey,
+        requiresApproval: task.requiresApproval,
+        checklist: { create: task.checklist.map((label, sortOrder) => ({ label, sortOrder })) },
+      },
+    });
+    created.set(task.taskKey, row.id);
+  }
+
+  for (const roomId of roomIds) {
+    const cycle = await prisma.cropCycle.findFirst({
+      where: { roomId, status: 'active' },
+      orderBy: { startDate: 'desc' },
+    });
+    if (!cycle) {
+      continue;
+    }
+    await prisma.cropCycle.update({ where: { id: cycle.id }, data: { workflowVersionId: version.id } });
+    await prisma.cycleTask.updateMany({ where: { cycleId: cycle.id }, data: { dependsOnTaskId: null } });
+    await prisma.cycleTask.deleteMany({ where: { cycleId: cycle.id } });
+    const taskIds = new Map<string, string>();
+    for (const task of CANOPY_TASKS) {
+      const row = await prisma.cycleTask.create({
+        data: {
+          cycleId: cycle.id,
+          roomId,
+          sourceTemplateId: created.get(task.taskKey),
+          taskKey: task.taskKey,
+          title: task.title,
+          instructions: task.instructions,
+          offsetDays: task.offsetDays,
+          dueOn: addUtcDays(cycle.startDate, task.offsetDays),
+          assigneeType: 'role',
+          roleId: operatorRoleId,
+          assigneeLabel: 'Site operator',
+          sopRecordId: task.sopTitle ? sop.id : null,
+          requiresNotes: task.requiresNotes,
+          requiresMeasurement: task.requiresMeasurement,
+          requiresPhoto: task.requiresPhoto,
+          requiresSignOff: task.requiresSignOff,
+          requiresApproval: task.requiresApproval,
+          checklist: { create: task.checklist.map((label, sortOrder) => ({ label, sortOrder })) },
+        },
+      });
+      taskIds.set(task.taskKey, row.id);
+    }
+    for (const task of CANOPY_TASKS) {
+      if (!task.dependsOnKey) {
+        continue;
+      }
+      const taskId = taskIds.get(task.taskKey);
+      const dependsOnTaskId = taskIds.get(task.dependsOnKey);
+      if (taskId && dependsOnTaskId) {
+        await prisma.cycleTask.update({ where: { id: taskId }, data: { dependsOnTaskId } });
+      }
+    }
+  }
+}
+
+function addUtcDays(value: Date, days: number): Date {
+  const [year, month, day] = value.toISOString().slice(0, 10).split('-').map(Number);
+  return new Date(Date.UTC(year, (month ?? 1) - 1, (day ?? 1) + days));
 }
 
 main()

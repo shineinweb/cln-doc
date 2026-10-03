@@ -100,8 +100,8 @@ export function RoomDashboardPage() {
             <Typography sx={{ color: 'text.secondary' }}>No tasks are due today.</Typography>
           ) : (
             room.data.tasksDueToday.map((task) => (
-              <Typography key={task.id}>
-                {task.title} · {formatCalendarDate(task.dueOn)}
+              <Typography key={task.id} data-testid="task-due-today">
+                {task.title} · {task.assigneeLabel} · {formatCalendarDate(task.dueOn)}
               </Typography>
             ))
           )}

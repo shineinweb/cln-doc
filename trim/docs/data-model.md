@@ -40,4 +40,6 @@ Every table has `created_at` and `updated_at`.
 
 Timeline events, movements, observations, labor entries, and an optional harvest-result summary are records for the cycle page. They are not a harvest workflow.
 
-`room_tasks`, `room_alerts`, `environmental_readings`, and `metrc_syncs` exist so the room dashboard can read them. Phase 2 does not generate tasks or call Metrc. Empty tables render as empty states. A reading or sync row with `is_sample` must be labeled sample data.
+A workflow template belongs to the organization. Each edit creates a new `workflow_template_versions` row. A cycle stores `workflow_version_id` and keeps that version until a manager applies another. Starting or applying a version writes `cycle_tasks`. Due dates are the anchor date plus `offset_days`, in the site timezone. `cycle_start` means the cycle start date, which is day 1. Tasks can be assigned to a team, a role, or an employee. Comments and photo attachments hang off the task. Photos are objects in the attachment bucket.
+
+`room_alerts`, `environmental_readings`, and `metrc_syncs` are still empty until those later phases. `room_tasks` is unused; the room dashboard reads generated `cycle_tasks` that are due today. A reading or sync row with `is_sample` must be labeled sample data.

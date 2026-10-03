@@ -28,6 +28,7 @@ const NAV = [
   { to: '/facility', label: 'Facility', end: true },
   { to: '/rooms', label: 'Rooms', end: false, hint: 'Center' },
   { to: '/crop-cycles', label: 'Crop cycles', end: true },
+  { to: '/workflows', label: 'Workflows', end: true },
   { to: '/workspace', label: 'Workspace', end: true },
   { to: '/compliance', label: 'Compliance', end: true },
 ];

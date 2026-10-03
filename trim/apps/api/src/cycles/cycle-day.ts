@@ -15,10 +15,27 @@ export function dateKeyFromDbDate(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
 
+export function dbDateFromKey(dateKey: string): Date {
+  return new Date(`${dateKey}T00:00:00.000Z`);
+}
+
 /**
  * Day 1 is the start date in the site timezone.
  * A cycle that starts today is day 1. Earlier dates count forward; future dates are zero or negative.
  */
+/** Add calendar days to a YYYY-MM-DD key. Offset 0 is that date, which is cycle day 1 when the key is the start date. */
+export function addCalendarDays(dateKey: string, days: number): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const utc = new Date(Date.UTC(year, (month ?? 1) - 1, (day ?? 1) + days));
+  return utc.toISOString().slice(0, 10);
+}
+
+export function calendarDaysBetween(fromKey: string, toKey: string): number {
+  const from = Date.parse(`${fromKey}T00:00:00.000Z`);
+  const to = Date.parse(`${toKey}T00:00:00.000Z`);
+  return Math.round((to - from) / MS_PER_DAY);
+}
+
 export function cycleDayNumber(startDateKey: string, timeZone: string, now: Date = new Date()): number {
   const todayKey = calendarDateInTimeZone(now, timeZone);
   const start = Date.parse(`${startDateKey}T00:00:00.000Z`);

@@ -5,9 +5,10 @@ import { FacilitiesModule } from './facilities/facilities.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
+import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule],
+  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule],
   controllers: [HealthController],
 })
 export class AppModule {}

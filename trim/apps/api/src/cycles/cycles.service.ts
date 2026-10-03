@@ -132,7 +132,7 @@ export class CyclesService {
   }> {
     const today = new Date(`${calendarDateInTimeZone(new Date(), timeZone)}T00:00:00.000Z`);
     const [tasks, alerts, readings, sync] = await Promise.all([
-      this.prisma.roomTask.findMany({
+      this.prisma.cycleTask.findMany({
         where: { roomId, status: 'open', dueOn: today },
         orderBy: { title: 'asc' },
       }),
@@ -157,6 +157,7 @@ export class CyclesService {
         title: task.title,
         dueOn: dateKeyFromDbDate(task.dueOn),
         status: task.status,
+        assigneeLabel: task.assigneeLabel,
       })),
       activeAlerts: alerts.map((alert) => ({ id: alert.id, message: alert.message })),
       latestReadings: readings.map((reading) => ({
@@ -184,12 +185,19 @@ export class CyclesService {
       include: {
         ...historyInclude,
         room: { include: { site: true } },
+        cycleTasks: { orderBy: [{ dueOn: 'asc' as const }, { title: 'asc' as const }] },
+        workflowVersion: {
+          include: {
+            template: { include: { versions: { orderBy: { versionNumber: 'desc' as const }, take: 1 } } },
+          },
+        },
       },
     });
     if (!cycle) {
       throw new NotFoundException('Crop cycle not found');
     }
     assertSiteAccess(user, cycle.room.site);
+    const latest = cycle.workflowVersion?.template.versions[0];
     return {
       ...this.summary(cycle, cycle.room.site.timezone),
       siteId: cycle.room.site.id,
@@ -197,6 +205,26 @@ export class CyclesService {
       siteTimezone: cycle.room.site.timezone,
       roomName: cycle.room.name,
       operatingHistory: this.history(cycle),
+      workflow: cycle.workflowVersion
+        ? {
+            templateId: cycle.workflowVersion.templateId,
+            templateName: cycle.workflowVersion.template.name,
+            versionId: cycle.workflowVersion.id,
+            versionNumber: cycle.workflowVersion.versionNumber,
+            latestVersionId: latest?.id ?? cycle.workflowVersion.id,
+            latestVersionNumber: latest?.versionNumber ?? cycle.workflowVersion.versionNumber,
+            durationDays: cycle.workflowVersion.durationDays,
+            startingEvent: cycle.workflowVersion.startingEvent,
+          }
+        : null,
+      tasks: cycle.cycleTasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        dueOn: dateKeyFromDbDate(task.dueOn),
+        status: task.status,
+        assigneeLabel: task.assigneeLabel,
+        offsetDays: task.offsetDays,
+      })),
     };
   }
 }

@@ -81,6 +81,7 @@ export const roomTaskSchema = z.object({
   title: z.string(),
   dueOn: z.string(),
   status: z.string(),
+  assigneeLabel: z.string(),
 });
 
 export const roomAlertSchema = z.object({
@@ -126,12 +127,252 @@ export const roomDetailSchema = roomSchema.extend({
   lastMetrcSync: metrcSyncSchema.nullable(),
 });
 
+export const cycleTaskSummarySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  dueOn: z.string(),
+  status: z.string(),
+  assigneeLabel: z.string(),
+  offsetDays: z.number().int(),
+});
+
+export const cycleWorkflowSchema = z.object({
+  templateId: z.string(),
+  templateName: z.string(),
+  versionId: z.string(),
+  versionNumber: z.number().int(),
+  latestVersionId: z.string(),
+  latestVersionNumber: z.number().int(),
+  durationDays: z.number().int(),
+  startingEvent: z.string(),
+});
+
 export const cropCycleDetailSchema = cropCycleSummarySchema.extend({
   siteId: z.string(),
   siteName: z.string(),
   siteTimezone: z.string(),
   roomName: z.string(),
   operatingHistory: operatingHistorySchema,
+  workflow: cycleWorkflowSchema.nullable(),
+  tasks: z.array(cycleTaskSummarySchema),
+});
+
+export const assigneeTypeSchema = z.enum(['team', 'role', 'employee']);
+
+export const workflowTaskInputSchema = z.object({
+  taskKey: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .regex(/^[a-z0-9_-]+$/, 'Use a short key such as scout.'),
+  title: z.string().trim().min(1).max(191),
+  offsetDays: z.number().int().min(0).max(365),
+  assigneeType: assigneeTypeSchema,
+  teamId: z.string().nullable().optional(),
+  roleId: z.string().nullable().optional(),
+  userId: z.string().nullable().optional(),
+  instructions: z.string().trim().min(1).max(4000),
+  checklist: z.array(z.string().trim().min(1).max(500)).min(1).max(30),
+  sopRecordId: z.string().nullable().optional(),
+  requiresNotes: z.boolean(),
+  requiresMeasurement: z.boolean(),
+  requiresPhoto: z.boolean(),
+  requiresSignOff: z.boolean(),
+  dependsOnKey: z.string().nullable().optional(),
+  requiresApproval: z.boolean(),
+});
+
+export const workflowVersionInputSchema = z.object({
+  durationDays: z.number().int().min(1).max(365),
+  startingEvent: z.string().trim().min(1).max(191),
+  tasks: z.array(workflowTaskInputSchema).min(1).max(40),
+});
+
+export const createWorkflowTemplateSchema = workflowVersionInputSchema.extend({
+  name: z.string().trim().min(1).max(191),
+});
+
+export const createSopSchema = z.object({
+  title: z.string().trim().min(1).max(191),
+  summary: z.string().trim().min(1).max(4000),
+});
+
+export const createTeamSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  memberIds: z.array(z.string()).min(1),
+});
+
+export const teamSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const startCycleSchema = z.object({
+  roomId: z.string().min(1),
+  name: z.string().trim().min(1).max(191),
+  cultivar: z.string().trim().min(1).max(191),
+  plantCount: z.number().int().positive(),
+  stage: z.string().trim().min(1).max(191),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  expectedHarvestDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  templateVersionId: z.string().min(1),
+});
+
+export const applyWorkflowSchema = z.object({
+  versionId: z.string().min(1),
+});
+
+export const rescheduleCycleSchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const taskCommentSchema = z.object({
+  body: z.string().trim().min(1).max(2000),
+});
+
+export const taskEvidenceSchema = z.object({
+  notes: z.string().trim().max(4000).nullable().optional(),
+  measurementValue: z.number().nullable().optional(),
+  measurementUnit: z.string().trim().max(40).nullable().optional(),
+  signOff: z.boolean().optional(),
+});
+
+export const taskChecklistSchema = z.object({
+  itemId: z.string().min(1),
+  checked: z.boolean(),
+});
+
+export const sopSummarySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  summary: z.string(),
+});
+
+export const workflowTaskViewSchema = z.object({
+  id: z.string(),
+  taskKey: z.string(),
+  title: z.string(),
+  offsetDays: z.number().int(),
+  assigneeType: assigneeTypeSchema,
+  assigneeLabel: z.string(),
+  teamId: z.string().nullable(),
+  roleId: z.string().nullable(),
+  userId: z.string().nullable(),
+  instructions: z.string(),
+  checklist: z.array(z.string()),
+  sop: sopSummarySchema.nullable(),
+  requiresNotes: z.boolean(),
+  requiresMeasurement: z.boolean(),
+  requiresPhoto: z.boolean(),
+  requiresSignOff: z.boolean(),
+  dependsOnKey: z.string().nullable(),
+  requiresApproval: z.boolean(),
+});
+
+export const workflowVersionViewSchema = z.object({
+  id: z.string(),
+  versionNumber: z.number().int(),
+  durationDays: z.number().int(),
+  startingEvent: z.string(),
+  tasks: z.array(workflowTaskViewSchema),
+});
+
+export const workflowTemplateViewSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  currentVersion: workflowVersionViewSchema,
+  versionCount: z.number().int(),
+});
+
+export const workflowDirectorySchema = z.object({
+  roles: z.array(z.object({ id: z.string(), name: z.string(), key: z.string() })),
+  teams: z.array(z.object({ id: z.string(), name: z.string(), memberNames: z.array(z.string()) })),
+  employees: z.array(z.object({ id: z.string(), name: z.string(), email: z.string() })),
+  sops: z.array(sopSummarySchema),
+  templates: z.array(workflowTemplateViewSchema),
+});
+
+export const startedCycleSchema = z.object({
+  id: z.string(),
+  tasks: z.array(cycleTaskSummarySchema),
+});
+
+export const rescheduleResultSchema = z.object({
+  persisted: z.literal(true),
+  startDate: z.string(),
+  expectedHarvestDate: z.string(),
+  tasks: z.array(cycleTaskSummarySchema),
+});
+
+export const reschedulePreviewSchema = z.object({
+  persisted: z.literal(false),
+  startDate: z.object({ from: z.string(), to: z.string() }),
+  expectedHarvestDate: z.object({ from: z.string(), to: z.string() }),
+  tasks: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      fromDueOn: z.string(),
+      toDueOn: z.string(),
+    }),
+  ),
+});
+
+export const taskChecklistItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  checked: z.boolean(),
+});
+
+export const taskCommentViewSchema = z.object({
+  id: z.string(),
+  authorName: z.string(),
+  body: z.string(),
+  createdAt: z.string(),
+});
+
+export const taskAttachmentViewSchema = z.object({
+  id: z.string(),
+  fileName: z.string(),
+  contentType: z.string(),
+  byteSize: z.number().int(),
+});
+
+export const cycleTaskDetailSchema = z.object({
+  id: z.string(),
+  cycleId: z.string(),
+  cycleName: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  siteId: z.string(),
+  siteName: z.string(),
+  title: z.string(),
+  instructions: z.string(),
+  dueOn: z.string(),
+  status: z.string(),
+  assigneeType: assigneeTypeSchema,
+  assigneeLabel: z.string(),
+  checklist: z.array(taskChecklistItemSchema),
+  requiresNotes: z.boolean(),
+  requiresMeasurement: z.boolean(),
+  requiresPhoto: z.boolean(),
+  requiresSignOff: z.boolean(),
+  requiresApproval: z.boolean(),
+  dependsOnTitle: z.string().nullable(),
+  sop: sopSummarySchema.nullable(),
+  notes: z.string().nullable(),
+  measurementValue: z.number().nullable(),
+  measurementUnit: z.string().nullable(),
+  signedOffAt: z.string().nullable(),
+  signedOffByName: z.string().nullable(),
+  comments: z.array(taskCommentViewSchema),
+  attachments: z.array(taskAttachmentViewSchema),
+});
+
+export const workspaceTodaySchema = z.object({
+  date: z.string(),
+  tasks: z.array(cycleTaskDetailSchema),
 });
 
 export const siteSchema = z.object({
@@ -182,6 +423,25 @@ export type OperatingHistory = z.infer<typeof operatingHistorySchema>;
 export type Room = z.infer<typeof roomSchema>;
 export type RoomDetail = z.infer<typeof roomDetailSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;
+export type CycleTaskSummary = z.infer<typeof cycleTaskSummarySchema>;
+export type WorkflowTaskInput = z.infer<typeof workflowTaskInputSchema>;
+export type WorkflowVersionInput = z.infer<typeof workflowVersionInputSchema>;
+export type CreateWorkflowTemplate = z.infer<typeof createWorkflowTemplateSchema>;
+export type CreateSop = z.infer<typeof createSopSchema>;
+export type CreateTeam = z.infer<typeof createTeamSchema>;
+export type StartCycle = z.infer<typeof startCycleSchema>;
+export type ApplyWorkflow = z.infer<typeof applyWorkflowSchema>;
+export type RescheduleCycle = z.infer<typeof rescheduleCycleSchema>;
+export type TaskCommentInput = z.infer<typeof taskCommentSchema>;
+export type TaskEvidenceInput = z.infer<typeof taskEvidenceSchema>;
+export type TaskChecklistInput = z.infer<typeof taskChecklistSchema>;
+export type WorkflowTemplateView = z.infer<typeof workflowTemplateViewSchema>;
+export type WorkflowDirectory = z.infer<typeof workflowDirectorySchema>;
+export type StartedCycle = z.infer<typeof startedCycleSchema>;
+export type RescheduleResult = z.infer<typeof rescheduleResultSchema>;
+export type ReschedulePreview = z.infer<typeof reschedulePreviewSchema>;
+export type CycleTaskDetail = z.infer<typeof cycleTaskDetailSchema>;
+export type WorkspaceToday = z.infer<typeof workspaceTodaySchema>;
 export type RoomTask = z.infer<typeof roomTaskSchema>;
 export type RoomAlert = z.infer<typeof roomAlertSchema>;
 export type EnvironmentalReading = z.infer<typeof environmentalReadingSchema>;

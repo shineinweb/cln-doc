@@ -68,3 +68,24 @@ export function apiGet<T>(path: string, schema: ZodType<T>): Promise<T> {
 export function apiSend<T>(path: string, schema: ZodType<T>, payload: unknown): Promise<T> {
   return apiRequest(path, schema, { method: 'POST', body: JSON.stringify(payload) });
 }
+
+export async function apiUpload<T>(path: string, schema: ZodType<T>, file: File): Promise<T> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const body = new FormData();
+  body.set('file', file);
+  const headers = new Headers();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  const response = await fetch(`/api${path}`, { method: 'POST', body, headers });
+  const text = await response.text();
+  const parsedBody = text ? (JSON.parse(text) as unknown) : null;
+  if (!response.ok) {
+    throw new ApiError(response.status, messageFromBody(parsedBody, response.status));
+  }
+  const parsed = schema.safeParse(parsedBody);
+  if (!parsed.success) {
+    throw new ApiError(response.status, 'The server returned an unexpected response.');
+  }
+  return parsed.data;
+}
