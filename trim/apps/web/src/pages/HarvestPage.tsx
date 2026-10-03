@@ -125,6 +125,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [grams, setGrams] = useState('');
+  const [packageGrams, setPackageGrams] = useState('');
   const [note, setNote] = useState('');
   const [label, setLabel] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -163,7 +164,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
     mutationFn: () =>
       apiSend(`/harvests/${harvest.id}/packages`, packageDetailSchema, {
         label: label.trim(),
-        grams: Number(grams),
+        grams: Number(packageGrams),
         tags,
       }),
     onSuccess: async (created) => {
@@ -233,6 +234,13 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
               button="Record waste"
             />
             <Typography sx={{ fontWeight: 600 }}>Package</Typography>
+            <TextField
+              label="Package weight (g)"
+              type="number"
+              value={packageGrams}
+              onChange={(event) => setPackageGrams(event.target.value)}
+              inputProps={{ 'data-testid': 'package-weight-input' }}
+            />
             <Box
               component="input"
               data-testid="package-label"
@@ -270,7 +278,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
                 data-testid="create-package"
                 variant="contained"
                 onClick={() => createPackage.mutate()}
-                disabled={createPackage.isPending || tags.length === 0 || label.trim().length === 0}
+                disabled={createPackage.isPending || tags.length === 0 || label.trim().length === 0 || Number(packageGrams) <= 0}
               >
                 Create package
               </Button>
