@@ -57,7 +57,7 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 3. Open **Crop cycles**, choose the facility, and open the cycle.
 4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
 
-Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. **Start cycle** is on the room dashboard **Crop cycle** tab, inside **Start a crop cycle**. It is not on **Crop cycles**, **Workflows**, or the cycle page. The form asks for **Cycle duration in days**. The start date is day 1, and the page shows the calculated end date. A duration of 22 days from September 12, 2026 ends October 3, 2026.
+Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Crop cycles**, on **Workflows**, or on the cycle page. **Edit** on the current crop opens the crop cycle form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
 
 **Reset room** is also on that tab, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones and readings stay.
 

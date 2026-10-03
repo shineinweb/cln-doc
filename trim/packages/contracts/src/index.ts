@@ -205,6 +205,8 @@ export const zoneInputSchema = z.object({
 export const cycleEditSchema = z.object({
   name: z.string().trim().min(1).max(191),
   cultivar: z.string().trim().min(1).max(191),
+  stage: z.enum(['flower', 'veg', 'dry', 'mother', 'clone']),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   expectedHarvestDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 

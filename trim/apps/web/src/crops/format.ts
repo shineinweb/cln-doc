@@ -5,6 +5,13 @@ export function addCalendarDays(dateKey: string, days: number): string {
   return utc.toISOString().slice(0, 10);
 }
 
+/** Inclusive day count. The start date is day 1. */
+export function inclusiveDayCount(startKey: string, endKey: string): number {
+  const start = Date.parse(`${startKey}T00:00:00.000Z`);
+  const end = Date.parse(`${endKey}T00:00:00.000Z`);
+  return Math.round((end - start) / 86_400_000) + 1;
+}
+
 export function formatCalendarDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number);
   if (!year || !month || !day) {

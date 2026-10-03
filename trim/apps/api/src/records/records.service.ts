@@ -16,7 +16,7 @@ import type {
   TemplateEdit,
   WeightEdit,
 } from '@trim/contracts';
-import { dbDateFromKey } from '../cycles/cycle-day';
+import { addCalendarDays, calendarDaysBetween, dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
 import { assertSiteAccess } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -28,13 +28,35 @@ export class RecordsService {
 
   async editCycle(user: SessionUser, cycleId: string, input: CycleEdit): Promise<RecordRemoved> {
     const cycle = await this.cycle(user, cycleId);
-    await this.prisma.cropCycle.update({
-      where: { id: cycle.id },
-      data: {
-        name: input.name,
-        cultivar: input.cultivar,
-        expectedHarvestDate: dbDateFromKey(input.expectedHarvestDate),
-      },
+    if (input.expectedHarvestDate < input.startDate) {
+      throw new BadRequestException('Expected harvest must be on or after the start date.');
+    }
+    const currentStart = dateKeyFromDbDate(cycle.startDate);
+    const version = cycle.workflowVersionId
+      ? await this.prisma.workflowTemplateVersion.findUnique({ where: { id: cycle.workflowVersionId } })
+      : null;
+    const anchored = !version || version.startingEvent === 'cycle_start';
+    await this.prisma.$transaction(async (tx) => {
+      await tx.cropCycle.update({
+        where: { id: cycle.id },
+        data: {
+          name: input.name,
+          cultivar: input.cultivar,
+          stage: input.stage,
+          startDate: dbDateFromKey(input.startDate),
+          expectedHarvestDate: dbDateFromKey(input.expectedHarvestDate),
+        },
+      });
+      if (input.startDate === currentStart) {
+        return;
+      }
+      const tasks = await tx.cycleTask.findMany({ where: { cycleId: cycle.id } });
+      for (const task of tasks) {
+        const dueOn = anchored
+          ? addCalendarDays(input.startDate, task.offsetDays)
+          : addCalendarDays(dateKeyFromDbDate(task.dueOn), calendarDaysBetween(currentStart, input.startDate));
+        await tx.cycleTask.update({ where: { id: task.id }, data: { dueOn: dbDateFromKey(dueOn) } });
+      }
     });
     return { id: cycle.id, removed: false, voided: false };
   }
