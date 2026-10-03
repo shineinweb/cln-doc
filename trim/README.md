@@ -1,6 +1,6 @@
 # Trim
 
-Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file. Phase 5 reviews Metrc submissions and delivers approved rows through a sandbox outbox. Phase 6 records a harvest, its weights, waste, and packages, and can queue a finished package on that same outbox. Phase 7 records room environment readings by hand or CSV, charts them, and raises stale and out-of-range alerts.
+Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file. Phase 5 reviews Metrc submissions and delivers approved rows through a sandbox outbox. Phase 6 records a harvest, its weights, waste, and packages, and can queue a finished package on that same outbox. Phase 7 records room environment readings by hand or CSV, charts them, and raises stale and out-of-range alerts. Phase 8 reports yield, cycle duration, labor, and cost from stored rows, and shows the formula next to each figure.
 
 The product lives in this `trim/` directory.
 
@@ -74,11 +74,17 @@ Active cycles, both in `America/Los_Angeles`:
 | Harbor House · Flower 1 | Cedar Nights flower | Cedar Nights | 144 | flower | 2026-09-12 | 2026-10-24 |
 | Hill Works · Veg 1 | Glass Orchard veg | Glass Orchard | 86 | veg | 2026-09-20 | 2026-11-15 |
 
-Each cycle has timeline, movement, observation, and labor rows. Neither has a harvest result. Dry Room and Mother Room have no active cycle. No Metrc sync rows are seeded.
+Each cycle has timeline, movement, observation, and labor rows. Dry Room and Mother Room have no active cycle. No Metrc sync rows are seeded. Cedar Nights is harvested after those rows are written. Glass Orchard stays in Veg 1.
 
 Flower 1’s stale threshold is 60 minutes. Its temperature readings are current (`hh-flower-1-temp`, newest about 10 minutes old). Relative humidity (`hh-flower-1-rh`, 58.2%) is three hours old and stale, and one active alert says so. A CO₂ row from `sample-co2-logger` is stored and labeled as sample data. Substrate has no reading, so that metric is shown as stale without its own alert. Veg 1 has a current temperature from `hw-veg-1-temp` and no alert. Timestamps are stored in UTC and shown in `America/Los_Angeles`.
 
-Plant counts on the room and crop cycle are the number of tagged plants assigned to that cycle: 144 on Cedar Nights flower and 86 on Glass Orchard veg. Tags are unique per license. Each plant has a planted event naming the actor.
+## Reports
+
+Flower 1’s Cedar Nights harvest stores wet 18240 g, dry 4120 g, packaged 3600 g, waste 240 g, and 144 plants. Grams per plant is dry weight divided by that plant count. Unaccounted weight is dry − packaged − waste, and packaged + waste + unaccounted equals the dry weight. The harvest timestamp is 2026-10-03 09:00 in `America/Los_Angeles`, so completed duration counts the start date 2026-09-12 as day 1 through that harvest date. Glass Orchard on Veg 1 is unharvested, so its yield and completed duration are absent. The comparison says so.
+
+Labor uses the cycle’s stored hours. Blake Ortiz is 2800 cents per hour and Casey Nguyen is 2600 cents per hour. Flower nutrients are 2 bags at 1500 cents, and veg media is 1 bag at 4200 cents. Labor cost is hours × the stored rate. Input cost is quantity × the stored unit cost. Total cost is the sum of those line totals. Sample environmental readings are excluded and are not used in these figures.
+
+Tags are unique per license. Each plant has a planted event naming the actor. Glass Orchard veg still has 86 plants assigned to the cycle. Cedar Nights’ 144 plants are on the harvest, so the room no longer counts them as the current crop.
 
 A saved inventory file is compared per license. Harbor House matches all 144 tags. Hill Works has one extra tag, `1A4HW0000000000000099999`, that is not a local plant. That comparison does not change Harbor House. Metrc credentials can be stored for a later phase and are not sent anywhere. The compliance screen shows import discrepancies plus pending review, failures, and uncertain submissions. Three changes are waiting for review: a Harbor House move (sandbox success), a Hill Works stage change (definite failure), and a Harbor House stage change (uncertain). Avery can review both licenses. Blake cannot read Hill Works submissions.
 
@@ -142,6 +148,11 @@ pnpm build
 - a live reading outside its alert range creates an active alert, and a later in-range reading clears it
 - a CSV import stores device, unit, site-local timestamp, quality, and the sample flag
 - another site cannot read a room’s environmental reading
+- Cedar Nights grams per plant equals dry weight divided by harvest plant count
+- packaged weight plus waste plus unaccounted weight equals dry weight
+- an unharvested cycle has no yield
+- labor cost equals hours times the stored hourly rate
+- another site cannot open a facility report
 
 The access tests create their own users. They do not depend on the seed passwords above.
 
@@ -155,4 +166,4 @@ DATABASE_URL=mysql://trim:trim@127.0.0.1:3306/trim_test pnpm db:migrate
 
 ## Boundaries
 
-Not built: yield, labor, and cost analytics, the SOP library, device adapters, and email/SMS. Environmental readings are entered by hand or CSV. Charts and alerts use those rows. Weights are typed by hand. Inventory import and submission delivery do not call Metrc. The worker delivers approved outbox rows, including a queued package, to a sandbox that can succeed, fail, or time out.
+Not built: the SOP library, device adapters, and email/SMS. Yield, labor, and cost reports use stored rows and show their formulas. Environmental readings are entered by hand or CSV. Charts and alerts use those rows. Sample readings stay out of the reports. Weights are typed by hand. Inventory import and submission delivery do not call Metrc. The worker delivers approved outbox rows, including a queued package, to a sandbox that can succeed, fail, or time out.

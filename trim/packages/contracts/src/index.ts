@@ -766,6 +766,84 @@ export const plantDetailSchema = z.object({
   events: z.array(plantEventSchema),
 });
 
+export const laborCostLineSchema = z.object({
+  entryId: z.string(),
+  rateId: z.string().nullable(),
+  personName: z.string(),
+  hours: z.number(),
+  hourlyCents: z.number().int().nullable(),
+  costCents: z.number().int().nullable(),
+  formula: z.string(),
+});
+
+export const inputCostLineSchema = z.object({
+  inputId: z.string(),
+  description: z.string(),
+  quantity: z.number(),
+  unit: z.string(),
+  unitCostCents: z.number().int(),
+  costCents: z.number().int(),
+  formula: z.string(),
+});
+
+export const cycleReportSchema = z.object({
+  cycleId: z.string(),
+  cycleName: z.string(),
+  cultivar: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  siteId: z.string(),
+  siteName: z.string(),
+  siteTimezone: z.string(),
+  yield: z.object({
+    present: z.boolean(),
+    absentReason: z.string().nullable(),
+    harvestId: z.string().nullable(),
+    plantCount: z.number().int().nullable(),
+    wetWeightGrams: z.number().int().nullable(),
+    dryWeightGrams: z.number().int().nullable(),
+    packageWeightGrams: z.number().int().nullable(),
+    wasteWeightGrams: z.number().int().nullable(),
+    unaccountedGrams: z.number().int().nullable(),
+    gramsPerPlant: z.number().nullable(),
+    gramsPerPlantFormula: z.string(),
+    ledgerFormula: z.string(),
+  }),
+  duration: z.object({
+    startDate: z.string(),
+    harvestAt: z.string().nullable(),
+    daysSinceStart: z.number().int().nullable(),
+    completedDurationDays: z.number().int().nullable(),
+    formula: z.string(),
+  }),
+  labor: z.object({
+    lines: z.array(laborCostLineSchema),
+    totalHours: z.number(),
+    totalCostCents: z.number().int(),
+    formula: z.string(),
+  }),
+  inputs: z.object({
+    lines: z.array(inputCostLineSchema),
+    totalCostCents: z.number().int(),
+    formula: z.string(),
+  }),
+  totalCostCents: z.number().int(),
+  totalCostFormula: z.string(),
+  excludedSampleReadingCount: z.number().int(),
+  sampleExclusionFormula: z.string(),
+});
+
+export const siteReportSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  siteTimezone: z.string(),
+  cycles: z.array(cycleReportSchema),
+});
+
+export const comparisonReportSchema = z.object({
+  cycles: z.array(cycleReportSchema),
+});
+
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type Zone = z.infer<typeof zoneSchema>;
 export type CropCycleSummary = z.infer<typeof cropCycleSummarySchema>;
@@ -828,3 +906,6 @@ export type HarvestDetail = z.infer<typeof harvestDetailSchema>;
 export type HarvestSummary = z.infer<typeof harvestSummarySchema>;
 export type PackageDetail = z.infer<typeof packageDetailSchema>;
 export type HarvestWasteView = z.infer<typeof harvestWasteSchema>;
+export type CycleReport = z.infer<typeof cycleReportSchema>;
+export type SiteReport = z.infer<typeof siteReportSchema>;
+export type ComparisonReport = z.infer<typeof comparisonReportSchema>;

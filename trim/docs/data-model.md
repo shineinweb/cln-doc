@@ -50,6 +50,8 @@ Every table has `created_at` and `updated_at`.
 
 Timeline events, movements, observations, labor entries, and an optional harvest-result summary are records for the cycle page. They are not the harvest workflow.
 
+`labor_rates` stores an hourly cost in cents for a person. `cycle_input_costs` stores a quantity and unit cost on a cycle. Yield, duration, labor, and cost reports read those rows plus harvest weights and labor entries. They do not store a second total. Sample environmental readings are left out of the reports.
+
 A harvest belongs to a license and records the plant tags that were cut. Wet weight, drying, dry weight, and trimming are `harvest_steps`, each with an actor and time. Waste is `harvest_waste` on that harvest. A package is `harvest_packages` plus `harvest_package_plants`, so the package traces back to those tags. Package weight, waste, and the unaccounted remainder are shown against the dry weight. A finished package is queued on the existing `metrc_submissions` row (`package_id`) and uses the same outbox. Hill Works Veg 1 is not a harvest.
 
 A workflow template belongs to the organization. Each edit creates a new `workflow_template_versions` row. A cycle stores `workflow_version_id` and keeps that version until a manager applies another. Starting or applying a version writes `cycle_tasks`. Due dates are the anchor date plus `offset_days`, in the site timezone. `cycle_start` means the cycle start date, which is day 1. Tasks can be assigned to a team, a role, or an employee. Comments and photo attachments hang off the task. Photos are objects in the attachment bucket.

@@ -248,6 +248,14 @@ async function main(): Promise<void> {
     caseyId: casey.id,
   });
   await seedEnvironment(flower.id, veg.id);
+  await seedAnalytics({
+    organizationId: organization.id,
+    cedarCycleId: cedar.id,
+    glassCycleId: glass.id,
+    harborLicenseId: harborLicense.id,
+    harborSiteId: harbor.id,
+    blakeId: blake.id,
+  });
 
   console.log('Seeded Harbor & Hill Cultivation.');
   console.log('Dev-only logins (also listed in the README):');
@@ -941,6 +949,151 @@ async function seedEnvironment(flowerRoomId: string, vegRoomId: string): Promise
       isSample: false,
       recordedAt: new Date(now - 8 * 60 * 1000),
     },
+  });
+}
+
+async function seedAnalytics(input: {
+  organizationId: string;
+  cedarCycleId: string;
+  glassCycleId: string;
+  harborLicenseId: string;
+  harborSiteId: string;
+  blakeId: string;
+}): Promise<void> {
+  await prisma.laborRate.upsert({
+    where: { organizationId_personName: { organizationId: input.organizationId, personName: 'Blake Ortiz' } },
+    create: { organizationId: input.organizationId, personName: 'Blake Ortiz', hourlyCents: 2800 },
+    update: { hourlyCents: 2800 },
+  });
+  await prisma.laborRate.upsert({
+    where: { organizationId_personName: { organizationId: input.organizationId, personName: 'Casey Nguyen' } },
+    create: { organizationId: input.organizationId, personName: 'Casey Nguyen', hourlyCents: 2600 },
+    update: { hourlyCents: 2600 },
+  });
+  await prisma.cycleInputCost.deleteMany({
+    where: { cycleId: { in: [input.cedarCycleId, input.glassCycleId] } },
+  });
+  await prisma.cycleInputCost.createMany({
+    data: [
+      {
+        cycleId: input.cedarCycleId,
+        description: 'Flower nutrients',
+        quantity: 2,
+        unit: 'bag',
+        unitCostCents: 1500,
+      },
+      {
+        cycleId: input.glassCycleId,
+        description: 'Veg media',
+        quantity: 1,
+        unit: 'bag',
+        unitCostCents: 4200,
+      },
+    ],
+  });
+
+  const cycle = await prisma.cropCycle.findUniqueOrThrow({ where: { id: input.cedarCycleId } });
+  const plants = await prisma.plant.findMany({
+    where: { cycleId: input.cedarCycleId },
+    orderBy: { tag: 'asc' },
+  });
+  if (plants.length !== 144) {
+    throw new Error(`Cedar Nights expected 144 plants to harvest, found ${plants.length}.`);
+  }
+  const harvestedAt = new Date('2026-10-03T16:00:00.000Z');
+  const harvest = await prisma.harvest.create({
+    data: {
+      licenseId: input.harborLicenseId,
+      siteId: input.harborSiteId,
+      cycleId: input.cedarCycleId,
+      roomId: cycle.roomId,
+      name: 'Cedar Nights flower harvest',
+    },
+  });
+  await prisma.harvestPlant.createMany({
+    data: plants.map((plant) => ({ harvestId: harvest.id, plantId: plant.id, tag: plant.tag })),
+  });
+  await prisma.harvestStep.createMany({
+    data: [
+      {
+        harvestId: harvest.id,
+        kind: 'harvested',
+        actorUserId: input.blakeId,
+        occurredAt: harvestedAt,
+        note: '144 plants recorded with their tags.',
+      },
+      {
+        harvestId: harvest.id,
+        kind: 'wet_weight',
+        actorUserId: input.blakeId,
+        occurredAt: new Date('2026-10-03T17:00:00.000Z'),
+        weightGrams: 18240,
+      },
+      {
+        harvestId: harvest.id,
+        kind: 'drying',
+        actorUserId: input.blakeId,
+        occurredAt: new Date('2026-10-03T18:00:00.000Z'),
+        roomId: cycle.roomId,
+      },
+      {
+        harvestId: harvest.id,
+        kind: 'dry_weight',
+        actorUserId: input.blakeId,
+        occurredAt: new Date('2026-10-03T19:00:00.000Z'),
+        weightGrams: 4120,
+      },
+      {
+        harvestId: harvest.id,
+        kind: 'trimming',
+        actorUserId: input.blakeId,
+        occurredAt: new Date('2026-10-03T20:00:00.000Z'),
+      },
+    ],
+  });
+  await prisma.harvestWaste.create({
+    data: {
+      harvestId: harvest.id,
+      weightGrams: 240,
+      note: 'Fan leaves and stem',
+      actorUserId: input.blakeId,
+      recordedAt: new Date('2026-10-03T21:00:00.000Z'),
+    },
+  });
+  const packaged = await prisma.harvestPackage.create({
+    data: {
+      harvestId: harvest.id,
+      licenseId: input.harborLicenseId,
+      label: '1A4PKGCEDARNIGHTS00001',
+      weightGrams: 3600,
+      actorUserId: input.blakeId,
+      recordedAt: new Date('2026-10-03T22:00:00.000Z'),
+    },
+  });
+  const harvestPlants = await prisma.harvestPlant.findMany({ where: { harvestId: harvest.id } });
+  await prisma.harvestPackagePlant.createMany({
+    data: harvestPlants.map((plant) => ({
+      packageId: packaged.id,
+      harvestPlantId: plant.id,
+      tag: plant.tag,
+    })),
+  });
+  await prisma.plantEvent.createMany({
+    data: plants.map((plant) => ({
+      plantId: plant.id,
+      licenseId: input.harborLicenseId,
+      eventType: 'harvested',
+      actorUserId: input.blakeId,
+      occurredAt: harvestedAt,
+      fromRoomId: plant.roomId,
+      fromStage: plant.stage,
+      toStage: 'harvested',
+      note: 'Harvested on Cedar Nights flower harvest.',
+    })),
+  });
+  await prisma.plant.updateMany({
+    where: { id: { in: plants.map((plant) => plant.id) } },
+    data: { status: 'harvested', stage: 'harvested', cycleId: null },
   });
 }
 

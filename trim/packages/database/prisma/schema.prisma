@@ -23,6 +23,7 @@ model Organization {
   sopRecords        SopRecord[]
   workflowTemplates WorkflowTemplate[]
   strains           Strain[]
+  laborRates        LaborRate[]
 
   @@map("organizations")
 }
@@ -615,6 +616,7 @@ model CropCycle {
   cycleTasks       CycleTask[]
   plants           Plant[]
   harvests         Harvest[]
+  inputCosts       CycleInputCost[]
 
   @@index([roomId, status])
   @@map("crop_cycles")
@@ -665,6 +667,39 @@ model CycleObservation {
 
   @@index([cycleId])
   @@map("cycle_observations")
+}
+
+/// Hourly labor rate for a named person. Cost reports multiply stored hours by this rate.
+model LaborRate {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  personName     String   @map("person_name")
+  hourlyCents    Int      @map("hourly_cents")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, personName])
+  @@index([organizationId])
+  @@map("labor_rates")
+}
+
+/// A quantity and unit cost stored on a cycle. The report sums quantity × unit cost.
+model CycleInputCost {
+  id            String   @id @default(cuid())
+  cycleId       String   @map("cycle_id")
+  description   String
+  quantity      Decimal  @db.Decimal(10, 2)
+  unit          String
+  unitCostCents Int      @map("unit_cost_cents")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_input_costs")
 }
 
 model CycleLaborEntry {
