@@ -45,6 +45,9 @@ model User {
   workflowAssignments WorkflowTaskTemplate[] @relation("WorkflowAssignee")
   assignedCycleTasks  CycleTask[]            @relation("CycleTaskAssignee")
   plantEvents         PlantEvent[]
+  harvestSteps        HarvestStep[]
+  harvestWastes       HarvestWaste[]
+  harvestPackages     HarvestPackage[]
   submissionsRequested MetrcSubmission[] @relation("SubmissionRequester")
   submissionsReviewed  MetrcSubmission[] @relation("SubmissionReviewer")
   metrcAttempts        MetrcAttempt[]    @relation("AttemptActor")
@@ -146,6 +149,7 @@ model Site {
   rooms        Room[]
   memberships  SiteMembership[]
   licenses     LicenseSite[]
+  harvests     Harvest[]
   metrcSyncs   MetrcSync[]
 
   @@unique([organizationId, code])
@@ -189,8 +193,10 @@ model License {
   metrcConnection MetrcConnection?
   imports        MetrcInventoryImport[]
   discrepancies  MetrcDiscrepancy[]
-  submissions    MetrcSubmission[]
-  outbox         MetrcOutbox[]
+  submissions     MetrcSubmission[]
+  outbox          MetrcOutbox[]
+  harvests        Harvest[]
+  harvestPackages HarvestPackage[]
 
   @@unique([organizationId, licenseNumber])
   @@index([organizationId])
@@ -263,8 +269,9 @@ model Plant {
   batch   PlantBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
   strain  Strain       @relation(fields: [strainId], references: [id], onDelete: Cascade)
   cycle   CropCycle?   @relation(fields: [cycleId], references: [id], onDelete: SetNull)
-  room    Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  events  PlantEvent[]
+  room          Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  events        PlantEvent[]
+  harvestPlants HarvestPlant[]
 
   @@unique([licenseId, tag])
   @@index([cycleId])
@@ -296,6 +303,123 @@ model PlantEvent {
   @@index([plantId, occurredAt])
   @@index([licenseId])
   @@map("plant_events")
+}
+
+/// A cut of plants on one license. Weights, waste, and packages stay on this row.
+model Harvest {
+  id        String   @id @default(cuid())
+  licenseId String   @map("license_id")
+  siteId    String?  @map("site_id")
+  cycleId   String?  @map("cycle_id")
+  roomId    String?  @map("room_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  license  License          @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  site     Site?            @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  cycle    CropCycle?       @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  room     Room?            @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  plants   HarvestPlant[]
+  steps    HarvestStep[]
+  wastes   HarvestWaste[]
+  packages HarvestPackage[]
+
+  @@index([licenseId])
+  @@index([siteId])
+  @@map("harvests")
+}
+
+model HarvestPlant {
+  id        String   @id @default(cuid())
+  harvestId String   @map("harvest_id")
+  plantId   String   @unique @map("plant_id")
+  tag       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  harvest       Harvest               @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  plant         Plant                 @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  packagePlants HarvestPackagePlant[]
+
+  @@unique([harvestId, tag])
+  @@map("harvest_plants")
+}
+
+/// Wet weight, drying, dry weight, and trimming. Each row keeps the actor and time.
+model HarvestStep {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  kind        String
+  actorUserId String   @map("actor_user_id")
+  occurredAt  DateTime @map("occurred_at")
+  weightGrams Int?     @map("weight_grams")
+  roomId      String?  @map("room_id")
+  note        String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  actor   User    @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  room    Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([harvestId, occurredAt])
+  @@map("harvest_steps")
+}
+
+model HarvestWaste {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  weightGrams Int      @map("weight_grams")
+  note        String?  @db.VarChar(500)
+  actorUserId String   @map("actor_user_id")
+  recordedAt  DateTime @map("recorded_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  actor   User    @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId])
+  @@map("harvest_waste")
+}
+
+model HarvestPackage {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  licenseId   String   @map("license_id")
+  label       String
+  weightGrams Int      @map("weight_grams")
+  actorUserId String   @map("actor_user_id")
+  recordedAt  DateTime @map("recorded_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  harvest     Harvest               @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  license     License               @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  actor       User                  @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  plants      HarvestPackagePlant[]
+  submissions MetrcSubmission[]
+
+  @@unique([licenseId, label])
+  @@index([harvestId])
+  @@map("harvest_packages")
+}
+
+model HarvestPackagePlant {
+  id             String   @id @default(cuid())
+  packageId      String   @map("package_id")
+  harvestPlantId String   @map("harvest_plant_id")
+  tag            String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  harvestPackage HarvestPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  harvestPlant   HarvestPlant   @relation(fields: [harvestPlantId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, harvestPlantId])
+  @@index([harvestPlantId])
+  @@map("harvest_package_plants")
 }
 
 /// Credentials stay on the server. The inventory import does not read this row and does not call Metrc.
@@ -352,7 +476,8 @@ model MetrcDiscrepancy {
 model MetrcSubmission {
   id              String    @id @default(cuid())
   licenseId       String    @map("license_id")
-  plantEventId    String    @map("plant_event_id")
+  plantEventId    String?   @map("plant_event_id")
+  packageId       String?   @map("package_id")
   status          String
   sandboxOutcome  String    @map("sandbox_outcome")
   requestedById   String    @map("requested_by_id")
@@ -363,15 +488,17 @@ model MetrcSubmission {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  license     License       @relation(fields: [licenseId], references: [id], onDelete: Cascade)
-  plantEvent  PlantEvent    @relation(fields: [plantEventId], references: [id], onDelete: Cascade)
-  requestedBy User          @relation("SubmissionRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  license        License         @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  plantEvent     PlantEvent?     @relation(fields: [plantEventId], references: [id], onDelete: Cascade)
+  harvestPackage HarvestPackage? @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  requestedBy    User            @relation("SubmissionRequester", fields: [requestedById], references: [id], onDelete: Cascade)
   reviewer    User?         @relation("SubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   outbox      MetrcOutbox?
   attempts    MetrcAttempt[]
 
   @@index([licenseId, status])
   @@index([plantEventId])
+  @@index([packageId])
   @@map("metrc_submissions")
 }
 
@@ -437,7 +564,9 @@ model Room {
   cycleTasks CycleTask[]
   alerts     RoomAlert[]
   readings   EnvironmentalReading[]
-  plants     Plant[]
+  plants      Plant[]
+  harvests    Harvest[]
+  dryingSteps HarvestStep[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -483,6 +612,7 @@ model CropCycle {
   harvestSummary   HarvestResultSummary?
   cycleTasks       CycleTask[]
   plants           Plant[]
+  harvests         Harvest[]
 
   @@index([roomId, status])
   @@map("crop_cycles")

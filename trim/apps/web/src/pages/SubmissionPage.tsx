@@ -36,7 +36,7 @@ export function SubmissionPage() {
     <Box>
       <PageHeader
         kicker={row.licenseNumber}
-        title={row.plantTag}
+        title={row.packageLabel ?? row.plantTag ?? 'Submission'}
         lede={`${row.eventType} · ${row.status}`}
       />
       <Typography data-testid="submission-status">{row.status}</Typography>

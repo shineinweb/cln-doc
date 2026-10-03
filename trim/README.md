@@ -1,6 +1,6 @@
 # Trim
 
-Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file. Phase 5 reviews Metrc submissions and delivers approved rows through a sandbox outbox.
+Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file. Phase 5 reviews Metrc submissions and delivers approved rows through a sandbox outbox. Phase 6 records a harvest, its weights, waste, and packages, and can queue a finished package on that same outbox.
 
 The product lives in this `trim/` directory.
 
@@ -90,6 +90,10 @@ The template **Canopy week** (28 days, anchored at `cycle_start`, assigned to th
 
 Scout the canopy links the SOP record “Canopy scout” and depends on the count. Lower-leaf pass depends on the scout and requires supervisor approval. On 2026-10-03 in `America/Los_Angeles`, Flower 1’s task due today is Lower-leaf pass and Veg 1’s is Scout the canopy. Blake sees the Harbor House assignment. Casey sees the Hill Works assignment. Avery can open both.
 
+## Harvest
+
+Flower 1’s Cedar Nights plants can be harvested from the room. The harvest stores each plant tag, then wet weight, drying, dry weight, trimming, waste, and packages. Each of those rows stores the actor, the time, and the harvest. A package lists the source tags. The screen shows dry weight, packaged weight, waste, and the unaccounted remainder. Hill Works Veg 1 stays in the room. A separate Hill Works prior lot exists so a Harbor House user can be denied that URL. A finished package is queued as a pending Metrc submission and is not sent until a manager approves it.
+
 ## Authentication
 
 Sign-in returns a bearer JWT. The browser stores it in `sessionStorage`. Each request reloads roles and site memberships from MySQL, so the token does not grant site access by itself. Details: [docs/authentication.md](docs/authentication.md). The tables are described in [docs/data-model.md](docs/data-model.md).
@@ -127,6 +131,11 @@ pnpm build
 - sandbox success, failure, and uncertain outcomes are stored with the actor, time, and request id
 - an uncertain change cannot be submitted again until reconciliation marks it landed or not landed
 - another license’s submissions are denied
+- a package traces back to the harvested plant tags
+- waste stores the actor
+- a plant that is not on the harvest cannot be packaged
+- harvest, waste, and package reads are denied across sites and licenses
+- package weight plus waste accounts for the recorded dry weight
 
 The access tests create their own users. They do not depend on the seed passwords above.
 
@@ -140,4 +149,4 @@ DATABASE_URL=mysql://trim:trim@127.0.0.1:3306/trim_test pnpm db:migrate
 
 ## Boundaries
 
-Not built: harvest, drying, trimming, waste, packages, environmental charts, analytics, the SOP library, device adapters, and email/SMS. Inventory import and submission delivery do not call Metrc. The worker delivers approved outbox rows to a sandbox that can succeed, fail, or time out.
+Not built: environmental charts, alerts, analytics, the SOP library, device adapters, and email/SMS. Weights are typed by hand. Inventory import and submission delivery do not call Metrc. The worker delivers approved outbox rows, including a queued package, to a sandbox that can succeed, fail, or time out.

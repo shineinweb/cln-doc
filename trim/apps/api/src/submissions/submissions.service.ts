@@ -9,13 +9,15 @@ const submissionInclude = {
   requestedBy: true,
   reviewer: true,
   plantEvent: { include: { plant: true } },
+  harvestPackage: { include: { plants: { orderBy: { tag: 'asc' as const } } } },
   attempts: { include: { actor: true, reconciledBy: true }, orderBy: { occurredAt: 'desc' as const } },
 } as const;
 
 type SubmissionRecord = {
   id: string;
   licenseId: string;
-  plantEventId: string;
+  plantEventId: string | null;
+  packageId: string | null;
   status: string;
   sandboxOutcome: string;
   requestedAt: Date;
@@ -24,7 +26,8 @@ type SubmissionRecord = {
   license: { licenseNumber: string; organizationId: string; sites: Array<{ siteId: string }> };
   requestedBy: { name: string };
   reviewer: { name: string } | null;
-  plantEvent: { eventType: string; note: string | null; plant: { id: string; tag: string } };
+  plantEvent: { eventType: string; note: string | null; plant: { id: string; tag: string } } | null;
+  harvestPackage: { id: string; label: string; weightGrams: number; plants: Array<{ tag: string }> } | null;
   attempts: Array<{
     id: string;
     occurredAt: Date;
@@ -57,8 +60,15 @@ export class SubmissionsService {
   }
 
   async queue(user: SessionUser, input: QueueSubmission): Promise<SubmissionView> {
+    if (input.packageId) {
+      return this.queuePackage(user, input.packageId, input.sandboxOutcome);
+    }
+    const plantEventId = input.plantEventId;
+    if (!plantEventId) {
+      throw new BadRequestException('Queue a plant event or a finished package.');
+    }
     const event = await this.prisma.plantEvent.findUnique({
-      where: { id: input.plantEventId },
+      where: { id: plantEventId },
       include: { plant: true },
     });
     if (!event) {
@@ -75,7 +85,7 @@ export class SubmissionsService {
     if (event.eventType !== 'moved' && event.eventType !== 'stage_changed') {
       throw new BadRequestException('Only a move or a stage change can be submitted');
     }
-    const block = await this.queueBlockReason(event.id);
+    const block = await this.queueBlockReason({ plantEventId: event.id });
     if (block) {
       throw new BadRequestException(block);
     }
@@ -139,12 +149,19 @@ export class SubmissionsService {
           requestId,
           status: 'pending',
           sandboxOutcome,
-          payload: {
-            licenseNumber: existing.license.licenseNumber,
-            plantTag: existing.plantEvent.plant.tag,
-            eventType: existing.plantEvent.eventType,
-            eventNote: existing.plantEvent.note,
-          },
+          payload: existing.harvestPackage
+            ? {
+                licenseNumber: existing.license.licenseNumber,
+                packageLabel: existing.harvestPackage.label,
+                weightGrams: existing.harvestPackage.weightGrams,
+                sourceTags: existing.harvestPackage.plants.map((plant) => plant.tag),
+              }
+            : {
+                licenseNumber: existing.license.licenseNumber,
+                plantTag: existing.plantEvent?.plant.tag,
+                eventType: existing.plantEvent?.eventType,
+                eventNote: existing.plantEvent?.note,
+              },
         },
       });
     });
@@ -215,9 +232,43 @@ export class SubmissionsService {
     return row;
   }
 
-  private async queueBlockReason(plantEventId: string): Promise<string | null> {
+  private async queuePackage(user: SessionUser, packageId: string, sandboxOutcome: QueueSubmission['sandboxOutcome']): Promise<SubmissionView> {
+    const finished = await this.prisma.harvestPackage.findUnique({
+      where: { id: packageId },
+      include: { plants: true, harvest: { include: { license: { include: { sites: true } } } } },
+    });
+    if (!finished || finished.harvest.license.organizationId !== user.organizationId) {
+      throw new NotFoundException('Package not found');
+    }
+    this.assertCovered(
+      user,
+      finished.harvest.license.sites.map((link) => link.siteId),
+      'You do not have access to this license',
+    );
+    if (finished.plants.length === 0) {
+      throw new BadRequestException('A package needs source tags before it can be queued.');
+    }
+    const block = await this.queueBlockReason({ packageId: finished.id });
+    if (block) {
+      throw new BadRequestException(block);
+    }
+    const created = await this.prisma.metrcSubmission.create({
+      data: {
+        licenseId: finished.licenseId,
+        packageId: finished.id,
+        status: 'pending_review',
+        sandboxOutcome,
+        requestedById: user.id,
+        requestedAt: new Date(),
+      },
+      include: submissionInclude,
+    });
+    return this.toView(created);
+  }
+
+  private async queueBlockReason(subject: { plantEventId?: string | null; packageId?: string | null }): Promise<string | null> {
     const rows = await this.prisma.metrcSubmission.findMany({
-      where: { plantEventId },
+      where: subject.packageId ? { packageId: subject.packageId } : { plantEventId: subject.plantEventId },
       include: { attempts: true },
     });
     if (rows.some((row) => row.status === 'uncertain')) {
@@ -241,21 +292,26 @@ export class SubmissionsService {
   private async toView(row: SubmissionRecord): Promise<SubmissionView> {
     const attempt = row.attempts[0] ?? null;
     const siblings = await this.prisma.metrcSubmission.findMany({
-      where: { plantEventId: row.plantEventId },
+      where: row.packageId ? { packageId: row.packageId } : { plantEventId: row.plantEventId },
       orderBy: { requestedAt: 'desc' },
       select: { id: true },
     });
     const latest = siblings[0]?.id === row.id;
-    const canQueueAgain = latest && (await this.queueBlockReason(row.plantEventId)) === null && row.status !== 'pending_review';
+    const canQueueAgain =
+      latest &&
+      (await this.queueBlockReason({ plantEventId: row.plantEventId, packageId: row.packageId })) === null &&
+      row.status !== 'pending_review';
     return {
       id: row.id,
       licenseId: row.licenseId,
       licenseNumber: row.license.licenseNumber,
-      plantId: row.plantEvent.plant.id,
-      plantTag: row.plantEvent.plant.tag,
+      plantId: row.plantEvent?.plant.id ?? null,
+      plantTag: row.plantEvent?.plant.tag ?? null,
       plantEventId: row.plantEventId,
-      eventType: row.plantEvent.eventType,
-      eventNote: row.plantEvent.note,
+      packageId: row.harvestPackage?.id ?? null,
+      packageLabel: row.harvestPackage?.label ?? null,
+      eventType: row.plantEvent?.eventType ?? 'package',
+      eventNote: row.plantEvent?.note ?? (row.harvestPackage ? `Package ${row.harvestPackage.label}` : null),
       status: row.status,
       sandboxOutcome: row.sandboxOutcome,
       requestedByName: row.requestedBy.name,

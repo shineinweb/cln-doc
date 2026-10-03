@@ -239,6 +239,7 @@ async function main(): Promise<void> {
     organizationId: organization.id,
     harborLicenseId: harborLicense.id,
     hillLicenseId: hillLicense.id,
+    hillSiteId: hill.id,
     cedarCycleId: cedar.id,
     glassCycleId: glass.id,
     flowerRoomId: flower.id,
@@ -399,6 +400,7 @@ async function seedInventory(input: {
   organizationId: string;
   harborLicenseId: string;
   hillLicenseId: string;
+  hillSiteId: string;
   cedarCycleId: string;
   glassCycleId: string;
   flowerRoomId: string;
@@ -407,6 +409,7 @@ async function seedInventory(input: {
   caseyId: string;
 }) {
   const licenseIds = [input.harborLicenseId, input.hillLicenseId];
+  await prisma.harvest.deleteMany({ where: { licenseId: { in: licenseIds } } });
   await prisma.metrcInventoryImport.deleteMany({ where: { licenseId: { in: licenseIds } } });
   await prisma.plant.deleteMany({ where: { licenseId: { in: licenseIds } } });
   await prisma.plantBatch.deleteMany({ where: { licenseId: { in: licenseIds } } });
@@ -517,6 +520,26 @@ async function seedInventory(input: {
   }
 
   await seedPendingSubmissions(input);
+  await seedPriorHillHarvest(input);
+}
+
+async function seedPriorHillHarvest(input: { hillLicenseId: string; hillSiteId: string; caseyId: string }) {
+  const harvest = await prisma.harvest.create({
+    data: {
+      licenseId: input.hillLicenseId,
+      siteId: input.hillSiteId,
+      name: 'Hill Works prior lot',
+    },
+  });
+  await prisma.harvestStep.create({
+    data: {
+      harvestId: harvest.id,
+      kind: 'harvested',
+      actorUserId: input.caseyId,
+      occurredAt: new Date('2026-08-01T16:00:00.000Z'),
+      note: 'Prior lot. Veg 1 was not cut.',
+    },
+  });
 }
 
 async function seedPendingSubmissions(input: {

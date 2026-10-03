@@ -1,0 +1,113 @@
+import { Alert, Box, Button, Skeleton, Typography } from '@mui/material';
+import { packageDetailSchema, submissionViewSchema } from '@trim/contracts';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { ApiError, apiGet, apiSend } from '../api/client';
+import { PageHeader } from '../components/PageHeader';
+import { formatTimestamp } from '../crops/format';
+
+export function PackagePage() {
+  const { packageId = '' } = useParams();
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState('success');
+  const detail = useQuery({
+    queryKey: ['package', packageId],
+    queryFn: () => apiGet(`/packages/${packageId}`, packageDetailSchema),
+    enabled: Boolean(packageId),
+    retry: false,
+  });
+  const queue = useMutation({
+    mutationFn: () =>
+      apiSend('/submissions', submissionViewSchema, {
+        packageId,
+        sandboxOutcome: outcome,
+      }),
+    onSuccess: async (submission) => {
+      setMessage(
+        submission.status === 'pending_review'
+          ? 'Queued for review. Nothing has been sent.'
+          : `Submission is ${submission.status}.`,
+      );
+      await queryClient.invalidateQueries({ queryKey: ['package', packageId] });
+      await queryClient.invalidateQueries({ queryKey: ['compliance'] });
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+
+  if (detail.isPending) {
+    return <Skeleton variant="rounded" height={220} />;
+  }
+  if (detail.error instanceof ApiError && (detail.error.status === 403 || detail.error.status === 404)) {
+    return (
+      <Alert severity="warning" data-testid="package-access-warning">
+        {detail.error.status === 403 ? 'You do not have access to this package.' : 'This package was not found.'}
+      </Alert>
+    );
+  }
+  if (detail.error || !detail.data) {
+    return <Alert severity="error">{detail.error?.message ?? 'This package could not be loaded.'}</Alert>;
+  }
+
+  const row = detail.data;
+  return (
+    <Box>
+      <PageHeader
+        kicker={row.licenseNumber}
+        title={row.label}
+        lede={`${row.weightGrams} g from ${row.harvestName}. The source tags are the plants that went into this package.`}
+      />
+      <Typography data-testid="package-label">{row.label}</Typography>
+      <Typography data-testid="package-weight" sx={{ mt: 1 }}>
+        {row.weightGrams} g · {row.actorName} · {formatTimestamp(row.recordedAt)}
+      </Typography>
+      <Typography sx={{ mt: 1 }}>
+        Dry {row.ledger.dryWeightGrams ?? '—'} g · packaged {row.ledger.packageWeightGrams} g · waste {row.ledger.wasteWeightGrams} g ·
+        unaccounted {row.ledger.unaccountedGrams ?? '—'} g
+      </Typography>
+      <Typography sx={{ mt: 2 }}>
+        <RouterLink to={`/harvests/${row.harvestId}`}>Open harvest</RouterLink>
+      </Typography>
+      <Typography data-testid="source-tag-count" sx={{ mt: 2, fontWeight: 600 }}>
+        {row.sourceTags.length} source tags
+      </Typography>
+      <Box sx={{ maxHeight: 320, overflow: 'auto', mt: 1 }}>
+        {row.sourceTags.map((source) => (
+          <Typography key={source.tag} data-testid="source-tag">
+            {source.tag}
+          </Typography>
+        ))}
+      </Box>
+      {row.submission ? (
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="package-submission-status">
+          {row.submission.status === 'pending_review'
+            ? 'Queued for review. Nothing has been sent.'
+            : `Submission ${row.submission.status}.`}
+        </Alert>
+      ) : (
+        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box
+            component="select"
+            data-testid="sandbox-outcome"
+            value={outcome}
+            onChange={(event) => setOutcome(event.target.value)}
+            sx={{ font: 'inherit', py: 1, px: 1.5 }}
+          >
+            <option value="success">Success</option>
+            <option value="failure">Definite failure</option>
+            <option value="uncertain">Uncertain</option>
+          </Box>
+          <Button data-testid="queue-package" variant="contained" onClick={() => queue.mutate()} disabled={queue.isPending}>
+            Queue for review
+          </Button>
+        </Box>
+      )}
+      {message ? (
+        <Alert severity="info" sx={{ mt: 1 }} data-testid="package-message">
+          {message}
+        </Alert>
+      ) : null}
+    </Box>
+  );
+}

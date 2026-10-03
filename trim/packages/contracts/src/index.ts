@@ -458,10 +458,15 @@ export const metrcImportSummarySchema = z.object({
 
 export const sandboxOutcomeSchema = z.enum(['success', 'failure', 'uncertain']);
 
-export const queueSubmissionSchema = z.object({
-  plantEventId: z.string().min(1),
-  sandboxOutcome: sandboxOutcomeSchema,
-});
+export const queueSubmissionSchema = z
+  .object({
+    plantEventId: z.string().min(1).optional(),
+    packageId: z.string().min(1).optional(),
+    sandboxOutcome: sandboxOutcomeSchema,
+  })
+  .refine((value) => Number(Boolean(value.plantEventId)) + Number(Boolean(value.packageId)) === 1, {
+    message: 'Queue a plant event or a finished package.',
+  });
 
 export const reviewSubmissionSchema = z
   .object({
@@ -493,9 +498,11 @@ export const submissionViewSchema = z.object({
   id: z.string(),
   licenseId: z.string(),
   licenseNumber: z.string(),
-  plantId: z.string(),
-  plantTag: z.string(),
-  plantEventId: z.string(),
+  plantId: z.string().nullable(),
+  plantTag: z.string().nullable(),
+  plantEventId: z.string().nullable(),
+  packageId: z.string().nullable(),
+  packageLabel: z.string().nullable(),
   eventType: z.string(),
   eventNote: z.string().nullable(),
   status: z.string(),
@@ -554,6 +561,124 @@ export const plantEventSchema = z.object({
   fromStage: z.string().nullable(),
   toStage: z.string().nullable(),
   note: z.string().nullable(),
+});
+
+const gramsSchema = z.number().int().positive().max(1_000_000);
+
+export const weightLedgerSchema = z.object({
+  wetWeightGrams: z.number().int().nullable(),
+  dryWeightGrams: z.number().int().nullable(),
+  packageWeightGrams: z.number().int(),
+  wasteWeightGrams: z.number().int(),
+  unaccountedGrams: z.number().int().nullable(),
+});
+
+export const harvestStepSchema = z.object({
+  id: z.string(),
+  kind: z.string(),
+  actorName: z.string(),
+  occurredAt: z.string(),
+  weightGrams: z.number().int().nullable(),
+  roomName: z.string().nullable(),
+  note: z.string().nullable(),
+});
+
+export const harvestPlantSchema = z.object({
+  plantId: z.string(),
+  tag: z.string(),
+});
+
+export const harvestWasteSchema = z.object({
+  id: z.string(),
+  harvestId: z.string(),
+  weightGrams: z.number().int(),
+  note: z.string().nullable(),
+  actorName: z.string(),
+  recordedAt: z.string(),
+});
+
+export const createHarvestSchema = z.object({
+  cycleId: z.string().min(1),
+});
+
+export const recordWeightSchema = z.object({
+  grams: gramsSchema,
+});
+
+export const startDryingSchema = z.object({
+  roomId: z.string().min(1).optional(),
+});
+
+export const recordWasteSchema = z.object({
+  grams: gramsSchema,
+  note: z.string().trim().max(500).optional(),
+});
+
+export const createPackageSchema = z.object({
+  label: z.string().trim().min(1).max(64),
+  grams: gramsSchema,
+  tags: z.array(z.string().trim().min(1)).min(1),
+});
+
+export const harvestSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  licenseNumber: z.string(),
+  siteName: z.string().nullable(),
+  plantCount: z.number().int(),
+  ledger: weightLedgerSchema,
+});
+
+export const harvestListSchema = z.array(harvestSummarySchema);
+
+export const harvestWasteListSchema = z.array(harvestWasteSchema);
+
+export const harvestDetailSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  licenseId: z.string(),
+  licenseNumber: z.string(),
+  siteName: z.string().nullable(),
+  cycleName: z.string().nullable(),
+  roomName: z.string().nullable(),
+  plantCount: z.number().int(),
+  plants: z.array(harvestPlantSchema),
+  steps: z.array(harvestStepSchema),
+  wastes: z.array(harvestWasteSchema),
+  packages: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      weightGrams: z.number().int(),
+      sourceTagCount: z.number().int(),
+    }),
+  ),
+  ledger: weightLedgerSchema,
+});
+
+export const packageSourceTagSchema = z.object({
+  plantId: z.string(),
+  tag: z.string(),
+});
+
+export const packageDetailSchema = z.object({
+  id: z.string(),
+  harvestId: z.string(),
+  harvestName: z.string(),
+  licenseId: z.string(),
+  licenseNumber: z.string(),
+  label: z.string(),
+  weightGrams: z.number().int(),
+  actorName: z.string(),
+  recordedAt: z.string(),
+  sourceTags: z.array(packageSourceTagSchema),
+  ledger: weightLedgerSchema,
+  submission: z
+    .object({
+      id: z.string(),
+      status: z.string(),
+    })
+    .nullable(),
 });
 
 export const plantDetailSchema = z.object({
@@ -619,3 +744,13 @@ export type QueueSubmission = z.infer<typeof queueSubmissionSchema>;
 export type ReviewSubmission = z.infer<typeof reviewSubmissionSchema>;
 export type ReconcileSubmission = z.infer<typeof reconcileSubmissionSchema>;
 export type SubmissionView = z.infer<typeof submissionViewSchema>;
+export type WeightLedger = z.infer<typeof weightLedgerSchema>;
+export type CreateHarvest = z.infer<typeof createHarvestSchema>;
+export type RecordWeight = z.infer<typeof recordWeightSchema>;
+export type StartDrying = z.infer<typeof startDryingSchema>;
+export type RecordWaste = z.infer<typeof recordWasteSchema>;
+export type CreatePackage = z.infer<typeof createPackageSchema>;
+export type HarvestDetail = z.infer<typeof harvestDetailSchema>;
+export type HarvestSummary = z.infer<typeof harvestSummarySchema>;
+export type PackageDetail = z.infer<typeof packageDetailSchema>;
+export type HarvestWasteView = z.infer<typeof harvestWasteSchema>;

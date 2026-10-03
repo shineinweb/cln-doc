@@ -1,9 +1,9 @@
 import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, Typography } from '@mui/material';
-import { roomDetailSchema, type RoomDetail } from '@trim/contracts';
-import { useQuery } from '@tanstack/react-query';
+import { harvestDetailSchema, roomDetailSchema, type RoomDetail } from '@trim/contracts';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Link as RouterLink, useParams } from 'react-router-dom';
-import { ApiError, apiGet } from '../api/client';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
@@ -12,7 +12,12 @@ import { roomTypeLabel, workbench } from '../theme';
 
 export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
+  const navigate = useNavigate();
   const { setSiteId } = useSites();
+  const harvestCrop = useMutation({
+    mutationFn: (cycleId: string) => apiSend('/harvests', harvestDetailSchema, { cycleId }),
+    onSuccess: (harvest) => navigate(`/harvests/${harvest.id}`),
+  });
   const room = useQuery({
     queryKey: ['room', roomId],
     queryFn: () => apiGet(`/rooms/${roomId}`, roomDetailSchema),
@@ -78,15 +83,26 @@ export function RoomDashboardPage() {
             <Typography sx={{ mt: 2 }} data-testid="room-expected-harvest">
               Expected harvest {formatCalendarDate(cycle.expectedHarvestDate)}
             </Typography>
-            <Button
-              component={RouterLink}
-              to={`/rooms/${room.data.id}/cycles/${cycle.id}`}
-              variant="contained"
-              sx={{ mt: 2 }}
-              data-testid="open-cycle"
-            >
-              Open crop cycle
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+              <Button component={RouterLink} to={`/rooms/${room.data.id}/cycles/${cycle.id}`} variant="contained" data-testid="open-cycle">
+                Open crop cycle
+              </Button>
+              {cycle.plantCount > 0 ? (
+                <Button
+                  variant="outlined"
+                  data-testid="harvest-crop"
+                  disabled={harvestCrop.isPending}
+                  onClick={() => harvestCrop.mutate(cycle.id)}
+                >
+                  Harvest this crop
+                </Button>
+              ) : null}
+            </Box>
+            {harvestCrop.error ? (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {harvestCrop.error.message}
+              </Alert>
+            ) : null}
           </CardContent>
         </Card>
       ) : (

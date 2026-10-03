@@ -8,8 +8,11 @@ import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
 import { CropCyclesPage } from './pages/CropCyclesPage';
 import { FacilityPage } from './pages/FacilityPage';
+import { HarvestPage } from './pages/HarvestPage';
+import { HarvestsPage } from './pages/HarvestsPage';
 import { LicenseInventoryPage } from './pages/LicenseInventoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { PackagePage } from './pages/PackagePage';
 import { PlantPage } from './pages/PlantPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
@@ -41,6 +44,9 @@ const router = createBrowserRouter([
       { path: 'workspace', element: <WorkspacePage /> },
       { path: 'tasks/:taskId', element: <TaskPage /> },
       { path: 'compliance', element: <CompliancePage /> },
+      { path: 'harvests', element: <HarvestsPage /> },
+      { path: 'harvests/:harvestId', element: <HarvestPage /> },
+      { path: 'packages/:packageId', element: <PackagePage /> },
       { path: 'licenses/:licenseId', element: <LicenseInventoryPage /> },
       { path: 'plants/:plantId', element: <PlantPage /> },
       { path: 'submissions/:submissionId', element: <SubmissionPage /> },

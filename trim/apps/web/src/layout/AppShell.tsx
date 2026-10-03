@@ -31,6 +31,7 @@ const NAV = [
   { to: '/workflows', label: 'Workflows', end: true },
   { to: '/workspace', label: 'Workspace', end: true },
   { to: '/compliance', label: 'Compliance', end: true },
+  { to: '/harvests', label: 'Harvests', end: false },
 ];
 
 export function AppShell() {

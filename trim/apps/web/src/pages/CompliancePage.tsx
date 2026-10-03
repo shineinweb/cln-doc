@@ -171,7 +171,7 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
   return (
     <Box data-testid="submission-card" sx={{ borderTop: '1px solid', borderColor: 'divider', pt: 1.5, mt: 1.5 }}>
       <Typography sx={{ fontWeight: 600 }}>
-        <RouterLink to={`/submissions/${submission.id}`}>{submission.plantTag}</RouterLink>
+        <RouterLink to={`/submissions/${submission.id}`}>{submission.packageLabel ?? submission.plantTag}</RouterLink>
         {` · ${submission.eventType}`}
       </Typography>
       <Typography data-testid="submission-note">{submission.eventNote}</Typography>
