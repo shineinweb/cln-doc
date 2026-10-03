@@ -40,7 +40,7 @@ export function TrolmasterPanel({ siteId, roomId }: { siteId: string; roomId: st
         Trolmaster settings
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 2 }}>
-        Turn Trolmaster on to read this room’s chart. Test draws the sample history for temperature, humidity, CO₂, VPD, and light, and does not call Trolmaster. Save a controller id and API credential for the live chart.
+        Turn Trolmaster on to check the saved credential. Test draws the sample history for temperature, humidity, CO₂, VPD, and light, and does not call Trolmaster. Save a controller id and API credential so the live chart can name that controller.
       </Typography>
       <Box sx={{ mb: 2 }}>
         <TrolmasterSwitches roomId={roomId} />

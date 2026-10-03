@@ -17,6 +17,11 @@ export interface TrolmasterSeriesDraft {
   points: TrolmasterPoint[];
 }
 
+export interface TrolmasterDevice {
+  mac: string;
+  model: string;
+}
+
 export async function fetchTrolmasterHistory(input: {
   apiKey: string;
   controllerId: string;
@@ -33,6 +38,7 @@ export async function fetchTrolmasterHistory(input: {
         'x-api-key': input.apiKey,
       },
       body: JSON.stringify({
+        cmd: 'getDevices',
         controllerId: input.controllerId,
         start: input.start,
         end: input.end,
@@ -49,10 +55,43 @@ export async function fetchTrolmasterHistory(input: {
     throw new Error('Trolmaster did not return a chart.');
   }
   try {
-    return await response.json();
-  } catch {
+    const payload: unknown = await response.json();
+    if (typeof payload === 'string') {
+      throw new Error('Trolmaster did not return a chart.');
+    }
+    return payload;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Trolmaster did not return a chart.') {
+      throw error;
+    }
     throw new Error('Trolmaster did not return a chart.');
   }
+}
+
+export function readTrolmasterDevices(payload: unknown): TrolmasterDevice[] {
+  if (!isRecord(payload) || !Array.isArray(payload.Items)) {
+    return [];
+  }
+  return payload.Items.flatMap((item) => {
+    if (!isRecord(item) || typeof item.mac !== 'string' || typeof item.model !== 'string') {
+      return [];
+    }
+    const mac = item.mac.trim();
+    const model = item.model.trim();
+    return mac && model ? [{ mac, model }] : [];
+  });
+}
+
+export function trolmasterDeviceMessage(controllerId: string, payload: unknown): string | null {
+  const devices = readTrolmasterDevices(payload);
+  if (devices.length === 0) {
+    return null;
+  }
+  const match = devices.find((device) => device.mac.toLowerCase() === controllerId.trim().toLowerCase());
+  if (!match) {
+    return 'That controller is not on this Trolmaster credential.';
+  }
+  return `Trolmaster accepted the credential for ${match.model} ${match.mac}. No history points were returned.`;
 }
 
 export function parseTrolmasterHistory(payload: unknown): TrolmasterSeriesDraft[] {
@@ -204,7 +243,7 @@ function unitOf(value: Record<string, unknown>): string {
 
 function classify(name: string, unit: string): TrolmasterMetric {
   const text = `${name} ${unit}`.toLowerCase();
-  if (/ppfd|\blight\b/.test(text)) {
+  if (/ppfd|\blight\b|\blp\b/.test(text)) {
     return 'light';
   }
   if (/\bvpd\b|vapor pressure/.test(text)) {
@@ -213,10 +252,10 @@ function classify(name: string, unit: string): TrolmasterMetric {
   if (/\bco2\b|carbon dioxide/.test(text)) {
     return 'co2';
   }
-  if (/humid|\brh\b|relative humidity/.test(text)) {
+  if (/humid|\brh\b|\bhy\b|relative humidity/.test(text)) {
     return 'humid';
   }
-  if (/temp|°f|°c|\bf\b|\bc\b/.test(text) && !/attempt/.test(text)) {
+  if (/\btp\b|temp|°f|°c|\bf\b|\bc\b/.test(text) && !/attempt/.test(text)) {
     return 'temp';
   }
   if (/\bec\b|ds\/m|ms\/cm|conductivity/.test(text)) {
@@ -254,12 +293,15 @@ function labelFromKey(key: string): string {
   const labels: Record<string, string> = {
     temp: 'Temp',
     temperature: 'Temp',
+    tp: 'Temp',
     humid: 'Humid',
     humidity: 'Humid',
+    hy: 'Humid',
     co2: 'CO2',
     vpd: 'VPD',
     light: 'Light',
     ppfd: 'Light',
+    lp: 'Light',
     ec: 'EC',
     vwc: 'VWC',
   };
@@ -267,11 +309,11 @@ function labelFromKey(key: string): string {
 }
 
 function timeKeyOf(row: Record<string, unknown>): string | null {
-  return ['at', 'time', 'timestamp', 't', 'recordedAt', 'date'].find((key) => timeValue(row[key])) ?? null;
+  return ['at', 'time', 'timestamp', 't', 'recordedAt', 'date', 'ct_tm'].find((key) => timeValue(row[key])) ?? null;
 }
 
 function firstTime(row: Record<string, unknown>): string | null {
-  for (const key of ['at', 'time', 'timestamp', 't', 'recordedAt', 'date']) {
+  for (const key of ['at', 'time', 'timestamp', 't', 'recordedAt', 'date', 'ct_tm']) {
     const at = timeValue(row[key]);
     if (at) {
       return at;

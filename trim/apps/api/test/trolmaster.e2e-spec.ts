@@ -115,7 +115,7 @@ describe('TrolMaster credentials', () => {
       expect(chart.body.series).toHaveLength(2);
       expect(JSON.stringify(chart.body)).not.toContain(secret);
       expect(standIn.requests[0]?.key).toBe(secret);
-      expect(standIn.requests[0]?.body).toMatchObject({ controllerId: 'FR5' });
+      expect(standIn.requests[0]?.body).toMatchObject({ cmd: 'getDevices', controllerId: 'FR5' });
     } finally {
       if (previous === undefined) {
         delete process.env.TROLMASTER_API_BASE;
