@@ -3,9 +3,11 @@ import { organizationSummarySchema, recordRemovedSchema, siteSchema, type Site }
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { CanopyScene } from '../components/Graphics';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
 import { DeleteRecord, SaveChanges } from '../records/RecordControls';
+import { workbench } from '../theme';
 
 export function FacilityPage() {
   const { sites, loading, error, setSiteId } = useSites();
@@ -26,7 +28,7 @@ export function FacilityPage() {
       {loading || organization.isPending ? <Skeleton variant="rounded" height={140} /> : <AddFacilityForm />}
       {!loading && sites.length === 0 ? <Alert severity="info">No facilities are assigned to this account.</Alert> : null}
       {sites.length > 0 ? (
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
           {sites.map((site) => (
             <FacilityCard key={site.id} site={site} onOpen={() => setSiteId(site.id)} />
           ))}
@@ -62,7 +64,18 @@ function FacilityCard({ site, onOpen }: { site: Site; onOpen: () => void }) {
     <Card data-testid="facility-card">
       <CardActionArea onClick={onOpen} sx={{ p: 0.5 }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+          <Box
+            sx={{
+              height: { xs: 88, sm: 104 },
+              mb: 1.5,
+              borderRadius: 2,
+              overflow: 'hidden',
+              bgcolor: workbench.greenhouseDeep,
+            }}
+          >
+            <CanopyScene />
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'flex-start' }}>
             <Typography variant="h3" sx={{ fontSize: 28 }} data-testid="facility-row-name">
               {site.name}
             </Typography>

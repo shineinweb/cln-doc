@@ -1,9 +1,12 @@
+import { workbench } from '../theme';
+
 export function Mark({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="#B8431F" />
-      <path d="M8.5 23.5 17 8.5" stroke="#F7F4EE" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M23.5 23.5 15 8.5" stroke="#1A2821" strokeWidth="2.4" strokeLinecap="round" />
+      <rect width="32" height="32" rx="10" fill={workbench.leaf} />
+      <path d="M16 24c0-8 4.2-12.2 10.2-14.2C25 18 21 22.2 16 24Z" fill={workbench.mist} />
+      <path d="M16 24c0-8-4.2-12.2-10.2-14.2C7 18 11 22.2 16 24Z" fill={workbench.gold} />
+      <path d="M16 24.2V9.5" stroke={workbench.greenhouseDeep} strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }

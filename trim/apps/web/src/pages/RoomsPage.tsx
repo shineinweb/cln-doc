@@ -7,7 +7,8 @@ import { ApiError, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { useSites } from '../layout/SiteProvider';
-import { ROOM_TYPE_LABELS, roomTypeLabel } from '../theme';
+import { RoomGlyph } from '../components/Graphics';
+import { ROOM_TYPE_LABELS, roomTypeColor, roomTypeLabel } from '../theme';
 
 export function RoomsPage() {
   const { site, loading, error } = useSites();
@@ -63,22 +64,28 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
     onError: (caught) => setError(caught instanceof ApiError ? caught.message : 'The room could not be deleted.'),
   });
   return (
-    <Card>
+    <Card sx={{ borderLeft: `6px solid ${roomTypeColor(room.roomType)}` }}>
       <CardContent>
         <RecordActions
           summary={
-            <Box>
-              <Typography variant="h3" sx={{ fontSize: 24 }} data-testid="room-row-name">
-                <RouterLink to={`/rooms/${room.id}`}>{room.name}</RouterLink>
-              </Typography>
-              <Typography sx={{ color: 'text.secondary' }}>
-                {room.currentCycle ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants` : 'No active crop'}
-              </Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0 }}>
+              <RoomGlyph color={roomTypeColor(room.roomType)} />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h3" sx={{ fontSize: { xs: 22, sm: 24 } }} data-testid="room-row-name">
+                  <RouterLink to={`/rooms/${room.id}`}>{room.name}</RouterLink>
+                </Typography>
+                <Typography sx={{ color: 'text.secondary' }}>
+                  {room.currentCycle ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants` : 'No active crop'}
+                </Typography>
+              </Box>
             </Box>
           }
           detail={
             <Box>
-              <Chip label={roomTypeLabel(room.roomType)} sx={{ mr: 1 }} />
+              <Chip
+                label={roomTypeLabel(room.roomType)}
+                sx={{ mr: 1, bgcolor: roomTypeColor(room.roomType), color: room.roomType === 'dry' ? '#173128' : '#fff' }}
+              />
               <Button component={RouterLink} to={`/rooms/${room.id}`} data-testid="open-room">
                 Open room
               </Button>

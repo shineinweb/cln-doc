@@ -4,11 +4,11 @@ Trim is the cultivation workspace for Harbor & Hill Cultivation. The room dashbo
 
 Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
-The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The left side of the page says “Know which rooms are yours before the day starts” and “Access follows the site.”
+The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, SOP, Settings, and Access. Rooms is marked Center. User manual, SOP, Settings, and Access open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a narrow screen, use **Open navigation**.
+After sign-in, the left navigation is Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, SOP, Settings, and Access. Each item has a small graphic. Rooms is marked Center. User manual, SOP, Settings, and Access open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Facility, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
-The top bar has a **Facility** switcher, your name, and **Sign out**.
+The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
 ## Who can open what
 
