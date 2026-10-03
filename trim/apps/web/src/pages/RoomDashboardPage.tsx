@@ -27,7 +27,7 @@ export function RoomDashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setSiteId } = useSites();
-  const [tab, setTab] = useState<'cycle' | 'room'>('cycle');
+  const [tab, setTab] = useState<'room' | 'tasks' | 'notes'>('room');
   const harvestCrop = useMutation({
     mutationFn: (cycleId: string) => apiSend('/harvests', harvestDetailSchema, { cycleId }),
     onSuccess: (harvest) => navigate(`/harvests/${harvest.id}`),
@@ -74,11 +74,12 @@ export function RoomDashboardPage() {
         title={room.data.name}
         lede="The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records."
       />
-      <Tabs value={tab} onChange={(_event, value: 'cycle' | 'room') => setTab(value)} sx={{ mb: 2 }}>
-        <Tab value="cycle" label="Crop cycle" data-testid="room-tab-cycle" />
+      <Tabs value={tab} onChange={(_event, value: 'room' | 'tasks' | 'notes') => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="room" label="Room" data-testid="room-tab-room" />
+        <Tab value="tasks" label="Tasks" data-testid="room-tab-tasks" />
+        <Tab value="notes" label="Notes" data-testid="room-tab-notes" />
       </Tabs>
-      {tab === 'cycle' ? (
+      {tab === 'room' ? (
         <Box>
           {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
           {cycle ? (
@@ -130,18 +131,8 @@ export function RoomDashboardPage() {
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
           ) : null}
-        </Box>
-      ) : (
-        <Box>
           <ZoneList roomId={room.data.id} zones={room.data.zones} />
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 3 }}>
-            <SignalCard title="Tasks due today" testId="tasks-due">
-              <PagedList
-                items={room.data.tasksDueToday}
-                empty="No tasks are due today."
-                render={(task) => <TaskDueRow key={task.id} task={task} />}
-              />
-            </SignalCard>
+          <Box sx={{ mb: 3 }}>
             <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
               <MetrcSync sync={room.data.lastMetrcSync} />
             </SignalCard>
@@ -157,11 +148,21 @@ export function RoomDashboardPage() {
               <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
                 Operating history
               </Typography>
-              <OperatingHistoryView history={room.data.operatingHistory} />
+              <OperatingHistoryView history={room.data.operatingHistory} hideObservations />
             </Box>
           ) : null}
         </Box>
-      )}
+      ) : null}
+      {tab === 'tasks' ? (
+        <SignalCard title="Tasks due today" testId="tasks-due">
+          <PagedList
+            items={room.data.tasksDueToday}
+            empty="No tasks are due today."
+            render={(task) => <TaskDueRow key={task.id} task={task} />}
+          />
+        </SignalCard>
+      ) : null}
+      {tab === 'notes' ? <RoomNotes cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} /> : null}
     </Box>
   );
 }
@@ -402,6 +403,39 @@ function ArchivedCrops({ roomId, cycles }: { roomId: string; cycles: RoomDetail[
           {cycle.harvestDate ? ` · harvest ${formatCalendarDate(cycle.harvestDate)}` : ' · no harvest date'}
         </Typography>
       ))}
+    </Box>
+  );
+}
+
+function RoomNotes({
+  cycleName,
+  notes,
+}: {
+  cycleName: string | null;
+  notes: { id: string; occurredOn: string; authorName: string; body: string }[];
+}) {
+  if (!cycleName) {
+    return <Alert severity="info">This room has no active crop cycle.</Alert>;
+  }
+
+  return (
+    <Box data-testid="room-notes">
+      <Typography variant="h2" sx={{ fontSize: 28, mb: 1 }}>
+        Notes
+      </Typography>
+      <Typography sx={{ color: 'text.secondary', mb: 2 }}>Notes recorded on {cycleName}.</Typography>
+      {notes.length === 0 ? (
+        <Alert severity="info">No notes are recorded for this crop.</Alert>
+      ) : (
+        notes.map((note) => (
+          <Box key={note.id} data-testid="room-note" sx={{ mb: 1.5 }}>
+            <Typography sx={{ fontWeight: 600 }}>
+              {formatCalendarDate(note.occurredOn)} · {note.authorName}
+            </Typography>
+            <Typography sx={{ color: 'text.secondary' }}>{note.body}</Typography>
+          </Box>
+        ))
+      )}
     </Box>
   );
 }

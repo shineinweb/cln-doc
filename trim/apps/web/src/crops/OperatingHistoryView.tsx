@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Typography } from '@mui/material';
 import type { OperatingHistory } from '@trim/contracts';
 import { formatCalendarDate } from './format';
 
-export function OperatingHistoryView({ history }: { history: OperatingHistory }) {
+export function OperatingHistoryView({ history, hideObservations = false }: { history: OperatingHistory; hideObservations?: boolean }) {
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <HistorySection title="Timeline">
@@ -36,20 +36,22 @@ export function OperatingHistoryView({ history }: { history: OperatingHistory })
           ))
         )}
       </HistorySection>
-      <HistorySection title="Observations">
-        {history.observations.length === 0 ? (
-          <EmptyLine>No observations are recorded.</EmptyLine>
-        ) : (
-          history.observations.map((observation) => (
-            <Box key={observation.id} sx={{ mb: 1.5 }}>
-              <Typography sx={{ fontWeight: 600 }}>
-                {formatCalendarDate(observation.occurredOn)} · {observation.authorName}
-              </Typography>
-              <Typography sx={{ color: 'text.secondary' }}>{observation.body}</Typography>
-            </Box>
-          ))
-        )}
-      </HistorySection>
+      {hideObservations ? null : (
+        <HistorySection title="Observations">
+          {history.observations.length === 0 ? (
+            <EmptyLine>No observations are recorded.</EmptyLine>
+          ) : (
+            history.observations.map((observation) => (
+              <Box key={observation.id} sx={{ mb: 1.5 }}>
+                <Typography sx={{ fontWeight: 600 }}>
+                  {formatCalendarDate(observation.occurredOn)} · {observation.authorName}
+                </Typography>
+                <Typography sx={{ color: 'text.secondary' }}>{observation.body}</Typography>
+              </Box>
+            ))
+          )}
+        </HistorySection>
+      )}
       <HistorySection title="Labor">
         {history.laborEntries.length === 0 ? (
           <EmptyLine>No labor entries are recorded.</EmptyLine>

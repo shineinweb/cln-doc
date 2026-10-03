@@ -78,22 +78,21 @@ Flower 1’s current crop is Cedar Nights flower. The plants from that crop have
 
 The room dashboard introduction says “The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records.”
 
-Two tabs sit under that line: **Crop cycle** and **Room**.
+The room opens on **Room**. Two more tabs sit beside it: **Tasks** and **Notes**.
 
-**Crop cycle** holds the current crop. The crop cycle form is not on the page until you choose **Reset room** or **Edit**.
+**Room** holds the current crop, zones, Metrc, readings, the gateway, the controller sample, and operating history. The crop cycle form is not on the page until you choose **Reset room** or **Edit**.
 
-**Reset room** is on the same tab for an organization admin. It opens a form: Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. The start date is day 1, and the form shows the calculated end date for the next crop. Saving closes the current crop, lists it under **Archived crops**, and starts the next crop from the strain. The harvest date, when entered, is stored on the crop being closed. Zones, readings, alerts, the gateway, and the controller sample stay on the **Room** tab. An employee does not see **Reset room**.
+**Reset room** is on **Room** for an organization admin. It opens a form: Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. The start date is day 1, and the form shows the calculated end date for the next crop. Saving closes the current crop, lists it under **Archived crops**, and starts the next crop from the strain. The harvest date, when entered, is stored on the crop being closed. Zones, readings, alerts, the gateway, and the controller sample stay on **Room**. An employee does not see **Reset room**.
 
 When a crop is active, the **Current crop** card shows the crop name and four figures: Cultivar, Plants, Stage, and Cycle day. Cycle day counts the start date as day 1 in the facility timezone. It also shows “Expected harvest”, **Edit**, and **Open crop cycle**. **Edit** opens the crop cycle form: Name, Cultivar, Stage, Start, and **Cycle duration in days**. The start date is day 1, and the form shows the calculated end date. **Save changes** writes that crop. **Cancel** closes the form. **Harvest this crop** appears only while the crop still has plants. Flower 1 does not show that button. Veg 1 does.
 
-If the room has no active crop, the **Crop cycle** tab says “This room has no active crop cycle.”
+If the room has no active crop, **Room** says “This room has no active crop cycle.”
 
-**Room** holds zones, today’s tasks, Metrc, readings, the gateway, the controller sample, and operating history. **Add zone** adds a zone under the room.
+**Add zone** adds a zone under the room. **Last successful Metrc sync** sits on **Room**. With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
 
-Two cards sit on that tab:
+**Tasks** lists **Tasks due today**. Empty rooms say “No tasks are due today.”
 
-- **Tasks due today.** Empty rooms say “No tasks are due today.”
-- **Last successful Metrc sync.** With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
+**Notes** lists notes recorded on the current crop. Each line shows the date, the author, and the note. If none are stored, it says “No notes are recorded for this crop.” A room with no crop says “This room has no active crop cycle.”
 
 **Latest environmental readings** lists Temperature, Relative humidity, CO₂, and Substrate. The line under the title says a reading older than the room’s threshold is stale, and names the timezone. Flower 1 and Veg 1 use 60 minutes. A metric with no reading is stale. A reading marked sample shows **Sample data**. A stale reading shows **Stale**.
 
@@ -111,7 +110,7 @@ Two cards sit on that tab:
 
 **Controller sample** lists stored controller rows and says they are sample data and do not clear or create range alerts. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. There is no control on this card that turns a controller row into a room reading or an alert.
 
-**Operating history** on the room, when present, has Timeline, Movements, Observations, Labor, and Harvest result.
+**Operating history** on **Room**, when present, has Timeline, Movements, Labor, and Harvest result. Observations for that crop are on **Notes**. The crop cycle page still lists Observations inside operating history.
 
 ## Crop cycles
 
