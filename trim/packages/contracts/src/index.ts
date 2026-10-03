@@ -1092,6 +1092,36 @@ export const trolmasterConnectionSchema = z.object({
   credentialSaved: z.literal(true),
 });
 
+export const trolmasterMetricSchema = z.enum(['ec', 'vwc', 'other']);
+
+export const trolmasterChartSchema = z.object({
+  controllerId: z.string().nullable(),
+  connected: z.boolean(),
+  message: z.string().nullable(),
+  latest: z.array(
+    z.object({
+      metric: trolmasterMetricSchema,
+      label: z.string(),
+      value: z.number(),
+      unit: z.string(),
+    }),
+  ),
+  series: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      metric: trolmasterMetricSchema,
+      unit: z.string(),
+      points: z.array(
+        z.object({
+          at: z.string(),
+          value: z.number(),
+        }),
+      ),
+    }),
+  ),
+});
+
 export const controllerSampleSchema = z.object({
   deviceId: z.string().trim().min(1).max(120),
   metric: z.string().trim().min(1).max(80),
@@ -1494,6 +1524,7 @@ export type AuditLogView = z.infer<typeof auditLogSchema>;
 export type AccessDirectory = z.infer<typeof accessDirectorySchema>;
 export type TrolmasterInput = z.infer<typeof trolmasterInputSchema>;
 export type TrolmasterConnection = z.infer<typeof trolmasterConnectionSchema>;
+export type TrolmasterChart = z.infer<typeof trolmasterChartSchema>;
 export type ControllerSample = z.infer<typeof controllerSampleSchema>;
 export type ControllerReading = z.infer<typeof controllerReadingSchema>;
 export type ScaleSampleInput = z.infer<typeof scaleSampleSchema>;

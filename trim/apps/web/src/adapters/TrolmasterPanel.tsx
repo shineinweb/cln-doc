@@ -28,6 +28,7 @@ export function TrolmasterPanel({ siteId, roomId }: { siteId: string; roomId: st
       setControllerId('');
       setApiCredential('');
       await queryClient.invalidateQueries({ queryKey: ['trolmaster', siteId] });
+      await queryClient.invalidateQueries({ queryKey: ['trolmaster-chart', roomId] });
     },
     onError: (error: Error) => setMessage(error.message),
   });
@@ -38,7 +39,7 @@ export function TrolmasterPanel({ siteId, roomId }: { siteId: string; roomId: st
         Trolmaster settings
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 2 }}>
-        This stores the controller id and credential for this room. Trim does not call TrolMaster.
+        This stores the controller id and credential for this room. The Room tab reads the chart from Trolmaster.
       </Typography>
       <Box
         component="form"

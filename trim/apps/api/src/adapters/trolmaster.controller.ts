@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import {
+  trolmasterChartSchema,
   trolmasterConnectionSchema,
   trolmasterInputSchema,
   type SessionUser,
+  type TrolmasterChart,
   type TrolmasterConnection,
   type TrolmasterInput,
 } from '@trim/contracts';
@@ -31,5 +33,16 @@ export class TrolmasterController {
     @Body(new ZodValidationPipe(trolmasterInputSchema)) body: TrolmasterInput,
   ): Promise<TrolmasterConnection> {
     return trolmasterConnectionSchema.parse(await this.trolmaster.save(user, siteId, body));
+  }
+}
+
+@Controller('rooms/:roomId/trolmaster')
+@UseGuards(JwtAuthGuard)
+export class TrolmasterChartController {
+  constructor(private readonly trolmaster: TrolmasterService) {}
+
+  @Get('chart')
+  async chart(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string): Promise<TrolmasterChart> {
+    return trolmasterChartSchema.parse(await this.trolmaster.chart(user, roomId));
   }
 }

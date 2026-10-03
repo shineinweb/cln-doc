@@ -16,6 +16,7 @@ import { PageHeader } from '../components/PageHeader';
 import { addCalendarDays, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
+import { TrolmasterChart } from '../adapters/TrolmasterChart';
 import { TrolmasterPanel } from '../adapters/TrolmasterPanel';
 import { RoomAlertRules, RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
@@ -69,7 +70,7 @@ export function RoomDashboardPage() {
       <PageHeader
         kicker={`${room.data.siteName} · ${roomTypeLabel(room.data.roomType)}`}
         title={room.data.name}
-        lede="The room opens on operating history. Zones, Trolmaster settings, and room settings are on their own tabs."
+        lede="The room opens on the Trolmaster chart and operating history. Zones, Trolmaster settings, and room settings are on their own tabs."
       />
       <Tabs value={tab} onChange={(_event, value: RoomTab) => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="room" label="Room" data-testid="room-tab-room" />
@@ -80,17 +81,20 @@ export function RoomDashboardPage() {
         <Tab value="settings" label="Settings" data-testid="room-tab-settings" />
       </Tabs>
       {tab === 'room' ? (
-        <Box data-testid="room-operating-history">
-          {room.data.operatingHistory ? (
-            <Box>
-              <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
-                Operating history
-              </Typography>
-              <OperatingHistoryView history={room.data.operatingHistory} hideObservations timeZone={room.data.siteTimezone} />
-            </Box>
-          ) : (
-            <Alert severity="info">This room has no operating history.</Alert>
-          )}
+        <Box sx={{ display: 'grid', gap: 3 }}>
+          <TrolmasterChart roomId={room.data.id} timeZone={room.data.siteTimezone} />
+          <Box data-testid="room-operating-history">
+            {room.data.operatingHistory ? (
+              <Box>
+                <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
+                  Operating history
+                </Typography>
+                <OperatingHistoryView history={room.data.operatingHistory} hideObservations timeZone={room.data.siteTimezone} />
+              </Box>
+            ) : (
+              <Alert severity="info">This room has no operating history.</Alert>
+            )}
+          </Box>
         </Box>
       ) : null}
       {tab === 'tasks' ? (

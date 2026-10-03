@@ -1152,7 +1152,7 @@ model SensorGateway {
   @@map("sensor_gateways")
 }
 
-/// A stored TrolMaster controller id and API credential. Trim does not call TrolMaster.
+/// A stored TrolMaster controller id and API credential. The room chart calls Trolmaster with this credential.
 model TrolmasterConnection {
   id            String   @id @default(cuid())
   siteId        String   @map("site_id")
