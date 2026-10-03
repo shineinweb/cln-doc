@@ -1,3 +1,10 @@
+/** Add calendar days to a YYYY-MM-DD key. Offset 0 is that date, which is cycle day 1. */
+export function addCalendarDays(dateKey: string, days: number): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const utc = new Date(Date.UTC(year, (month ?? 1) - 1, (day ?? 1) + days));
+  return utc.toISOString().slice(0, 10);
+}
+
 export function formatCalendarDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number);
   if (!year || !month || !day) {

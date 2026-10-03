@@ -14,13 +14,13 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 1. Open **Facility** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
 2. Open **Rooms** and choose the room. The page says “Open a room to see its current crop, cycle day, and operating history.”
-3. On the room dashboard, read **Current crop**: Cultivar, Plants, Stage, Cycle day, and Expected harvest. Cycle day counts the start date as day 1 in `America/Los_Angeles`.
-4. Read **Tasks due today**. On October 3, 2026, Flower 1 lists Lower-leaf pass and Veg 1 lists Scout the canopy.
+3. On the room dashboard, open the **Crop cycle** tab and read **Current crop**: Cultivar, Plants, Stage, Cycle day, and Expected harvest. Cycle day counts the start date as day 1 in `America/Los_Angeles`.
+4. Open the **Room** tab and read **Tasks due today**. On October 3, 2026, Flower 1 lists Lower-leaf pass and Veg 1 lists Scout the canopy.
 5. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
 6. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
 7. Read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
 8. Read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
-9. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” and “No tasks are due today.”
+9. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on the **Crop cycle** tab and “No tasks are due today” on the **Room** tab.
 
 **Done.** You can name the crop, the cycle day, the task due today, and whether a reading or alert needs attention. Flower 1 shows Cedar Nights flower with 0 plants because that crop is already harvested. Veg 1 shows Glass Orchard veg with 86 plants still in the room.
 
@@ -57,7 +57,7 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 3. Open **Crop cycles**, choose the facility, and open the cycle.
 4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
 
-Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no Start cycle button on Workflows or on the cycle page.
+Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. **Start cycle** is on the room dashboard **Crop cycle** tab, inside **Start a crop cycle**. It is not on **Crop cycles**, **Workflows**, or the cycle page. The form asks for **Cycle duration in days**. The start date is day 1, and the page shows the calculated end date. A duration of 22 days from September 12, 2026 ends October 3, 2026.
 
 **Done.** The cycle page shows the template chip and the generated tasks. A cycle with no template says “This cycle has no workflow assignments yet.”
 
@@ -194,12 +194,12 @@ The stored Cedar Nights flower harvest on `OR-CULT-44821` is already through thi
 
 **Steps.**
 
-1. Open the room dashboard.
+1. Open the room dashboard and choose the **Room** tab.
 2. Under **Record a reading**, enter Device, Metric, Value, Unit, Timestamp, and Quality. Quality is Good, Suspect, or Bad.
 3. Leave **Sample data** unchecked for a live sensor. Check it only when the row is not a live sensor.
 4. Choose **Save reading**. A time you type without a timezone is the facility’s local time.
 5. To load a file instead, use **Import a CSV**. The columns are `device_id`, `metric`, `value`, `unit`, `recorded_at`, `quality`, and `sample`. Choose **Import readings**.
-6. For a live gateway post, use **Environment gateway** on the same room. Harbor House environment says it posts a live reading and is not sample data. Enter Device, Metric, Value, Unit, Timestamp, and Quality, then **Post gateway reading**. There is no sample checkbox on that form.
+6. For a live gateway post, use **Environment gateway** on the **Room** tab. Harbor House environment says it posts a live reading and is not sample data. Enter Device, Metric, Value, Unit, Timestamp, and Quality, then **Post gateway reading**. There is no sample checkbox on that form.
 7. To add an alert, set **Alert rule** to “Stale metric” or “Outside a range,” enter Minimum and Maximum for a range, and choose **Save alert rule**.
 
 A controller sample is not this procedure. It stays on **Controller sample**, labeled Sample data, and it does not clear or create a range alert.

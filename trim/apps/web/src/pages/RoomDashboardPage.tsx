@@ -1,22 +1,32 @@
-import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, TextField, Typography } from '@mui/material';
-import { harvestDetailSchema, recordRemovedSchema, roomDetailSchema, zoneSchema, type RoomDetail, type Zone } from '@trim/contracts';
+import { Alert, Box, Button, Card, CardContent, Chip, MenuItem, Skeleton, Tab, Tabs, TextField, Typography } from '@mui/material';
+import {
+  harvestDetailSchema,
+  recordRemovedSchema,
+  roomDetailSchema,
+  startedCycleSchema,
+  workflowDirectorySchema,
+  zoneSchema,
+  type RoomDetail,
+  type Zone,
+} from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
-import { cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
+import { addCalendarDays, cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
-import { roomTypeLabel, workbench } from '../theme';
+import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
 
 export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
   const navigate = useNavigate();
   const { setSiteId } = useSites();
+  const [tab, setTab] = useState<'cycle' | 'room'>('cycle');
   const harvestCrop = useMutation({
     mutationFn: (cycleId: string) => apiSend('/harvests', harvestDetailSchema, { cycleId }),
     onSuccess: (harvest) => navigate(`/harvests/${harvest.id}`),
@@ -63,81 +73,220 @@ export function RoomDashboardPage() {
         title={room.data.name}
         lede="The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records."
       />
-      <ZoneList roomId={room.data.id} zones={room.data.zones} />
-      {cycle ? (
-        <Card sx={{ mb: 2 }} data-testid="current-cycle">
-          <CardContent>
-            <Typography variant="overline" sx={{ color: 'primary.main', letterSpacing: '0.14em' }}>
-              Current crop
-            </Typography>
-            <Typography variant="h2" sx={{ fontSize: 32 }} data-testid="room-crop-name">
-              {cycle.name}
-            </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2, mt: 2 }}>
-              <Metric label="Cultivar" value={cycle.cultivar} testId="room-cultivar" />
-              <Metric label="Plants" value={String(cycle.plantCount)} testId="room-plant-count" />
-              <Metric label="Stage" value={roomTypeLabel(cycle.stage)} testId="room-stage" />
-              <Metric label="Cycle day" value={cycleDayLabel(cycle.cycleDay)} testId="room-cycle-day" />
-            </Box>
-            <Typography sx={{ mt: 2 }} data-testid="room-expected-harvest">
-              Expected harvest {formatCalendarDate(cycle.expectedHarvestDate)}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-              <Button component={RouterLink} to={`/rooms/${room.data.id}/cycles/${cycle.id}`} variant="contained" data-testid="open-cycle">
-                Open crop cycle
-              </Button>
-              {cycle.plantCount > 0 ? (
-                <Button
-                  variant="outlined"
-                  data-testid="harvest-crop"
-                  disabled={harvestCrop.isPending}
-                  onClick={() => harvestCrop.mutate(cycle.id)}
-                >
-                  Harvest this crop
-                </Button>
-              ) : null}
-            </Box>
-            {harvestCrop.error ? (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {harvestCrop.error.message}
-              </Alert>
-            ) : null}
-          </CardContent>
-        </Card>
-      ) : (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          This room has no active crop cycle.
-        </Alert>
-      )}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 3 }}>
-        <SignalCard title="Tasks due today" testId="tasks-due">
-          <PagedList
-            items={room.data.tasksDueToday}
-            empty="No tasks are due today."
-            render={(task) => (
-              <TaskDueRow key={task.id} task={task} />
-            )}
-          />
-        </SignalCard>
-        <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
-          <MetrcSync sync={room.data.lastMetrcSync} />
-        </SignalCard>
-      </Box>
-      <Box sx={{ mb: 3 }}>
-        <RoomEnvironment room={room.data} />
-      </Box>
-      <Box sx={{ mb: 3 }}>
-        <RoomAdapters roomId={room.data.id} siteId={room.data.siteId} timeZone={room.data.siteTimezone} />
-      </Box>
-      {room.data.operatingHistory ? (
+      <Tabs value={tab} onChange={(_event, value: 'cycle' | 'room') => setTab(value)} sx={{ mb: 2 }}>
+        <Tab value="cycle" label="Crop cycle" data-testid="room-tab-cycle" />
+        <Tab value="room" label="Room" data-testid="room-tab-room" />
+      </Tabs>
+      {tab === 'cycle' ? (
         <Box>
-          <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
-            Operating history
-          </Typography>
-          <OperatingHistoryView history={room.data.operatingHistory} />
+          <StartCycleForm roomId={room.data.id} roomType={room.data.roomType} />
+          {cycle ? (
+            <Card sx={{ mb: 2 }} data-testid="current-cycle">
+              <CardContent>
+                <Typography variant="overline" sx={{ color: 'primary.main', letterSpacing: '0.14em' }}>
+                  Current crop
+                </Typography>
+                <Typography variant="h2" sx={{ fontSize: 32 }} data-testid="room-crop-name">
+                  {cycle.name}
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2, mt: 2 }}>
+                  <Metric label="Cultivar" value={cycle.cultivar} testId="room-cultivar" />
+                  <Metric label="Plants" value={String(cycle.plantCount)} testId="room-plant-count" />
+                  <Metric label="Stage" value={roomTypeLabel(cycle.stage)} testId="room-stage" />
+                  <Metric label="Cycle day" value={cycleDayLabel(cycle.cycleDay)} testId="room-cycle-day" />
+                </Box>
+                <Typography sx={{ mt: 2 }} data-testid="room-expected-harvest">
+                  Expected harvest {formatCalendarDate(cycle.expectedHarvestDate)}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                  <Button component={RouterLink} to={`/rooms/${room.data.id}/cycles/${cycle.id}`} variant="contained" data-testid="open-cycle">
+                    Open crop cycle
+                  </Button>
+                  {cycle.plantCount > 0 ? (
+                    <Button
+                      variant="outlined"
+                      data-testid="harvest-crop"
+                      disabled={harvestCrop.isPending}
+                      onClick={() => harvestCrop.mutate(cycle.id)}
+                    >
+                      Harvest this crop
+                    </Button>
+                  ) : null}
+                </Box>
+                {harvestCrop.error ? (
+                  <Alert severity="error" sx={{ mt: 2 }}>
+                    {harvestCrop.error.message}
+                  </Alert>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              This room has no active crop cycle.
+            </Alert>
+          )}
         </Box>
-      ) : null}
+      ) : (
+        <Box>
+          <ZoneList roomId={room.data.id} zones={room.data.zones} />
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 3 }}>
+            <SignalCard title="Tasks due today" testId="tasks-due">
+              <PagedList
+                items={room.data.tasksDueToday}
+                empty="No tasks are due today."
+                render={(task) => <TaskDueRow key={task.id} task={task} />}
+              />
+            </SignalCard>
+            <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
+              <MetrcSync sync={room.data.lastMetrcSync} />
+            </SignalCard>
+          </Box>
+          <Box sx={{ mb: 3 }}>
+            <RoomEnvironment room={room.data} />
+          </Box>
+          <Box sx={{ mb: 3 }}>
+            <RoomAdapters roomId={room.data.id} siteId={room.data.siteId} timeZone={room.data.siteTimezone} />
+          </Box>
+          {room.data.operatingHistory ? (
+            <Box>
+              <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
+                Operating history
+              </Typography>
+              <OperatingHistoryView history={room.data.operatingHistory} />
+            </Box>
+          ) : null}
+        </Box>
+      )}
     </Box>
+  );
+}
+
+function StartCycleForm({ roomId, roomType }: { roomId: string; roomType: string }) {
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [durationDays, setDurationDays] = useState('');
+  const [templateVersionId, setTemplateVersionId] = useState('');
+  const directory = useQuery({
+    queryKey: ['workflow-directory'],
+    queryFn: () => apiGet('/workflows/directory', workflowDirectorySchema),
+  });
+  const templates = directory.data?.templates ?? [];
+  useEffect(() => {
+    const first = templates[0];
+    if (!first || templateVersionId) {
+      return;
+    }
+    setTemplateVersionId(first.currentVersion.id);
+    setDurationDays(String(first.currentVersion.durationDays));
+  }, [templateVersionId, templates]);
+  const endDate = useMemo(() => {
+    const days = Number(durationDays);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !Number.isInteger(days) || days < 1) {
+      return null;
+    }
+    return addCalendarDays(startDate, days - 1);
+  }, [durationDays, startDate]);
+  const save = useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiSend('/cycles', startedCycleSchema, body),
+    onSuccess: async () => {
+      setMessage('Crop cycle started.');
+      await queryClient.invalidateQueries({ queryKey: ['sites'] });
+      await queryClient.invalidateQueries({ queryKey: ['room', roomId] });
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+  const stage = roomType in ROOM_TYPE_LABELS ? roomType : 'flower';
+
+  return (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
+          Start a crop cycle
+        </Typography>
+        <Box
+          component="form"
+          sx={{ display: 'grid', gap: 1.5, maxWidth: 480 }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!endDate) {
+              return;
+            }
+            const form = new FormData(event.currentTarget);
+            save.mutate({
+              roomId,
+              name: String(form.get('name') ?? ''),
+              cultivar: String(form.get('cultivar') ?? ''),
+              plantCount: Number(form.get('plantCount')),
+              stage: String(form.get('stage') ?? ''),
+              startDate,
+              expectedHarvestDate: endDate,
+              templateVersionId,
+            });
+          }}
+        >
+          <TextField label="Name" name="name" required />
+          <TextField label="Cultivar" name="cultivar" required />
+          <TextField label="Plant count" name="plantCount" type="number" required inputProps={{ min: 1 }} />
+          <TextField select label="Stage" name="stage" defaultValue={stage}>
+            {Object.entries(ROOM_TYPE_LABELS).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Start"
+            name="startDate"
+            type="date"
+            required
+            value={startDate}
+            onChange={(event) => setStartDate(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'cycle-start' }}
+          />
+          <TextField
+            label="Cycle duration in days"
+            name="durationDays"
+            type="number"
+            required
+            value={durationDays}
+            onChange={(event) => setDurationDays(event.target.value)}
+            inputProps={{ min: 1, step: 1, 'data-testid': 'cycle-duration' }}
+          />
+          <Typography data-testid="cycle-end-date" sx={{ color: endDate ? 'text.primary' : 'text.secondary' }}>
+            {endDate ? `End of cycle ${formatCalendarDate(endDate)}.` : 'End of cycle is calculated from the start date and the duration. The start date is day 1.'}
+          </Typography>
+          <TextField
+            select
+            label="Template"
+            name="templateVersionId"
+            value={templateVersionId}
+            required
+            onChange={(event) => {
+              const versionId = event.target.value;
+              setTemplateVersionId(versionId);
+              const template = templates.find((item) => item.currentVersion.id === versionId);
+              if (template) {
+                setDurationDays(String(template.currentVersion.durationDays));
+              }
+            }}
+          >
+            {templates.map((template) => (
+              <MenuItem key={template.currentVersion.id} value={template.currentVersion.id}>
+                {template.name}
+                {template.cultivar ? ` · ${template.cultivar}` : ''}
+                {template.medium ? ` · ${template.medium}` : ''}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Button type="submit" variant="contained" disabled={save.isPending || !endDate} data-testid="start-cycle" sx={{ justifySelf: 'start' }}>
+            Start cycle
+          </Button>
+        </Box>
+        {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
+      </CardContent>
+    </Card>
   );
 }
 

@@ -78,11 +78,17 @@ Flower 1’s current crop is Cedar Nights flower. The plants from that crop have
 
 The room dashboard introduction says “The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records.”
 
+Two tabs sit under that line: **Crop cycle** and **Room**.
+
+**Crop cycle** holds **Start a crop cycle** and the current crop. The form asks for Name, Cultivar, Plant count, Stage, Start, **Cycle duration in days**, and Template. The room is already open, so there is no room picker. The start date is day 1. The end of the cycle is that start date plus the duration, counting the start date as one of the days. A duration of 22 days that starts September 12, 2026 ends October 3, 2026, and the form shows “End of cycle Oct 3, 2026.” Choosing a template fills the duration from that template. Canopy week fills 28. **Start cycle** saves the cycle on this room. The stored expected harvest is that calculated date.
+
 When a crop is active, the **Current crop** card shows the crop name and four figures: Cultivar, Plants, Stage, and Cycle day. Cycle day counts the start date as day 1 in the facility timezone. It also shows “Expected harvest” and **Open crop cycle**. **Harvest this crop** appears only while the crop still has plants. Flower 1 does not show that button. Veg 1 does.
 
-If the room has no active crop, the page says “This room has no active crop cycle.”
+If the room has no active crop, the **Crop cycle** tab says “This room has no active crop cycle.”
 
-Two cards sit under the crop:
+**Room** holds zones, today’s tasks, Metrc, readings, the gateway, the controller sample, and operating history. **Add zone** adds a zone under the room.
+
+Two cards sit on that tab:
 
 - **Tasks due today.** Empty rooms say “No tasks are due today.”
 - **Last successful Metrc sync.** With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
@@ -99,7 +105,7 @@ Two cards sit under the crop:
 
 **Alert rule** can be “Stale metric” or “Outside a range,” with Minimum and Maximum for a range. **Save alert rule** keeps it. The page then says “Alert rule saved.”
 
-**Environment gateway** is on the same room page. It names the site gateway, such as “Harbor House environment,” and says it posts a live reading and is not sample data. The form asks for Device, Metric, Value, Unit, Timestamp, and Quality. **Post gateway reading** updates the latest reading for that metric. A site with no gateway says “No environment gateway is registered for this site.”
+**Environment gateway** is on the **Room** tab. It names the site gateway, such as “Harbor House environment,” and says it posts a live reading and is not sample data. The form asks for Device, Metric, Value, Unit, Timestamp, and Quality. **Post gateway reading** updates the latest reading for that metric. A site with no gateway says “No environment gateway is registered for this site.”
 
 **Controller sample** lists stored controller rows and says they are sample data and do not clear or create range alerts. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. There is no control on this card that turns a controller row into a room reading or an alert.
 
@@ -107,7 +113,7 @@ Two cards sit under the crop:
 
 ## Crop cycles
 
-**Crop cycles** lists active cycles for the facility in the switcher. Each card shows the crop, room, cultivar, plant count, expected harvest, stage, and cycle day. Open one for the timeline, movements, observations, and labor.
+**Crop cycles** lists active cycles for the facility in the switcher. Each card shows the crop, room, cultivar, plant count, expected harvest, stage, and cycle day. Open one for the timeline, movements, observations, and labor. A new cycle is started on the room dashboard **Crop cycle** tab. This list does not start one. **Edit** on a listed cycle still changes the name, cultivar, and expected harvest date.
 
 The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned.
 
@@ -133,7 +139,7 @@ Avery can save three things on this page:
 
 - **SOP record**, with Title, Summary, and **Save SOP**. The seeded note is Canopy scout: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.”
 - **Team**, with Team name, Member, and **Save team**. The seeded team is Canopy crew.
-- **New template**, then **Save template**. Fields are Template name, Cultivar, Medium, Duration in days, Starting event, Task key, Task title, Days after the starting event, Instructions, Assign to (Role, Team, or Employee), and Linked SOP. The starting-event hint says “Use cycle_start, or the title of a timeline event.” Saving a name that already exists reports “A workflow template with that name already exists.” This form creates a new template. It does not edit Canopy week in place, and the page has no separate Start cycle button.
+- **New template**, then **Save template**. Fields are Template name, Cultivar, Medium, Duration in days, Starting event, Task key, Task title, Days after the starting event, Instructions, Assign to (Role, Team, or Employee), and Linked SOP. The starting-event hint says “Use cycle_start, or the title of a timeline event.” Saving a name that already exists reports “A workflow template with that name already exists.” This form creates a new template. It does not edit Canopy week in place, and the page has no Start cycle button. **Start cycle** is on the room dashboard **Crop cycle** tab.
 
 **Cultivar** and **Medium** are optional. Leave them blank when the template is not for one cultivar or one medium. A filled card adds “Cultivar …” and “Medium …”. The seeded templates are **Cedar Nights coco week** (Cultivar Cedar Nights, Medium coco, task Check runoff, linked to Irrigation pass) and **Glass Orchard soil week** (Cultivar Glass Orchard, Medium soil, task Scout the benches, linked to IPM scout). Canopy week has neither, so it stays a general template.
 
