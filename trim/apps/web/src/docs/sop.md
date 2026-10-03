@@ -315,13 +315,13 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 ## Adding a user
 
-**Who.** Avery, the organization admin. An employee sees **Access** and cannot save.
+**Who.** Avery, the organization admin. An employee sees **Users** and cannot save.
 
 **When.** A new person needs a sign-in.
 
 **Steps.**
 
-1. Open **Access**. The page opens on **Users**.
+1. Open **Users**, directly under **Dashboard**. The page opens on **Users**.
 2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters.
 3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
 4. Choose **Add user**. The person appears in the table. **Audit logs** records the change.

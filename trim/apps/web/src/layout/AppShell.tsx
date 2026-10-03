@@ -28,7 +28,9 @@ import { useSites } from './SiteProvider';
 const DRAWER_WIDTH = 248;
 
 const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: GlyphName }[] = [
-  { to: '/', label: 'Facility', end: true, glyph: 'facility' },
+  { to: '/', label: 'Dashboard', end: true, glyph: 'dashboard' },
+  { to: '/access', label: 'Users', end: true, glyph: 'access' },
+  { to: '/facilities', label: 'Facility', end: true, glyph: 'facility' },
   { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms' },
   { to: '/crop-cycles', label: 'Crop cycles', end: true, glyph: 'cycles' },
   { to: '/workflows', label: 'Workflows', end: true, glyph: 'workflows' },
@@ -40,11 +42,10 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual' },
   { to: '/sop', label: 'SOP', end: true, glyph: 'sop' },
   { to: '/settings', label: 'Settings', end: true, glyph: 'settings' },
-  { to: '/access', label: 'Access', end: true, glyph: 'access' },
 ];
 
 const PHONE_NAV = [
-  { to: '/', label: 'Facility', glyph: 'facility' as const, match: (path: string) => path === '/' },
+  { to: '/', label: 'Dashboard', glyph: 'dashboard' as const, match: (path: string) => path === '/' },
   { to: '/rooms', label: 'Rooms', glyph: 'rooms' as const, match: (path: string) => path.startsWith('/rooms') },
   { to: '/workspace', label: 'Workspace', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace') },
   { to: '/harvests', label: 'Harvests', glyph: 'harvests' as const, match: (path: string) => path.startsWith('/harvests') },

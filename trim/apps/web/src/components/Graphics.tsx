@@ -1,6 +1,7 @@
 import { workbench } from '../theme';
 
 export type GlyphName =
+  | 'dashboard'
   | 'facility'
   | 'rooms'
   | 'cycles'
@@ -27,6 +28,16 @@ export function NavGlyph({ name }: { name: GlyphName }) {
 function GlyphPath({ name }: { name: GlyphName }) {
   const stroke = 'currentColor';
   const common = { stroke, strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  if (name === 'dashboard') {
+    return (
+      <>
+        <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6" {...common} />
+        <rect x="13" y="3.5" width="7.5" height="5" rx="1.6" {...common} />
+        <rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6" {...common} />
+        <rect x="13" y="10.5" width="7.5" height="10" rx="1.6" {...common} />
+      </>
+    );
+  }
   if (name === 'facility') {
     return (
       <>

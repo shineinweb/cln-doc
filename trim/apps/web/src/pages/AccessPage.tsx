@@ -50,7 +50,7 @@ export function AccessPage() {
   return (
     <Box>
       <PageHeader
-        kicker="Access"
+        kicker="Users"
         title="Users, roles, and permissions"
         lede="Add and change the people who can sign in, the roles they hold, and the permissions those roles grant. The audit log records sign-ins and these changes."
       />

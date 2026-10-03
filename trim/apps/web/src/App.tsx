@@ -4,6 +4,7 @@ import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './layout/AppShell';
 import { SiteProvider } from './layout/SiteProvider';
 import { AccessPage } from './pages/AccessPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { FacilityPage } from './pages/FacilityPage';
 import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
@@ -41,7 +42,8 @@ const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <FacilityPage /> },
+      { index: true, element: <DashboardPage /> },
+      { path: 'facilities', element: <FacilityPage /> },
       { path: 'facility', element: <Navigate to="/rooms" replace /> },
       { path: 'rooms', element: <RoomsPage /> },
       { path: 'rooms/:roomId', element: <RoomDashboardPage /> },
