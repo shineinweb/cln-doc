@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { SessionUser, TrolmasterChart, TrolmasterConnection, TrolmasterInput, TrolmasterMode } from '@trim/contracts';
+import type { SessionUser, TrolmasterChart, TrolmasterConnection, TrolmasterInput, TrolmasterMode, TrolmasterRange } from '@trim/contracts';
 import { assertSiteAccess } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
 import { fetchTrolmasterHistory, parseTrolmasterHistory, type TrolmasterMetric } from './trolmaster-client';
@@ -56,7 +56,7 @@ export class TrolmasterService {
     return { enabled, testMode };
   }
 
-  async chart(user: SessionUser, roomId: string): Promise<TrolmasterChart> {
+  async chart(user: SessionUser, roomId: string, range: TrolmasterRange = 'day'): Promise<TrolmasterChart> {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
       include: { site: true, trolmasterConnection: true },
@@ -76,7 +76,8 @@ export class TrolmasterService {
       return blankChart(null, true, false, 'Save a Trolmaster controller on Trolmaster settings.');
     }
     const end = new Date();
-    const start = new Date(end.getTime() - 4 * 24 * 60 * 60 * 1000);
+    const hours = range === 'month' ? 24 * 30 : range === 'week' ? 24 * 7 : 24;
+    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
     try {
       const payload = await fetchTrolmasterHistory({
         apiKey: connection.apiCredential,
@@ -136,7 +137,7 @@ function blankChart(
 function latestReadings(
   series: TrolmasterChart['series'],
 ): TrolmasterChart['latest'] {
-  return (['ec', 'vwc'] as const).flatMap((metric) => {
+  return (['temp', 'humid', 'co2', 'vpd', 'light', 'ec', 'vwc'] as const).flatMap((metric) => {
     const match = series.find((item) => item.metric === metric && /pw/i.test(item.name)) ?? series.find((item) => item.metric === metric);
     const point = match?.points.at(-1);
     if (!match || !point) {
@@ -147,11 +148,16 @@ function latestReadings(
 }
 
 function headline(metric: TrolmasterMetric, name: string): string {
+  const labels: Partial<Record<TrolmasterMetric, string>> = {
+    temp: 'Temp',
+    humid: 'Humid',
+    co2: 'CO2',
+    vpd: 'VPD',
+    light: 'Light',
+    vwc: 'VWC',
+  };
   if (metric === 'ec') {
     return /pw/i.test(name) ? 'EC PW' : 'EC';
   }
-  if (metric === 'vwc') {
-    return 'VWC';
-  }
-  return name;
+  return labels[metric] ?? name;
 }

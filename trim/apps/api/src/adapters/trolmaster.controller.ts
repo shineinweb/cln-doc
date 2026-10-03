@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { z } from 'zod';
 import {
   trolmasterChartSchema,
   trolmasterConnectionSchema,
   trolmasterInputSchema,
   trolmasterModeSchema,
+  trolmasterRangeSchema,
   type SessionUser,
   type TrolmasterChart,
   type TrolmasterConnection,
@@ -44,8 +45,13 @@ export class TrolmasterChartController {
   constructor(private readonly trolmaster: TrolmasterService) {}
 
   @Get('chart')
-  async chart(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string): Promise<TrolmasterChart> {
-    return trolmasterChartSchema.parse(await this.trolmaster.chart(user, roomId));
+  async chart(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Query('range') range?: string,
+  ): Promise<TrolmasterChart> {
+    const parsed = trolmasterRangeSchema.safeParse(range ?? 'day');
+    return trolmasterChartSchema.parse(await this.trolmaster.chart(user, roomId, parsed.success ? parsed.data : 'day'));
   }
 
   @Patch()

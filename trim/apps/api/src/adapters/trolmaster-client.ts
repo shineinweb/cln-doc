@@ -3,7 +3,7 @@ export const TROLMASTER_API_BASE = 'https://api.trolmaster.com';
 const MAX_SERIES = 40;
 const MAX_POINTS = 360;
 
-export type TrolmasterMetric = 'ec' | 'vwc' | 'other';
+export type TrolmasterMetric = 'temp' | 'humid' | 'co2' | 'vpd' | 'light' | 'ec' | 'vwc' | 'other';
 
 export interface TrolmasterPoint {
   at: string;
@@ -204,6 +204,21 @@ function unitOf(value: Record<string, unknown>): string {
 
 function classify(name: string, unit: string): TrolmasterMetric {
   const text = `${name} ${unit}`.toLowerCase();
+  if (/ppfd|\blight\b/.test(text)) {
+    return 'light';
+  }
+  if (/\bvpd\b|vapor pressure/.test(text)) {
+    return 'vpd';
+  }
+  if (/\bco2\b|carbon dioxide/.test(text)) {
+    return 'co2';
+  }
+  if (/humid|\brh\b|relative humidity/.test(text)) {
+    return 'humid';
+  }
+  if (/temp|°f|°c|\bf\b|\bc\b/.test(text) && !/attempt/.test(text)) {
+    return 'temp';
+  }
   if (/\bec\b|ds\/m|ms\/cm|conductivity/.test(text)) {
     return 'ec';
   }
@@ -214,23 +229,41 @@ function classify(name: string, unit: string): TrolmasterMetric {
 }
 
 function defaultUnit(metric: TrolmasterMetric): string {
+  if (metric === 'temp') {
+    return '°F';
+  }
+  if (metric === 'humid' || metric === 'vwc') {
+    return '%';
+  }
+  if (metric === 'co2') {
+    return 'PPM';
+  }
+  if (metric === 'vpd') {
+    return 'kPa';
+  }
+  if (metric === 'light') {
+    return 'PPFD';
+  }
   if (metric === 'ec') {
     return 'dS/m';
-  }
-  if (metric === 'vwc') {
-    return '%';
   }
   return '';
 }
 
 function labelFromKey(key: string): string {
-  if (key.toLowerCase() === 'ec') {
-    return 'EC';
-  }
-  if (key.toLowerCase() === 'vwc') {
-    return 'VWC';
-  }
-  return key.slice(0, 80);
+  const labels: Record<string, string> = {
+    temp: 'Temp',
+    temperature: 'Temp',
+    humid: 'Humid',
+    humidity: 'Humid',
+    co2: 'CO2',
+    vpd: 'VPD',
+    light: 'Light',
+    ppfd: 'Light',
+    ec: 'EC',
+    vwc: 'VWC',
+  };
+  return labels[key.toLowerCase()] ?? key.slice(0, 80);
 }
 
 function timeKeyOf(row: Record<string, unknown>): string | null {

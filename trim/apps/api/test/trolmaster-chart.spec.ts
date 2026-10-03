@@ -30,4 +30,17 @@ describe('Trolmaster history parser', () => {
     ]);
     expect(wide.map((series) => series.metric).sort()).toEqual(['ec', 'vwc']);
   });
+
+  it('reads temperature, humidity, CO2, VPD, and light', () => {
+    const history = parseTrolmasterHistory({
+      series: [
+        { name: 'Temp', unit: '°F', points: [{ at: '2026-10-03T14:00:00.000Z', value: 80.1 }] },
+        { name: 'Humid', unit: '%', points: [{ at: '2026-10-03T14:00:00.000Z', value: 61.2 }] },
+        { name: 'CO2', unit: 'PPM', points: [{ at: '2026-10-03T14:00:00.000Z', value: 0 }] },
+        { name: 'VPD', unit: 'kPa', points: [{ at: '2026-10-03T14:00:00.000Z', value: 2.56 }] },
+        { name: 'Light', unit: 'PPFD', points: [{ at: '2026-10-03T14:00:00.000Z', value: 0 }] },
+      ],
+    });
+    expect(history.map((series) => series.metric)).toEqual(['temp', 'humid', 'co2', 'vpd', 'light']);
+  });
 });

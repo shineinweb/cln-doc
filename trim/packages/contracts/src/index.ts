@@ -1097,7 +1097,9 @@ export const trolmasterModeSchema = z.object({
   testMode: z.boolean(),
 });
 
-export const trolmasterMetricSchema = z.enum(['ec', 'vwc', 'other']);
+export const trolmasterMetricSchema = z.enum(['temp', 'humid', 'co2', 'vpd', 'light', 'ec', 'vwc', 'other']);
+
+export const trolmasterRangeSchema = z.enum(['day', 'week', 'month']);
 
 export const trolmasterChartSchema = z.object({
   controllerId: z.string().nullable(),
@@ -1532,6 +1534,7 @@ export type AccessDirectory = z.infer<typeof accessDirectorySchema>;
 export type TrolmasterInput = z.infer<typeof trolmasterInputSchema>;
 export type TrolmasterConnection = z.infer<typeof trolmasterConnectionSchema>;
 export type TrolmasterMode = z.infer<typeof trolmasterModeSchema>;
+export type TrolmasterRange = z.infer<typeof trolmasterRangeSchema>;
 export type TrolmasterChart = z.infer<typeof trolmasterChartSchema>;
 export type ControllerSample = z.infer<typeof controllerSampleSchema>;
 export type ControllerReading = z.infer<typeof controllerReadingSchema>;
