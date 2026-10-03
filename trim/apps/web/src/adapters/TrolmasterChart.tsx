@@ -1,7 +1,7 @@
-import { Alert, Box, Typography } from '@mui/material';
+import { Alert, Box, Button, Typography } from '@mui/material';
 import { trolmasterChartSchema, type TrolmasterChart } from '@trim/contracts';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { apiGet } from '../api/client';
 
 const EC_COLORS = ['#e6b84a', '#f6d78a', '#c9942a', '#ffe3a3', '#a67c2a'];
@@ -17,15 +17,16 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
     queryFn: () => apiGet(`/rooms/${roomId}/trolmaster/chart`, trolmasterChartSchema),
   });
   const [hoverAt, setHoverAt] = useState<string | null>(null);
+  const [preview, setPreview] = useState(false);
+  const sample = useMemo(() => sampleChart(), []);
 
   if (chart.isPending) {
     return <Alert severity="info">Reading Trolmaster…</Alert>;
   }
-  if (chart.error) {
-    return <Alert severity="error">{chart.error.message}</Alert>;
-  }
 
-  const data = chart.data;
+  const live = chart.data ?? emptyChart(chart.error?.message ?? 'Trolmaster did not return a chart.');
+  const showingSample = preview && live.series.length === 0;
+  const data = showingSample ? sample : live;
   const domain = timeDomain(data);
   const hovered = hoverAt ? readingsAt(data, hoverAt) : data.latest;
 
@@ -51,11 +52,40 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
         </Box>
       </Box>
       {data.series.length === 0 ? (
-        <Alert severity="info" data-testid="trolmaster-chart-empty">
-          {data.message ?? 'Trolmaster returned no chart points.'}
-        </Alert>
+        <Box>
+          <Alert severity={chart.error && !chart.data ? 'error' : 'info'} data-testid="trolmaster-chart-empty">
+            {data.message ?? 'Trolmaster returned no chart points.'}
+          </Alert>
+          <Button
+            variant="outlined"
+            data-testid="trolmaster-preview-sample"
+            onClick={() => setPreview(true)}
+            sx={{ mt: 2, color: '#e8eef8', borderColor: '#7eb6f0' }}
+          >
+            Preview sample chart
+          </Button>
+        </Box>
       ) : (
-        <ChartPlot data={data} domain={domain} timeZone={timeZone} hoverAt={hoverAt} onHover={setHoverAt} />
+        <>
+          {showingSample ? (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'center', mb: 1 }}>
+              <Typography data-testid="trolmaster-sample-note" sx={{ color: '#f6d78a', fontSize: 14 }}>
+                Sample readings. Trim is not calling Trolmaster.
+              </Typography>
+              <Button
+                data-testid="trolmaster-hide-sample"
+                onClick={() => {
+                  setPreview(false);
+                  setHoverAt(null);
+                }}
+                sx={{ color: '#e8eef8' }}
+              >
+                Hide sample
+              </Button>
+            </Box>
+          ) : null}
+          <ChartPlot data={data} domain={domain} timeZone={timeZone} hoverAt={hoverAt} onHover={setHoverAt} />
+        </>
       )}
     </Box>
   );
@@ -127,6 +157,42 @@ function ChartPlot({
       </Box>
     </Box>
   );
+}
+
+function emptyChart(message: string): TrolmasterChart {
+  return { controllerId: null, connected: false, message, latest: [], series: [] };
+}
+
+function sampleChart(now = Date.now()): TrolmasterChart {
+  const start = now - 4 * 24 * 60 * 60 * 1000;
+  const step = 3 * 60 * 60 * 1000;
+  const count = Math.round((now - start) / step);
+  const points = (wave: (index: number) => number) =>
+    Array.from({ length: count + 1 }, (_, index) => ({
+      at: new Date(start + index * step).toISOString(),
+      value: Math.round(wave(index) * 100) / 100,
+    }));
+  const ecPw = points((index) => 4.31 + Math.sin(index / 3) * 0.35);
+  const vwc = points((index) => 21.6 + Math.sin(index / 2.2) * 4);
+  ecPw[ecPw.length - 1] = { ...ecPw[ecPw.length - 1], value: 4.31 };
+  vwc[vwc.length - 1] = { ...vwc[vwc.length - 1], value: 21.6 };
+  return {
+    controllerId: 'Sample',
+    connected: false,
+    message: 'Sample readings. Trim is not calling Trolmaster.',
+    latest: [
+      { metric: 'ec', label: 'EC PW', value: 4.31, unit: 'dS/m' },
+      { metric: 'vwc', label: 'VWC', value: 21.6, unit: '%' },
+    ],
+    series: [
+      { id: 'sample-ec-pw', name: 'EC PW', metric: 'ec', unit: 'dS/m', points: ecPw },
+      { id: 'sample-ec-2', name: 'EC 2', metric: 'ec', unit: 'dS/m', points: points((index) => 3.4 + Math.sin(index / 4) * 0.5) },
+      { id: 'sample-ec-3', name: 'EC 3', metric: 'ec', unit: 'dS/m', points: points((index) => 2.2 + Math.cos(index / 5) * 0.4) },
+      { id: 'sample-vwc', name: 'VWC', metric: 'vwc', unit: '%', points: vwc },
+      { id: 'sample-vwc-2', name: 'VWC 2', metric: 'vwc', unit: '%', points: points((index) => 18 + Math.cos(index / 3) * 3) },
+      { id: 'sample-vwc-3', name: 'VWC 3', metric: 'vwc', unit: '%', points: points((index) => 24 + Math.sin(index / 2.5) * 2.5) },
+    ],
+  };
 }
 
 function timeDomain(data: TrolmasterChart): { min: number; max: number } {

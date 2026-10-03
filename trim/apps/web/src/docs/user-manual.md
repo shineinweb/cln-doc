@@ -80,7 +80,7 @@ The room dashboard introduction says “The room opens on the Trolmaster chart a
 
 The room opens on **Room**. Beside it are **Tasks**, **Notes**, **Zones**, and **Settings**. A flower room also has **Trolmaster settings**.
 
-**Room** shows the **Trolmaster** chart and **Operating history**. The chart plots EC in gold and VWC in blue for the last four days, and the chips show the latest EC and VWC. Move across the chart to read the time. When a crop has history, operating history has Timeline, Movements, Labor, and Harvest result. Observations for that crop are on **Notes**. A room with no history says “This room has no operating history.” A room with no saved controller says “Save a Trolmaster controller on Trolmaster settings.” The room does not show a current-crop card.
+**Room** shows the **Trolmaster** chart and **Operating history**. The chart plots EC in gold and VWC in blue for the last four days, and the chips show the latest EC and VWC. Move across the chart to read the time. When a crop has history, operating history has Timeline, Movements, Labor, and Harvest result. Observations for that crop are on **Notes**. A room with no history says “This room has no operating history.” A room with no saved controller says “Save a Trolmaster controller on Trolmaster settings.” **Preview sample chart** draws sample EC and VWC lines on that room and does not call Trolmaster. **Hide sample** returns to the message. The room does not show a current-crop card.
 
 **Zones** lists the room’s zones. **Add zone** adds a zone. **View**, **Edit**, **Save changes**, and **Delete** sit on each zone.
 
