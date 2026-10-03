@@ -17,6 +17,7 @@ import type {
   WeightEdit,
 } from '@trim/contracts';
 import { addCalendarDays, calendarDaysBetween, dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
+import { assigneeForSite } from '../facilities/assignee';
 import { assertSiteAccess } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -89,10 +90,24 @@ export class RecordsService {
 
   async editTask(user: SessionUser, taskId: string, input: TaskEdit): Promise<RecordRemoved> {
     const task = await this.task(user, taskId);
-    await this.prisma.cycleTask.update({
-      where: { id: task.id },
-      data: { title: input.title, dueOn: dbDateFromKey(input.dueOn) },
-    });
+    const data: {
+      title: string;
+      dueOn: Date;
+      userId?: string | null;
+      assigneeType?: string;
+      assigneeLabel?: string;
+      roleId?: string | null;
+      teamId?: string | null;
+    } = { title: input.title, dueOn: dbDateFromKey(input.dueOn) };
+    if (input.assigneeId !== undefined) {
+      const assignee = await assigneeForSite(this.prisma, user.organizationId, task.room.siteId, input.assigneeId);
+      data.userId = assignee?.id ?? null;
+      data.assigneeType = assignee ? 'user' : 'unassigned';
+      data.assigneeLabel = assignee?.name ?? 'Unassigned';
+      data.roleId = null;
+      data.teamId = null;
+    }
+    await this.prisma.cycleTask.update({ where: { id: task.id }, data });
     return { id: task.id, removed: false, voided: false };
   }
 

@@ -151,6 +151,7 @@ export class CyclesService {
         dueOn: dateKeyFromDbDate(task.dueOn),
         status: task.status,
         assigneeLabel: task.assigneeLabel,
+        assigneeId: task.userId,
       })),
       ...environment,
       lastMetrcSync:

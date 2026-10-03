@@ -73,6 +73,7 @@ model User {
   metrcAttempts        MetrcAttempt[]    @relation("AttemptActor")
   metrcReconciles      MetrcAttempt[]    @relation("AttemptReconciler")
   auditLogs            AuditLog[]
+  roomTasks            RoomTask[]        @relation("RoomTaskAssignee")
 
   @@index([organizationId])
   @@map("users")
@@ -1039,19 +1040,25 @@ model CycleTaskAttachment {
   @@map("cycle_task_attachments")
 }
 
-/// Unused by the workflow engine. Generated assignments live on cycle_tasks.
+/// A task added on the room. One-time tasks have a due date. Recurring tasks repeat daily or weekly.
 model RoomTask {
-  id        String   @id @default(cuid())
-  roomId    String   @map("room_id")
-  title     String
-  dueOn     DateTime @map("due_on") @db.Date
-  status    String   @default("open")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  roomId         String   @map("room_id")
+  title          String
+  kind           String   @default("one_time")
+  cadence        String?
+  dueOn          DateTime @map("due_on") @db.Date
+  status         String   @default("open")
+  assigneeUserId String?  @map("assignee_user_id")
+  assigneeLabel  String   @default("Unassigned") @map("assignee_label")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room     Room  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  assignee User? @relation("RoomTaskAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
 
   @@index([roomId, dueOn])
+  @@index([assigneeUserId])
   @@map("room_tasks")
 }
 

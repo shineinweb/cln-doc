@@ -14,6 +14,7 @@ import type {
 import { dateKeyFromDbDate } from '../cycles/cycle-day';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RoomTasksService } from './room-tasks.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
 
 const roomInclude = {
@@ -45,6 +46,7 @@ export class FacilitiesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cycles: CyclesService,
+    private readonly roomTasks: RoomTasksService,
   ) {}
 
   async createSite(user: SessionUser, input: CreateSite): Promise<Site> {
@@ -255,6 +257,7 @@ export class FacilitiesService {
         harvestDate: cycle.harvestDate ? dateKeyFromDbDate(cycle.harvestDate) : null,
       })),
       ...signals,
+      managedTasks: await this.roomTasks.list(room.id),
     };
   }
 

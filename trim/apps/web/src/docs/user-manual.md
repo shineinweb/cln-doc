@@ -86,7 +86,7 @@ The room opens on **Room**. **Tasks** and **Notes** sit beside it. A flower room
 
 **Add zone** adds a zone under the room. **Last successful Metrc sync** sits on **Room**. With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
 
-**Tasks** lists **Tasks due today**. Empty rooms say “No tasks are due today.”
+**Tasks** has **Add task**. The form asks for a title, **One time** or **Recurring**, a due date, and an optional **Employee**. A recurring task repeats **Daily** or **Weekly**, and the date is the next due date. **Edit** and **Delete** are on each added task. **Tasks due today** still lists the crop’s tasks. Empty rooms say “No tasks are due today.”
 
 **Notes** lists notes recorded on the current crop. Each line shows the date, the author, and the note. If none are stored, it says “No notes are recorded for this crop.” A room with no crop says “This room has no active crop cycle.”
 

@@ -82,6 +82,25 @@ export const roomTaskSchema = z.object({
   dueOn: z.string(),
   status: z.string(),
   assigneeLabel: z.string(),
+  assigneeId: z.string().nullable(),
+});
+
+export const managedTaskInputSchema = z.object({
+  title: z.string().trim().min(1).max(191),
+  kind: z.enum(['one_time', 'recurring']),
+  cadence: z.enum(['daily', 'weekly']).optional().nullable(),
+  dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  assigneeId: z.string().trim().max(191).optional().nullable(),
+});
+
+export const managedTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  kind: z.enum(['one_time', 'recurring']),
+  cadence: z.enum(['daily', 'weekly']).nullable(),
+  dueOn: z.string(),
+  assigneeId: z.string().nullable(),
+  assigneeName: z.string().nullable(),
 });
 
 export const environmentMetricSchema = z.enum(['temperature', 'relative_humidity', 'co2', 'substrate']);
@@ -213,6 +232,7 @@ export const cycleEditSchema = z.object({
 export const taskEditSchema = z.object({
   title: z.string().trim().min(1).max(191),
   dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  assigneeId: z.string().trim().max(191).optional().nullable(),
 });
 
 export const taskCreateSchema = taskEditSchema;
@@ -307,6 +327,7 @@ export const roomDetailSchema = roomSchema.extend({
   siteTimezone: z.string(),
   operatingHistory: operatingHistorySchema.nullable(),
   tasksDueToday: z.array(roomTaskSchema),
+  managedTasks: z.array(managedTaskSchema),
   staleAfterMinutes: z.number().int(),
   activeAlerts: z.array(roomAlertSchema),
   latestReadings: z.array(latestReadingSlotSchema),
@@ -1348,6 +1369,8 @@ export type RecordRemoved = z.infer<typeof recordRemovedSchema>;
 export type ZoneInput = z.infer<typeof zoneInputSchema>;
 export type CycleEdit = z.infer<typeof cycleEditSchema>;
 export type TaskEdit = z.infer<typeof taskEditSchema>;
+export type ManagedTaskInput = z.infer<typeof managedTaskInputSchema>;
+export type ManagedTask = z.infer<typeof managedTaskSchema>;
 export type PlantEdit = z.infer<typeof plantEditSchema>;
 export type BatchInput = z.infer<typeof batchInputSchema>;
 export type PlantCreate = z.infer<typeof plantCreateSchema>;

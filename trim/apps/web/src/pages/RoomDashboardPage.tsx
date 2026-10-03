@@ -20,6 +20,7 @@ import { TrolmasterPanel } from '../adapters/TrolmasterPanel';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
+import { RoomTasksPanel } from '../rooms/RoomTasksPanel';
 import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
 
 export function RoomDashboardPage() {
@@ -104,13 +105,12 @@ export function RoomDashboardPage() {
         </Box>
       ) : null}
       {tab === 'tasks' ? (
-        <SignalCard title="Tasks due today" testId="tasks-due">
-          <PagedList
-            items={room.data.tasksDueToday}
-            empty="No tasks are due today."
-            render={(task) => <TaskDueRow key={task.id} task={task} />}
-          />
-        </SignalCard>
+        <RoomTasksPanel
+          roomId={room.data.id}
+          siteId={room.data.siteId}
+          tasksDueToday={room.data.tasksDueToday}
+          managedTasks={room.data.managedTasks}
+        />
       ) : null}
       {tab === 'notes' ? <RoomNotes cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} /> : null}
       {tab === 'trolmaster' && room.data.roomType === 'flower' ? (
@@ -352,46 +352,6 @@ function ZoneRow({ zone, onChanged }: { zone: Zone; onChanged: () => Promise<voi
           }}
         >
           <TextField label="Name" name="name" defaultValue={zone.name} required />
-          <SaveChanges pending={save.isPending} />
-        </Box>
-      }
-      onDelete={() => remove.mutate()}
-    />
-  );
-}
-
-function TaskDueRow({ task }: { task: { id: string; title: string; assigneeLabel: string; dueOn: string } }) {
-  const queryClient = useQueryClient();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['room'] });
-  const save = useMutation({
-    mutationFn: (body: { title: string; dueOn: string }) => apiSend(`/tasks/${task.id}`, recordRemovedSchema, body, 'PATCH'),
-    onSuccess: refresh,
-  });
-  const remove = useMutation({
-    mutationFn: () => apiSend(`/tasks/${task.id}`, recordRemovedSchema, undefined, 'DELETE'),
-    onSuccess: refresh,
-  });
-  return (
-    <RecordActions
-      summary={
-        <Typography data-testid="task-due-today">
-          <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
-          {` · ${task.assigneeLabel} · ${formatCalendarDate(task.dueOn)}`}
-        </Typography>
-      }
-      detail={<Typography>{task.assigneeLabel}</Typography>}
-      editor={
-        <Box
-          component="form"
-          sx={{ display: 'grid', gap: 1 }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            save.mutate({ title: String(form.get('title') ?? ''), dueOn: String(form.get('dueOn') ?? '') });
-          }}
-        >
-          <TextField label="Title" name="title" defaultValue={task.title} required />
-          <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
           <SaveChanges pending={save.isPending} />
         </Box>
       }
