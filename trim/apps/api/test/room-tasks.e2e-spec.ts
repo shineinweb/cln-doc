@@ -56,23 +56,16 @@ describe('room tasks', () => {
     const missingDays = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenAdmin}`)
-      .send({ title: 'Scout', kind: 'recurring', cadence: 'weekly', dueOn: '2026-10-06', assigneeIds: [] });
+      .send({ title: 'Scout', kind: 'recurring', cadence: 'weekly', assigneeIds: [] });
     expect(missingDays.status).toBe(400);
     expect(missingDays.body.message).toBe('Choose at least one day of the week.');
 
-    const wrongDay = await request(app.getHttpServer())
+    const missingDue = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
       .set('Authorization', `Bearer ${tokenAdmin}`)
-      .send({
-        title: 'Scout',
-        kind: 'recurring',
-        cadence: 'weekly',
-        weekdays: ['tue', 'fri'],
-        dueOn: '2026-10-07',
-        assigneeIds: [],
-      });
-    expect(wrongDay.status).toBe(400);
-    expect(wrongDay.body.message).toBe('Next due must be one of the selected days.');
+      .send({ title: 'Scout', kind: 'one_time', assigneeIds: [] });
+    expect(missingDue.status).toBe(400);
+    expect(missingDue.body.message).toBe('Enter a due date.');
 
     const siteBUser = await prisma.user.findUniqueOrThrow({ where: { email: fixture.siteBUser.email } });
     const wrongPerson = await request(app.getHttpServer())
@@ -118,6 +111,7 @@ describe('room tasks', () => {
     expect(recurring.body.kind).toBe('recurring');
     expect(recurring.body.cadence).toBe('weekly');
     expect(recurring.body.weekdays).toEqual(['sat']);
+    expect(recurring.body.dueOn).toBeNull();
     expect(recurring.body.assignees).toEqual([{ id: siteAUserId, name: 'Site A Operator' }]);
 
     const onDays = await request(app.getHttpServer())
@@ -128,12 +122,11 @@ describe('room tasks', () => {
         kind: 'recurring',
         cadence: 'weekly',
         weekdays: ['fri', 'tue', 'tue'],
-        dueOn: '2026-10-06',
         assigneeIds: [],
       });
     expect(onDays.status).toBe(201);
     expect(onDays.body.weekdays).toEqual(['tue', 'fri']);
-    expect(onDays.body.dueOn).toBe('2026-10-06');
+    expect(onDays.body.dueOn).toBeNull();
 
     const admin = await prisma.user.findUniqueOrThrow({ where: { email: fixture.adminUser.email } });
     const shared = await request(app.getHttpServer())
@@ -144,7 +137,6 @@ describe('room tasks', () => {
         kind: 'recurring',
         cadence: 'weekly',
         weekdays: ['tue', 'fri'],
-        dueOn: '2026-10-06',
         assigneeIds: [siteAUserId, admin.id, siteAUserId],
       })
       .expect(200);
@@ -160,7 +152,6 @@ describe('room tasks', () => {
         title: 'Check the east drain',
         kind: 'recurring',
         cadence: 'daily',
-        dueOn: '2026-10-04',
         assigneeIds: [siteAUserId],
       })
       .expect(200);
@@ -169,6 +160,7 @@ describe('room tasks', () => {
       kind: 'recurring',
       cadence: 'daily',
       weekdays: [],
+      dueOn: null,
       assignees: [{ id: siteAUserId, name: 'Site A Operator' }],
     });
 
@@ -206,7 +198,6 @@ describe('room tasks', () => {
         kind: 'recurring',
         cadence: 'weekly',
         weekdays: ['fri'],
-        dueOn: '2026-10-09',
         assigneeIds: [siteAUserId, admin.id],
       })
       .expect(200);

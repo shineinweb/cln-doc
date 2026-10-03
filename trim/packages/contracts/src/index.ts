@@ -93,7 +93,7 @@ export const managedTaskInputSchema = z.object({
   kind: z.enum(['one_time', 'recurring']),
   cadence: z.enum(['daily', 'weekly']).optional().nullable(),
   weekdays: z.array(weekdaySchema).optional().nullable(),
-  dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   assigneeIds: z.array(z.string().trim().min(1).max(191)).optional().nullable(),
 });
 
@@ -109,7 +109,7 @@ export const managedTaskSchema = z.object({
   kind: z.enum(['one_time', 'recurring']),
   cadence: z.enum(['daily', 'weekly']).nullable(),
   weekdays: z.array(weekdaySchema),
-  dueOn: z.string(),
+  dueOn: z.string().nullable(),
   assignees: z.array(taskAssigneeSchema),
 });
 

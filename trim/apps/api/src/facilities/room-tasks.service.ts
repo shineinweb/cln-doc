@@ -30,7 +30,7 @@ export class RoomTasksService {
         kind: schedule.kind,
         cadence: schedule.cadence,
         weekdays: schedule.weekdays,
-        dueOn: dbDateFromKey(input.dueOn),
+        dueOn: schedule.dueOn,
         status: 'open',
         assignees: { create: assignees.map((person) => ({ userId: person.id })) },
       },
@@ -52,7 +52,7 @@ export class RoomTasksService {
         kind: schedule.kind,
         cadence: schedule.cadence,
         weekdays: schedule.weekdays,
-        dueOn: dbDateFromKey(input.dueOn),
+        dueOn: schedule.dueOn,
         assignees: {
           deleteMany: {},
           create: assignees.map((person) => ({ userId: person.id })),
@@ -70,25 +70,24 @@ export class RoomTasksService {
     return { id: existing.id, removed: true, voided: false };
   }
 
-  private schedule(input: ManagedTaskInput): { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays: string | null } {
+  private schedule(input: ManagedTaskInput): { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays: string | null; dueOn: Date | null } {
     if (input.kind === 'recurring') {
       if (input.cadence !== 'daily' && input.cadence !== 'weekly') {
         throw new BadRequestException('Choose daily or weekly for a recurring task.');
       }
       if (input.cadence === 'daily') {
-        return { kind: 'recurring', cadence: 'daily', weekdays: null };
+        return { kind: 'recurring', cadence: 'daily', weekdays: null, dueOn: null };
       }
       const weekdays = normalizeWeekdays(input.weekdays);
       if (weekdays.length === 0) {
         throw new BadRequestException('Choose at least one day of the week.');
       }
-      const dueDay = weekdayOf(input.dueOn);
-      if (!weekdays.includes(dueDay)) {
-        throw new BadRequestException('Next due must be one of the selected days.');
-      }
-      return { kind: 'recurring', cadence: 'weekly', weekdays: weekdays.join(',') };
+      return { kind: 'recurring', cadence: 'weekly', weekdays: weekdays.join(','), dueOn: null };
     }
-    return { kind: 'one_time', cadence: null, weekdays: null };
+    if (!input.dueOn) {
+      throw new BadRequestException('Enter a due date.');
+    }
+    return { kind: 'one_time', cadence: null, weekdays: null, dueOn: dbDateFromKey(input.dueOn) };
   }
 
   private async room(user: SessionUser, roomId: string) {
@@ -116,7 +115,7 @@ function toManagedTask(row: {
   kind: string;
   cadence: string | null;
   weekdays: string | null;
-  dueOn: Date;
+  dueOn: Date | null;
   assignees: { user: { id: string; name: string } }[];
 }): ManagedTask {
   const kind = row.kind === 'recurring' ? 'recurring' : 'one_time';
@@ -128,7 +127,7 @@ function toManagedTask(row: {
     kind,
     cadence,
     weekdays: kind === 'recurring' && cadence === 'weekly' ? parseWeekdays(row.weekdays) : [],
-    dueOn: dateKeyFromDbDate(row.dueOn),
+    dueOn: row.dueOn ? dateKeyFromDbDate(row.dueOn) : null,
     assignees: [...row.assignees]
       .map((assignment) => ({ id: assignment.user.id, name: assignment.user.name }))
       .sort((left, right) => left.name.localeCompare(right.name)),
@@ -138,7 +137,6 @@ function toManagedTask(row: {
 const assigneeInclude = { assignees: { include: { user: true } } } as const;
 
 const WEEKDAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
-const WEEKDAY_FROM_UTC = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 function normalizeWeekdays(days: Weekday[] | null | undefined): Weekday[] {
   const chosen = new Set(days ?? []);
@@ -153,9 +151,4 @@ function parseWeekdays(value: string | null): Weekday[] {
 function blankDescription(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? '';
   return trimmed.length > 0 ? trimmed : null;
-}
-
-function weekdayOf(dateKey: string): Weekday {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  return WEEKDAY_FROM_UTC[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 }

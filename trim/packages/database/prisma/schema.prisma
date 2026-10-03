@@ -1040,20 +1040,21 @@ model CycleTaskAttachment {
   @@map("cycle_task_attachments")
 }
 
-/// A task added on the room. One-time tasks have a due date. Recurring tasks repeat every day, or on chosen days of the week such as Tuesday and Friday.
+/// A task added on the room. One-time tasks have a due date. Recurring tasks repeat every day, or on chosen days of the week such as Tuesday and Friday, and have no due date.
 model RoomTask {
-  id             String   @id @default(cuid())
-  roomId         String   @map("room_id")
+  id             String    @id @default(cuid())
+  roomId         String    @map("room_id")
   title          String
-  description    String?  @db.Text
-  kind           String   @default("one_time")
+  description    String?   @db.Text
+  kind           String    @default("one_time")
   cadence        String?
   /// Chosen weekdays for a weekly task, stored as mon,tue,fri. Empty for one-time and daily tasks.
   weekdays       String?
-  dueOn          DateTime @map("due_on") @db.Date
-  status         String   @default("open")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  /// Due date for a one-time task. Recurring tasks leave this empty.
+  dueOn          DateTime? @map("due_on") @db.Date
+  status         String    @default("open")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   room      Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
   assignees RoomTaskAssignee[]

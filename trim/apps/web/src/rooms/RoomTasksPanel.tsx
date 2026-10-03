@@ -32,7 +32,7 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
             Tasks
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. Description is optional, and you can assign more than one employee.
+            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task has no due date. Description is optional, and you can assign more than one employee.
           </Typography>
           <AddTaskForm roomId={roomId} siteId={siteId} />
           <PagedList
@@ -135,7 +135,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
         detail={
           <Box>
             <Typography>
-              {scheduleLabel(task)} · {peopleLabel(task.assignees)} · {formatCalendarDate(task.dueOn)}
+              {taskSummary(task)}
             </Typography>
             <Typography sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{task.description ?? 'No description.'}</Typography>
           </Box>
@@ -149,7 +149,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
               kind: task.kind,
               cadence: task.cadence ?? 'weekly',
               weekdays: task.weekdays,
-              dueOn: task.dueOn,
+              dueOn: task.dueOn ?? todayKey(),
               assigneeIds: task.assignees.map((person) => person.id),
             }}
             pending={save.isPending}
@@ -249,15 +249,9 @@ function TaskFields({
       onSubmit={(event) => {
         event.preventDefault();
         const selected = WEEKDAYS.filter((day) => weekdays.includes(day.key)).map((day) => day.key);
-        if (kind === 'recurring' && cadence === 'weekly') {
-          if (selected.length === 0) {
-            setFormError('Choose at least one day of the week.');
-            return;
-          }
-          if (!selected.includes(weekdayOf(dueOn))) {
-            setFormError('Next due must be one of the selected days.');
-            return;
-          }
+        if (kind === 'recurring' && cadence === 'weekly' && selected.length === 0) {
+          setFormError('Choose at least one day of the week.');
+          return;
         }
         setFormError(null);
         onSubmit({
@@ -266,7 +260,7 @@ function TaskFields({
           kind,
           cadence: kind === 'recurring' ? cadence : null,
           weekdays: kind === 'recurring' && cadence === 'weekly' ? selected : [],
-          dueOn,
+          dueOn: kind === 'one_time' ? dueOn : null,
           assigneeIds,
         });
       }}
@@ -331,15 +325,17 @@ function TaskFields({
           {formError ? <Alert sx={{ mt: 1 }} severity="error">{formError}</Alert> : null}
         </Box>
       ) : null}
-      <TextField
-        label={kind === 'recurring' ? 'Next due' : 'Due date'}
-        type="date"
-        value={dueOn}
-        onChange={(event) => setDueOn(event.target.value)}
-        required
-        InputLabelProps={{ shrink: true }}
-        inputProps={{ 'data-testid': 'task-due' }}
-      />
+      {kind === 'one_time' ? (
+        <TextField
+          label="Due date"
+          type="date"
+          value={dueOn}
+          onChange={(event) => setDueOn(event.target.value)}
+          required
+          InputLabelProps={{ shrink: true }}
+          inputProps={{ 'data-testid': 'task-due' }}
+        />
+      ) : null}
       <EmployeeChecks siteId={siteId} value={assigneeIds} onChange={setAssigneeIds} />
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Button type="submit" variant="contained" data-testid={submitTestId} disabled={pending}>
@@ -416,7 +412,15 @@ function EmployeeChecks({ siteId, value, onChange }: { siteId: string; value: st
 }
 
 function taskLine(task: ManagedTask): string {
-  return `${task.title} · ${scheduleLabel(task)} · ${peopleLabel(task.assignees)} · ${formatCalendarDate(task.dueOn)}`;
+  return `${task.title} · ${taskSummary(task)}`;
+}
+
+function taskSummary(task: { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays?: Weekday[]; assignees: { name: string }[]; dueOn: string | null }): string {
+  const parts = [scheduleLabel(task), peopleLabel(task.assignees)];
+  if (task.dueOn) {
+    parts.push(formatCalendarDate(task.dueOn));
+  }
+  return parts.join(' · ');
 }
 
 function peopleLabel(people: { name: string }[]): string {
@@ -465,12 +469,6 @@ function weekdayLabel(days: Weekday[]): string {
     return `${names[0]} and ${names[1]}`;
   }
   return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
-}
-
-function weekdayOf(dateKey: string): Weekday {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const utc = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
-  return utc[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 }
 
 function todayKey(): string {
