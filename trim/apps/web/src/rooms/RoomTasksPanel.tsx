@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardContent, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Checkbox, FormControlLabel, TextField, Typography } from '@mui/material';
 import {
   accessDirectorySchema,
   managedTaskSchema,
@@ -6,9 +6,10 @@ import {
   type ManagedTask,
   type ManagedTaskInput,
   type RoomDetail,
+  type Weekday,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type InputHTMLAttributes } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { formatCalendarDate } from '../crops/format';
@@ -31,7 +32,7 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
             Tasks
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-            Add a one-time task or a task that repeats daily or weekly. An employee is optional.
+            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. An employee is optional.
           </Typography>
           <AddTaskForm roomId={roomId} siteId={siteId} />
           <PagedList
@@ -85,7 +86,7 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
           </Typography>
           <TaskFields
             siteId={siteId}
-            initial={{ title: '', kind: 'one_time', cadence: 'weekly', dueOn: todayKey(), assigneeId: '' }}
+            initial={{ title: '', kind: 'one_time', cadence: 'weekly', weekdays: [], dueOn: todayKey(), assigneeId: '' }}
             pending={save.isPending}
             submitLabel="Add task"
             submitTestId="task-save"
@@ -134,6 +135,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
               title: task.title,
               kind: task.kind,
               cadence: task.cadence ?? 'weekly',
+              weekdays: task.weekdays,
               dueOn: task.dueOn,
               assigneeId: task.assigneeId ?? '',
             }}
@@ -212,7 +214,7 @@ function TaskFields({
   onCancel,
 }: {
   siteId: string;
-  initial: { title: string; kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly'; dueOn: string; assigneeId: string };
+  initial: { title: string; kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly'; weekdays: Weekday[]; dueOn: string; assigneeId: string };
   pending?: boolean;
   submitLabel: string;
   submitTestId: string;
@@ -222,18 +224,33 @@ function TaskFields({
   const [title, setTitle] = useState(initial.title);
   const [kind, setKind] = useState(initial.kind);
   const [cadence, setCadence] = useState(initial.cadence);
+  const [weekdays, setWeekdays] = useState<Weekday[]>(initial.weekdays);
   const [dueOn, setDueOn] = useState(initial.dueOn);
   const [assigneeId, setAssigneeId] = useState(initial.assigneeId);
+  const [formError, setFormError] = useState<string | null>(null);
   return (
     <Box
       component="form"
       sx={{ display: 'grid', gap: 1.5, maxWidth: 480 }}
       onSubmit={(event) => {
         event.preventDefault();
+        const selected = WEEKDAYS.filter((day) => weekdays.includes(day.key)).map((day) => day.key);
+        if (kind === 'recurring' && cadence === 'weekly') {
+          if (selected.length === 0) {
+            setFormError('Choose at least one day of the week.');
+            return;
+          }
+          if (!selected.includes(weekdayOf(dueOn))) {
+            setFormError('Next due must be one of the selected days.');
+            return;
+          }
+        }
+        setFormError(null);
         onSubmit({
           title,
           kind,
           cadence: kind === 'recurring' ? cadence : null,
+          weekdays: kind === 'recurring' && cadence === 'weekly' ? selected : [],
           dueOn,
           assigneeId: assigneeId || null,
         });
@@ -261,6 +278,34 @@ function TaskFields({
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
         </TextField>
+      ) : null}
+      {kind === 'recurring' && cadence === 'weekly' ? (
+        <Box>
+          <Typography sx={{ fontSize: 14, mb: 0.5 }}>Days</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1 }}>
+            {WEEKDAYS.map((day) => (
+              <FormControlLabel
+                key={day.key}
+                control={
+                  <Checkbox
+                    checked={weekdays.includes(day.key)}
+                    onChange={() => {
+                      setWeekdays((current) =>
+                        current.includes(day.key) ? current.filter((item) => item !== day.key) : [...current, day.key],
+                      );
+                    }}
+                    inputProps={{ 'data-testid': `task-day-${day.key}` } as InputHTMLAttributes<HTMLInputElement>}
+                  />
+                }
+                label={day.label}
+              />
+            ))}
+          </Box>
+          <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>
+            Choose one or more days, such as Tuesday and Friday.
+          </Typography>
+          {formError ? <Alert sx={{ mt: 1 }} severity="error">{formError}</Alert> : null}
+        </Box>
       ) : null}
       <TextField
         label={kind === 'recurring' ? 'Next due' : 'Due date'}
@@ -316,14 +361,44 @@ function taskLine(task: ManagedTask): string {
   return `${task.title} · ${scheduleLabel(task)} · ${who} · ${formatCalendarDate(task.dueOn)}`;
 }
 
-function scheduleLabel(task: { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null }): string {
+function scheduleLabel(task: { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays?: Weekday[] }): string {
   if (task.kind === 'recurring' && task.cadence === 'daily') {
     return 'Daily';
   }
   if (task.kind === 'recurring') {
-    return 'Weekly';
+    return weekdayLabel(task.weekdays ?? []);
   }
   return 'One time';
+}
+
+const WEEKDAYS: { key: Weekday; label: string }[] = [
+  { key: 'mon', label: 'Monday' },
+  { key: 'tue', label: 'Tuesday' },
+  { key: 'wed', label: 'Wednesday' },
+  { key: 'thu', label: 'Thursday' },
+  { key: 'fri', label: 'Friday' },
+  { key: 'sat', label: 'Saturday' },
+  { key: 'sun', label: 'Sunday' },
+];
+
+function weekdayLabel(days: Weekday[]): string {
+  const names = WEEKDAYS.filter((day) => days.includes(day.key)).map((day) => day.label);
+  if (names.length === 0) {
+    return 'Weekly';
+  }
+  if (names.length === 1) {
+    return names[0];
+  }
+  if (names.length === 2) {
+    return `${names[0]} and ${names[1]}`;
+  }
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+}
+
+function weekdayOf(dateKey: string): Weekday {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const utc = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+  return utc[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
 }
 
 function todayKey(): string {

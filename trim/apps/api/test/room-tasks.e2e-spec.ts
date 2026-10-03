@@ -53,6 +53,27 @@ describe('room tasks', () => {
     expect(missingCadence.status).toBe(400);
     expect(missingCadence.body.message).toBe('Choose daily or weekly for a recurring task.');
 
+    const missingDays = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/tasks`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ title: 'Scout', kind: 'recurring', cadence: 'weekly', dueOn: '2026-10-06', assigneeId: null });
+    expect(missingDays.status).toBe(400);
+    expect(missingDays.body.message).toBe('Choose at least one day of the week.');
+
+    const wrongDay = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/tasks`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        title: 'Scout',
+        kind: 'recurring',
+        cadence: 'weekly',
+        weekdays: ['tue', 'fri'],
+        dueOn: '2026-10-07',
+        assigneeId: null,
+      });
+    expect(wrongDay.status).toBe(400);
+    expect(wrongDay.body.message).toBe('Next due must be one of the selected days.');
+
     const siteBUser = await prisma.user.findUniqueOrThrow({ where: { email: fixture.siteBUser.email } });
     const wrongPerson = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/tasks`)
@@ -70,6 +91,7 @@ describe('room tasks', () => {
       title: 'Check the drain',
       kind: 'one_time',
       cadence: null,
+      weekdays: [],
       dueOn: '2026-10-03',
       assigneeId: null,
       assigneeName: null,
@@ -82,14 +104,31 @@ describe('room tasks', () => {
         title: 'Scout the canopy',
         kind: 'recurring',
         cadence: 'weekly',
+        weekdays: ['sat'],
         dueOn: '2026-10-10',
         assigneeId: siteAUserId,
       });
     expect(recurring.status).toBe(201);
     expect(recurring.body.kind).toBe('recurring');
     expect(recurring.body.cadence).toBe('weekly');
+    expect(recurring.body.weekdays).toEqual(['sat']);
     expect(recurring.body.assigneeId).toBe(siteAUserId);
     expect(recurring.body.assigneeName).toBe('Site A Operator');
+
+    const onDays = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/tasks`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({
+        title: 'Defoliate',
+        kind: 'recurring',
+        cadence: 'weekly',
+        weekdays: ['fri', 'tue', 'tue'],
+        dueOn: '2026-10-06',
+        assigneeId: null,
+      });
+    expect(onDays.status).toBe(201);
+    expect(onDays.body.weekdays).toEqual(['tue', 'fri']);
+    expect(onDays.body.dueOn).toBe('2026-10-06');
 
     const edited = await request(app.getHttpServer())
       .patch(`/rooms/${fixture.roomAId}/tasks/${created.body.id}`)
@@ -106,6 +145,7 @@ describe('room tasks', () => {
       title: 'Check the east drain',
       kind: 'recurring',
       cadence: 'daily',
+      weekdays: [],
       assigneeName: 'Site A Operator',
     });
 
@@ -128,8 +168,25 @@ describe('room tasks', () => {
       .expect(200);
     expect(room.body.managedTasks.map((task: { title: string }) => task.title).sort()).toEqual([
       'Check the east drain',
+      'Defoliate',
       'Scout the canopy',
     ]);
+    const listed = room.body.managedTasks.find((task: { title: string }) => task.title === 'Defoliate');
+    expect(listed.weekdays).toEqual(['tue', 'fri']);
+
+    const fridayOnly = await request(app.getHttpServer())
+      .patch(`/rooms/${fixture.roomAId}/tasks/${onDays.body.id}`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({
+        title: 'Defoliate',
+        kind: 'recurring',
+        cadence: 'weekly',
+        weekdays: ['fri'],
+        dueOn: '2026-10-09',
+        assigneeId: null,
+      })
+      .expect(200);
+    expect(fridayOnly.body.weekdays).toEqual(['fri']);
 
     await request(app.getHttpServer())
       .delete(`/rooms/${fixture.roomAId}/tasks/${created.body.id}`)
@@ -138,6 +195,10 @@ describe('room tasks', () => {
     await request(app.getHttpServer())
       .delete(`/rooms/${fixture.roomAId}/tasks/${recurring.body.id}`)
       .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .delete(`/rooms/${fixture.roomAId}/tasks/${onDays.body.id}`)
+      .set('Authorization', `Bearer ${tokenA}`)
       .expect(200);
     expect(await prisma.roomTask.count({ where: { roomId: fixture.roomAId } })).toBe(0);
   });

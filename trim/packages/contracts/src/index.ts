@@ -85,10 +85,13 @@ export const roomTaskSchema = z.object({
   assigneeId: z.string().nullable(),
 });
 
+export const weekdaySchema = z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+
 export const managedTaskInputSchema = z.object({
   title: z.string().trim().min(1).max(191),
   kind: z.enum(['one_time', 'recurring']),
   cadence: z.enum(['daily', 'weekly']).optional().nullable(),
+  weekdays: z.array(weekdaySchema).optional().nullable(),
   dueOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   assigneeId: z.string().trim().max(191).optional().nullable(),
 });
@@ -98,6 +101,7 @@ export const managedTaskSchema = z.object({
   title: z.string(),
   kind: z.enum(['one_time', 'recurring']),
   cadence: z.enum(['daily', 'weekly']).nullable(),
+  weekdays: z.array(weekdaySchema),
   dueOn: z.string(),
   assigneeId: z.string().nullable(),
   assigneeName: z.string().nullable(),
@@ -1369,6 +1373,7 @@ export type RecordRemoved = z.infer<typeof recordRemovedSchema>;
 export type ZoneInput = z.infer<typeof zoneInputSchema>;
 export type CycleEdit = z.infer<typeof cycleEditSchema>;
 export type TaskEdit = z.infer<typeof taskEditSchema>;
+export type Weekday = z.infer<typeof weekdaySchema>;
 export type ManagedTaskInput = z.infer<typeof managedTaskInputSchema>;
 export type ManagedTask = z.infer<typeof managedTaskSchema>;
 export type PlantEdit = z.infer<typeof plantEditSchema>;
