@@ -64,6 +64,8 @@ Flower 1’s current crop is Cedar Nights flower. The plants from that crop have
 
 **Rooms** is titled Rooms, with the kicker Center. The introduction says “Open a room to see its current crop, cycle day, and operating history.” Each row shows the room name, cultivar and plant count or “No active crop,” and the room type. Choose the row to open the dashboard.
 
+**Add a room** is the form above the list. Enter a name and choose a type: Flower, Vegetative, Mother, Dry, or Clone. **Add room** saves the room on the facility selected in the switcher and shows it in the list. You can add a room only for a facility you can open. Avery Chen can add a room at Harbor House and at Hill Works. Blake Ortiz can add a room at Harbor House. Opening Hill Works is outside Blake’s access, so he cannot add a room there.
+
 The room dashboard introduction says “The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records.”
 
 When a crop is active, the **Current crop** card shows the crop name and four figures: Cultivar, Plants, Stage, and Cycle day. Cycle day counts the start date as day 1 in the facility timezone. It also shows “Expected harvest” and **Open crop cycle**. **Harvest this crop** appears only while the crop still has plants. Flower 1 does not show that button. Veg 1 does.

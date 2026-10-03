@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import type { OrganizationSummary, Room, RoomDetail, SessionUser, Site, Zone } from '@trim/contracts';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import type { CreateRoom, OrganizationSummary, Room, RoomDetail, SessionUser, Site, Zone } from '@trim/contracts';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
@@ -56,6 +56,36 @@ export class FacilitiesService {
   async listRooms(user: SessionUser, siteId: string): Promise<Room[]> {
     const site = await this.getSite(user, siteId);
     return site.rooms;
+  }
+
+  async createRoom(user: SessionUser, siteId: string, input: CreateRoom): Promise<Room> {
+    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+    assertSiteAccess(user, site);
+    const existing = await this.prisma.room.findMany({
+      where: { siteId },
+      select: { code: true },
+    });
+    const code = uniqueRoomCode(
+      input.name,
+      existing.map((room) => room.code),
+    );
+    try {
+      const room = await this.prisma.room.create({
+        data: {
+          siteId,
+          name: input.name,
+          code,
+          roomType: input.roomType,
+        },
+        include: roomInclude,
+      });
+      return this.toRoom(room, site.timezone);
+    } catch (error) {
+      if (isUniqueConstraint(error)) {
+        throw new BadRequestException('A room with that name already exists on this facility.');
+      }
+      throw error;
+    }
   }
 
   async getRoom(user: SessionUser, roomId: string): Promise<RoomDetail> {
@@ -160,4 +190,21 @@ export class FacilitiesService {
       updatedAt: zone.updatedAt.toISOString(),
     };
   }
+}
+
+function uniqueRoomCode(name: string, takenCodes: string[]): string {
+  const taken = new Set(takenCodes);
+  const base = name.toUpperCase().replace(/[^A-Z0-9]+/g, '').slice(0, 12) || 'ROOM';
+  let code = base;
+  let suffix = 2;
+  while (taken.has(code)) {
+    const tail = String(suffix);
+    code = `${base.slice(0, Math.max(1, 12 - tail.length))}${tail}`;
+    suffix += 1;
+  }
+  return code;
+}
+
+function isUniqueConstraint(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
 }

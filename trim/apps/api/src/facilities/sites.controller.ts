@@ -1,7 +1,8 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import type { Room, SessionUser, Site } from '@trim/contracts';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { createRoomSchema, type CreateRoom, type Room, type SessionUser, type Site } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { FacilitiesService } from './facilities.service';
 
 @Controller('sites')
@@ -17,6 +18,15 @@ export class SitesController {
   @Get(':siteId/rooms')
   listRooms(@CurrentUser() user: SessionUser, @Param('siteId') siteId: string): Promise<Room[]> {
     return this.facilities.listRooms(user, siteId);
+  }
+
+  @Post(':siteId/rooms')
+  createRoom(
+    @CurrentUser() user: SessionUser,
+    @Param('siteId') siteId: string,
+    @Body(new ZodValidationPipe(createRoomSchema)) body: CreateRoom,
+  ): Promise<Room> {
+    return this.facilities.createRoom(user, siteId, body);
   }
 
   @Get(':siteId')

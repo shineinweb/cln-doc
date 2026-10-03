@@ -144,6 +144,45 @@ describe('site access restrictions', () => {
     expect(list.body.find((site: { id: string }) => site.id === fixture.siteBId)).toBeTruthy();
   });
 
+  it('lets a user add a room only on a facility they can open', async () => {
+    const denied = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteBId}/rooms`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ name: 'Site B clone room', roomType: 'clone' })
+      .expect(403);
+    expect(denied.body.message).toBe('You do not have access to this site');
+
+    await request(app.getHttpServer())
+      .post(`/sites/${fixture.otherSiteId}/rooms`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ name: 'Other org room', roomType: 'dry' })
+      .expect(404);
+
+    const created = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteBId}/rooms`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ name: 'Site B clone room', roomType: 'clone' })
+      .expect(201);
+    expect(created.body.siteId).toBe(fixture.siteBId);
+    expect(created.body.name).toBe('Site B clone room');
+    expect(created.body.roomType).toBe('clone');
+    expect(created.body.currentCycle).toBeNull();
+
+    const rooms = await request(app.getHttpServer())
+      .get(`/sites/${fixture.siteBId}/rooms`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .expect(200);
+    expect(rooms.body.map((room: { name: string }) => room.name)).toContain('Site B clone room');
+
+    const own = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/rooms`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ name: 'Site A dry room', roomType: 'dry' })
+      .expect(201);
+    expect(own.body.siteId).toBe(fixture.siteAId);
+    expect(own.body.roomType).toBe('dry');
+  });
+
   it('hides a site that belongs to another organization', async () => {
     await request(app.getHttpServer())
       .get(`/sites/${fixture.otherSiteId}`)

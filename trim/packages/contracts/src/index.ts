@@ -170,6 +170,13 @@ export const metrcSyncSchema = z.object({
   isSample: z.boolean(),
 });
 
+export const ROOM_TYPES = ['flower', 'veg', 'mother', 'dry', 'clone'] as const;
+
+export const createRoomSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  roomType: z.enum(ROOM_TYPES),
+});
+
 export const roomSchema = z.object({
   id: z.string(),
   siteId: z.string(),
@@ -1087,6 +1094,7 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type Zone = z.infer<typeof zoneSchema>;
 export type CropCycleSummary = z.infer<typeof cropCycleSummarySchema>;
 export type OperatingHistory = z.infer<typeof operatingHistorySchema>;
+export type CreateRoom = z.infer<typeof createRoomSchema>;
 export type Room = z.infer<typeof roomSchema>;
 export type RoomDetail = z.infer<typeof roomDetailSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;
