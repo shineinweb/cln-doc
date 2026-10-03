@@ -19,6 +19,33 @@ export function dbDateFromKey(dateKey: string): Date {
   return new Date(`${dateKey}T00:00:00.000Z`);
 }
 
+/** Local date and HH:mm in a timezone, as a UTC instant. */
+export function zonedDateTimeToUtc(dateKey: string, time: string, timeZone: string): Date {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const [hour, minute] = time.split(':').map(Number);
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  const offset = timeZoneOffsetMs(utcGuess, timeZone);
+  const adjusted = new Date(utcGuess.getTime() - offset);
+  const corrected = timeZoneOffsetMs(adjusted, timeZone);
+  return corrected === offset ? adjusted : new Date(utcGuess.getTime() - corrected);
+}
+
+function timeZoneOffsetMs(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(instant);
+  const value = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  const asUtc = Date.UTC(value('year'), value('month') - 1, value('day'), value('hour'), value('minute'), value('second'));
+  return asUtc - instant.getTime();
+}
+
 /**
  * Day 1 is the start date in the site timezone.
  * A cycle that starts today is day 1. Earlier dates count forward; future dates are zero or negative.

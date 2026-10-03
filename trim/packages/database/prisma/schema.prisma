@@ -730,10 +730,12 @@ model CycleMovement {
 model CycleObservation {
   id         String   @id @default(cuid())
   cycleId    String   @map("cycle_id")
-  occurredOn DateTime @map("occurred_on") @db.Date
-  authorName String   @map("author_name")
+  occurredOn DateTime  @map("occurred_on") @db.Date
+  /// Clock time of the note in UTC. Older notes may be empty and show the date only.
+  occurredAt DateTime? @map("occurred_at")
+  authorName String    @map("author_name")
   /// general, environment, irrigation, canopy, pests, nutrients, equipment, or harvest. Older notes may be empty.
-  category   String?  @db.VarChar(32)
+  category   String?   @db.VarChar(32)
   body       String   @db.Text
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")

@@ -61,6 +61,7 @@ export const noteCategorySchema = z.enum([
 export const cycleObservationSchema = z.object({
   id: z.string(),
   occurredOn: z.string(),
+  occurredAt: z.string().nullable(),
   authorName: z.string(),
   category: z.string().nullable(),
   body: z.string(),
@@ -69,6 +70,8 @@ export const cycleObservationSchema = z.object({
 export const roomNoteInputSchema = z.object({
   category: noteCategorySchema,
   body: z.string().max(8000),
+  occurredOn: z.string().trim().min(1).max(10),
+  occurredTime: z.string().trim().min(1).max(5),
 });
 
 export const cycleLaborEntrySchema = z.object({

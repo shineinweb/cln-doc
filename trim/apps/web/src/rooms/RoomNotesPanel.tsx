@@ -3,19 +3,21 @@ import { cycleObservationSchema, type NoteCategory } from '@trim/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ApiError, apiSend } from '../api/client';
-import { formatCalendarDate } from '../crops/format';
+import { formatNoteWhen } from '../crops/format';
 import { workbench } from '../theme';
 import { NOTE_CATEGORIES, noteCategoryLabel } from './note-categories';
 
-type Note = { id: string; occurredOn: string; authorName: string; category: string | null; body: string };
+type Note = { id: string; occurredOn: string; occurredAt: string | null; authorName: string; category: string | null; body: string };
 
 export function RoomNotesPanel({
   roomId,
   cycleName,
+  timeZone,
   notes,
 }: {
   roomId: string;
   cycleName: string | null;
+  timeZone: string;
   notes: Note[];
 }) {
   if (!cycleName) {
@@ -30,9 +32,9 @@ export function RoomNotesPanel({
           Notes
         </Typography>
         <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-          Leave a note on {cycleName} for later. Choose a category, such as Environment or Pests.
+          Leave a note on {cycleName} for later. Choose a category, a date, and a time.
         </Typography>
-        <AddNoteForm roomId={roomId} />
+        <AddNoteForm roomId={roomId} timeZone={timeZone} />
         {listed.length === 0 ? (
           <Alert severity="info">No notes are recorded for this crop.</Alert>
         ) : (
@@ -41,7 +43,7 @@ export function RoomNotesPanel({
             return (
             <Box key={note.id} data-testid="room-note" sx={{ mb: 1.5 }}>
               <Typography sx={{ fontWeight: 600 }}>
-                {formatCalendarDate(note.occurredOn)} · {note.authorName}
+                {formatNoteWhen(note.occurredOn, note.occurredAt, timeZone)} · {note.authorName}
                 {category ? ` · ${category}` : ''}
               </Typography>
               <Typography data-testid="room-note-body" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap' }}>
@@ -56,19 +58,24 @@ export function RoomNotesPanel({
   );
 }
 
-function AddNoteForm({ roomId }: { roomId: string }) {
+function AddNoteForm({ roomId, timeZone }: { roomId: string; timeZone: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<NoteCategory>('general');
+  const [occurredOn, setOccurredOn] = useState(() => nowParts(timeZone).date);
+  const [occurredTime, setOccurredTime] = useState(() => nowParts(timeZone).time);
   const [body, setBody] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
-    mutationFn: () => apiSend(`/rooms/${roomId}/notes`, cycleObservationSchema, { category, body }),
+    mutationFn: () => apiSend(`/rooms/${roomId}/notes`, cycleObservationSchema, { category, body, occurredOn, occurredTime }),
     onSuccess: async () => {
       setError(null);
       setBody('');
       setCategory('general');
+      const next = nowParts(timeZone);
+      setOccurredOn(next.date);
+      setOccurredTime(next.time);
       setMessage('Note added.');
       setOpen(false);
       await queryClient.invalidateQueries({ queryKey: ['room', roomId] });
@@ -106,6 +113,24 @@ function AddNoteForm({ roomId }: { roomId: string }) {
             ))}
           </TextField>
           <TextField
+            label="Date"
+            type="date"
+            value={occurredOn}
+            onChange={(event) => setOccurredOn(event.target.value)}
+            required
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'note-date' }}
+          />
+          <TextField
+            label="Time"
+            type="time"
+            value={occurredTime}
+            onChange={(event) => setOccurredTime(event.target.value)}
+            required
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ 'data-testid': 'note-time' }}
+          />
+          <TextField
             label="Note"
             value={body}
             onChange={(event) => setBody(event.target.value)}
@@ -125,11 +150,26 @@ function AddNoteForm({ roomId }: { roomId: string }) {
           </Box>
         </Box>
       ) : (
-        <Button variant="contained" data-testid="add-note" onClick={() => { setMessage(null); setOpen(true); }}>
+        <Button variant="contained" data-testid="add-note" onClick={() => { setMessage(null); const next = nowParts(timeZone); setOccurredOn(next.date); setOccurredTime(next.time); setOpen(true); }}>
           Add note
         </Button>
       )}
       {message ? <Alert sx={{ mt: 2 }} data-testid="note-added">{message}</Alert> : null}
     </Box>
   );
+}
+
+function nowParts(timeZone: string): { date: string; time: string } {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const value = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  const hour = value('hour') === '24' ? '00' : value('hour');
+  return { date: `${value('year')}-${value('month')}-${value('day')}`, time: `${hour}:${value('minute')}` };
 }

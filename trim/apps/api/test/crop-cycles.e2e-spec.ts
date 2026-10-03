@@ -271,33 +271,41 @@ describe('crop cycles', () => {
     const denied = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/notes`)
       .set('Authorization', `Bearer ${tokenB}`)
-      .send({ category: 'general', body: 'Not this facility.' });
+      .send({ category: 'general', body: 'Not this facility.', occurredOn: '2026-10-03', occurredTime: '16:37' });
     expect(denied.status).toBe(403);
 
     const blank = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/notes`)
       .set('Authorization', `Bearer ${tokenA}`)
-      .send({ category: 'general', body: '   ' });
+      .send({ category: 'general', body: '   ', occurredOn: '2026-10-03', occurredTime: '16:37' });
     expect(blank.status).toBe(400);
     expect(blank.body.message).toBe('Enter a note.');
 
     const created = await request(app.getHttpServer())
       .post(`/rooms/${fixture.roomAId}/notes`)
       .set('Authorization', `Bearer ${tokenA}`)
-      .send({ category: 'environment', body: '  East bench is dry.  ' })
+      .send({ category: 'environment', body: '  East bench is dry.  ', occurredOn: '2026-10-03', occurredTime: '16:37' })
       .expect(201);
     expect(created.body.authorName).toBe('Site A Operator');
     expect(created.body.category).toBe('environment');
     expect(created.body.body).toBe('East bench is dry.');
-    expect(created.body.occurredOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(created.body.occurredOn).toBe('2026-10-03');
+    expect(created.body.occurredAt).toBe('2026-10-03T23:37:00.000Z');
+
+    const missingTime = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/notes`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ category: 'general', body: 'No clock.', occurredOn: '2026-10-03', occurredTime: '4pm' });
+    expect(missingTime.status).toBe(400);
+    expect(missingTime.body.message).toBe('Enter a time.');
 
     const room = await request(app.getHttpServer())
       .get(`/rooms/${fixture.roomAId}`)
       .set('Authorization', `Bearer ${tokenA}`)
       .expect(200);
-    expect(room.body.operatingHistory.observations.map((note: { body: string; category: string | null }) => [note.body, note.category])).toEqual([
-      ['Looks even', null],
-      ['East bench is dry.', 'environment'],
+    expect(room.body.operatingHistory.observations.map((note: { body: string; category: string | null; occurredAt: string | null }) => [note.body, note.category, note.occurredAt])).toEqual([
+      ['Looks even', null, null],
+      ['East bench is dry.', 'environment', '2026-10-03T23:37:00.000Z'],
     ]);
 
     const emptyRoom = await prisma.room.create({
@@ -306,7 +314,7 @@ describe('crop cycles', () => {
     const missing = await request(app.getHttpServer())
       .post(`/rooms/${emptyRoom.id}/notes`)
       .set('Authorization', `Bearer ${tokenA}`)
-      .send({ category: 'general', body: 'Nothing to attach this to.' });
+      .send({ category: 'general', body: 'Nothing to attach this to.', occurredOn: '2026-10-03', occurredTime: '16:37' });
     expect(missing.status).toBe(400);
     expect(missing.body.message).toBe('This room has no active crop cycle.');
     await prisma.room.delete({ where: { id: emptyRoom.id } });

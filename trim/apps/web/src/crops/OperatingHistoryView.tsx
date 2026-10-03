@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import type { OperatingHistory } from '@trim/contracts';
 import { noteCategoryLabel } from '../rooms/note-categories';
-import { formatCalendarDate } from './format';
+import { formatCalendarDate, formatNoteWhen } from './format';
 
-export function OperatingHistoryView({ history, hideObservations = false }: { history: OperatingHistory; hideObservations?: boolean }) {
+export function OperatingHistoryView({ history, hideObservations = false, timeZone = 'UTC' }: { history: OperatingHistory; hideObservations?: boolean; timeZone?: string }) {
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <HistorySection title="Timeline">
@@ -47,7 +47,7 @@ export function OperatingHistoryView({ history, hideObservations = false }: { hi
               return (
               <Box key={observation.id} sx={{ mb: 1.5 }}>
                 <Typography sx={{ fontWeight: 600 }}>
-                  {formatCalendarDate(observation.occurredOn)} · {observation.authorName}
+                  {formatNoteWhen(observation.occurredOn, observation.occurredAt, timeZone)} · {observation.authorName}
                   {category ? ` · ${category}` : ''}
                 </Typography>
                 <Typography sx={{ color: 'text.secondary' }}>{observation.body}</Typography>

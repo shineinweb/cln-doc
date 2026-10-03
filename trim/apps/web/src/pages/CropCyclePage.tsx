@@ -80,7 +80,7 @@ export function CropCyclePage() {
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Operating history
       </Typography>
-      <OperatingHistoryView history={cycle.data.operatingHistory} />
+      <OperatingHistoryView history={cycle.data.operatingHistory} timeZone={cycle.data.siteTimezone} />
     </Box>
   );
 }

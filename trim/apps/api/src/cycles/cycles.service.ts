@@ -11,12 +11,12 @@ import type {
 import { EnvironmentService } from '../environment/environment.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess } from '../facilities/site-access';
-import { calendarDateInTimeZone, cycleDayNumber, dateKeyFromDbDate, dbDateFromKey } from './cycle-day';
+import { calendarDateInTimeZone, cycleDayNumber, dateKeyFromDbDate, dbDateFromKey, zonedDateTimeToUtc } from './cycle-day';
 
 const historyInclude = {
   events: { orderBy: { occurredOn: 'asc' as const } },
   movements: { orderBy: { occurredOn: 'asc' as const } },
-  observations: { orderBy: { occurredOn: 'asc' as const } },
+  observations: { orderBy: [{ occurredAt: 'asc' as const }, { occurredOn: 'asc' as const }] },
   laborEntries: { orderBy: { occurredOn: 'asc' as const } },
   harvestSummary: true,
 };
@@ -40,7 +40,7 @@ type CycleWithHistory = {
     plantCount: number;
     note: string | null;
   }>;
-  observations: Array<{ id: string; occurredOn: Date; authorName: string; category: string | null; body: string }>;
+  observations: Array<{ id: string; occurredOn: Date; occurredAt: Date | null; authorName: string; category: string | null; body: string }>;
   laborEntries: Array<{
     id: string;
     occurredOn: Date;
@@ -104,6 +104,7 @@ export class CyclesService {
       observations: cycle.observations.map((observation) => ({
         id: observation.id,
         occurredOn: dateKeyFromDbDate(observation.occurredOn),
+        occurredAt: observation.occurredAt ? observation.occurredAt.toISOString() : null,
         authorName: observation.authorName,
         category: observation.category,
         body: observation.body,
@@ -237,10 +238,17 @@ export class CyclesService {
     if (note.length > 4000) {
       throw new BadRequestException('A note can be at most 4000 characters.');
     }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.occurredOn)) {
+      throw new BadRequestException('Enter a date.');
+    }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(input.occurredTime)) {
+      throw new BadRequestException('Enter a time.');
+    }
     const created = await this.prisma.cycleObservation.create({
       data: {
         cycleId: cycle.id,
-        occurredOn: dbDateFromKey(calendarDateInTimeZone(new Date(), room.site.timezone)),
+        occurredOn: dbDateFromKey(input.occurredOn),
+        occurredAt: zonedDateTimeToUtc(input.occurredOn, input.occurredTime, room.site.timezone),
         authorName: user.name,
         category: input.category,
         body: note,
@@ -249,6 +257,7 @@ export class CyclesService {
     return {
       id: created.id,
       occurredOn: dateKeyFromDbDate(created.occurredOn),
+      occurredAt: created.occurredAt ? created.occurredAt.toISOString() : null,
       authorName: created.authorName,
       category: created.category,
       body: created.body,

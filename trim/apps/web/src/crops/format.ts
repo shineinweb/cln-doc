@@ -25,6 +25,24 @@ export function formatCalendarDate(isoDate: string): string {
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
+export function formatNoteWhen(occurredOn: string, occurredAt: string | null, timeZone: string): string {
+  if (!occurredAt) {
+    return formatCalendarDate(occurredOn);
+  }
+  const date = new Date(occurredAt);
+  if (Number.isNaN(date.getTime())) {
+    return formatCalendarDate(occurredOn);
+  }
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone,
+  }).format(date);
+}
+
 export function formatTimestamp(iso: string, timeZone?: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {

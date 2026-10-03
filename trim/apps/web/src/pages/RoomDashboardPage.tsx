@@ -100,7 +100,7 @@ export function RoomDashboardPage() {
               <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
                 Operating history
               </Typography>
-              <OperatingHistoryView history={room.data.operatingHistory} hideObservations />
+              <OperatingHistoryView history={room.data.operatingHistory} hideObservations timeZone={room.data.siteTimezone} />
             </Box>
           ) : null}
         </Box>
@@ -114,7 +114,7 @@ export function RoomDashboardPage() {
         />
       ) : null}
       {tab === 'notes' ? (
-        <RoomNotesPanel roomId={room.data.id} cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} />
+        <RoomNotesPanel roomId={room.data.id} cycleName={cycle?.name ?? null} timeZone={room.data.siteTimezone} notes={room.data.operatingHistory?.observations ?? []} />
       ) : null}
       {tab === 'trolmaster' && room.data.roomType === 'flower' ? (
         <TrolmasterPanel siteId={room.data.siteId} roomId={room.data.id} />
