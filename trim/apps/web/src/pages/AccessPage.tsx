@@ -34,7 +34,18 @@ import { useState, type InputHTMLAttributes } from 'react';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
-import { DeleteRecord, Pager, PAGE_SIZE, RowActions, SectionToolbar, TablePanel } from '../records/RecordControls';
+import {
+  DeleteRecord,
+  filterAndSortRows,
+  ListSearch,
+  Pager,
+  PAGE_SIZE,
+  RowActions,
+  SectionToolbar,
+  SortableHeader,
+  TablePanel,
+  useListQuery,
+} from '../records/RecordControls';
 import { UserActivityDashboard } from './UserActivityDashboard';
 
 const MANAGER_ONLY = 'Only a manager can change users, roles, and permissions.';
@@ -165,33 +176,84 @@ function AddUserForm({
 
 function UserTable({ directory, canManage }: { directory: AccessDirectory; canManage: boolean }) {
   const [page, setPage] = useState(1);
-  const pageCount = Math.max(1, Math.ceil(directory.users.length / PAGE_SIZE));
+  const list = useListQuery<'name' | 'email' | 'role' | 'facilities'>('name');
+  const rows = filterAndSortRows(
+    directory.users,
+    list,
+    (person, query) =>
+      [person.name, person.email, person.roleName, facilityLabel(person)].join(' ').toLowerCase().includes(query),
+    (person, key) => {
+      if (key === 'email') return person.email;
+      if (key === 'role') return person.roleName;
+      if (key === 'facilities') return facilityLabel(person);
+      return person.name;
+    },
+  );
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const slice = directory.users.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const slice = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
     <Box data-testid="user-table">
       {directory.users.length === 0 ? <Alert severity="info">No users are recorded.</Alert> : null}
       {directory.users.length > 0 ? (
-        <TablePanel>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Facilities</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {slice.map((person) => (
-                <UserRow key={person.id} person={person} directory={directory} canManage={canManage} />
-              ))}
-            </TableBody>
-          </Table>
-        </TablePanel>
+        <Box sx={{ display: 'grid', gap: 1.5 }}>
+          <ListSearch
+            value={list.query}
+            onChange={(value) => {
+              list.setQuery(value);
+              setPage(1);
+            }}
+            placeholder="Search users"
+            testId="user-search"
+          />
+          {rows.length === 0 ? <Alert severity="info">No users match that search.</Alert> : null}
+          {rows.length > 0 ? (
+            <TablePanel>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <SortableHeader
+                      label="Name"
+                      active={list.sortKey === 'name'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('name')}
+                      testId="user-sort-name"
+                    />
+                    <SortableHeader
+                      label="Email"
+                      active={list.sortKey === 'email'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('email')}
+                      testId="user-sort-email"
+                    />
+                    <SortableHeader
+                      label="Role"
+                      active={list.sortKey === 'role'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('role')}
+                      testId="user-sort-role"
+                    />
+                    <SortableHeader
+                      label="Facilities"
+                      active={list.sortKey === 'facilities'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('facilities')}
+                      testId="user-sort-facilities"
+                    />
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {slice.map((person) => (
+                    <UserRow key={person.id} person={person} directory={directory} canManage={canManage} />
+                  ))}
+                </TableBody>
+              </Table>
+            </TablePanel>
+          ) : null}
+          <Pager page={safePage} pageCount={pageCount} total={rows.length} onPage={setPage} />
+        </Box>
       ) : null}
-      <Pager page={safePage} pageCount={pageCount} total={directory.users.length} onPage={setPage} />
     </Box>
   );
 }
@@ -384,37 +446,88 @@ function UserFields({
 
 function AuditTable({ directory }: { directory: AccessDirectory }) {
   const [page, setPage] = useState(1);
-  const pageCount = Math.max(1, Math.ceil(directory.audit.length / PAGE_SIZE));
+  const list = useListQuery<'when' | 'who' | 'action' | 'summary'>('when', 'desc');
+  const rows = filterAndSortRows(
+    directory.audit,
+    list,
+    (entry, query) =>
+      [formatWhen(entry.at), entry.actorName, entry.action, entry.summary].join(' ').toLowerCase().includes(query),
+    (entry, key) => {
+      if (key === 'who') return entry.actorName;
+      if (key === 'action') return entry.action;
+      if (key === 'summary') return entry.summary;
+      return new Date(entry.at).getTime();
+    },
+  );
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const slice = directory.audit.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const slice = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
     <Box data-testid="audit-log">
       {directory.audit.length === 0 ? <Alert severity="info">No activity is recorded.</Alert> : null}
       {directory.audit.length > 0 ? (
-        <TablePanel>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>When</TableCell>
-                <TableCell>Who</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Summary</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {slice.map((entry) => (
-                <TableRow key={entry.id} data-testid="audit-row" hover>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatWhen(entry.at)}</TableCell>
-                  <TableCell>{entry.actorName}</TableCell>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{entry.action}</TableCell>
-                  <TableCell>{entry.summary}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TablePanel>
+        <Box sx={{ display: 'grid', gap: 1.5 }}>
+          <ListSearch
+            value={list.query}
+            onChange={(value) => {
+              list.setQuery(value);
+              setPage(1);
+            }}
+            placeholder="Search activity"
+            testId="audit-search"
+          />
+          {rows.length === 0 ? <Alert severity="info">No activity matches that search.</Alert> : null}
+          {rows.length > 0 ? (
+            <TablePanel>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <SortableHeader
+                      label="When"
+                      active={list.sortKey === 'when'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('when')}
+                      testId="audit-sort-when"
+                    />
+                    <SortableHeader
+                      label="Who"
+                      active={list.sortKey === 'who'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('who')}
+                      testId="audit-sort-who"
+                    />
+                    <SortableHeader
+                      label="Action"
+                      active={list.sortKey === 'action'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('action')}
+                      testId="audit-sort-action"
+                    />
+                    <SortableHeader
+                      label="Summary"
+                      active={list.sortKey === 'summary'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('summary')}
+                      testId="audit-sort-summary"
+                    />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {slice.map((entry) => (
+                    <TableRow key={entry.id} data-testid="audit-row" hover>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatWhen(entry.at)}</TableCell>
+                      <TableCell>{entry.actorName}</TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>{entry.action}</TableCell>
+                      <TableCell>{entry.summary}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TablePanel>
+          ) : null}
+          <Pager page={safePage} pageCount={pageCount} total={rows.length} onPage={setPage} />
+        </Box>
       ) : null}
-      <Pager page={safePage} pageCount={pageCount} total={directory.audit.length} onPage={setPage} />
     </Box>
   );
 }
@@ -423,9 +536,21 @@ function RolesTab({ directory, canManage }: { directory: AccessDirectory; canMan
   const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
   const [addedMessage, setAddedMessage] = useState<string | null>(null);
-  const pageCount = Math.max(1, Math.ceil(directory.roles.length / PAGE_SIZE));
+  const list = useListQuery<'name' | 'description' | 'permissions'>('name');
+  const rows = filterAndSortRows(
+    directory.roles,
+    list,
+    (role, query) =>
+      [role.name, role.description, role.permissionKeys.join(' ')].join(' ').toLowerCase().includes(query),
+    (role, key) => {
+      if (key === 'description') return role.description;
+      if (key === 'permissions') return role.permissionKeys.join(', ');
+      return role.name;
+    },
+  );
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const slice = directory.roles.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const slice = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
     <Box data-testid="role-table">
       <SectionToolbar
@@ -458,25 +583,57 @@ function RolesTab({ directory, canManage }: { directory: AccessDirectory; canMan
       {addedMessage ? <Alert sx={{ mb: 1.5 }}>{addedMessage}</Alert> : null}
       {directory.roles.length === 0 ? <Alert severity="info">No roles are recorded.</Alert> : null}
       {directory.roles.length > 0 ? (
-        <TablePanel>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Permissions</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {slice.map((role) => (
-                <RoleRow key={role.id} role={role} directory={directory} canManage={canManage} />
-              ))}
-            </TableBody>
-          </Table>
-        </TablePanel>
+        <Box sx={{ display: 'grid', gap: 1.5 }}>
+          <ListSearch
+            value={list.query}
+            onChange={(value) => {
+              list.setQuery(value);
+              setPage(1);
+            }}
+            placeholder="Search roles"
+            testId="role-search"
+          />
+          {rows.length === 0 ? <Alert severity="info">No roles match that search.</Alert> : null}
+          {rows.length > 0 ? (
+            <TablePanel>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <SortableHeader
+                      label="Name"
+                      active={list.sortKey === 'name'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('name')}
+                      testId="role-sort-name"
+                    />
+                    <SortableHeader
+                      label="Description"
+                      active={list.sortKey === 'description'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('description')}
+                      testId="role-sort-description"
+                    />
+                    <SortableHeader
+                      label="Permissions"
+                      active={list.sortKey === 'permissions'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('permissions')}
+                      testId="role-sort-permissions"
+                    />
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {slice.map((role) => (
+                    <RoleRow key={role.id} role={role} directory={directory} canManage={canManage} />
+                  ))}
+                </TableBody>
+              </Table>
+            </TablePanel>
+          ) : null}
+          <Pager page={safePage} pageCount={pageCount} total={rows.length} onPage={setPage} />
+        </Box>
       ) : null}
-      <Pager page={safePage} pageCount={pageCount} total={directory.roles.length} onPage={setPage} />
     </Box>
   );
 }
@@ -692,9 +849,16 @@ function PermissionsTab({ directory, canManage }: { directory: AccessDirectory; 
   const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
   const [addedMessage, setAddedMessage] = useState<string | null>(null);
-  const pageCount = Math.max(1, Math.ceil(directory.permissions.length / PAGE_SIZE));
+  const list = useListQuery<'key' | 'description'>('key');
+  const rows = filterAndSortRows(
+    directory.permissions,
+    list,
+    (permission, query) => [permission.key, permission.description].join(' ').toLowerCase().includes(query),
+    (permission, key) => (key === 'description' ? permission.description : permission.key),
+  );
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
-  const slice = directory.permissions.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const slice = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
     <Box data-testid="permission-table">
       <SectionToolbar
@@ -726,24 +890,50 @@ function PermissionsTab({ directory, canManage }: { directory: AccessDirectory; 
       {addedMessage ? <Alert sx={{ mb: 1.5 }}>{addedMessage}</Alert> : null}
       {directory.permissions.length === 0 ? <Alert severity="info">No permissions are recorded.</Alert> : null}
       {directory.permissions.length > 0 ? (
-        <TablePanel>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Key</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {slice.map((permission) => (
-                <PermissionRow key={permission.id} permission={permission} canManage={canManage} />
-              ))}
-            </TableBody>
-          </Table>
-        </TablePanel>
+        <Box sx={{ display: 'grid', gap: 1.5 }}>
+          <ListSearch
+            value={list.query}
+            onChange={(value) => {
+              list.setQuery(value);
+              setPage(1);
+            }}
+            placeholder="Search permissions"
+            testId="permission-search"
+          />
+          {rows.length === 0 ? <Alert severity="info">No permissions match that search.</Alert> : null}
+          {rows.length > 0 ? (
+            <TablePanel>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <SortableHeader
+                      label="Key"
+                      active={list.sortKey === 'key'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('key')}
+                      testId="permission-sort-key"
+                    />
+                    <SortableHeader
+                      label="Description"
+                      active={list.sortKey === 'description'}
+                      direction={list.sortDirection}
+                      onClick={() => list.toggleSort('description')}
+                      testId="permission-sort-description"
+                    />
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {slice.map((permission) => (
+                    <PermissionRow key={permission.id} permission={permission} canManage={canManage} />
+                  ))}
+                </TableBody>
+              </Table>
+            </TablePanel>
+          ) : null}
+          <Pager page={safePage} pageCount={pageCount} total={rows.length} onPage={setPage} />
+        </Box>
       ) : null}
-      <Pager page={safePage} pageCount={pageCount} total={directory.permissions.length} onPage={setPage} />
     </Box>
   );
 }

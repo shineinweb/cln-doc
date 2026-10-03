@@ -340,7 +340,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 1. Open **Users**, directly under **Dashboard**. The page opens on **Users**. **Activity** shows the last 14 days of sign-ins and access changes.
 2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters.
 3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
-4. Choose **Add user**. The person appears in the table. **Audit logs** records the change.
+4. Choose **Add user**. The person appears in the table. Use **Search users** or a column header when the list is long. **Audit logs** records the change and can be searched the same way.
 5. **Edit** changes the person. **Delete** removes a person who has not recorded work. Do not delete your own account.
 
 **Done.** The new person is in the Users table, and the audit log names who added them.

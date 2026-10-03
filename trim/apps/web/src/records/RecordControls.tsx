@@ -7,7 +7,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  TableCell,
   TableContainer,
+  TableSortLabel,
   TextField,
   Typography,
 } from '@mui/material';
@@ -15,6 +17,103 @@ import { useState, type ReactNode } from 'react';
 import { workbench } from '../theme';
 
 export const PAGE_SIZE = 5;
+
+export type SortDirection = 'asc' | 'desc';
+
+export type ListQueryState<Key extends string> = {
+  query: string;
+  sortKey: Key;
+  sortDirection: SortDirection;
+  setQuery: (value: string) => void;
+  toggleSort: (key: Key) => void;
+};
+
+export function useListQuery<Key extends string>(defaultSortKey: Key, defaultDirection: SortDirection = 'asc'): ListQueryState<Key> {
+  const [query, setQuery] = useState('');
+  const [sortKey, setSortKey] = useState<Key>(defaultSortKey);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(defaultDirection);
+  return {
+    query,
+    sortKey,
+    sortDirection,
+    setQuery,
+    toggleSort: (key) => {
+      if (key === sortKey) {
+        setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+        return;
+      }
+      setSortKey(key);
+      setSortDirection('asc');
+    },
+  };
+}
+
+export function filterAndSortRows<T, Key extends string>(
+  rows: T[],
+  list: ListQueryState<Key>,
+  matches: (row: T, query: string) => boolean,
+  valueFor: (row: T, key: Key) => string | number,
+): T[] {
+  const needle = list.query.trim().toLowerCase();
+  const filtered = needle ? rows.filter((row) => matches(row, needle)) : [...rows];
+  filtered.sort((left, right) => {
+    const leftValue = valueFor(left, list.sortKey);
+    const rightValue = valueFor(right, list.sortKey);
+    const compared =
+      typeof leftValue === 'number' && typeof rightValue === 'number'
+        ? leftValue - rightValue
+        : String(leftValue).localeCompare(String(rightValue), undefined, { sensitivity: 'base', numeric: true });
+    return list.sortDirection === 'asc' ? compared : -compared;
+  });
+  return filtered;
+}
+
+export function ListSearch({
+  value,
+  onChange,
+  placeholder,
+  testId = 'list-search',
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  testId?: string;
+}) {
+  return (
+    <TextField
+      size="small"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      inputProps={{ 'data-testid': testId, 'aria-label': placeholder }}
+      sx={{ minWidth: { xs: '100%', sm: 260 }, maxWidth: 360 }}
+    />
+  );
+}
+
+export function SortableHeader({
+  label,
+  active,
+  direction,
+  onClick,
+  align = 'left',
+  testId,
+}: {
+  label: string;
+  active: boolean;
+  direction: SortDirection;
+  onClick: () => void;
+  align?: 'left' | 'right';
+  testId?: string;
+}) {
+  return (
+    <TableCell align={align} sortDirection={active ? direction : false}>
+      <TableSortLabel active={active} direction={direction} onClick={onClick} data-testid={testId} sx={{ fontWeight: 700 }}>
+        {label}
+      </TableSortLabel>
+    </TableCell>
+  );
+}
 
 export function SectionToolbar({ title, action }: { title: string; action?: ReactNode }) {
   return (

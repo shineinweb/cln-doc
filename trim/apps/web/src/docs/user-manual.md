@@ -110,13 +110,13 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **Activity** sits at the top of the Users tab. It counts people, sign-ins, access changes, and active people from the audit log for the last 14 days, draws a daily activity chart, and lists the most active people.
 
-**Users** lists every person in a table: name, email, role, and facilities. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
+**Users** lists every person in a table: name, email, role, and facilities. Use **Search users** to filter the list, and click a column header to sort. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
 
-**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for changes to users, roles, and permissions.
+**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for changes to users, roles, and permissions. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
 
-**Roles** lists each role with its description and permissions. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
+**Roles** lists each role with its description and permissions. Use **Search roles** to filter the list, and click a column header to sort. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
 
-**Permissions** lists each key and description. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
+**Permissions** lists each key and description. Use **Search permissions** to filter the list, and click a column header to sort. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
 
 An employee sees the tables and “Only a manager can change users, roles, and permissions.”
 
