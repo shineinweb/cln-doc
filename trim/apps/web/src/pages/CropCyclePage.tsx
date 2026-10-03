@@ -1,8 +1,8 @@
 import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, TextField, Typography } from '@mui/material';
-import { cropCycleDetailSchema, recordRemovedSchema, reschedulePreviewSchema, rescheduleResultSchema, startedCycleSchema, type ReschedulePreview } from '@trim/contracts';
+import { cropCycleDetailSchema, harvestDetailSchema, recordRemovedSchema, reschedulePreviewSchema, rescheduleResultSchema, startedCycleSchema, type ReschedulePreview } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
@@ -71,6 +71,7 @@ export function CropCyclePage() {
         <Chip label={cycleDayLabel(cycle.data.cycleDay)} data-testid="cycle-page-day" />
         {cycle.data.workflow ? <Chip label={`${cycle.data.workflow.templateName} v${cycle.data.workflow.versionNumber}`} /> : null}
       </Box>
+      {cycle.data.plantCount > 0 ? <HarvestCropButton cycleId={cycle.data.id} /> : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Generated tasks
       </Typography>
@@ -80,6 +81,26 @@ export function CropCyclePage() {
         Operating history
       </Typography>
       <OperatingHistoryView history={cycle.data.operatingHistory} />
+    </Box>
+  );
+}
+
+function HarvestCropButton({ cycleId }: { cycleId: string }) {
+  const navigate = useNavigate();
+  const harvestCrop = useMutation({
+    mutationFn: () => apiSend('/harvests', harvestDetailSchema, { cycleId }),
+    onSuccess: (harvest) => navigate(`/harvests/${harvest.id}`),
+  });
+  return (
+    <Box sx={{ mb: 3 }}>
+      <Button variant="outlined" data-testid="harvest-crop" disabled={harvestCrop.isPending} onClick={() => harvestCrop.mutate()}>
+        Harvest this crop
+      </Button>
+      {harvestCrop.error ? (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {harvestCrop.error.message}
+        </Alert>
+      ) : null}
     </Box>
   );
 }

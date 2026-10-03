@@ -63,7 +63,7 @@ If an account has no membership, the page says “No facilities are assigned to 
 
 ## Rooms
 
-**Rooms** is titled Rooms. The kicker is the facility code, HARBOR or HILL. The line under the title names the facility and its address, then says “Open a room to see its current crop, cycle day, and operating history.” Harbor House is 180 Cannery Road, Astoria, OR 97103. Hill Works is 42 Ridge Lane, Hood River, OR 97031. Choosing a facility in the top bar opens this page.
+**Rooms** is titled Rooms. The kicker is the facility code, HARBOR or HILL. The line under the title names the facility and its address, then says “Open a room to see its zones, readings, and operating history.” Harbor House is 180 Cannery Road, Astoria, OR 97103. Hill Works is 42 Ridge Lane, Hood River, OR 97031. Choosing a facility in the top bar opens this page.
 
 Each row shows the room name, cultivar and plant count or “No active crop.” **View** shows the room type and **Open room**. Choose the room name to open the dashboard.
 
@@ -80,13 +80,9 @@ The room dashboard introduction says “The room dashboard is the daily workspac
 
 The room opens on **Room**. Two more tabs sit beside it: **Tasks** and **Notes**.
 
-**Room** holds the current crop, zones, Metrc, readings, the gateway, the controller sample, and operating history. The crop cycle form is not on the page until you choose **Reset room** or **Edit**.
+**Room** holds zones, Metrc, readings, the gateway, the controller sample, and operating history. It does not show a current-crop card.
 
 **Reset room** is on **Room** for an organization admin. It opens a form: Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. The start date is day 1, and the form shows the calculated end date for the next crop. Saving closes the current crop, lists it under **Archived crops**, and starts the next crop from the strain. The harvest date, when entered, is stored on the crop being closed. Zones, readings, alerts, the gateway, and the controller sample stay on **Room**. An employee does not see **Reset room**.
-
-When a crop is active, the **Current crop** card shows the crop name and four figures: Cultivar, Plants, Stage, and Cycle day. Cycle day counts the start date as day 1 in the facility timezone. It also shows “Expected harvest”, **Edit**, and **Open crop cycle**. **Edit** opens the crop cycle form: Name, Cultivar, Stage, Start, and **Cycle duration in days**. The start date is day 1, and the form shows the calculated end date. **Save changes** writes that crop. **Cancel** closes the form. **Harvest this crop** appears only while the crop still has plants. Flower 1 does not show that button. Veg 1 does.
-
-If the room has no active crop, **Room** says “This room has no active crop cycle.”
 
 **Add zone** adds a zone under the room. **Last successful Metrc sync** sits on **Room**. With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
 
@@ -114,9 +110,9 @@ If the room has no active crop, **Room** says “This room has no active crop cy
 
 ## Crop cycles
 
-**Crop cycles** lists active cycles for the facility in the switcher. Each card shows the crop, room, cultivar, plant count, expected harvest, stage, and cycle day. Open one for the timeline, movements, observations, and labor. This list does not start a cycle. **Edit** on a listed cycle opens the same crop cycle form: name, cultivar, stage, start, and cycle duration in days.
+**Crop cycles** lists active cycles for the facility in the switcher. Each card shows the crop, room, cultivar, plant count, expected harvest, stage, and cycle day. Open one for the timeline, movements, observations, and labor. This list does not start a cycle. **Edit** on a listed cycle opens the crop cycle form: name, cultivar, stage, start, and cycle duration in days. The start date is day 1, and the form shows the calculated end date. **Save changes** writes that crop. **Cancel** closes the form.
 
-The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned.
+The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned. **Harvest this crop** appears on that page only while the crop still has plants.
 
 **Generated tasks** lists each task with its assignee and due date. If none exist, the page says “This cycle has no workflow assignments yet.”
 
@@ -181,7 +177,7 @@ The seeded queue, still pending review until someone approves it, is a Harbor Ho
 
 **Harvests** says a harvest keeps the plant tags, weights, waste, and packages for one license, and that veg crops stay in the room until they are cut. Each card shows the harvest name, license, facility, and plant count.
 
-**Harvest this crop** on a room with plants starts a harvest and opens it. The harvest page shows the license, the name, the plant count, and “plant tags stay on this harvest.”
+**Harvest this crop** is on the crop cycle page while that crop still has plants. It starts a harvest and opens it. The harvest page shows the license, the name, the plant count, and “plant tags stay on this harvest.” Flower 1’s current crop has no plants, so that button is not on its cycle page. Veg 1 still has plants, so the button is on that cycle page.
 
 The weight ledger is Wet weight, Dry weight, Packaged, Waste, and Unaccounted. Unaccounted is dry weight minus packaged minus waste. Figures that are not recorded yet say “Not recorded.”
 

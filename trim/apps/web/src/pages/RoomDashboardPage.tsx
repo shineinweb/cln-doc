@@ -1,6 +1,5 @@
 import { Alert, Box, Button, Card, CardContent, Chip, MenuItem, Skeleton, Tab, Tabs, TextField, Typography } from '@mui/material';
 import {
-  harvestDetailSchema,
   recordRemovedSchema,
   roomDetailSchema,
   startedCycleSchema,
@@ -10,11 +9,11 @@ import {
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
-import { addCalendarDays, cycleDayLabel, formatCalendarDate, formatTimestamp, inclusiveDayCount } from '../crops/format';
+import { addCalendarDays, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
@@ -24,14 +23,9 @@ import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
 
 export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { setSiteId } = useSites();
   const [tab, setTab] = useState<'room' | 'tasks' | 'notes'>('room');
-  const harvestCrop = useMutation({
-    mutationFn: (cycleId: string) => apiSend('/harvests', harvestDetailSchema, { cycleId }),
-    onSuccess: (harvest) => navigate(`/harvests/${harvest.id}`),
-  });
   const room = useQuery({
     queryKey: ['room', roomId],
     queryFn: () => apiGet(`/rooms/${roomId}`, roomDetailSchema),
@@ -82,52 +76,6 @@ export function RoomDashboardPage() {
       {tab === 'room' ? (
         <Box>
           {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
-          {cycle ? (
-            <Card sx={{ mb: 2 }} data-testid="current-cycle">
-              <CardContent>
-                <Typography variant="overline" sx={{ color: 'primary.main', letterSpacing: '0.14em' }}>
-                  Current crop
-                </Typography>
-                <Typography variant="h2" sx={{ fontSize: 32 }} data-testid="room-crop-name">
-                  {cycle.name}
-                </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2, mt: 2 }}>
-                  <Metric label="Cultivar" value={cycle.cultivar} testId="room-cultivar" />
-                  <Metric label="Plants" value={String(cycle.plantCount)} testId="room-plant-count" />
-                  <Metric label="Stage" value={roomTypeLabel(cycle.stage)} testId="room-stage" />
-                  <Metric label="Cycle day" value={cycleDayLabel(cycle.cycleDay)} testId="room-cycle-day" />
-                </Box>
-                <Typography sx={{ mt: 2 }} data-testid="room-expected-harvest">
-                  Expected harvest {formatCalendarDate(cycle.expectedHarvestDate)}
-                </Typography>
-                <EditCycleForm cycle={cycle} />
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-                  <Button component={RouterLink} to={`/rooms/${room.data.id}/cycles/${cycle.id}`} variant="contained" data-testid="open-cycle">
-                    Open crop cycle
-                  </Button>
-                  {cycle.plantCount > 0 ? (
-                    <Button
-                      variant="outlined"
-                      data-testid="harvest-crop"
-                      disabled={harvestCrop.isPending}
-                      onClick={() => harvestCrop.mutate(cycle.id)}
-                    >
-                      Harvest this crop
-                    </Button>
-                  ) : null}
-                </Box>
-                {harvestCrop.error ? (
-                  <Alert severity="error" sx={{ mt: 2 }}>
-                    {harvestCrop.error.message}
-                  </Alert>
-                ) : null}
-              </CardContent>
-            </Card>
-          ) : (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              This room has no active crop cycle.
-            </Alert>
-          )}
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
           ) : null}
@@ -163,110 +111,6 @@ export function RoomDashboardPage() {
         </SignalCard>
       ) : null}
       {tab === 'notes' ? <RoomNotes cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} /> : null}
-    </Box>
-  );
-}
-
-function EditCycleForm({
-  cycle,
-}: {
-  cycle: { id: string; roomId: string; name: string; cultivar: string; stage: string; startDate: string; expectedHarvestDate: string };
-}) {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState(cycle.startDate);
-  const [durationDays, setDurationDays] = useState(String(Math.max(1, inclusiveDayCount(cycle.startDate, cycle.expectedHarvestDate))));
-  const endDate = useMemo(() => {
-    const days = Number(durationDays);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !Number.isInteger(days) || days < 1) {
-      return null;
-    }
-    return addCalendarDays(startDate, days - 1);
-  }, [durationDays, startDate]);
-  const save = useMutation({
-    mutationFn: (body: Record<string, unknown>) => apiSend(`/cycles/${cycle.id}`, recordRemovedSchema, body, 'PATCH'),
-    onSuccess: async () => {
-      setMessage('Crop cycle saved.');
-      setOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ['sites'] });
-      await queryClient.invalidateQueries({ queryKey: ['room', cycle.roomId] });
-    },
-    onError: (error: Error) => setMessage(error.message),
-  });
-  const stage = cycle.stage in ROOM_TYPE_LABELS ? cycle.stage : 'flower';
-
-  if (!open) {
-    return (
-      <Box sx={{ mt: 2 }}>
-        <Button variant="outlined" data-testid="edit-cycle" onClick={() => setOpen(true)}>
-          Edit
-        </Button>
-        {message ? <Alert sx={{ mt: 2 }}>{message}</Alert> : null}
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      component="form"
-      sx={{ display: 'grid', gap: 1.5, maxWidth: 480, mt: 2 }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!endDate) {
-          return;
-        }
-        const form = new FormData(event.currentTarget);
-        save.mutate({
-          name: String(form.get('name') ?? ''),
-          cultivar: String(form.get('cultivar') ?? ''),
-          stage: String(form.get('stage') ?? ''),
-          startDate,
-          expectedHarvestDate: endDate,
-        });
-      }}
-    >
-      <Typography variant="h3" sx={{ fontSize: 22 }}>
-        Edit crop cycle
-      </Typography>
-      <TextField label="Name" name="name" required defaultValue={cycle.name} />
-      <TextField label="Cultivar" name="cultivar" required defaultValue={cycle.cultivar} />
-      <TextField select label="Stage" name="stage" defaultValue={stage}>
-        {Object.entries(ROOM_TYPE_LABELS).map(([value, label]) => (
-          <MenuItem key={value} value={value}>
-            {label}
-          </MenuItem>
-        ))}
-      </TextField>
-      <TextField
-        label="Start"
-        name="startDate"
-        type="date"
-        required
-        value={startDate}
-        onChange={(event) => setStartDate(event.target.value)}
-        InputLabelProps={{ shrink: true }}
-        inputProps={{ 'data-testid': 'cycle-start' }}
-      />
-      <TextField
-        label="Cycle duration in days"
-        name="durationDays"
-        type="number"
-        required
-        value={durationDays}
-        onChange={(event) => setDurationDays(event.target.value)}
-        inputProps={{ min: 1, step: 1, 'data-testid': 'cycle-duration' }}
-      />
-      <Typography data-testid="cycle-end-date" sx={{ color: endDate ? 'text.primary' : 'text.secondary' }}>
-        {endDate ? `End of cycle ${formatCalendarDate(endDate)}.` : 'End of cycle is calculated from the start date and the duration. The start date is day 1.'}
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <SaveChanges pending={save.isPending || !endDate} />
-        <Button type="button" onClick={() => setOpen(false)}>
-          Cancel
-        </Button>
-      </Box>
-      {message ? <Alert>{message}</Alert> : null}
     </Box>
   );
 }
@@ -548,17 +392,6 @@ function TaskDueRow({ task }: { task: { id: string; title: string; assigneeLabel
       }
       onDelete={() => remove.mutate()}
     />
-  );
-}
-
-function Metric({ label, value, testId }: { label: string; value: string; testId: string }) {
-  return (
-    <Box>
-      <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>{label}</Typography>
-      <Typography sx={{ fontWeight: 600 }} data-testid={testId}>
-        {value}
-      </Typography>
-    </Box>
   );
 }
 

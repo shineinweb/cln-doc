@@ -13,16 +13,16 @@ A page for the other facility says you do not have access. Do not keep going on 
 **Steps.**
 
 1. Open **Facility** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
-2. Open **Rooms** and choose the room. The page says “Open a room to see its current crop, cycle day, and operating history.”
-3. The room dashboard opens on **Room**. Read **Current crop**: Cultivar, Plants, Stage, Cycle day, and Expected harvest. Cycle day counts the start date as day 1 in `America/Los_Angeles`.
+2. Open **Rooms** and choose the room. The page says “Open a room to see its zones, readings, and operating history.”
+3. The room dashboard opens on **Room**. Read the zones and **Last successful Metrc sync**. The room does not show a current-crop card. Cycle day is on the crop cycle page, and it counts the start date as day 1 in `America/Los_Angeles`.
 4. Open **Tasks** and read **Tasks due today**. On October 3, 2026, Flower 1 lists Count plants onto the bench and Lower-leaf pass. Veg 1 lists Scout the canopy.
 5. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
 6. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
 7. Read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
 8. Read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
-9. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Room** and on **Notes**, and “No tasks are due today” on **Tasks**.
+9. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Notes**, and “No tasks are due today” on **Tasks**. The room list row says “No active crop.”
 
-**Done.** You can name the crop, the cycle day, the task due today, and whether a reading or alert needs attention. Flower 1 shows Cedar Nights flower with 0 plants because that crop is already harvested. Veg 1 shows Glass Orchard veg with 86 plants still in the room.
+**Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on **Crop cycles**. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
 
 ## Completing today’s assignment
 
@@ -57,7 +57,7 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 3. Open **Crop cycles**, choose the facility, and open the cycle.
 4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
 
-Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Crop cycles**, on **Workflows**, or on the cycle page. **Edit** on the current crop opens the crop cycle form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
+Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Crop cycles**, on **Workflows**, or on the cycle page. **Edit** on a listed cycle opens the crop cycle form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
 
 **Reset room** is on the **Room** tab, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones and readings stay. **Tasks** and **Notes** are the other tabs on that page.
 
@@ -165,13 +165,13 @@ A package uses the same sandbox. On the package page, choose Success, Definite f
 
 ## Harvest through package
 
-**Who.** Anyone who can open the facility. Blake can harvest Harbor House. Casey can harvest Hill Works. Avery can harvest either. **Harvest this crop** is on the room only while the crop still has plants. Flower 1 does not show it. Veg 1 does.
+**Who.** Anyone who can open the facility. Blake can harvest Harbor House. Casey can harvest Hill Works. Avery can harvest either. **Harvest this crop** is on the crop cycle page while that crop still has plants. Flower 1’s current crop does not show it. Veg 1 does.
 
 **When.** The crop is cut and you are recording wet weight through the package. Veg crops stay in the room until they are cut.
 
 **Steps.**
 
-1. On the room, choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
+1. Open **Crop cycles** and open the cycle. Choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
 2. Enter **Wet weight (g)** and choose **Record wet weight**.
 3. Choose **Start drying**.
 4. Enter **Dry weight (g)** and choose **Record dry weight**.

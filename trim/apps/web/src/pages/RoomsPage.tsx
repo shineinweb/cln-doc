@@ -17,7 +17,7 @@ export function RoomsPage() {
       <PageHeader
         kicker={site?.code ?? 'Center'}
         title="Rooms"
-        lede={site ? roomsLede(site) : 'Open a room to see its current crop, cycle day, and operating history.'}
+        lede={site ? roomsLede(site) : 'Open a room to see its zones, readings, and operating history.'}
       />
       {loading ? <Skeleton variant="rounded" height={180} /> : null}
       {error ? <Alert severity="error">{error.message}</Alert> : null}
@@ -40,7 +40,7 @@ export function RoomsPage() {
 function roomsLede(site: Site): string {
   const address = [site.addressLine1, site.city, site.region, site.postalCode].filter(Boolean).join(', ');
   const place = address ? `${site.name}. ${address}.` : `${site.name}.`;
-  return `${place} Open a room to see its current crop, cycle day, and operating history.`;
+  return `${place} Open a room to see its zones, readings, and operating history.`;
 }
 
 function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
