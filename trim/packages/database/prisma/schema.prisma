@@ -1,0 +1,1422 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// A cultivation company. Users, sites, and licenses all belong to one organization.
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  title       String?  @db.VarChar(191)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users             User[]
+  sites             Site[]
+  licenses          License[]
+  roles             Role[]
+  teams             Team[]
+  sopRecords        SopRecord[]
+  workflowTemplates WorkflowTemplate[]
+  strains           Strain[]
+  laborRates        LaborRate[]
+  metrcApiSetting   MetrcApiSetting?
+  auditLogs         AuditLog[]
+
+  @@map("organizations")
+}
+
+/// Stored Metrc integrator key, user API key, and facility license. Trim does not call Metrc.
+model MetrcApiSetting {
+  id                String   @id @default(cuid())
+  organizationId    String   @unique @map("organization_id")
+  integratorApiKey  String   @map("integrator_api_key") @db.Text
+  userApiKey        String   @map("user_api_key") @db.Text
+  licenseNumber     String   @default("") @map("license_number")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("metrc_api_settings")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  email          String   @unique
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  credential      Credential?
+  memberships     SiteMembership[]
+  userRoles       UserRole[]
+  teamMemberships     TeamMember[]
+  taskComments        CycleTaskComment[]
+  taskAttachments     CycleTaskAttachment[]
+  workflowAssignments WorkflowTaskTemplate[] @relation("WorkflowAssignee")
+  assignedCycleTasks  CycleTask[]            @relation("CycleTaskAssignee")
+  plantEvents         PlantEvent[]
+  harvestSteps        HarvestStep[]
+  harvestWastes       HarvestWaste[]
+  harvestPackages     HarvestPackage[]
+  submissionsRequested MetrcSubmission[] @relation("SubmissionRequester")
+  submissionsReviewed  MetrcSubmission[] @relation("SubmissionReviewer")
+  metrcAttempts        MetrcAttempt[]    @relation("AttemptActor")
+  metrcReconciles      MetrcAttempt[]    @relation("AttemptReconciler")
+  auditLogs            AuditLog[]
+  roomTaskAssignments  RoomTaskAssignee[]
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+/// Password storage is separate from the user profile so later login methods can be added.
+model Credential {
+  id           String   @id @default(cuid())
+  userId       String   @unique @map("user_id")
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credentials")
+}
+
+/// A sign-in, or a change to a user, role, or permission. The actor name stays if the user is removed.
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  actorId        String?  @map("actor_id")
+  actorName      String   @map("actor_name") @db.VarChar(191)
+  action         String   @db.VarChar(64)
+  entityType     String   @map("entity_type") @db.VarChar(64)
+  entityId       String?  @map("entity_id")
+  summary        String   @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
+}
+
+/// Global permission catalog. Roles grant these inside an organization.
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String   @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  key            String
+  name           String
+  description    String   @db.VarChar(500)
+  /// Org-wide roles can open every site in the organization. Other roles need a site membership.
+  isOrgWide      Boolean  @default(false) @map("is_org_wide")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization  Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions   RolePermission[]
+  userRoles     UserRole[]
+  workflowTasks WorkflowTaskTemplate[]
+  cycleTasks    CycleTask[]
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+  @@map("roles")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+/// A physical facility. This is not a regulated license.
+model Site {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  code           String
+  addressLine1   String?  @map("address_line1")
+  city           String?
+  region         String?
+  postalCode     String?  @map("postal_code")
+  timezone       String   @default("America/Los_Angeles")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  rooms        Room[]
+  memberships  SiteMembership[]
+  licenses     LicenseSite[]
+  harvests       Harvest[]
+  metrcSyncs     MetrcSync[]
+  sensorGateways SensorGateway[]
+  irrigationRecords  IrrigationRecord[]
+  ipmRecords         IpmRecord[]
+  maintenanceRecords MaintenanceRecord[]
+  purchaseRecords    PurchaseRecord[]
+  sanitationRecords  SanitationRecord[]
+  trainingRecords    TrainingRecord[]
+  roomStays          RoomStay[]
+  recurringDuties    RecurringDuty[]
+  trolmasterConnections TrolmasterConnection[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@map("sites")
+}
+
+/// Explicit grant to open one site. Organization admins do not need a row here.
+model SiteMembership {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  siteId    String   @map("site_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, siteId])
+  @@index([siteId])
+  @@map("site_memberships")
+}
+
+/// Regulated license. Plants, batches, and Metrc comparisons are scoped here, not to the site.
+model License {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  licenseNumber  String    @map("license_number")
+  licenseType    String    @map("license_type")
+  jurisdiction   String
+  status         String    @default("active")
+  issuedOn       DateTime? @map("issued_on") @db.Date
+  expiresOn      DateTime? @map("expires_on") @db.Date
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sites          LicenseSite[]
+  batches        PlantBatch[]
+  plants         Plant[]
+  metrcConnection MetrcConnection?
+  imports        MetrcInventoryImport[]
+  discrepancies  MetrcDiscrepancy[]
+  submissions     MetrcSubmission[]
+  outbox          MetrcOutbox[]
+  harvests        Harvest[]
+  harvestPackages HarvestPackage[]
+
+  @@unique([organizationId, licenseNumber])
+  @@index([organizationId])
+  @@map("licenses")
+}
+
+/// A license may cover activity at one or more physical sites. The site is still not the license.
+model LicenseSite {
+  licenseId String   @map("license_id")
+  siteId    String   @map("site_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  site    Site    @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@id([licenseId, siteId])
+  @@map("license_sites")
+}
+
+/// Cultivar name held by the organization. Plants under a license point at one strain.
+model Strain {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  batches      PlantBatch[]
+  plants       Plant[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("strains")
+}
+
+model PlantBatch {
+  id        String   @id @default(cuid())
+  licenseId String   @map("license_id")
+  strainId  String   @map("strain_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  strain  Strain  @relation(fields: [strainId], references: [id], onDelete: Cascade)
+  plants  Plant[]
+
+  @@unique([licenseId, name])
+  @@index([strainId])
+  @@map("plant_batches")
+}
+
+/// One tagged plant. The tag is unique inside its license. cycleId is the crop it is assigned to.
+model Plant {
+  id        String   @id @default(cuid())
+  licenseId String   @map("license_id")
+  batchId   String   @map("batch_id")
+  strainId  String   @map("strain_id")
+  cycleId   String?  @map("cycle_id")
+  roomId    String?  @map("room_id")
+  tag       String
+  stage        String
+  status       String    @default("active")
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  license License      @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  batch   PlantBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  strain  Strain       @relation(fields: [strainId], references: [id], onDelete: Cascade)
+  cycle   CropCycle?   @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  room          Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  events        PlantEvent[]
+  harvestPlants HarvestPlant[]
+
+  @@unique([licenseId, tag])
+  @@index([cycleId])
+  @@index([roomId])
+  @@index([batchId])
+  @@map("plants")
+}
+
+/// Actor and facts for a planted, moved, stage change, or observation. Rows are not overwritten.
+model PlantEvent {
+  id          String   @id @default(cuid())
+  plantId     String   @map("plant_id")
+  licenseId   String   @map("license_id")
+  eventType   String   @map("event_type")
+  actorUserId String   @map("actor_user_id")
+  occurredAt  DateTime @map("occurred_at")
+  fromRoomId  String?  @map("from_room_id")
+  toRoomId    String?  @map("to_room_id")
+  fromStage   String?  @map("from_stage")
+  toStage     String?  @map("to_stage")
+  note        String?  @db.VarChar(2000)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  plant       Plant             @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  actor       User              @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  submissions MetrcSubmission[]
+
+  @@index([plantId, occurredAt])
+  @@index([licenseId])
+  @@map("plant_events")
+}
+
+/// A cut of plants on one license. Weights, waste, and packages stay on this row.
+model Harvest {
+  id        String   @id @default(cuid())
+  licenseId String   @map("license_id")
+  siteId    String?  @map("site_id")
+  cycleId   String?  @map("cycle_id")
+  roomId    String?  @map("room_id")
+  name         String
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  license  License          @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  site     Site?            @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  cycle    CropCycle?       @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  room     Room?            @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  plants   HarvestPlant[]
+  steps    HarvestStep[]
+  wastes       HarvestWaste[]
+  packages     HarvestPackage[]
+  scaleSamples ScaleSample[]
+  tagSamples   HarvestTagSample[]
+
+  @@index([licenseId])
+  @@index([siteId])
+  @@map("harvests")
+}
+
+model HarvestPlant {
+  id        String   @id @default(cuid())
+  harvestId String   @map("harvest_id")
+  plantId   String   @unique @map("plant_id")
+  tag       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  harvest       Harvest               @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  plant         Plant                 @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  packagePlants HarvestPackagePlant[]
+
+  @@unique([harvestId, tag])
+  @@map("harvest_plants")
+}
+
+/// Wet weight, drying, dry weight, and trimming. Each row keeps the actor and time.
+model HarvestStep {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  kind        String
+  actorUserId String   @map("actor_user_id")
+  occurredAt  DateTime @map("occurred_at")
+  weightGrams Int?     @map("weight_grams")
+  roomId       String?   @map("room_id")
+  note         String?   @db.VarChar(500)
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  actor   User    @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  room    Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([harvestId, occurredAt])
+  @@map("harvest_steps")
+}
+
+model HarvestWaste {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  weightGrams Int      @map("weight_grams")
+  note        String?  @db.VarChar(500)
+  actorUserId  String    @map("actor_user_id")
+  recordedAt   DateTime  @map("recorded_at")
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  actor   User    @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId])
+  @@map("harvest_waste")
+}
+
+model HarvestPackage {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  licenseId   String   @map("license_id")
+  label       String
+  weightGrams Int      @map("weight_grams")
+  actorUserId  String    @map("actor_user_id")
+  recordedAt   DateTime  @map("recorded_at")
+  voidedAt     DateTime? @map("voided_at")
+  voidedByName String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  harvest     Harvest               @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  license     License               @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  actor       User                  @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  plants      HarvestPackagePlant[]
+  submissions MetrcSubmission[]
+
+  @@unique([licenseId, label])
+  @@index([harvestId])
+  @@map("harvest_packages")
+}
+
+model HarvestPackagePlant {
+  id             String   @id @default(cuid())
+  packageId      String   @map("package_id")
+  harvestPlantId String   @map("harvest_plant_id")
+  tag            String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  harvestPackage HarvestPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  harvestPlant   HarvestPlant   @relation(fields: [harvestPlantId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, harvestPlantId])
+  @@index([harvestPlantId])
+  @@map("harvest_package_plants")
+}
+
+/// Credentials stay on the server. The inventory import does not read this row and does not call Metrc.
+model MetrcConnection {
+  id            String   @id @default(cuid())
+  licenseId     String   @unique @map("license_id")
+  integratorKey String   @map("integrator_key") @db.VarChar(255)
+  userKey       String   @map("user_key") @db.VarChar(255)
+  baseUrl       String   @map("base_url") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@map("metrc_connections")
+}
+
+model MetrcInventoryImport {
+  id               String   @id @default(cuid())
+  licenseId        String   @map("license_id")
+  source           String
+  status           String
+  matchedCount     Int      @map("matched_count")
+  discrepancyCount Int      @map("discrepancy_count")
+  importedAt       DateTime @map("imported_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  license       License            @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  discrepancies MetrcDiscrepancy[]
+
+  @@index([licenseId, importedAt])
+  @@map("metrc_inventory_imports")
+}
+
+model MetrcDiscrepancy {
+  id        String   @id @default(cuid())
+  importId  String   @map("import_id")
+  licenseId String   @map("license_id")
+  tag       String
+  kind      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  import  MetrcInventoryImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  license License              @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@index([importId])
+  @@index([licenseId])
+  @@map("metrc_discrepancies")
+}
+
+/// A local move or stage change waiting for review. Nothing is sent while this is pending or rejected.
+model MetrcSubmission {
+  id              String    @id @default(cuid())
+  licenseId       String    @map("license_id")
+  plantEventId    String?   @map("plant_event_id")
+  packageId       String?   @map("package_id")
+  status          String
+  sandboxOutcome  String    @map("sandbox_outcome")
+  requestedById   String    @map("requested_by_id")
+  requestedAt     DateTime  @map("requested_at")
+  reviewerId      String?   @map("reviewer_id")
+  reviewedAt      DateTime? @map("reviewed_at")
+  rejectionNote   String?   @map("rejection_note") @db.VarChar(500)
+  voidedAt        DateTime? @map("voided_at")
+  voidedByName    String?   @map("voided_by_name") @db.VarChar(191)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  license        License         @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  plantEvent     PlantEvent?     @relation(fields: [plantEventId], references: [id], onDelete: Cascade)
+  harvestPackage HarvestPackage? @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  requestedBy    User            @relation("SubmissionRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  reviewer    User?         @relation("SubmissionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  outbox      MetrcOutbox?
+  attempts    MetrcAttempt[]
+
+  @@index([licenseId, status])
+  @@index([plantEventId])
+  @@index([packageId])
+  @@map("metrc_submissions")
+}
+
+/// Written in the same transaction as approval. The worker is the only sender.
+model MetrcOutbox {
+  id             String   @id @default(cuid())
+  submissionId   String   @unique @map("submission_id")
+  licenseId      String   @map("license_id")
+  requestId      String   @unique @map("request_id")
+  status         String
+  sandboxOutcome String   @map("sandbox_outcome")
+  payload        Json
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  submission MetrcSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  license    License         @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  attempts   MetrcAttempt[]
+
+  @@index([status, createdAt])
+  @@map("metrc_outbox")
+}
+
+/// One delivery or reconciliation fact. Rows are not overwritten except to record reconciliation on an uncertain attempt.
+model MetrcAttempt {
+  id                     String    @id @default(cuid())
+  submissionId           String    @map("submission_id")
+  outboxId               String    @map("outbox_id")
+  actorUserId            String    @map("actor_user_id")
+  occurredAt             DateTime  @map("occurred_at")
+  requestId              String    @map("request_id")
+  outcome                String
+  detail                 String?   @db.VarChar(500)
+  reconciliationResult   String?   @map("reconciliation_result")
+  reconciledAt           DateTime? @map("reconciled_at")
+  reconciledById         String?   @map("reconciled_by_id")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  submission   MetrcSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  outbox       MetrcOutbox     @relation(fields: [outboxId], references: [id], onDelete: Cascade)
+  actor        User            @relation("AttemptActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  reconciledBy User?           @relation("AttemptReconciler", fields: [reconciledById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId])
+  @@index([requestId])
+  @@map("metrc_attempts")
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  siteId    String   @map("site_id")
+  name      String
+  code      String
+  roomType          String   @map("room_type")
+  staleAfterMinutes Int      @default(60) @map("stale_after_minutes")
+  trolmasterEnabled Boolean  @default(true) @map("trolmaster_enabled")
+  trolmasterTest    Boolean  @default(false) @map("trolmaster_test")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  site       Site                  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  zones      Zone[]
+  cycles     CropCycle[]
+  tasks      RoomTask[]
+  cycleTasks CycleTask[]
+  alerts     RoomAlert[]
+  alertRules AlertRule[]
+  readings   EnvironmentalReading[]
+  plants      Plant[]
+  harvests           Harvest[]
+  dryingSteps        HarvestStep[]
+  controllerReadings ControllerReading[]
+  irrigationRecords  IrrigationRecord[]
+  ipmRecords         IpmRecord[]
+  maintenanceRecords MaintenanceRecord[]
+  sanitationRecords  SanitationRecord[]
+  roomStays          RoomStay[]
+  recurringDuties    RecurringDuty[]
+  trolmasterConnection TrolmasterConnection?
+  defoliations         RoomDefoliation[]
+
+  @@unique([siteId, code])
+  @@index([siteId])
+  @@map("rooms")
+}
+
+model RoomDefoliation {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  dayNumber Int      @map("day_number")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, dayNumber])
+  @@map("room_defoliations")
+}
+
+model Zone {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  name      String
+  code      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, code])
+  @@index([roomId])
+  @@map("zones")
+}
+
+/// A crop occupying a room. Cycle day is not stored; it is derived from startDate and the site timezone.
+model CropCycle {
+  id                  String   @id @default(cuid())
+  roomId              String   @map("room_id")
+  name                String
+  cultivar            String
+  plantCount          Int      @map("plant_count")
+  stage               String
+  startDate           DateTime  @map("start_date") @db.Date
+  expectedHarvestDate DateTime  @map("expected_harvest_date") @db.Date
+  harvestDate         DateTime? @map("harvest_date") @db.Date
+  status              String
+  workflowVersionId   String?  @map("workflow_version_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  room             Room                     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  workflowVersion  WorkflowTemplateVersion? @relation(fields: [workflowVersionId], references: [id])
+  events           CycleEvent[]
+  movements        CycleMovement[]
+  observations     CycleObservation[]
+  laborEntries     CycleLaborEntry[]
+  harvestSummary   HarvestResultSummary?
+  cycleTasks       CycleTask[]
+  plants           Plant[]
+  harvests         Harvest[]
+  inputCosts       CycleInputCost[]
+
+  @@index([roomId, status])
+  @@map("crop_cycles")
+}
+
+model CycleEvent {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  title      String
+  detail     String?  @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_events")
+}
+
+model CycleMovement {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  fromLabel  String   @map("from_label")
+  toLabel    String   @map("to_label")
+  plantCount Int      @map("plant_count")
+  note       String?  @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_movements")
+}
+
+model CycleObservation {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime  @map("occurred_on") @db.Date
+  /// Clock time of the note in UTC. Older notes may be empty and show the date only.
+  occurredAt DateTime? @map("occurred_at")
+  authorName String    @map("author_name")
+  /// general, environment, irrigation, canopy, pests, nutrients, equipment, or harvest. Older notes may be empty.
+  category   String?   @db.VarChar(32)
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_observations")
+}
+
+/// Hourly labor rate for a named person. Cost reports multiply stored hours by this rate.
+model LaborRate {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  personName     String   @map("person_name")
+  hourlyCents    Int      @map("hourly_cents")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, personName])
+  @@index([organizationId])
+  @@map("labor_rates")
+}
+
+/// A quantity and unit cost stored on a cycle. The report sums quantity × unit cost.
+model CycleInputCost {
+  id            String   @id @default(cuid())
+  cycleId       String   @map("cycle_id")
+  description   String
+  quantity      Decimal  @db.Decimal(10, 2)
+  unit          String
+  unitCostCents Int      @map("unit_cost_cents")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_input_costs")
+}
+
+model CycleLaborEntry {
+  id         String   @id @default(cuid())
+  cycleId    String   @map("cycle_id")
+  occurredOn DateTime @map("occurred_on") @db.Date
+  personName String   @map("person_name")
+  hours      Decimal  @db.Decimal(5, 2)
+  note       String?  @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@index([cycleId])
+  @@map("cycle_labor_entries")
+}
+
+/// A written result for the cycle page. This is not the harvest workflow.
+model HarvestResultSummary {
+  id         String   @id @default(cuid())
+  cycleId    String   @unique @map("cycle_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  summary    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  cycle CropCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+
+  @@map("harvest_result_summaries")
+}
+
+/// A named group of employees. A workflow task can be assigned to the whole team.
+model Team {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      TeamMember[]
+  taskTemplates WorkflowTaskTemplate[]
+  cycleTasks   CycleTask[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("teams")
+}
+
+model TeamMember {
+  teamId    String   @map("team_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+/// A procedure a workflow task, recurring duty, or training row may cite.
+model SopRecord {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  title          String
+  summary        String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization  Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  taskTemplates WorkflowTaskTemplate[]
+  cycleTasks    CycleTask[]
+  roomTasks     RoomTask[]
+
+  @@unique([organizationId, title])
+  @@index([organizationId])
+  @@map("sop_records")
+}
+
+/// Stable template identity. Edits create a new WorkflowTemplateVersion.
+model WorkflowTemplate {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  /// Empty when the template is not written for one cultivar.
+  cultivar       String?  @db.VarChar(191)
+  /// Empty when the template is not written for one medium.
+  medium         String?  @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  versions     WorkflowTemplateVersion[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("workflow_templates")
+}
+
+model WorkflowTemplateVersion {
+  id             String   @id @default(cuid())
+  templateId     String   @map("template_id")
+  versionNumber  Int      @map("version_number")
+  durationDays   Int      @map("duration_days")
+  /// `cycle_start` anchors tasks to the cycle start date. Any other value must match a cycle event title.
+  startingEvent  String   @map("starting_event")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  template   WorkflowTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tasks      WorkflowTaskTemplate[]
+  cycles     CropCycle[]
+
+  @@unique([templateId, versionNumber])
+  @@index([templateId])
+  @@map("workflow_template_versions")
+}
+
+model WorkflowTaskTemplate {
+  id                  String   @id @default(cuid())
+  versionId           String   @map("version_id")
+  taskKey             String   @map("task_key")
+  title               String
+  offsetDays          Int      @map("offset_days")
+  sortOrder           Int      @map("sort_order")
+  assigneeType        String   @map("assignee_type")
+  teamId              String?  @map("team_id")
+  roleId              String?  @map("role_id")
+  userId              String?  @map("user_id")
+  instructions        String   @db.Text
+  sopRecordId         String?  @map("sop_record_id")
+  requiresNotes       Boolean  @default(false) @map("requires_notes")
+  requiresMeasurement Boolean  @default(false) @map("requires_measurement")
+  requiresPhoto       Boolean  @default(false) @map("requires_photo")
+  requiresSignOff     Boolean  @default(false) @map("requires_sign_off")
+  dependsOnKey        String?  @map("depends_on_key")
+  requiresApproval    Boolean  @default(false) @map("requires_approval")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  version    WorkflowTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  team       Team?                   @relation(fields: [teamId], references: [id])
+  role       Role?                   @relation(fields: [roleId], references: [id])
+  assignee   User?                   @relation("WorkflowAssignee", fields: [userId], references: [id])
+  sopRecord  SopRecord?              @relation(fields: [sopRecordId], references: [id])
+  checklist  WorkflowChecklistItem[]
+
+  @@unique([versionId, taskKey])
+  @@index([versionId])
+  @@map("workflow_task_templates")
+}
+
+model WorkflowChecklistItem {
+  id        String   @id @default(cuid())
+  taskId    String   @map("task_id")
+  label     String   @db.VarChar(500)
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  task WorkflowTaskTemplate @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("workflow_checklist_items")
+}
+
+/// A dated assignment generated from one template version. The cycle keeps that version until a manager applies another.
+model CycleTask {
+  id                  String    @id @default(cuid())
+  cycleId             String    @map("cycle_id")
+  roomId              String    @map("room_id")
+  sourceTemplateId    String?   @map("source_template_id")
+  taskKey             String    @map("task_key")
+  title               String
+  instructions        String    @db.Text
+  offsetDays          Int       @map("offset_days")
+  dueOn               DateTime  @map("due_on") @db.Date
+  status              String    @default("open")
+  assigneeType        String    @map("assignee_type")
+  teamId              String?   @map("team_id")
+  roleId              String?   @map("role_id")
+  userId              String?   @map("user_id")
+  assigneeLabel       String    @map("assignee_label")
+  sopRecordId         String?   @map("sop_record_id")
+  requiresNotes       Boolean   @default(false) @map("requires_notes")
+  requiresMeasurement Boolean   @default(false) @map("requires_measurement")
+  requiresPhoto       Boolean   @default(false) @map("requires_photo")
+  requiresSignOff     Boolean   @default(false) @map("requires_sign_off")
+  requiresApproval    Boolean   @default(false) @map("requires_approval")
+  dependsOnTaskId     String?   @map("depends_on_task_id")
+  notes               String?   @db.Text
+  measurementValue    Decimal?  @map("measurement_value") @db.Decimal(10, 2)
+  measurementUnit     String?   @map("measurement_unit")
+  signedOffAt         DateTime? @map("signed_off_at")
+  signedOffByName     String?   @map("signed_off_by_name")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  cycle       CropCycle                @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  room        Room                     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  team        Team?                    @relation(fields: [teamId], references: [id])
+  role        Role?                    @relation(fields: [roleId], references: [id])
+  assignee    User?                    @relation("CycleTaskAssignee", fields: [userId], references: [id])
+  sopRecord   SopRecord?               @relation(fields: [sopRecordId], references: [id])
+  dependsOn   CycleTask?               @relation("TaskDependency", fields: [dependsOnTaskId], references: [id], onDelete: SetNull)
+  dependents  CycleTask[]              @relation("TaskDependency")
+  checklist   CycleTaskChecklistItem[]
+  comments    CycleTaskComment[]
+  attachments CycleTaskAttachment[]
+
+  @@index([roomId, dueOn])
+  @@index([cycleId])
+  @@map("cycle_tasks")
+}
+
+model CycleTaskChecklistItem {
+  id        String   @id @default(cuid())
+  taskId    String   @map("task_id")
+  label     String   @db.VarChar(500)
+  sortOrder Int      @map("sort_order")
+  checked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  task CycleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("cycle_task_checklist_items")
+}
+
+model CycleTaskComment {
+  id         String   @id @default(cuid())
+  taskId     String   @map("task_id")
+  authorId   String   @map("author_id")
+  authorName String   @map("author_name")
+  body       String   @db.VarChar(2000)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  task   CycleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("cycle_task_comments")
+}
+
+model CycleTaskAttachment {
+  id           String   @id @default(cuid())
+  taskId       String   @map("task_id")
+  objectKey    String   @unique @map("object_key")
+  fileName     String   @map("file_name")
+  contentType  String   @map("content_type")
+  byteSize     Int      @map("byte_size")
+  uploadedById String   @map("uploaded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  task       CycleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("cycle_task_attachments")
+}
+
+/// A task added on the room. One-time tasks have a due date. Recurring tasks repeat every day, or on chosen days of the week such as Tuesday and Friday, and have no due date.
+model RoomTask {
+  id             String    @id @default(cuid())
+  roomId         String    @map("room_id")
+  title          String
+  description    String?   @db.Text
+  kind           String    @default("one_time")
+  cadence        String?
+  /// Chosen weekdays for a weekly task, stored as mon,tue,fri. Empty for one-time and daily tasks.
+  weekdays       String?
+  /// Due date for a one-time task. Recurring tasks leave this empty.
+  dueOn          DateTime? @map("due_on") @db.Date
+  status         String    @default("open")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  room          Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  assignees     RoomTaskAssignee[]
+  sourceAlertId String?            @unique @map("source_alert_id")
+  sourceAlert   RoomAlert?         @relation(fields: [sourceAlertId], references: [id], onDelete: SetNull)
+  sopRecordId   String?            @map("sop_record_id")
+  sopRecord     SopRecord?         @relation(fields: [sopRecordId], references: [id], onDelete: SetNull)
+
+  @@index([roomId, dueOn])
+  @@index([sopRecordId])
+  @@map("room_tasks")
+}
+
+/// Employees assigned to a room task. A task can have none, one, or several.
+model RoomTaskAssignee {
+  roomTaskId String @map("room_task_id")
+  userId     String @map("user_id")
+
+  roomTask RoomTask @relation(fields: [roomTaskId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomTaskId, userId])
+  @@index([userId])
+  @@map("room_task_assignees")
+}
+
+model AlertRule {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  metric    String
+  kind      String
+  minValue  Decimal? @map("min_value") @db.Decimal(10, 2)
+  maxValue  Decimal? @map("max_value") @db.Decimal(10, 2)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room   Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  alerts RoomAlert[]
+
+  @@index([roomId])
+  @@map("alert_rules")
+}
+
+model RoomAlert {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  ruleId    String?  @map("rule_id")
+  metric    String?
+  kind      String?
+  message   String   @db.VarChar(500)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  rule      AlertRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  roomTasks RoomTask[]
+
+  @@index([roomId, active])
+  @@index([ruleId])
+  @@map("room_alerts")
+}
+
+model EnvironmentalReading {
+  id         String   @id @default(cuid())
+  roomId     String   @map("room_id")
+  deviceId   String   @default("unspecified") @map("device_id")
+  recordedAt DateTime @map("recorded_at")
+  metric     String
+  value      Decimal  @db.Decimal(10, 2)
+  unit       String
+  quality    String   @default("good")
+  isSample   Boolean  @default(false) @map("is_sample")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, recordedAt])
+  @@index([roomId, metric, recordedAt])
+  @@map("environmental_readings")
+}
+
+/// A site-scoped gateway. It can post live sensor readings only for rooms on its site.
+model SensorGateway {
+  id        String   @id @default(cuid())
+  siteId    String   @map("site_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, name])
+  @@index([siteId])
+  @@map("sensor_gateways")
+}
+
+/// A stored TrolMaster controller id and API credential. The room chart calls Trolmaster with this credential.
+model TrolmasterConnection {
+  id            String   @id @default(cuid())
+  siteId        String   @map("site_id")
+  roomId        String   @unique @map("room_id")
+  controllerId  String   @map("controller_id")
+  apiCredential String   @map("api_credential") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("trolmaster_connections")
+}
+
+/// A controller sample. These rows are not environmental readings and do not feed alert rules.
+model ControllerReading {
+  id         String   @id @default(cuid())
+  roomId     String   @map("room_id")
+  deviceId   String   @map("device_id")
+  metric     String
+  value      Decimal  @db.Decimal(10, 2)
+  unit       String
+  recordedAt DateTime @map("recorded_at")
+  quality    String
+  isSample   Boolean  @default(true) @map("is_sample")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, recordedAt])
+  @@map("controller_readings")
+}
+
+/// A sample scale weight. It is not a harvest step and does not change the weight ledger.
+model ScaleSample {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  deviceId    String   @map("device_id")
+  weightGrams Int      @map("weight_grams")
+  unit        String
+  recordedAt  DateTime @map("recorded_at")
+  quality     String
+  isSample    Boolean  @default(true) @map("is_sample")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId, recordedAt])
+  @@map("scale_samples")
+}
+
+/// A sample tag read from a harvest scanner. It never changes plants, packages, or the weight ledger.
+model HarvestTagSample {
+  id         String   @id @default(cuid())
+  harvestId  String   @map("harvest_id")
+  deviceId   String   @map("device_id")
+  tag        String
+  recordedAt DateTime @map("recorded_at")
+  quality    String
+  isSample   Boolean  @default(true) @map("is_sample")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId, recordedAt])
+  @@map("harvest_tag_samples")
+}
+
+model IrrigationRecord {
+  id           String   @id @default(cuid())
+  siteId       String   @map("site_id")
+  roomId       String   @map("room_id")
+  recordedOn   DateTime @map("recorded_on") @db.Date
+  kind         String
+  method       String
+  volumeLiters Decimal? @map("volume_liters") @db.Decimal(8, 2)
+  ec           Decimal? @db.Decimal(4, 2)
+  ph           Decimal? @db.Decimal(4, 2)
+  nutrientName String?  @map("nutrient_name")
+  note         String?  @db.VarChar(500)
+  actorName    String   @map("actor_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, recordedOn])
+  @@map("irrigation_records")
+}
+
+model IpmRecord {
+  id         String   @id @default(cuid())
+  siteId     String   @map("site_id")
+  roomId     String   @map("room_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  target     String
+  finding    String
+  response   String
+  note       String?  @db.VarChar(500)
+  actorName  String   @map("actor_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, recordedOn])
+  @@map("ipm_records")
+}
+
+model MaintenanceRecord {
+  id         String    @id @default(cuid())
+  siteId     String    @map("site_id")
+  roomId     String?   @map("room_id")
+  recordedOn DateTime  @map("recorded_on") @db.Date
+  assetName  String    @map("asset_name")
+  kind       String
+  summary    String    @db.VarChar(500)
+  nextDueOn  DateTime? @map("next_due_on") @db.Date
+  actorName  String    @map("actor_name")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  site Site  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, recordedOn])
+  @@map("maintenance_records")
+}
+
+model PurchaseRecord {
+  id            String   @id @default(cuid())
+  siteId        String   @map("site_id")
+  vendorName    String   @map("vendor_name")
+  orderedOn     DateTime @map("ordered_on") @db.Date
+  status        String
+  description   String
+  quantity      Decimal  @db.Decimal(8, 2)
+  unitCostCents Int      @map("unit_cost_cents")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, orderedOn])
+  @@map("purchase_records")
+}
+
+model SanitationRecord {
+  id         String   @id @default(cuid())
+  siteId     String   @map("site_id")
+  roomId     String   @map("room_id")
+  recordedOn DateTime @map("recorded_on") @db.Date
+  area       String
+  method     String
+  outcome    String
+  actorName  String   @map("actor_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, recordedOn])
+  @@map("sanitation_records")
+}
+
+model TrainingRecord {
+  id          String    @id @default(cuid())
+  siteId      String    @map("site_id")
+  traineeName String    @map("trainee_name")
+  title       String
+  sopTitle    String?   @map("sop_title")
+  status      String
+  completedOn DateTime? @map("completed_on") @db.Date
+  actorName   String    @map("actor_name")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("training_records")
+}
+
+/// A room's planned occupancy. This is the calendar, not a second crop cycle.
+model RoomStay {
+  id        String   @id @default(cuid())
+  siteId    String   @map("site_id")
+  roomId    String   @map("room_id")
+  label     String
+  cultivar  String
+  medium    String
+  startsOn  DateTime @map("starts_on") @db.Date
+  endsOn    DateTime @map("ends_on") @db.Date
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, startsOn])
+  @@map("room_stays")
+}
+
+model RecurringDuty {
+  id            String   @id @default(cuid())
+  siteId        String   @map("site_id")
+  roomId        String?  @map("room_id")
+  title         String
+  cadence       String
+  nextDueOn     DateTime @map("next_due_on") @db.Date
+  assigneeLabel String   @map("assignee_label")
+  sopTitle      String?  @map("sop_title")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  site Site  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, nextDueOn])
+  @@map("recurring_duties")
+}
+
+/// A recorded sync outcome. Phase 2 does not call Metrc.
+model MetrcSync {
+  id          String    @id @default(cuid())
+  siteId      String    @map("site_id")
+  status      String
+  succeededAt DateTime? @map("succeeded_at")
+  isSample    Boolean   @default(false) @map("is_sample")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, succeededAt])
+  @@map("metrc_syncs")
+}

@@ -1,0 +1,13 @@
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = 'mysql://trim:trim@127.0.0.1:3306/trim_test';
+process.env.JWT_SECRET = 'test-jwt-secret-trim-phase1';
+process.env.JWT_EXPIRES_IN_SECONDS = '3600';
+process.env.WEB_ORIGIN = 'http://localhost:5173';
+process.env.API_PORT = '3000';
+process.env.REDIS_URL = 'redis://127.0.0.1:6379';
+process.env.S3_ENDPOINT = 'http://127.0.0.1:9000';
+process.env.S3_REGION = 'us-east-1';
+process.env.S3_BUCKET = 'trim-attachments';
+process.env.S3_ACCESS_KEY = 'trim';
+process.env.S3_SECRET_KEY = 'trimsecret';
+process.env.S3_FORCE_PATH_STYLE = 'true';

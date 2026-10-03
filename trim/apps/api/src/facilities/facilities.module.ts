@@ -1,0 +1,17 @@
+import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { CyclesModule } from '../cycles/cycles.module';
+import { FacilitiesService } from './facilities.service';
+import { RoomTasksService } from './room-tasks.service';
+import { OrganizationController } from './organization.controller';
+import { RoomsController, ZonesController } from './rooms.controller';
+import { SettingsController } from './settings.controller';
+import { SettingsService } from './settings.service';
+import { SitesController } from './sites.controller';
+
+@Module({
+  imports: [AuthModule, CyclesModule],
+  controllers: [SitesController, RoomsController, ZonesController, OrganizationController, SettingsController],
+  providers: [FacilitiesService, SettingsService, RoomTasksService],
+})
+export class FacilitiesModule {}
