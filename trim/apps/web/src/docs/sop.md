@@ -1,0 +1,227 @@
+# Trim operating procedures
+
+These procedures are the ones a manager and an employee follow in Trim. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
+
+A page for the other facility says you do not have access. Do not keep going on that page.
+
+## Daily room check
+
+**Who.** The person who can open that facility. Blake checks Flower 1 and Dry Room. Casey checks Veg 1 and Mother Room. Avery can check either facility.
+
+**When.** At the start of the shift, before today’s assignment.
+
+**Steps.**
+
+1. Open **Company** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
+2. Open **Rooms** and choose the room. The page says “Open a room to see its current crop, cycle day, and operating history.”
+3. On the room dashboard, read **Current crop**: Cultivar, Plants, Stage, Cycle day, and Expected harvest. Cycle day counts the start date as day 1 in `America/Los_Angeles`.
+4. Read **Tasks due today**. On October 3, 2026, Flower 1 lists Lower-leaf pass and Veg 1 lists Scout the canopy.
+5. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
+6. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
+7. Read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
+8. Read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
+9. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” and “No tasks are due today.”
+
+**Done.** You can name the crop, the cycle day, the task due today, and whether a reading or alert needs attention. Flower 1 shows Cedar Nights flower with 0 plants because that crop is already harvested. Veg 1 shows Glass Orchard veg with 86 plants still in the room.
+
+## Completing today’s assignment
+
+**Who.** The person the card names. Blake completes Harbor House assignments. Casey completes Hill Works assignments. Avery sees both lists. A task from the other facility stays off the list.
+
+**When.** On the due date shown on **Workspace**. On October 3, 2026, Lower-leaf pass is due on Flower 1 and Scout the canopy is due on Veg 1.
+
+**Steps.**
+
+1. Open **Workspace**. The title is Employee workspace. The introduction names the date.
+2. Open the assignment card. It shows the facility, room, task title, due date, assignee, and crop.
+3. Read the instructions. Scout the canopy also shows the Canopy scout note: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.” Lower-leaf pass shows the chip Supervisor approval and the line “Depends on Scout the canopy.”
+4. Check the boxes on the card. Scout the canopy uses “Check the first half of the room” and “Check the second half of the room.” Lower-leaf pass uses “Clear the aisle” and “Bag the leaves.”
+5. Type **Notes** and choose **Save notes** when the work needs a written record.
+6. Choose **Add photo** when a picture is required. The file must be jpeg, png, webp, or gif. The file name appears on the card. Choose that name to open it again.
+7. Type **Comment** and choose **Add comment**. Your name and the comment stay on the card.
+
+Chips for Measurement or Sign-off can appear on a card. The card has no separate measurement field and no sign-off field.
+
+**Done.** The boxes you checked stay checked. Saved notes, the photo file name, and your comment are on the card. If nothing is due, Workspace says “Nothing is assigned to you today.”
+
+## Starting a cycle from a template
+
+**Who.** Avery. Blake and Casey see “Managers create templates. You can still work the assignments they generate.”
+
+**When.** You need to confirm that an active cycle is already running on a template, or you are preparing the template a cycle uses.
+
+**Steps.**
+
+1. Open **Workflows**. The page says “A template is applied when a cycle starts.”
+2. Read **Canopy week**. The card says “Version 1 of 1 · 28 days · starts at cycle_start.” The tasks are Day 1 Count plants onto the bench, Day 14 Scout the canopy, and Day 22 Lower-leaf pass.
+3. Open **Crop cycles**, choose the facility, and open the cycle.
+4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
+
+Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no Start cycle button on Workflows or on the cycle page.
+
+**Done.** The cycle page shows the template chip and the generated tasks. A cycle with no template says “This cycle has no workflow assignments yet.”
+
+## Reschedule preview before confirm
+
+**Who.** Avery. The **Reschedule** panel is not on the cycle page for Blake or Casey.
+
+**When.** The cycle start date needs to move, and you want to see the new task dates before they are saved.
+
+**Steps.**
+
+1. Open the crop cycle.
+2. In **Reschedule**, read “Current start” and “Preview the task dates before anything is written.”
+3. Set **New start date**.
+4. Choose **Preview**. The page lists each task as “title: from → to” and says “Preview only. Nothing has been saved.”
+5. If the dates are wrong, change **New start date**. Preview clears, and **Confirm reschedule** stays off until you preview again.
+6. Choose **Confirm reschedule** only after the preview lines are the dates you want.
+
+**Done.** The page says “Reschedule saved.” The cycle start date and the due dates on **Generated tasks** match the preview. Expected harvest moves with the start date.
+
+## Template versions
+
+**Who.** Avery.
+
+**When.** You are checking which version a cycle uses, or a newer version of that template is already stored and this cycle should move to it.
+
+**Steps.**
+
+1. Open **Workflows**. Each card says “Version N of M.” Canopy week is version 1 of 1. The introduction says editing a template creates a new version and leaves existing cycles on the version they already have.
+2. **New template** and **Save template** create version 1 of a new name. Saving the name Canopy week again says “A workflow template with that name already exists.” That form does not edit the existing template.
+3. Open the crop cycle. The chip shows the version that cycle already has, such as **Canopy week v1**.
+4. **Apply version N** appears only when a newer version of that template is already stored. It is not on Canopy week while the template is still version 1 of 1.
+5. When the button is present, choose **Apply version N**.
+
+**Done.** After apply, the page says “The newer template version is now assigned to this cycle.” The chip and **Generated tasks** match that version. A cycle you do not apply stays on the version it already has.
+
+## License inventory import
+
+**Who.** Anyone who can open the license. Avery sees both. Blake sees `OR-CULT-44821` at Harbor House. Casey sees `OR-CULT-55218` at Hill Works.
+
+**When.** You need to know whether the stored inventory file matches the tagged plants.
+
+**Steps.**
+
+1. Open **Compliance**. The page says “Imports stay on the license.”
+2. Read the license card. It shows the license number, the facility, and the plant count.
+3. Harbor House, 144 tagged plants, says “No discrepancies.”
+4. Hill Works, 86 tagged plants, lists `1A4HW000000000000099999` as “In the file, not in Trim.”
+5. Choose **Open inventory**. The page says plant totals come from tagged plants on this license, and “Showing N of M tags.” Open a tag to read the plant: tag, strain, stage, room or “No room,” and cycle or “No cycle.”
+
+Compliance has no file-upload control. The card shows the comparison already stored. A license with no comparison says “No inventory file has been compared for this license.” The plant page has no form to add, move, or remove a tag.
+
+**Done.** You can say the Harbor file matches, and you can name the Hill tag that is in the file and not in Trim. The inventory list matches the count on the license card.
+
+## Reviewed sandbox submissions
+
+**Who.** Avery. Approve, Reject, and the sandbox result are not shown to Blake or Casey. The page says “Only a manager can review submissions” if someone else tries. A move or stage change is sent only after the manager approves it, and only to the sandbox.
+
+**When.** A submission on the license card says Pending review, or an earlier send came back Failed or Uncertain and needs a decision.
+
+**Steps.**
+
+1. Open **Compliance** and find **Submissions** on the license card.
+2. Read the tag or package label, the event, the note, and the status. Pending review says “Waiting for a manager. Nothing has been sent.”
+3. The seeded rows, still pending until you approve them, are:
+   - Harbor House move, note “Submit the Harbor House move.”, sandbox result Success.
+   - Hill Works stage change, note “Submit the Hill Works stage change.”, sandbox result Definite failure.
+   - Harbor House stage change, note “Submit the Harbor House stage change.”, sandbox result Uncertain.
+
+**Success.**
+
+1. Set the sandbox menu to **Success**.
+2. Choose **Approve**. The card says “Approved. The outbox will deliver it.” and the status becomes Queued.
+3. Leave the page open. It checks again while the status is Queued.
+
+**Done for success.** The status is Succeeded. The attempt line names the request, Avery, the time, and the outcome. That change will not be sent again.
+
+**Definite failure.**
+
+1. Set the sandbox menu to **Definite failure**.
+2. Choose **Approve** and wait through Queued.
+
+**Done for failure.** The status is Failed. The card says “Definite failure. Retry only by queueing a new reviewed submission.” Choose **Queue again**. The new row says “A new submission is waiting for review. It has not been sent.” and is Pending review. Review that new row before anything is sent.
+
+**Uncertain.**
+
+1. Set the sandbox menu to **Uncertain**.
+2. Choose **Approve** and wait through Queued.
+
+**Done for uncertain.** The status is Uncertain. The card says “This change will not be sent again until the sandbox says whether it landed.”
+
+**Reconcile.**
+
+1. On an Uncertain row, choose one finding.
+2. **Sandbox says landed** says “Sandbox says the write landed. It will not be sent again.”
+3. **Sandbox says it did not land** says “Sandbox says the write did not land. A new reviewed submission can be queued.” Choose **Queue again** only after that finding. The new row waits for review.
+
+**Done for reconcile.** The status is Reconciled. The attempt line includes the reconciliation result. A landed result is not sent again. A not-landed result can be queued again as a new Pending review row.
+
+**Reject.** On a Pending review row, **Reject** says “Rejected. Nothing was sent.”
+
+A package uses the same sandbox. On the package page, choose Success, Definite failure, or Uncertain, then **Queue for review**. The page then says “Queued for review. Nothing has been sent.” Finish the review on **Compliance**.
+
+## Harvest through package
+
+**Who.** Anyone who can open the facility. Blake can harvest Harbor House. Casey can harvest Hill Works. Avery can harvest either. **Harvest this crop** is on the room only while the crop still has plants. Flower 1 does not show it. Veg 1 does.
+
+**When.** The crop is cut and you are recording wet weight through the package. Veg crops stay in the room until they are cut.
+
+**Steps.**
+
+1. On the room, choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
+2. Enter **Wet weight (g)** and choose **Record wet weight**.
+3. Choose **Start drying**.
+4. Enter **Dry weight (g)** and choose **Record dry weight**.
+5. Choose **Record trimming**.
+6. Enter **Waste note** and **Waste (g)**, then choose **Record waste**.
+7. Under Package, enter **Package weight (g)** and the package tag.
+8. In **Scan a source tag**, type or wedge-scan a plant tag and press Enter. Repeat for each tag, or choose **Include harvested tags**. The line under the buttons counts source tags selected.
+9. Choose **Create package**. It stays off until the tag, the weight, and at least one source tag are present. The package page opens.
+10. Choose the sandbox result and **Queue for review**.
+
+The weight that counts is the number you type. **Sample scale weight** sits beside the ledger and does not change wet, dry, packaged, waste, or unaccounted weight. The scan field is keyboard entry. It is not an RFID reader.
+
+**Done.** The ledger shows Wet weight, Dry weight, Packaged, Waste, and Unaccounted. Unaccounted is dry weight minus packaged minus waste. The package page shows the label, grams, your name, the time, the ledger line, and the source tags. After queueing, it says “Queued for review. Nothing has been sent.” once.
+
+The stored Cedar Nights flower harvest on `OR-CULT-44821` is already through this sequence: wet 18240 g, dry 4120 g, packaged 3600 g, waste 240 g, unaccounted 280 g, package `1A4PKGCEDARNIGHTS00001`. The sample beside it is `hh-sample-scale`, 510 g, labeled Sample data. That 510 g is not part of the ledger. Hill Works prior lot has no veg cut and is not the Glass Orchard crop.
+
+## Recording a reading
+
+**Who.** Anyone who can open the room. Blake records Harbor House rooms. Casey records Hill Works rooms. Avery can record either. A Harbor House gateway cannot write a Hill Works room. The message is “This gateway cannot write that room.” Blake opening the Hill Works gateway sees “You do not have access to this gateway.” once.
+
+**When.** During the room check, or when a sensor posts a live value.
+
+**Steps.**
+
+1. Open the room dashboard.
+2. Under **Record a reading**, enter Device, Metric, Value, Unit, Timestamp, and Quality. Quality is Good, Suspect, or Bad.
+3. Leave **Sample data** unchecked for a live sensor. Check it only when the row is not a live sensor.
+4. Choose **Save reading**. A time you type without a timezone is the facility’s local time.
+5. To load a file instead, use **Import a CSV**. The columns are `device_id`, `metric`, `value`, `unit`, `recorded_at`, `quality`, and `sample`. Choose **Import readings**.
+6. For a live gateway post, use **Environment gateway** on the same room. Harbor House environment says it posts a live reading and is not sample data. Enter Device, Metric, Value, Unit, Timestamp, and Quality, then **Post gateway reading**. There is no sample checkbox on that form.
+7. To add an alert, set **Alert rule** to “Stale metric” or “Outside a range,” enter Minimum and Maximum for a range, and choose **Save alert rule**.
+
+A controller sample is not this procedure. It stays on **Controller sample**, labeled Sample data, and it does not clear or create a range alert.
+
+**Done.** **Latest environmental readings** shows the device, value, unit, and time. A manual save says “Reading saved.” or “Sample reading saved.” A gateway post names the device, value, and unit and says “This is a live reading.” A sample row shows **Sample data** and is not the live value for a range alert. A live temperature newer than 60 minutes is not stale. Humidity stays stale when its own newest reading is older than 60 minutes and the stale rule is on. The page says “Alert rule saved.” after you save a rule.
+
+## Reading yield and cost
+
+**Who.** Avery reads both facilities. Blake reads Harbor House cycles. Casey reads Hill Works cycles. A facility report for the other site says “You do not have access to this report.”
+
+**When.** After harvest weights, labor, and input costs are stored, or when you need to see that an open cycle has no yield yet.
+
+**Steps.**
+
+1. Open **Reports**. The title is Cultivar and room comparison. Each figure is computed from stored harvest, labor, and cost rows, and the formula under a number is the calculation.
+2. On the crop card, read **Yield**. Cedar Nights shows grams per plant from dry weight 4120 g divided by 144 plants, and the ledger line “Packaged 3600 g + waste 240 g + unaccounted 280 g = dry weight 4120 g.” Glass Orchard says “This cycle has not been harvested, so yield is absent.”
+3. Read **Cycle duration**. Cedar Nights, started 2026-09-12 and harvested 2026-10-03, says “Completed duration: 22 days.” An open cycle says “Days since start” and “Completed duration is absent.”
+4. Read **Labor**. Blake Ortiz is 5.5 hours at 2800 cents. Casey Nguyen is 4 hours at 2600 cents. The line under each name is hours times that person’s stored rate.
+5. Read **Input costs**. Flower nutrients is 2 at 1500 cents. Veg media is 1 at 4200 cents.
+6. Read **Total cost**. Cedar Nights is 18400 cents. Glass Orchard is 14600 cents. The formula is labor cost plus input cost.
+7. Read the sample line. It says sample environmental readings are excluded and gives the excluded count.
+
+The comparison page has no link to a single-facility report. That page is **Facility report** at `/reports/sites/` plus the facility id, and it uses the same sections for the cycles on that facility.
+
+**Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples and the 510 g scale sample are not in these totals. Hill Works prior lot is not a Glass Orchard yield.

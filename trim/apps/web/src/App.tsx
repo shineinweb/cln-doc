@@ -8,6 +8,7 @@ import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
 import { CropCyclesPage } from './pages/CropCyclesPage';
 import { FacilityPage } from './pages/FacilityPage';
+import { SopPage, UserManualPage } from './pages/GuidePages';
 import { GatewayPage } from './pages/GatewayPage';
 import { HarvestPage } from './pages/HarvestPage';
 import { HarvestsPage } from './pages/HarvestsPage';
@@ -56,6 +57,8 @@ const router = createBrowserRouter([
       { path: 'plants/:plantId', element: <PlantPage /> },
       { path: 'readings/:readingId', element: <ReadingPage /> },
       { path: 'reports', element: <ReportsPage /> },
+      { path: 'user-manual', element: <UserManualPage /> },
+      { path: 'sop', element: <SopPage /> },
       { path: 'reports/sites/:siteId', element: <SiteReportPage /> },
       { path: 'submissions/:submissionId', element: <SubmissionPage /> },
       {

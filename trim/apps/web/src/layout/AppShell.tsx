@@ -33,6 +33,8 @@ const NAV = [
   { to: '/compliance', label: 'Compliance', end: true },
   { to: '/harvests', label: 'Harvests', end: false },
   { to: '/reports', label: 'Reports', end: false },
+  { to: '/user-manual', label: 'User manual', end: true },
+  { to: '/sop', label: 'SOP', end: true },
 ];
 
 export function AppShell() {
@@ -51,7 +53,7 @@ export function AppShell() {
         </Box>
         <Typography sx={{ mt: 1.5, color: '#C9C1B4', fontSize: 13 }}>{user?.organizationName}</Typography>
       </Box>
-      <List sx={{ px: 1, flex: 1 }}>
+      <List sx={{ px: 1, flex: 1, overflowY: 'auto' }}>
         {NAV.map((item) => (
           <ListItemButton
             key={item.to}
