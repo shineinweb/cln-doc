@@ -120,6 +120,7 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
 
 function AddRoomForm({ siteId }: { siteId: string }) {
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -128,6 +129,7 @@ function AddRoomForm({ siteId }: { siteId: string }) {
     onSuccess: async () => {
       setFormError(null);
       setMessage('Room added.');
+      setOpen(false);
       setFormKey((key) => key + 1);
       await queryClient.invalidateQueries({ queryKey: ['sites'] });
     },
@@ -138,47 +140,60 @@ function AddRoomForm({ siteId }: { siteId: string }) {
   });
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h3" sx={{ fontSize: 22, mb: 1.5 }}>
-          Add a room
-        </Typography>
-        <Box
-          key={formKey}
-          component="form"
-          sx={{ display: 'grid', gap: 1.5, maxWidth: 420 }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            save.mutate({
-              name: String(form.get('name') ?? ''),
-              roomType: String(form.get('roomType') ?? ''),
-            });
-          }}
-        >
-          <TextField label="Name" name="name" required inputProps={{ 'data-testid': 'room-name' }} />
-          <TextField select label="Type" name="roomType" defaultValue="flower" inputProps={{ 'data-testid': 'room-type' }}>
-            {ROOM_TYPES.map((roomType) => (
-              <MenuItem key={roomType} value={roomType}>
-                {ROOM_TYPE_LABELS[roomType]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Button type="submit" variant="contained" data-testid="add-room" disabled={save.isPending} sx={{ justifySelf: 'start' }}>
-            Add room
-          </Button>
-        </Box>
-        {message ? (
-          <Alert sx={{ mt: 2 }} data-testid="room-added">
-            {message}
-          </Alert>
-        ) : null}
-        {formError ? (
-          <Alert sx={{ mt: 2 }} severity="error">
-            {formError}
-          </Alert>
-        ) : null}
-      </CardContent>
-    </Card>
+    <Box>
+      {open ? (
+        <Card>
+          <CardContent>
+            <Typography variant="h3" sx={{ fontSize: 22, mb: 1.5 }}>
+              Add a room
+            </Typography>
+            <Box
+              key={formKey}
+              component="form"
+              sx={{ display: 'grid', gap: 1.5, maxWidth: 420 }}
+              onSubmit={(event) => {
+                event.preventDefault();
+                const form = new FormData(event.currentTarget);
+                save.mutate({
+                  name: String(form.get('name') ?? ''),
+                  roomType: String(form.get('roomType') ?? ''),
+                });
+              }}
+            >
+              <TextField label="Name" name="name" required inputProps={{ 'data-testid': 'room-name' }} />
+              <TextField select label="Type" name="roomType" defaultValue="flower" inputProps={{ 'data-testid': 'room-type' }}>
+                {ROOM_TYPES.map((roomType) => (
+                  <MenuItem key={roomType} value={roomType}>
+                    {ROOM_TYPE_LABELS[roomType]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button type="submit" variant="contained" data-testid="add-room" disabled={save.isPending}>
+                  Add room
+                </Button>
+                <Button type="button" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+              </Box>
+            </Box>
+            {formError ? (
+              <Alert sx={{ mt: 2 }} severity="error">
+                {formError}
+              </Alert>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : (
+        <Button variant="contained" data-testid="add-room" onClick={() => setOpen(true)}>
+          Add room
+        </Button>
+      )}
+      {message ? (
+        <Alert sx={{ mt: 2 }} data-testid="room-added">
+          {message}
+        </Alert>
+      ) : null}
+    </Box>
   );
 }

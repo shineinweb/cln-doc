@@ -74,7 +74,7 @@ Seeded rooms:
 
 Flower 1’s current crop is Cedar Nights flower. The plants from that crop have been harvested, so the row shows 0 plants. Veg 1’s current crop is Glass Orchard veg, with 86 plants still in the room. Dry Room and Mother Room say “No active crop.”
 
-**Add a room** is the form above the list. Enter a name and choose a type: Flower, Vegetative, Mother, Dry, or Clone. **Add room** saves the room on the facility selected in the switcher and shows it in the list. **View**, **Edit**, **Save changes**, and **Delete** sit on each room. **Previous** and **Next** page the list. You can add, edit, or delete a room only for a facility you can open. Avery Chen can change a room at Harbor House and at Hill Works. Blake Ortiz can change a room at Harbor House. He cannot edit or delete a Hill Works room.
+**Add room** opens the form above the list. Enter a name and choose a type: Flower, Vegetative, Mother, Dry, or Clone. **Add room** saves the room on the facility selected in the switcher and shows it in the list. **Cancel** closes the form without saving. **View**, **Edit**, **Save changes**, and **Delete** sit on each room. **Previous** and **Next** page the list. You can add, edit, or delete a room only for a facility you can open. Avery Chen can change a room at Harbor House and at Hill Works. Blake Ortiz can change a room at Harbor House. He cannot edit or delete a Hill Works room.
 
 The room dashboard introduction says “The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records.”
 
