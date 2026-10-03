@@ -17,7 +17,7 @@ import { addCalendarDays, formatCalendarDate, formatTimestamp } from '../crops/f
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
 import { TrolmasterPanel } from '../adapters/TrolmasterPanel';
-import { RoomEnvironment } from '../environment/RoomEnvironment';
+import { RoomAlertRules, RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { RoomNotesPanel } from '../rooms/RoomNotesPanel';
@@ -28,7 +28,7 @@ export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
   const { user } = useAuth();
   const { setSiteId } = useSites();
-  const [tab, setTab] = useState<'room' | 'tasks' | 'notes' | 'trolmaster'>('room');
+  const [tab, setTab] = useState<RoomTab>('room');
   const room = useQuery({
     queryKey: ['room', roomId],
     queryFn: () => apiGet(`/rooms/${roomId}`, roomDetailSchema),
@@ -69,32 +69,18 @@ export function RoomDashboardPage() {
       <PageHeader
         kicker={`${room.data.siteName} · ${roomTypeLabel(room.data.roomType)}`}
         title={room.data.name}
-        lede="The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records."
+        lede="The room opens on operating history. Zones, Trolmaster settings, and room settings are on their own tabs."
       />
-      <Tabs value={tab} onChange={(_event, value: 'room' | 'tasks' | 'notes' | 'trolmaster') => setTab(value)} sx={{ mb: 2 }}>
+      <Tabs value={tab} onChange={(_event, value: RoomTab) => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="room" label="Room" data-testid="room-tab-room" />
         <Tab value="tasks" label="Tasks" data-testid="room-tab-tasks" />
         <Tab value="notes" label="Notes" data-testid="room-tab-notes" />
-        {room.data.roomType === 'flower' ? <Tab value="trolmaster" label="Trolmaster API's" data-testid="room-tab-trolmaster" /> : null}
+        <Tab value="zones" label="Zones" data-testid="room-tab-zones" />
+        {room.data.roomType === 'flower' ? <Tab value="trolmaster" label="Trolmaster settings" data-testid="room-tab-trolmaster" /> : null}
+        <Tab value="settings" label="Settings" data-testid="room-tab-settings" />
       </Tabs>
       {tab === 'room' ? (
-        <Box>
-          {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
-          {room.data.archivedCycles.length > 0 ? (
-            <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
-          ) : null}
-          <ZoneList roomId={room.data.id} zones={room.data.zones} />
-          <Box sx={{ mb: 3 }}>
-            <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
-              <MetrcSync sync={room.data.lastMetrcSync} />
-            </SignalCard>
-          </Box>
-          <Box sx={{ mb: 3 }}>
-            <RoomEnvironment room={room.data} />
-          </Box>
-          <Box sx={{ mb: 3 }}>
-            <RoomAdapters roomId={room.data.id} siteId={room.data.siteId} timeZone={room.data.siteTimezone} />
-          </Box>
+        <Box data-testid="room-operating-history">
           {room.data.operatingHistory ? (
             <Box>
               <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
@@ -102,7 +88,9 @@ export function RoomDashboardPage() {
               </Typography>
               <OperatingHistoryView history={room.data.operatingHistory} hideObservations timeZone={room.data.siteTimezone} />
             </Box>
-          ) : null}
+          ) : (
+            <Alert severity="info">This room has no operating history.</Alert>
+          )}
         </Box>
       ) : null}
       {tab === 'tasks' ? (
@@ -116,12 +104,29 @@ export function RoomDashboardPage() {
       {tab === 'notes' ? (
         <RoomNotesPanel roomId={room.data.id} cycleName={cycle?.name ?? null} timeZone={room.data.siteTimezone} notes={room.data.operatingHistory?.observations ?? []} />
       ) : null}
+      {tab === 'zones' ? <ZoneList roomId={room.data.id} zones={room.data.zones} /> : null}
       {tab === 'trolmaster' && room.data.roomType === 'flower' ? (
         <TrolmasterPanel siteId={room.data.siteId} roomId={room.data.id} />
+      ) : null}
+      {tab === 'settings' ? (
+        <Box data-testid="room-settings" sx={{ display: 'grid', gap: 3 }}>
+          <RoomAlertRules room={room.data} />
+          {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
+          {room.data.archivedCycles.length > 0 ? (
+            <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
+          ) : null}
+          <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
+            <MetrcSync sync={room.data.lastMetrcSync} />
+          </SignalCard>
+          <RoomEnvironment room={room.data} />
+          <RoomAdapters roomId={room.data.id} siteId={room.data.siteId} timeZone={room.data.siteTimezone} />
+        </Box>
       ) : null}
     </Box>
   );
 }
+
+type RoomTab = 'room' | 'tasks' | 'notes' | 'zones' | 'trolmaster' | 'settings';
 
 function ResetRoomForm({ roomId, roomType }: { roomId: string; roomType: string }) {
   const queryClient = useQueryClient();
@@ -166,7 +171,7 @@ function ResetRoomForm({ roomId, roomType }: { roomId: string; roomType: string 
           Reset room
         </Typography>
         <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-          This closes the current crop and keeps it in the archive. Zones and readings stay on this room. The start date is day 1.
+          This closes the current crop and keeps it in the archive. Zones stay on the Zones tab. Readings and alert rules stay on Settings. The start date is day 1.
         </Typography>
         <Box
           component="form"

@@ -65,19 +65,6 @@ export function RoomEnvironment({ room }: { room: RoomDetail }) {
     },
   });
 
-  const saveRule = useMutation({
-    mutationFn: (payload: unknown) => apiSend(`/rooms/${room.id}/alert-rules`, alertRuleSchema, payload),
-    onSuccess: async () => {
-      setError(null);
-      setMessage('Alert rule saved.');
-      await refresh();
-    },
-    onError: (reason: Error) => {
-      setMessage(null);
-      setError(reason.message);
-    },
-  });
-
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <Card sx={{ bgcolor: workbench.mist }} data-testid="latest-readings">
@@ -139,19 +126,6 @@ export function RoomEnvironment({ room }: { room: RoomDetail }) {
             empty="No readings are stored for this metric."
             testId="reading-list"
             render={(reading) => <ReadingRecord key={reading.id} reading={reading} roomId={room.id} />}
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent>
-          <Typography variant="h3" sx={{ fontSize: 20, mb: 1 }}>
-            Alert rules
-          </Typography>
-          <PagedList
-            items={room.alertRules}
-            empty="No alert rules are stored for this room."
-            testId="alert-rule-list"
-            render={(rule) => <RuleRecord key={rule.id} rule={rule} roomId={room.id} />}
           />
         </CardContent>
       </Card>
@@ -231,45 +205,94 @@ export function RoomEnvironment({ room }: { room: RoomDetail }) {
                 Import readings
               </Button>
             </Box>
-            <Box
-              component="form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const form = new FormData(event.currentTarget);
-                const kind = String(form.get('kind') ?? 'stale');
-                const minRaw = String(form.get('minValue') ?? '');
-                const maxRaw = String(form.get('maxValue') ?? '');
-                saveRule.mutate({
-                  metric: String(form.get('metric') ?? 'temperature'),
-                  kind,
-                  minValue: minRaw === '' ? null : Number(minRaw),
-                  maxValue: maxRaw === '' ? null : Number(maxRaw),
-                });
-              }}
-              sx={{ display: 'grid', gap: 1, mt: 3 }}
-            >
-              <Typography variant="h3" sx={{ fontSize: 20 }}>
-                Alert rule
-              </Typography>
-              <LabeledSelect label="Metric" name="metric" testId="rule-metric" options={METRICS} />
-              <LabeledSelect
-                label="Kind"
-                name="kind"
-                testId="rule-kind"
-                options={[
-                  { value: 'stale', label: 'Stale metric' },
-                  { value: 'range', label: 'Outside a range' },
-                ]}
-              />
-              <Field label="Minimum" name="minValue" testId="rule-min" type="number" />
-              <Field label="Maximum" name="maxValue" testId="rule-max" type="number" />
-              <Button type="submit" variant="outlined" data-testid="save-alert-rule" disabled={saveRule.isPending}>
-                Save alert rule
-              </Button>
-            </Box>
           </CardContent>
         </Card>
       </Box>
+      {message ? (
+        <Alert severity="success" data-testid="environment-message">
+          {message}
+        </Alert>
+      ) : null}
+      {error ? (
+        <Alert severity="error" data-testid="environment-error">
+          {error}
+        </Alert>
+      ) : null}
+    </Box>
+  );
+}
+
+export function RoomAlertRules({ room }: { room: RoomDetail }) {
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const saveRule = useMutation({
+    mutationFn: (payload: unknown) => apiSend(`/rooms/${room.id}/alert-rules`, alertRuleSchema, payload),
+    onSuccess: async () => {
+      setError(null);
+      setMessage('Alert rule saved.');
+      await queryClient.invalidateQueries({ queryKey: ['room', room.id] });
+    },
+    onError: (reason: Error) => {
+      setMessage(null);
+      setError(reason.message);
+    },
+  });
+  return (
+    <Box sx={{ display: 'grid', gap: 2 }} data-testid="alert-rules">
+      <Card sx={{ bgcolor: workbench.mist }}>
+        <CardContent>
+          <Typography variant="h3" sx={{ fontSize: 20, mb: 1 }}>
+            Alert rules
+          </Typography>
+          <PagedList
+            items={room.alertRules}
+            empty="No alert rules are stored for this room."
+            testId="alert-rule-list"
+            render={(rule) => <RuleRecord key={rule.id} rule={rule} roomId={room.id} />}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <Box
+            component="form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              const kind = String(form.get('kind') ?? 'stale');
+              const minRaw = String(form.get('minValue') ?? '');
+              const maxRaw = String(form.get('maxValue') ?? '');
+              saveRule.mutate({
+                metric: String(form.get('metric') ?? 'temperature'),
+                kind,
+                minValue: minRaw === '' ? null : Number(minRaw),
+                maxValue: maxRaw === '' ? null : Number(maxRaw),
+              });
+            }}
+            sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+          >
+            <Typography variant="h3" sx={{ fontSize: 20 }}>
+              Alert rule
+            </Typography>
+            <LabeledSelect label="Metric" name="metric" testId="rule-metric" options={METRICS} />
+            <LabeledSelect
+              label="Kind"
+              name="kind"
+              testId="rule-kind"
+              options={[
+                { value: 'stale', label: 'Stale metric' },
+                { value: 'range', label: 'Outside a range' },
+              ]}
+            />
+            <Field label="Minimum" name="minValue" testId="rule-min" type="number" />
+            <Field label="Maximum" name="maxValue" testId="rule-max" type="number" />
+            <Button type="submit" variant="outlined" data-testid="save-alert-rule" disabled={saveRule.isPending}>
+              Save alert rule
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
       {message ? (
         <Alert severity="success" data-testid="environment-message">
           {message}

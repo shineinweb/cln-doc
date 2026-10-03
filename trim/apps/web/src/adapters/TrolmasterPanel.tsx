@@ -35,7 +35,7 @@ export function TrolmasterPanel({ siteId, roomId }: { siteId: string; roomId: st
   return (
     <Box data-testid="trolmaster-panel">
       <Typography variant="h2" sx={{ fontSize: 28, mb: 1 }}>
-        Trolmaster API's
+        Trolmaster settings
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 2 }}>
         This stores the controller id and credential for this room. Trim does not call TrolMaster.
