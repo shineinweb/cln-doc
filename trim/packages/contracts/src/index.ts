@@ -177,6 +177,21 @@ export const createRoomSchema = z.object({
   roomType: z.enum(ROOM_TYPES),
 });
 
+const optionalPlace = z
+  .string()
+  .trim()
+  .max(191)
+  .nullish()
+  .transform((value) => (value && value.length > 0 ? value : null));
+
+export const createSiteSchema = z.object({
+  name: z.string().trim().min(1).max(191),
+  addressLine1: optionalPlace,
+  city: optionalPlace,
+  region: optionalPlace,
+  postalCode: optionalPlace,
+});
+
 export const recordRemovedSchema = z.object({
   id: z.string(),
   removed: z.boolean(),
@@ -1191,6 +1206,7 @@ export type Zone = z.infer<typeof zoneSchema>;
 export type CropCycleSummary = z.infer<typeof cropCycleSummarySchema>;
 export type OperatingHistory = z.infer<typeof operatingHistorySchema>;
 export type CreateRoom = z.infer<typeof createRoomSchema>;
+export type CreateSite = z.infer<typeof createSiteSchema>;
 export type RecordRemoved = z.infer<typeof recordRemovedSchema>;
 export type ZoneInput = z.infer<typeof zoneInputSchema>;
 export type CycleEdit = z.infer<typeof cycleEditSchema>;

@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import {
   createRoomSchema,
+  createSiteSchema,
   recordRemovedSchema,
   roomPageSchema,
   type CreateRoom,
+  type CreateSite,
   type RecordRemoved,
   type Room,
   type SessionUser,
@@ -22,6 +24,19 @@ export class SitesController {
   @Get()
   list(@CurrentUser() user: SessionUser): Promise<Site[]> {
     return this.facilities.listSites(user);
+  }
+
+  @Post()
+  create(
+    @CurrentUser() user: SessionUser,
+    @Body(new ZodValidationPipe(createSiteSchema)) body: CreateSite,
+  ): Promise<Site> {
+    return this.facilities.createSite(user, body);
+  }
+
+  @Delete(':siteId')
+  async remove(@CurrentUser() user: SessionUser, @Param('siteId') siteId: string): Promise<RecordRemoved> {
+    return recordRemovedSchema.parse(await this.facilities.deleteSite(user, siteId));
   }
 
   @Get(':siteId/rooms')

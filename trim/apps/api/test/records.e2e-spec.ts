@@ -81,6 +81,57 @@ describe('record changes', () => {
       .expect(404);
   });
 
+  it('adds a facility, removes it, and denies the other site', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/sites')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({
+        name: 'North Glass',
+        addressLine1: '10 Orchard Road',
+        city: 'Astoria',
+        region: 'OR',
+        postalCode: '97103',
+      })
+      .expect(201);
+    expect(created.body.name).toBe('North Glass');
+    expect(created.body.city).toBe('Astoria');
+    expect(created.body.code).toBe('NORTHGLASS');
+    expect(created.body.rooms).toEqual([]);
+
+    const room = await request(app.getHttpServer())
+      .post(`/sites/${created.body.id}/rooms`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ name: 'Bay', roomType: 'clone' })
+      .expect(201);
+
+    const listed = await request(app.getHttpServer()).get('/sites').set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
+    expect(listed.body.map((site: { id: string }) => site.id)).toContain(created.body.id);
+
+    const denied = await request(app.getHttpServer())
+      .delete(`/sites/${fixture.siteBId}`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(403);
+    expect(denied.body.message).toBe('You do not have access to this site');
+
+    const addedByOperator = await request(app.getHttpServer())
+      .post('/sites')
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ name: 'Operator Shed', city: 'Astoria', region: 'OR' })
+      .expect(201);
+    const operatorList = await request(app.getHttpServer()).get('/sites').set('Authorization', `Bearer ${tokenA}`).expect(200);
+    const operatorIds = operatorList.body.map((site: { id: string }) => site.id);
+    expect(operatorIds).toContain(addedByOperator.body.id);
+    expect(operatorIds).not.toContain(fixture.siteBId);
+
+    await request(app.getHttpServer())
+      .delete(`/sites/${created.body.id}`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+    await request(app.getHttpServer()).get(`/sites/${created.body.id}`).set('Authorization', `Bearer ${tokenAdmin}`).expect(404);
+    await request(app.getHttpServer()).get(`/rooms/${room.body.id}`).set('Authorization', `Bearer ${tokenAdmin}`).expect(404);
+    await request(app.getHttpServer()).get(`/sites/${fixture.siteBId}`).set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
+  });
+
   it('denies a site operator a change on the other facility', async () => {
     const denied = await request(app.getHttpServer())
       .patch(`/sites/${fixture.siteBId}/rooms/${fixture.roomBId}`)

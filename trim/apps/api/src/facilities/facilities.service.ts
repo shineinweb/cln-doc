@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   CreateRoom,
+  CreateSite,
   OrganizationSummary,
   RecordRemoved,
   Room,
@@ -44,6 +45,49 @@ export class FacilitiesService {
     private readonly prisma: PrismaService,
     private readonly cycles: CyclesService,
   ) {}
+
+  async createSite(user: SessionUser, input: CreateSite): Promise<Site> {
+    const existing = await this.prisma.site.findMany({
+      where: { organizationId: user.organizationId },
+      select: { code: true },
+    });
+    const code = uniqueRoomCode(input.name, existing.map((site) => site.code));
+    try {
+      const site = await this.prisma.site.create({
+        data: {
+          organizationId: user.organizationId,
+          name: input.name,
+          code,
+          addressLine1: input.addressLine1,
+          city: input.city,
+          region: input.region,
+          postalCode: input.postalCode,
+          memberships: user.isOrgAdmin ? undefined : { create: { userId: user.id } },
+        },
+        include: { rooms: { include: roomInclude, orderBy: { name: 'asc' } } },
+      });
+      return this.toSite(site, site.timezone);
+    } catch (error) {
+      if (isUniqueConstraint(error)) {
+        throw new BadRequestException('A facility with that name already exists.');
+      }
+      throw error;
+    }
+  }
+
+  async deleteSite(user: SessionUser, siteId: string): Promise<RecordRemoved> {
+    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+    assertSiteAccess(user, site);
+    try {
+      await this.prisma.site.delete({ where: { id: site.id } });
+    } catch (error) {
+      if (isForeignKeyConstraint(error)) {
+        throw new BadRequestException('This facility still has records that cannot be removed.');
+      }
+      throw error;
+    }
+    return { id: site.id, removed: true, voided: false };
+  }
 
   async listSites(user: SessionUser): Promise<Site[]> {
     const sites = await this.prisma.site.findMany({
@@ -314,4 +358,8 @@ function uniqueRoomCode(name: string, takenCodes: string[]): string {
 
 function isUniqueConstraint(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
+}
+
+function isForeignKeyConstraint(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2003';
 }

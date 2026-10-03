@@ -51,11 +51,13 @@ Rooms, zones, and Operations rows are removed. Plants, packages, harvest weights
 
 Reports stay calculated. A report total has no **Delete**.
 
-Add forms that were already on a page keep their buttons: **Add room**, **Save record**, **Save purchase**, **Save training**, **Save stay**, **Save recurring task**, **Save template**, **Save SOP**, **Save reading**, **Save alert rule**, and **Mark done**. New add buttons are **Add zone**, **Start cycle**, **Add task**, **Add batch**, and **Add plant**.
+Add forms that were already on a page keep their buttons: **Add room**, **Save record**, **Save purchase**, **Save training**, **Save stay**, **Save recurring task**, **Save template**, **Save SOP**, **Save reading**, **Save alert rule**, and **Mark done**. New add buttons are **Add facility**, **Add zone**, **Start cycle**, **Add task**, **Add batch**, and **Add plant**.
 
 ## Facility
 
 **Facility** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility. The top bar also has a **Facility** switcher that chooses the same site and opens Rooms.
+
+**Add a facility** asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. The code is taken from the name. **Delete** asks “Delete this record?” and then removes the facility and its rooms. You can delete a facility you can open. Avery Chen can add a facility and can delete Harbor House or Hill Works. Blake Ortiz can add a facility, and it appears on his list. He cannot delete Hill Works.
 
 If an account has no membership, the page says “No facilities are assigned to this account.”
 
