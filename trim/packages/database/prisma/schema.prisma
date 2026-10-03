@@ -150,8 +150,9 @@ model Site {
   rooms        Room[]
   memberships  SiteMembership[]
   licenses     LicenseSite[]
-  harvests     Harvest[]
-  metrcSyncs   MetrcSync[]
+  harvests       Harvest[]
+  metrcSyncs     MetrcSync[]
+  sensorGateways SensorGateway[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -323,8 +324,9 @@ model Harvest {
   room     Room?            @relation(fields: [roomId], references: [id], onDelete: SetNull)
   plants   HarvestPlant[]
   steps    HarvestStep[]
-  wastes   HarvestWaste[]
-  packages HarvestPackage[]
+  wastes       HarvestWaste[]
+  packages     HarvestPackage[]
+  scaleSamples ScaleSample[]
 
   @@index([licenseId])
   @@index([siteId])
@@ -568,8 +570,9 @@ model Room {
   alertRules AlertRule[]
   readings   EnvironmentalReading[]
   plants      Plant[]
-  harvests    Harvest[]
-  dryingSteps HarvestStep[]
+  harvests           Harvest[]
+  dryingSteps        HarvestStep[]
+  controllerReadings ControllerReading[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -1034,6 +1037,60 @@ model EnvironmentalReading {
   @@index([roomId, recordedAt])
   @@index([roomId, metric, recordedAt])
   @@map("environmental_readings")
+}
+
+/// A site-scoped gateway. It can post live sensor readings only for rooms on its site.
+model SensorGateway {
+  id        String   @id @default(cuid())
+  siteId    String   @map("site_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, name])
+  @@index([siteId])
+  @@map("sensor_gateways")
+}
+
+/// A controller sample. These rows are not environmental readings and do not feed alert rules.
+model ControllerReading {
+  id         String   @id @default(cuid())
+  roomId     String   @map("room_id")
+  deviceId   String   @map("device_id")
+  metric     String
+  value      Decimal  @db.Decimal(10, 2)
+  unit       String
+  recordedAt DateTime @map("recorded_at")
+  quality    String
+  isSample   Boolean  @default(true) @map("is_sample")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, recordedAt])
+  @@map("controller_readings")
+}
+
+/// A sample scale weight. It is not a harvest step and does not change the weight ledger.
+model ScaleSample {
+  id          String   @id @default(cuid())
+  harvestId   String   @map("harvest_id")
+  deviceId    String   @map("device_id")
+  weightGrams Int      @map("weight_grams")
+  unit        String
+  recordedAt  DateTime @map("recorded_at")
+  quality     String
+  isSample    Boolean  @default(true) @map("is_sample")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  harvest Harvest @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId, recordedAt])
+  @@map("scale_samples")
 }
 
 /// A recorded sync outcome. Phase 2 does not call Metrc.

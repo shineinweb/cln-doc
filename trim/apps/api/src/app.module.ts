@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AdaptersModule } from './adapters/adapters.module';
 import { AuthModule } from './auth/auth.module';
 import { CyclesModule } from './cycles/cycles.module';
 import { FacilitiesModule } from './facilities/facilities.module';
@@ -12,7 +13,7 @@ import { SubmissionsModule } from './submissions/submissions.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule, SubmissionsModule, InventoryModule, HarvestsModule, ReportsModule],
+  imports: [PrismaModule, StorageModule, AuthModule, CyclesModule, FacilitiesModule, WorkflowsModule, SubmissionsModule, InventoryModule, HarvestsModule, ReportsModule, AdaptersModule],
   controllers: [HealthController],
 })
 export class AppModule {}

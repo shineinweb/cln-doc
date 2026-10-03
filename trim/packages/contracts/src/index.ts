@@ -766,6 +766,64 @@ export const plantDetailSchema = z.object({
   events: z.array(plantEventSchema),
 });
 
+export const sensorGatewaySchema = z.object({
+  id: z.string(),
+  siteId: z.string(),
+  name: z.string(),
+});
+
+export const gatewayReadingSchema = z.object({
+  roomId: z.string().min(1),
+  deviceId: z.string().trim().min(1).max(120),
+  metric: environmentMetricSchema,
+  value: z.number().finite(),
+  unit: z.string().trim().min(1).max(20),
+  recordedAt: z.string().trim().min(1),
+  quality: readingQualitySchema,
+});
+
+export const controllerSampleSchema = z.object({
+  deviceId: z.string().trim().min(1).max(120),
+  metric: z.string().trim().min(1).max(80),
+  value: z.number().finite(),
+  unit: z.string().trim().min(1).max(20),
+  recordedAt: z.string().trim().min(1),
+  quality: readingQualitySchema,
+  isSample: z.literal(true).default(true),
+});
+
+export const controllerReadingSchema = z.object({
+  id: z.string(),
+  roomId: z.string(),
+  deviceId: z.string(),
+  metric: z.string(),
+  value: z.number(),
+  unit: z.string(),
+  recordedAt: z.string(),
+  quality: z.string(),
+  isSample: z.literal(true),
+});
+
+export const scaleSampleSchema = z.object({
+  deviceId: z.string().trim().min(1).max(120),
+  weightGrams: z.number().int().positive(),
+  unit: z.string().trim().min(1).max(20),
+  recordedAt: z.string().trim().min(1),
+  quality: readingQualitySchema,
+  isSample: z.literal(true).default(true),
+});
+
+export const scaleSampleViewSchema = z.object({
+  id: z.string(),
+  harvestId: z.string(),
+  deviceId: z.string(),
+  weightGrams: z.number().int(),
+  unit: z.string(),
+  recordedAt: z.string(),
+  quality: z.string(),
+  isSample: z.literal(true),
+});
+
 export const laborCostLineSchema = z.object({
   entryId: z.string(),
   rateId: z.string().nullable(),
@@ -909,3 +967,9 @@ export type HarvestWasteView = z.infer<typeof harvestWasteSchema>;
 export type CycleReport = z.infer<typeof cycleReportSchema>;
 export type SiteReport = z.infer<typeof siteReportSchema>;
 export type ComparisonReport = z.infer<typeof comparisonReportSchema>;
+export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
+export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
+export type ControllerSample = z.infer<typeof controllerSampleSchema>;
+export type ControllerReading = z.infer<typeof controllerReadingSchema>;
+export type ScaleSampleInput = z.infer<typeof scaleSampleSchema>;
+export type ScaleSampleView = z.infer<typeof scaleSampleViewSchema>;

@@ -1,5 +1,6 @@
 import { Alert, Box, Button, Card, CardContent, Skeleton, TextField, Typography } from '@mui/material';
-import { harvestDetailSchema, packageDetailSchema, type HarvestDetail } from '@trim/contracts';
+import { harvestDetailSchema, packageDetailSchema, scaleSampleViewSchema, type HarvestDetail } from '@trim/contracts';
+import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
@@ -49,7 +50,10 @@ export function HarvestPage() {
       <Typography data-testid="harvest-plant-count" sx={{ mb: 2 }}>
         {row.plantCount} plants
       </Typography>
-      <WeightLedger ledger={row.ledger} />
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 2, alignItems: 'start' }}>
+        <WeightLedger ledger={row.ledger} />
+        <ScaleSamples harvestId={row.id} />
+      </Box>
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h3" sx={{ fontSize: 22, mb: 1 }}>
@@ -95,6 +99,35 @@ export function HarvestPage() {
         </Box>
       ) : null}
     </Box>
+  );
+}
+
+function ScaleSamples({ harvestId }: { harvestId: string }) {
+  const samples = useQuery({
+    queryKey: ['scale-samples', harvestId],
+    queryFn: () => apiGet(`/adapters/scales/harvests/${harvestId}/samples`, z.array(scaleSampleViewSchema)),
+    retry: false,
+  });
+  return (
+    <Card data-testid="scale-samples" sx={{ mb: 2 }}>
+      <CardContent>
+        <Typography variant="h3" sx={{ fontSize: 20, mb: 1 }}>
+          Sample scale weight
+        </Typography>
+        <Typography sx={{ color: 'text.secondary', mb: 1 }}>
+          This sample sits beside the ledger. It does not change wet, dry, packaged, waste, or unaccounted weight.
+        </Typography>
+        {samples.data && samples.data.length > 0 ? (
+          samples.data.map((sample) => (
+            <Typography key={sample.id} data-testid="scale-sample">
+              {sample.deviceId} · {sample.weightGrams} {sample.unit} · {sample.quality} · {formatTimestamp(sample.recordedAt)} · Sample data
+            </Typography>
+          ))
+        ) : (
+          <Typography sx={{ color: 'text.secondary' }}>No sample scale weight is stored.</Typography>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

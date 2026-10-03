@@ -256,6 +256,7 @@ async function main(): Promise<void> {
     harborSiteId: harbor.id,
     blakeId: blake.id,
   });
+  await seedAdapters(harbor.id, hill.id, flower.id);
 
   console.log('Seeded Harbor & Hill Cultivation.');
   console.log('Dev-only logins (also listed in the README):');
@@ -1094,6 +1095,56 @@ async function seedAnalytics(input: {
   await prisma.plant.updateMany({
     where: { id: { in: plants.map((plant) => plant.id) } },
     data: { status: 'harvested', stage: 'harvested', cycleId: null },
+  });
+}
+
+async function seedAdapters(harborSiteId: string, hillSiteId: string, flowerRoomId: string) {
+  await prisma.sensorGateway.upsert({
+    where: { siteId_name: { siteId: harborSiteId, name: 'Harbor House environment' } },
+    update: {},
+    create: { siteId: harborSiteId, name: 'Harbor House environment' },
+  });
+  await prisma.sensorGateway.upsert({
+    where: { siteId_name: { siteId: hillSiteId, name: 'Hill Works environment' } },
+    update: {},
+    create: { siteId: hillSiteId, name: 'Hill Works environment' },
+  });
+
+  await prisma.controllerReading.deleteMany({
+    where: { roomId: flowerRoomId, deviceId: 'hh-flower-1-controller' },
+  });
+  await prisma.controllerReading.create({
+    data: {
+      roomId: flowerRoomId,
+      deviceId: 'hh-flower-1-controller',
+      metric: 'setpoint',
+      value: 72,
+      unit: '°F',
+      quality: 'good',
+      isSample: true,
+      recordedAt: new Date(Date.now() - 2 * 60 * 1000),
+    },
+  });
+
+  const harvest = await prisma.harvest.findFirst({
+    where: { name: 'Cedar Nights flower harvest', siteId: harborSiteId },
+  });
+  if (!harvest) {
+    throw new Error('Cedar Nights flower harvest is missing, so the scale sample cannot be stored.');
+  }
+  await prisma.scaleSample.deleteMany({
+    where: { harvestId: harvest.id, deviceId: 'hh-sample-scale' },
+  });
+  await prisma.scaleSample.create({
+    data: {
+      harvestId: harvest.id,
+      deviceId: 'hh-sample-scale',
+      weightGrams: 510,
+      unit: 'g',
+      quality: 'good',
+      isSample: true,
+      recordedAt: new Date('2026-10-03T22:30:00.000Z'),
+    },
   });
 }
 

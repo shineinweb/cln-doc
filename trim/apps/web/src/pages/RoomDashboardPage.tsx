@@ -7,6 +7,7 @@ import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
+import { RoomAdapters } from '../adapters/RoomAdapters';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { roomTypeLabel, workbench } from '../theme';
@@ -129,6 +130,9 @@ export function RoomDashboardPage() {
       </Box>
       <Box sx={{ mb: 3 }}>
         <RoomEnvironment room={room.data} />
+      </Box>
+      <Box sx={{ mb: 3 }}>
+        <RoomAdapters roomId={room.data.id} siteId={room.data.siteId} timeZone={room.data.siteTimezone} />
       </Box>
       {room.data.operatingHistory ? (
         <Box>
