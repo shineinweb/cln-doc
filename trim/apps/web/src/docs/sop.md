@@ -227,7 +227,23 @@ A controller sample is not this procedure. It stays on **Controller sample**, la
 
 The comparison page has no link to a single-facility report. That page is **Facility report** at `/reports/sites/` plus the facility id, and it uses the same sections for the cycles on that facility.
 
-**Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples, the 510 g scale sample, and the sample tag are not in these totals. Hill Works prior lot is not a Glass Orchard yield.
+**Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples, the 510 g scale sample, and the sample tag are not in these totals. Hill Works prior lot is not a Glass Orchard yield. A crop with no labor entries says “Labor is absent. No labor entries are stored.” A crop with no input costs says “Input cost is absent. No input costs are stored.”
+
+## Site coach
+
+**Who.** Anyone who can open the facility. Blake sees Harbor House. Casey sees Hill Works. Avery can switch facilities.
+
+**When.** You want the stored figures, a procedure quote, a room alert task, or a readiness list for the license jurisdiction.
+
+**Steps.**
+
+1. Open **Site coach**. It follows the facility in the top bar.
+2. Read **Statistics**. The formulas match **Reports**. A missing harvest, labor row, or input cost says that figure is absent.
+3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Workspace**.
+4. Type a question in **Ask about a stored procedure** and choose **Ask**. The answer quotes a stored procedure, or it says “No stored procedure matches that question.”
+5. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
+
+**Done.** You can name the jurisdiction, whether a figure is absent, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
 
 ## Recording irrigation and feed
 

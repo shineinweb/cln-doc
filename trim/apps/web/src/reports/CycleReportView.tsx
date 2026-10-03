@@ -49,7 +49,7 @@ export function CycleReportView({ report }: { report: CycleReport }) {
         </Section>
         <Section title="Labor">
           {report.labor.lines.length === 0 ? (
-            <Typography sx={{ color: 'text.secondary' }}>No labor entries are stored.</Typography>
+            <Typography data-testid="labor-absent" sx={{ color: 'text.secondary' }}>Labor is absent. No labor entries are stored.</Typography>
           ) : (
             report.labor.lines.map((line) => (
               <Box key={line.entryId} sx={{ mb: 1 }} data-testid="labor-line">
@@ -68,7 +68,7 @@ export function CycleReportView({ report }: { report: CycleReport }) {
         </Section>
         <Section title="Input costs">
           {report.inputs.lines.length === 0 ? (
-            <Typography sx={{ color: 'text.secondary' }}>No input costs are stored.</Typography>
+            <Typography data-testid="input-absent" sx={{ color: 'text.secondary' }}>Input cost is absent. No input costs are stored.</Typography>
           ) : (
             report.inputs.lines.map((line) => (
               <Box key={line.inputId} sx={{ mb: 1 }} data-testid="input-line">

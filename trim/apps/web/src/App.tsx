@@ -20,6 +20,7 @@ import { PackagePage } from './pages/PackagePage';
 import { PlantPage } from './pages/PlantPage';
 import { ReadingPage } from './pages/ReadingPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { SiteCoachPage } from './pages/SiteCoachPage';
 import { SiteReportPage } from './pages/SiteReportPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
@@ -63,6 +64,7 @@ const router = createBrowserRouter([
       { path: 'operations', element: <OperationsPage /> },
       { path: 'operations/:area', element: <OperationsPage /> },
       { path: 'reports', element: <ReportsPage /> },
+      { path: 'coach', element: <SiteCoachPage /> },
       { path: 'user-manual', element: <UserManualPage /> },
       { path: 'sop', element: <SopPage /> },
       { path: 'settings', element: <SettingsPage /> },

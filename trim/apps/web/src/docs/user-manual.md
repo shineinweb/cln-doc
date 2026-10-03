@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, User manual, SOP, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, User manual, SOP, and Settings open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, Site coach, User manual, SOP, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, User manual, SOP, and Settings open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -255,7 +255,21 @@ Each crop card has Yield, Cycle duration, Labor, Input costs, and Total cost.
 - Input cost is quantity times the stored unit cost. The seeded lines are Flower nutrients, 2 at 1500 cents, and Veg media, 1 at 4200 cents.
 - Total cost is labor cost plus input cost: 18400 cents for Cedar Nights and 14600 cents for Glass Orchard.
 
-The card also says “Sample environmental readings are excluded. This report does not use their values.” Controller samples and scale samples are not part of these totals.
+The card also says “Sample environmental readings are excluded. This report does not use their values.” Controller samples and scale samples are not part of these totals. When a crop has no labor entries, the card says “Labor is absent. No labor entries are stored.” When it has no input costs, it says “Input cost is absent. No input costs are stored.”
+
+## Site coach
+
+**Site coach** sits in the left navigation after Reports. It follows the facility in the top bar.
+
+**Statistics** uses the same harvest, labor, and cost figures as Reports, and prints the formula under each number. A crop with no harvest says yield is absent. A crop with no labor entries says labor is absent. A crop with no input costs says input cost is absent.
+
+**Room notices** lists each active room alert. Opening the coach creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. The coach does not invent a task that no procedure describes. The same notice appears on **Workspace**.
+
+**Ask about a stored procedure** searches the organization’s stored procedure titles and summaries and quotes the match. If nothing matches, it says “No stored procedure matches that question.”
+
+**Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Trim does not call live Metrc, and it does not send email or SMS.
+
+A person who cannot open the facility does not see that facility’s coach.
 
 ## Operations
 

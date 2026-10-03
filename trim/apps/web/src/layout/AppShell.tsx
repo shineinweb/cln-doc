@@ -39,6 +39,7 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests' },
   { to: '/operations', label: 'Operations', end: false, glyph: 'operations' },
   { to: '/reports', label: 'Reports', end: false, glyph: 'reports' },
+  { to: '/coach', label: 'Site coach', end: true, glyph: 'coach' },
   { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual' },
   { to: '/sop', label: 'SOP', end: true, glyph: 'sop' },
   { to: '/settings', label: 'Settings', end: true, glyph: 'settings' },

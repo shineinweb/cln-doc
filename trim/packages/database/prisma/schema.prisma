@@ -868,6 +868,7 @@ model SopRecord {
   organization  Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   taskTemplates WorkflowTaskTemplate[]
   cycleTasks    CycleTask[]
+  roomTasks     RoomTask[]
 
   @@unique([organizationId, title])
   @@index([organizationId])
@@ -1075,10 +1076,15 @@ model RoomTask {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  room      Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  assignees RoomTaskAssignee[]
+  room          Room               @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  assignees     RoomTaskAssignee[]
+  sourceAlertId String?            @unique @map("source_alert_id")
+  sourceAlert   RoomAlert?         @relation(fields: [sourceAlertId], references: [id], onDelete: SetNull)
+  sopRecordId   String?            @map("sop_record_id")
+  sopRecord     SopRecord?         @relation(fields: [sopRecordId], references: [id], onDelete: SetNull)
 
   @@index([roomId, dueOn])
+  @@index([sopRecordId])
   @@map("room_tasks")
 }
 
@@ -1124,8 +1130,9 @@ model RoomAlert {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  room Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  rule AlertRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  rule      AlertRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  roomTasks RoomTask[]
 
   @@index([roomId, active])
   @@index([ruleId])

@@ -11,6 +11,7 @@ export type GlyphName =
   | 'harvests'
   | 'operations'
   | 'reports'
+  | 'coach'
   | 'manual'
   | 'sop'
   | 'settings'
@@ -107,6 +108,15 @@ function GlyphPath({ name }: { name: GlyphName }) {
       <>
         <path d="M4 19V5M4 19h16" {...common} />
         <path d="M8 15v-4M12 15V8M16 15v-6" {...common} />
+      </>
+    );
+  }
+  if (name === 'coach') {
+    return (
+      <>
+        <path d="M5 7.5h10.5a3 3 0 0 1 3 3V17a2 2 0 0 1-2 2H7.5" {...common} />
+        <path d="M5 7.5V17a2 2 0 0 0 2 2h1.5" {...common} />
+        <path d="M8.5 11h6M8.5 14.5h4" {...common} />
       </>
     );
   }

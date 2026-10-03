@@ -3,6 +3,7 @@ import type { CycleTaskDetail, SessionUser, TaskChecklistInput, TaskCommentInput
 import { calendarDateInTimeZone, dateKeyFromDbDate } from '../cycles/cycle-day';
 import { assertSiteAccess, authorizedSiteWhere } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
+import { CoachService } from '../coach/coach.service';
 import { AttachmentsService } from '../storage/attachments.service';
 
 const taskInclude = {
@@ -22,6 +23,7 @@ export class TasksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly attachments: AttachmentsService,
+    private readonly coach: CoachService,
   ) {}
 
   async workspace(user: SessionUser): Promise<WorkspaceToday> {
@@ -38,7 +40,7 @@ export class TasksService {
     const date = visible[0]
       ? dateKeyFromDbDate(visible[0].dueOn)
       : calendarDateInTimeZone(new Date(), 'America/Los_Angeles');
-    return { date, tasks: visible.map((task) => this.toDetail(task)) };
+    return { date, tasks: visible.map((task) => this.toDetail(task)), notices: await this.coach.notices(user) };
   }
 
   async getTask(user: SessionUser, taskId: string): Promise<CycleTaskDetail> {

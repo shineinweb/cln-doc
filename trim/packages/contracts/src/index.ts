@@ -641,9 +641,23 @@ export const cycleTaskDetailSchema = z.object({
   attachments: z.array(taskAttachmentViewSchema),
 });
 
+export const workspaceNoticeSchema = z.object({
+  alertId: z.string(),
+  siteId: z.string(),
+  siteName: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  message: z.string(),
+  taskId: z.string(),
+  taskTitle: z.string(),
+  sopTitle: z.string().nullable(),
+  sopSummary: z.string().nullable(),
+});
+
 export const workspaceTodaySchema = z.object({
   date: z.string(),
   tasks: z.array(cycleTaskDetailSchema),
+  notices: z.array(workspaceNoticeSchema),
 });
 
 export const siteSchema = z.object({
@@ -1262,6 +1276,39 @@ export const comparisonReportSchema = z.object({
   cycles: z.array(cycleReportSchema),
 });
 
+export const coachGapSchema = z.object({
+  kind: z.enum(['untagged_plants', 'discrepancies', 'pending_submissions', 'unqueued_packages', 'missing_waste']),
+  count: z.number().int(),
+  detail: z.string(),
+});
+
+export const coachLicenseSchema = z.object({
+  licenseId: z.string(),
+  licenseNumber: z.string(),
+  jurisdiction: z.string(),
+  gaps: z.array(coachGapSchema),
+});
+
+export const siteCoachSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  cycles: z.array(cycleReportSchema),
+  notices: z.array(workspaceNoticeSchema),
+  licenses: z.array(coachLicenseSchema),
+  statement: z.string(),
+});
+
+export const coachQuestionSchema = z.object({
+  question: z.string().trim().min(1).max(500),
+});
+
+export const coachAnswerSchema = z.object({
+  matched: z.boolean(),
+  title: z.string().nullable(),
+  summary: z.string().nullable(),
+  message: z.string(),
+});
+
 const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const optionalRoomSchema = z.string().trim().min(1).optional().nullable();
 
@@ -1490,7 +1537,11 @@ export type StartedCycle = z.infer<typeof startedCycleSchema>;
 export type RescheduleResult = z.infer<typeof rescheduleResultSchema>;
 export type ReschedulePreview = z.infer<typeof reschedulePreviewSchema>;
 export type CycleTaskDetail = z.infer<typeof cycleTaskDetailSchema>;
+export type WorkspaceNotice = z.infer<typeof workspaceNoticeSchema>;
 export type WorkspaceToday = z.infer<typeof workspaceTodaySchema>;
+export type SiteCoach = z.infer<typeof siteCoachSchema>;
+export type CoachQuestion = z.infer<typeof coachQuestionSchema>;
+export type CoachAnswer = z.infer<typeof coachAnswerSchema>;
 export type RoomTask = z.infer<typeof roomTaskSchema>;
 export type RoomAlert = z.infer<typeof roomAlertSchema>;
 export type EnvironmentalReading = z.infer<typeof environmentalReadingSchema>;

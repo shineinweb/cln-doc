@@ -28,6 +28,16 @@ export function WorkspacePage() {
         title="Employee workspace"
         lede={`Assignments due ${formatCalendarDate(workspace.data.date)}. Tasks from another facility stay off this list.`}
       />
+      {workspace.data.notices.length > 0 ? (
+        <Box sx={{ display: 'grid', gap: 1.5, mb: 3 }} data-testid="workspace-notices">
+          {workspace.data.notices.map((notice) => (
+            <Alert key={notice.alertId} severity="warning" data-testid="workspace-notice">
+              {`${notice.siteName} · ${notice.roomName}. ${notice.message} Task: ${notice.taskTitle}.`}
+              {notice.sopTitle ? ` Procedure: ${notice.sopTitle}.` : ''}
+            </Alert>
+          ))}
+        </Box>
+      ) : null}
       <PagedList
         items={workspace.data.tasks}
         empty="Nothing is assigned to you today."
