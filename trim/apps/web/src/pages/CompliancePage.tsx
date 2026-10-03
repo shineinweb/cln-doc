@@ -238,7 +238,7 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
           Queue again
         </Button>
       ) : null}
-      {message ? (
+      {message && (message !== 'Approved. The outbox will deliver it.' || submission.status === 'queued') ? (
         <Alert severity="info" sx={{ mt: 1 }} data-testid="submission-message">
           {message}
         </Alert>
