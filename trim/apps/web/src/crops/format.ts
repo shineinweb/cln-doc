@@ -11,7 +11,7 @@ export function formatCalendarDate(isoDate: string): string {
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-export function formatTimestamp(iso: string): string {
+export function formatTimestamp(iso: string, timeZone?: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
     return iso;
@@ -21,6 +21,8 @@ export function formatTimestamp(iso: string): string {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone,
+    ...(timeZone ? { timeZoneName: 'short' as const } : {}),
   }).format(date);
 }
 

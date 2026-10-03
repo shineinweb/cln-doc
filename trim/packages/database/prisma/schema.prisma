@@ -553,9 +553,10 @@ model Room {
   siteId    String   @map("site_id")
   name      String
   code      String
-  roomType  String   @map("room_type")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  roomType          String   @map("room_type")
+  staleAfterMinutes Int      @default(60) @map("stale_after_minutes")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   site       Site                  @relation(fields: [siteId], references: [id], onDelete: Cascade)
   zones      Zone[]
@@ -563,6 +564,7 @@ model Room {
   tasks      RoomTask[]
   cycleTasks CycleTask[]
   alerts     RoomAlert[]
+  alertRules AlertRule[]
   readings   EnvironmentalReading[]
   plants      Plant[]
   harvests    Harvest[]
@@ -942,27 +944,52 @@ model RoomTask {
   @@map("room_tasks")
 }
 
+model AlertRule {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  metric    String
+  kind      String
+  minValue  Decimal? @map("min_value") @db.Decimal(10, 2)
+  maxValue  Decimal? @map("max_value") @db.Decimal(10, 2)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room   Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  alerts RoomAlert[]
+
+  @@index([roomId])
+  @@map("alert_rules")
+}
+
 model RoomAlert {
   id        String   @id @default(cuid())
   roomId    String   @map("room_id")
+  ruleId    String?  @map("rule_id")
+  metric    String?
+  kind      String?
   message   String   @db.VarChar(500)
   active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  rule AlertRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
 
   @@index([roomId, active])
+  @@index([ruleId])
   @@map("room_alerts")
 }
 
 model EnvironmentalReading {
   id         String   @id @default(cuid())
   roomId     String   @map("room_id")
+  deviceId   String   @default("unspecified") @map("device_id")
   recordedAt DateTime @map("recorded_at")
   metric     String
   value      Decimal  @db.Decimal(10, 2)
   unit       String
+  quality    String   @default("good")
   isSample   Boolean  @default(false) @map("is_sample")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -970,6 +997,7 @@ model EnvironmentalReading {
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId, recordedAt])
+  @@index([roomId, metric, recordedAt])
   @@map("environmental_readings")
 }
 

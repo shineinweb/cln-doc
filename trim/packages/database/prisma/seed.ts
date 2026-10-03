@@ -247,6 +247,7 @@ async function main(): Promise<void> {
     blakeId: blake.id,
     caseyId: casey.id,
   });
+  await seedEnvironment(flower.id, veg.id);
 
   console.log('Seeded Harbor & Hill Cultivation.');
   console.log('Dev-only logins (also listed in the README):');
@@ -857,6 +858,90 @@ async function seedCanopyWeek(
       }
     }
   }
+}
+
+async function seedEnvironment(flowerRoomId: string, vegRoomId: string): Promise<void> {
+  const roomIds = [flowerRoomId, vegRoomId];
+  await prisma.roomAlert.deleteMany({ where: { roomId: { in: roomIds } } });
+  await prisma.alertRule.deleteMany({ where: { roomId: { in: roomIds } } });
+  await prisma.environmentalReading.deleteMany({ where: { roomId: { in: roomIds } } });
+  await prisma.room.updateMany({ where: { id: { in: roomIds } }, data: { staleAfterMinutes: 60 } });
+
+  const now = Date.now();
+  const flowerTemps = [
+    { ageMs: 6 * 60 * 60 * 1000, value: 72.4 },
+    { ageMs: 4 * 60 * 60 * 1000, value: 73.1 },
+    { ageMs: 2 * 60 * 60 * 1000, value: 74 },
+    { ageMs: 10 * 60 * 1000, value: 74.6 },
+  ];
+  for (const point of flowerTemps) {
+    await prisma.environmentalReading.create({
+      data: {
+        roomId: flowerRoomId,
+        deviceId: 'hh-flower-1-temp',
+        metric: 'temperature',
+        value: point.value,
+        unit: '°F',
+        quality: 'good',
+        isSample: false,
+        recordedAt: new Date(now - point.ageMs),
+      },
+    });
+  }
+  await prisma.environmentalReading.create({
+    data: {
+      roomId: flowerRoomId,
+      deviceId: 'hh-flower-1-rh',
+      metric: 'relative_humidity',
+      value: 58.2,
+      unit: '%',
+      quality: 'good',
+      isSample: false,
+      recordedAt: new Date(now - 3 * 60 * 60 * 1000),
+    },
+  });
+  await prisma.environmentalReading.create({
+    data: {
+      roomId: flowerRoomId,
+      deviceId: 'sample-co2-logger',
+      metric: 'co2',
+      value: 1120,
+      unit: 'ppm',
+      quality: 'good',
+      isSample: true,
+      recordedAt: new Date(now - 5 * 60 * 1000),
+    },
+  });
+  const humidityRule = await prisma.alertRule.create({
+    data: {
+      roomId: flowerRoomId,
+      metric: 'relative_humidity',
+      kind: 'stale',
+      enabled: true,
+    },
+  });
+  await prisma.roomAlert.create({
+    data: {
+      roomId: flowerRoomId,
+      ruleId: humidityRule.id,
+      metric: 'relative_humidity',
+      kind: 'stale',
+      active: true,
+      message: 'Relative humidity is stale. No reading is newer than 60 minutes.',
+    },
+  });
+  await prisma.environmentalReading.create({
+    data: {
+      roomId: vegRoomId,
+      deviceId: 'hw-veg-1-temp',
+      metric: 'temperature',
+      value: 76.1,
+      unit: '°F',
+      quality: 'good',
+      isSample: false,
+      recordedAt: new Date(now - 8 * 60 * 1000),
+    },
+  });
 }
 
 function addUtcDays(value: Date, days: number): Date {

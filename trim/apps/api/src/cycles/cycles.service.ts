@@ -2,13 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
   CropCycleDetail,
   CropCycleSummary,
-  EnvironmentalReading,
   MetrcSync,
   OperatingHistory,
-  RoomAlert,
   RoomTask,
   SessionUser,
 } from '@trim/contracts';
+import { EnvironmentService } from '../environment/environment.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertSiteAccess } from '../facilities/site-access';
 import { calendarDateInTimeZone, cycleDayNumber, dateKeyFromDbDate } from './cycle-day';
@@ -53,7 +52,10 @@ type CycleWithHistory = {
 
 @Injectable()
 export class CyclesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly environment: EnvironmentService,
+  ) {}
 
   summary(cycle: {
     id: string;
@@ -127,29 +129,19 @@ export class CyclesService {
     timeZone: string,
   ): Promise<{
     tasksDueToday: RoomTask[];
-    activeAlerts: RoomAlert[];
-    latestReadings: EnvironmentalReading[];
     lastMetrcSync: MetrcSync | null;
-  }> {
+  } & Awaited<ReturnType<EnvironmentService['dashboard']>>> {
     const today = new Date(`${calendarDateInTimeZone(new Date(), timeZone)}T00:00:00.000Z`);
-    const [tasks, alerts, readings, sync] = await Promise.all([
+    const [tasks, sync, environment] = await Promise.all([
       this.prisma.cycleTask.findMany({
         where: { roomId, status: 'open', dueOn: today },
         orderBy: { title: 'asc' },
-      }),
-      this.prisma.roomAlert.findMany({
-        where: { roomId, active: true },
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.environmentalReading.findMany({
-        where: { roomId },
-        orderBy: { recordedAt: 'desc' },
-        take: 8,
       }),
       this.prisma.metrcSync.findFirst({
         where: { siteId, status: 'succeeded', succeededAt: { not: null } },
         orderBy: { succeededAt: 'desc' },
       }),
+      this.environment.dashboard(roomId),
     ]);
 
     return {
@@ -160,15 +152,7 @@ export class CyclesService {
         status: task.status,
         assigneeLabel: task.assigneeLabel,
       })),
-      activeAlerts: alerts.map((alert) => ({ id: alert.id, message: alert.message })),
-      latestReadings: readings.map((reading) => ({
-        id: reading.id,
-        recordedAt: reading.recordedAt.toISOString(),
-        metric: reading.metric,
-        value: Number(reading.value),
-        unit: reading.unit,
-        isSample: reading.isSample,
-      })),
+      ...environment,
       lastMetrcSync:
         sync?.succeededAt == null
           ? null

@@ -14,6 +14,7 @@ import { LicenseInventoryPage } from './pages/LicenseInventoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { PackagePage } from './pages/PackagePage';
 import { PlantPage } from './pages/PlantPage';
+import { ReadingPage } from './pages/ReadingPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
       { path: 'packages/:packageId', element: <PackagePage /> },
       { path: 'licenses/:licenseId', element: <LicenseInventoryPage /> },
       { path: 'plants/:plantId', element: <PlantPage /> },
+      { path: 'readings/:readingId', element: <ReadingPage /> },
       { path: 'submissions/:submissionId', element: <SubmissionPage /> },
       {
         path: '*',

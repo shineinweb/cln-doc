@@ -202,7 +202,20 @@ describe('crop cycles', () => {
     expect(room.body.operatingHistory.harvestSummary).toBeNull();
     expect(room.body.tasksDueToday).toEqual([]);
     expect(room.body.activeAlerts).toEqual([]);
-    expect(room.body.latestReadings).toEqual([]);
+    expect(room.body.staleAfterMinutes).toBe(60);
+    expect(room.body.readingHistory).toEqual([]);
+    expect(
+      room.body.latestReadings.map((slot: { metric: string; value: number | null; stale: boolean }) => ({
+        metric: slot.metric,
+        value: slot.value,
+        stale: slot.stale,
+      })),
+    ).toEqual([
+      { metric: 'temperature', value: null, stale: true },
+      { metric: 'relative_humidity', value: null, stale: true },
+      { metric: 'co2', value: null, stale: true },
+      { metric: 'substrate', value: null, stale: true },
+    ]);
     expect(room.body.lastMetrcSync).toBeNull();
   });
 

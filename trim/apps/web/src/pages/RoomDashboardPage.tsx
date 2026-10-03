@@ -7,6 +7,7 @@ import { ApiError, apiGet, apiSend } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
+import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { roomTypeLabel, workbench } from '../theme';
 
@@ -58,7 +59,7 @@ export function RoomDashboardPage() {
       <PageHeader
         kicker={`${room.data.siteName} · ${roomTypeLabel(room.data.roomType)}`}
         title={room.data.name}
-        lede="The room dashboard is the daily workspace. Crop figures below are stored records. Empty panels mean no row exists yet."
+        lede="The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records."
       />
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
         {room.data.zones.map((zone) => (
@@ -122,19 +123,12 @@ export function RoomDashboardPage() {
             ))
           )}
         </SignalCard>
-        <SignalCard title="Active alerts" testId="active-alerts">
-          {room.data.activeAlerts.length === 0 ? (
-            <Typography sx={{ color: 'text.secondary' }}>No active alerts.</Typography>
-          ) : (
-            room.data.activeAlerts.map((alert) => <Typography key={alert.id}>{alert.message}</Typography>)
-          )}
-        </SignalCard>
-        <SignalCard title="Latest environmental readings" testId="latest-readings">
-          <Readings readings={room.data.latestReadings} />
-        </SignalCard>
         <SignalCard title="Last successful Metrc sync" testId="metrc-sync">
           <MetrcSync sync={room.data.lastMetrcSync} />
         </SignalCard>
+      </Box>
+      <Box sx={{ mb: 3 }}>
+        <RoomEnvironment room={room.data} />
       </Box>
       {room.data.operatingHistory ? (
         <Box>
@@ -169,22 +163,6 @@ function SignalCard({ title, testId, children }: { title: string; testId: string
         {children}
       </CardContent>
     </Card>
-  );
-}
-
-function Readings({ readings }: { readings: RoomDetail['latestReadings'] }) {
-  if (readings.length === 0) {
-    return <Typography sx={{ color: 'text.secondary' }}>No environmental readings are recorded.</Typography>;
-  }
-  return (
-    <Box>
-      {readings.map((reading) => (
-        <Typography key={reading.id} sx={{ mb: 0.5 }}>
-          {reading.metric} {reading.value} {reading.unit} · {formatTimestamp(reading.recordedAt)}
-          {reading.isSample ? ' · Sample data' : ''}
-        </Typography>
-      ))}
-    </Box>
   );
 }
 

@@ -84,9 +84,15 @@ export const roomTaskSchema = z.object({
   assigneeLabel: z.string(),
 });
 
+export const environmentMetricSchema = z.enum(['temperature', 'relative_humidity', 'co2', 'substrate']);
+
+export const readingQualitySchema = z.enum(['good', 'suspect', 'bad']);
+
 export const roomAlertSchema = z.object({
   id: z.string(),
   message: z.string(),
+  metric: z.string().nullable(),
+  kind: z.string().nullable(),
 });
 
 export const environmentalReadingSchema = z.object({
@@ -95,7 +101,67 @@ export const environmentalReadingSchema = z.object({
   metric: z.string(),
   value: z.number(),
   unit: z.string(),
+  deviceId: z.string(),
+  quality: z.string(),
   isSample: z.boolean(),
+});
+
+export const latestReadingSlotSchema = z.object({
+  metric: z.string(),
+  id: z.string().nullable(),
+  recordedAt: z.string().nullable(),
+  value: z.number().nullable(),
+  unit: z.string().nullable(),
+  deviceId: z.string().nullable(),
+  quality: z.string().nullable(),
+  isSample: z.boolean(),
+  stale: z.boolean(),
+});
+
+export const createReadingSchema = z.object({
+  deviceId: z.string().trim().min(1, 'Enter a device identity.').max(120),
+  metric: environmentMetricSchema,
+  value: z.number().finite(),
+  unit: z.string().trim().min(1, 'Enter a unit.').max(20),
+  recordedAt: z.string().trim().min(1, 'Enter a timestamp.'),
+  quality: readingQualitySchema,
+  isSample: z.boolean().default(false),
+});
+
+export const importReadingsSchema = z.object({
+  csv: z.string().trim().min(1, 'Choose a CSV file.').max(100_000),
+});
+
+export const importReadingsResultSchema = z.object({
+  imported: z.number().int(),
+  readings: z.array(environmentalReadingSchema),
+});
+
+export const createAlertRuleSchema = z
+  .object({
+    metric: environmentMetricSchema,
+    kind: z.enum(['range', 'stale']),
+    minValue: z.number().finite().nullable().optional(),
+    maxValue: z.number().finite().nullable().optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.kind === 'range' && value.minValue == null && value.maxValue == null) {
+      context.addIssue({
+        code: 'custom',
+        message: 'A range rule needs a minimum or a maximum.',
+        path: ['minValue'],
+      });
+    }
+  });
+
+export const alertRuleSchema = z.object({
+  id: z.string(),
+  roomId: z.string(),
+  metric: z.string(),
+  kind: z.string(),
+  minValue: z.number().nullable(),
+  maxValue: z.number().nullable(),
+  enabled: z.boolean(),
 });
 
 export const metrcSyncSchema = z.object({
@@ -122,8 +188,10 @@ export const roomDetailSchema = roomSchema.extend({
   siteTimezone: z.string(),
   operatingHistory: operatingHistorySchema.nullable(),
   tasksDueToday: z.array(roomTaskSchema),
+  staleAfterMinutes: z.number().int(),
   activeAlerts: z.array(roomAlertSchema),
-  latestReadings: z.array(environmentalReadingSchema),
+  latestReadings: z.array(latestReadingSlotSchema),
+  readingHistory: z.array(environmentalReadingSchema),
   lastMetrcSync: metrcSyncSchema.nullable(),
 });
 
@@ -727,6 +795,12 @@ export type WorkspaceToday = z.infer<typeof workspaceTodaySchema>;
 export type RoomTask = z.infer<typeof roomTaskSchema>;
 export type RoomAlert = z.infer<typeof roomAlertSchema>;
 export type EnvironmentalReading = z.infer<typeof environmentalReadingSchema>;
+export type LatestReadingSlot = z.infer<typeof latestReadingSlotSchema>;
+export type CreateReading = z.infer<typeof createReadingSchema>;
+export type ImportReadings = z.infer<typeof importReadingsSchema>;
+export type ImportReadingsResult = z.infer<typeof importReadingsResultSchema>;
+export type CreateAlertRule = z.infer<typeof createAlertRuleSchema>;
+export type AlertRule = z.infer<typeof alertRuleSchema>;
 export type MetrcSync = z.infer<typeof metrcSyncSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type SessionUser = z.infer<typeof sessionUserSchema>;
