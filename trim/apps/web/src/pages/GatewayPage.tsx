@@ -31,7 +31,13 @@ export function GatewayPage() {
     onSuccess: () => setError(null),
     onError: (reason: Error) => setError(reason.message),
   });
-  const denied = gateway.error instanceof ApiError && (gateway.error.status === 403 || gateway.error.status === 404);
+  const loadDenied =
+    gateway.error instanceof ApiError && gateway.error.status === 403
+      ? 'You do not have access to this gateway.'
+      : gateway.error instanceof ApiError && gateway.error.status === 404
+        ? 'This gateway was not found.'
+        : null;
+  const writeError = error && error !== loadDenied ? error : null;
 
   return (
     <Box>
@@ -40,11 +46,9 @@ export function GatewayPage() {
         title={gateway.data?.name ?? 'Gateway write'}
         lede="A gateway can post a live reading only for a room on its own site."
       />
-      {denied ? (
+      {loadDenied ? (
         <Alert severity="warning" sx={{ mb: 2 }} data-testid="gateway-load-denied">
-          {gateway.error instanceof ApiError && gateway.error.status === 403
-            ? 'You do not have access to this gateway.'
-            : 'This gateway was not found.'}
+          {loadDenied}
         </Alert>
       ) : null}
       <Card>
@@ -99,9 +103,9 @@ export function GatewayPage() {
               Post gateway reading
             </Button>
           </Box>
-          {error ? (
+          {writeError ? (
             <Alert severity="error" sx={{ mt: 2 }} data-testid="gateway-error">
-              {error}
+              {writeError}
             </Alert>
           ) : null}
           {postReading.isSuccess ? (
