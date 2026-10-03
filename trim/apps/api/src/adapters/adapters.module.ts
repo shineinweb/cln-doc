@@ -9,10 +9,12 @@ import { ScaleAdapterController } from './scale-adapter.controller';
 import { ScaleAdapterService } from './scale-adapter.service';
 import { TagAdapterController } from './tag-adapter.controller';
 import { TagAdapterService } from './tag-adapter.service';
+import { TrolmasterController } from './trolmaster.controller';
+import { TrolmasterService } from './trolmaster.service';
 
 @Module({
   imports: [AuthModule, EnvironmentModule],
-  controllers: [EnvironmentGatewayController, ControllerAdapterController, ScaleAdapterController, TagAdapterController],
-  providers: [EnvironmentGatewayService, ControllerAdapterService, ScaleAdapterService, TagAdapterService],
+  controllers: [EnvironmentGatewayController, ControllerAdapterController, ScaleAdapterController, TagAdapterController, TrolmasterController],
+  providers: [EnvironmentGatewayService, ControllerAdapterService, ScaleAdapterService, TagAdapterService, TrolmasterService],
 })
 export class AdaptersModule {}

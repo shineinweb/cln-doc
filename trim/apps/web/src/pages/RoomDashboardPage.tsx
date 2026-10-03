@@ -16,6 +16,7 @@ import { PageHeader } from '../components/PageHeader';
 import { addCalendarDays, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
+import { TrolmasterPanel } from '../adapters/TrolmasterPanel';
 import { RoomEnvironment } from '../environment/RoomEnvironment';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
@@ -25,7 +26,7 @@ export function RoomDashboardPage() {
   const { roomId = '' } = useParams();
   const { user } = useAuth();
   const { setSiteId } = useSites();
-  const [tab, setTab] = useState<'room' | 'tasks' | 'notes'>('room');
+  const [tab, setTab] = useState<'room' | 'tasks' | 'notes' | 'trolmaster'>('room');
   const room = useQuery({
     queryKey: ['room', roomId],
     queryFn: () => apiGet(`/rooms/${roomId}`, roomDetailSchema),
@@ -68,10 +69,11 @@ export function RoomDashboardPage() {
         title={room.data.name}
         lede="The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records."
       />
-      <Tabs value={tab} onChange={(_event, value: 'room' | 'tasks' | 'notes') => setTab(value)} sx={{ mb: 2 }}>
+      <Tabs value={tab} onChange={(_event, value: 'room' | 'tasks' | 'notes' | 'trolmaster') => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="room" label="Room" data-testid="room-tab-room" />
         <Tab value="tasks" label="Tasks" data-testid="room-tab-tasks" />
         <Tab value="notes" label="Notes" data-testid="room-tab-notes" />
+        {room.data.roomType === 'flower' ? <Tab value="trolmaster" label="Trolmaster API's" data-testid="room-tab-trolmaster" /> : null}
       </Tabs>
       {tab === 'room' ? (
         <Box>
@@ -111,6 +113,9 @@ export function RoomDashboardPage() {
         </SignalCard>
       ) : null}
       {tab === 'notes' ? <RoomNotes cycleName={cycle?.name ?? null} notes={room.data.operatingHistory?.observations ?? []} /> : null}
+      {tab === 'trolmaster' && room.data.roomType === 'flower' ? (
+        <TrolmasterPanel siteId={room.data.siteId} roomId={room.data.id} />
+      ) : null}
     </Box>
   );
 }

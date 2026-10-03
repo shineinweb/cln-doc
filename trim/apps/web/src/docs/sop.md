@@ -14,7 +14,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 1. Open **Facility** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
 2. Open **Rooms** and choose the room. The page says “Open a room to see its zones, readings, and operating history.”
-3. The room dashboard opens on **Room**. Read the zones and **Last successful Metrc sync**. The room does not show a current-crop card. Cycle day is on the crop cycle page, and it counts the start date as day 1 in `America/Los_Angeles`.
+3. The room dashboard opens on **Room**. Read the zones and **Last successful Metrc sync**. The room does not show a current-crop card. Cycle day is on the crop cycle page, and it counts the start date as day 1 in `America/Los_Angeles`. A flower room also has **Trolmaster API's**. That tab stores a controller id and API credential and does not call TrolMaster.
 4. Open **Tasks** and read **Tasks due today**. On October 3, 2026, Flower 1 lists Count plants onto the bench and Lower-leaf pass. Veg 1 lists Scout the canopy.
 5. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
 6. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.

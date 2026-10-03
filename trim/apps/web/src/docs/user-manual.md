@@ -78,7 +78,7 @@ Flower 1’s current crop is Cedar Nights flower. The plants from that crop have
 
 The room dashboard introduction says “The room dashboard is the daily workspace. Crop figures, readings, and alerts below are stored records.”
 
-The room opens on **Room**. Two more tabs sit beside it: **Tasks** and **Notes**.
+The room opens on **Room**. **Tasks** and **Notes** sit beside it. A flower room also has **Trolmaster API's**.
 
 **Room** holds zones, Metrc, readings, the gateway, the controller sample, and operating history. It does not show a current-crop card.
 
@@ -89,6 +89,8 @@ The room opens on **Room**. Two more tabs sit beside it: **Tasks** and **Notes**
 **Tasks** lists **Tasks due today**. Empty rooms say “No tasks are due today.”
 
 **Notes** lists notes recorded on the current crop. Each line shows the date, the author, and the note. If none are stored, it says “No notes are recorded for this crop.” A room with no crop says “This room has no active crop cycle.”
+
+**Trolmaster API's** is on a flower room. The form asks for **Your room**, **TrolMaster controller id**, and **API credential**. **Your room** lists the rooms on this facility. **Save** stores the controller id and credential. The page then says “Credential saved.” and lists the room name, the controller id, and “Credential saved.” The credential is not shown again. Trim does not call TrolMaster. A room that is not a flower room does not show this tab.
 
 **Latest environmental readings** lists Temperature, Relative humidity, CO₂, and Substrate. The line under the title says a reading older than the room’s threshold is stale, and names the timezone. Flower 1 and Veg 1 use 60 minutes. A metric with no reading is stale. A reading marked sample shows **Sample data**. A stale reading shows **Stale**.
 

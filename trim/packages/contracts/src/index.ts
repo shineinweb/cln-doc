@@ -933,6 +933,20 @@ export const gatewayReadingSchema = z.object({
   quality: readingQualitySchema,
 });
 
+export const trolmasterInputSchema = z.object({
+  roomId: z.string().trim().min(1),
+  controllerId: z.string().trim().min(1).max(191),
+  apiCredential: z.string().trim().min(1).max(4000),
+});
+
+export const trolmasterConnectionSchema = z.object({
+  id: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  controllerId: z.string(),
+  credentialSaved: z.literal(true),
+});
+
 export const controllerSampleSchema = z.object({
   deviceId: z.string().trim().min(1).max(120),
   metric: z.string().trim().min(1).max(80),
@@ -1316,6 +1330,8 @@ export type SiteReport = z.infer<typeof siteReportSchema>;
 export type ComparisonReport = z.infer<typeof comparisonReportSchema>;
 export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
 export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
+export type TrolmasterInput = z.infer<typeof trolmasterInputSchema>;
+export type TrolmasterConnection = z.infer<typeof trolmasterConnectionSchema>;
 export type ControllerSample = z.infer<typeof controllerSampleSchema>;
 export type ControllerReading = z.infer<typeof controllerReadingSchema>;
 export type ScaleSampleInput = z.infer<typeof scaleSampleSchema>;

@@ -161,6 +161,7 @@ model Site {
   trainingRecords    TrainingRecord[]
   roomStays          RoomStay[]
   recurringDuties    RecurringDuty[]
+  trolmasterConnections TrolmasterConnection[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -600,6 +601,7 @@ model Room {
   sanitationRecords  SanitationRecord[]
   roomStays          RoomStay[]
   recurringDuties    RecurringDuty[]
+  trolmasterConnection TrolmasterConnection?
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -1084,6 +1086,23 @@ model SensorGateway {
   @@unique([siteId, name])
   @@index([siteId])
   @@map("sensor_gateways")
+}
+
+/// A stored TrolMaster controller id and API credential. Trim does not call TrolMaster.
+model TrolmasterConnection {
+  id            String   @id @default(cuid())
+  siteId        String   @map("site_id")
+  roomId        String   @unique @map("room_id")
+  controllerId  String   @map("controller_id")
+  apiCredential String   @map("api_credential") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@map("trolmaster_connections")
 }
 
 /// A controller sample. These rows are not environmental readings and do not feed alert rules.
