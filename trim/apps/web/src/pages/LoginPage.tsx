@@ -7,7 +7,6 @@ import { Navigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { CanopyScene } from '../components/Graphics';
-import { Mark } from '../components/Mark';
 import { displayFont, workbench } from '../theme';
 
 export function LoginPage() {
@@ -54,10 +53,17 @@ export function LoginPage() {
           color: workbench.ink,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Mark size={36} />
-          <Typography sx={{ fontFamily: displayFont, fontWeight: 700, fontSize: { xs: 32, md: 40 } }}>Trim</Typography>
-        </Box>
+        <Box
+          component="img"
+          src="/brand/serenity-wordmark.png"
+          alt="Serenity Inventory"
+          sx={{
+            display: 'block',
+            width: { xs: 220, sm: 280, md: 320 },
+            maxWidth: '100%',
+            height: 'auto',
+          }}
+        />
         <Box>
           <Typography sx={{ fontFamily: displayFont, fontWeight: 700, fontSize: { xs: 32, sm: 40, md: 48 }, lineHeight: 1.05, maxWidth: 480 }}>
             Know which rooms are yours before the day starts.
