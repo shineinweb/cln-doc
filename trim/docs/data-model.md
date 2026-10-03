@@ -20,7 +20,13 @@ Organization
 
 ## Sites are not licenses
 
-A **site** is a physical facility (address, rooms, zones). A **license** is a regulated authorization number held by the organization. `license_sites` records that a license may cover work at a facility. Inventory, when it exists, should be scoped by license. Phase 1 stores license rows and does not expose them through the API.
+A **site** is a physical facility (address, rooms, zones). A **license** is a regulated authorization number held by the organization. `license_sites` records which facilities a license covers. Plants, batches, and inventory comparisons belong to the license. A user can read a license only when they can open one of its sites. Harbor House and Hill Works each have their own license.
+
+`crop_cycles.plant_count` is no longer the number shown in the app. Room and cycle plant counts are `COUNT` of `plants` assigned to that cycle.
+
+Strains belong to the organization. A plant has one strain, one batch, one tag unique on its license, a current room, and an optional crop cycle. Movements, stage changes, observations, and the original planting are `plant_events`. Each event stores the actor.
+
+`metrc_connections` holds server-side credentials and is not returned by the API. Inventory import does not read that table and does not call Metrc. `metrc_inventory_imports` and `metrc_discrepancies` record a comparison of a saved tag list with local plants. `metrc_syncs` stays empty; it is not an import.
 
 ## Access
 

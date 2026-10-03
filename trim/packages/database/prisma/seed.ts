@@ -128,7 +128,7 @@ async function main(): Promise<void> {
   ]);
   await upsertRoom(hill.id, 'MOM', 'Mother Room', 'mother', [['STOCK', 'Stock bench']]);
 
-  await upsertActiveCycle(flower.id, {
+  const cedar = await upsertActiveCycle(flower.id, {
     name: 'Cedar Nights flower',
     cultivar: 'Cedar Nights',
     plantCount: 144,
@@ -173,7 +173,7 @@ async function main(): Promise<void> {
     ],
   });
 
-  await upsertActiveCycle(veg.id, {
+  const glass = await upsertActiveCycle(veg.id, {
     name: 'Glass Orchard veg',
     cultivar: 'Glass Orchard',
     plantCount: 86,
@@ -213,36 +213,11 @@ async function main(): Promise<void> {
     ],
   });
 
-  const license = await prisma.license.upsert({
-    where: {
-      organizationId_licenseNumber: {
-        organizationId: organization.id,
-        licenseNumber: 'OR-CULT-44821',
-      },
-    },
-    create: {
-      organizationId: organization.id,
-      licenseNumber: 'OR-CULT-44821',
-      licenseType: 'producer',
-      jurisdiction: 'US-OR',
-      status: 'active',
-      issuedOn: new Date('2024-03-01'),
-      expiresOn: new Date('2027-03-01'),
-    },
-    update: {
-      licenseType: 'producer',
-      jurisdiction: 'US-OR',
-      status: 'active',
-    },
+  const harborLicense = await upsertLicense(organization.id, 'OR-CULT-44821', harbor.id);
+  const hillLicense = await upsertLicense(organization.id, 'OR-CULT-55218', hill.id);
+  await prisma.licenseSite.deleteMany({
+    where: { licenseId: harborLicense.id, siteId: hill.id },
   });
-
-  for (const siteId of [harbor.id, hill.id]) {
-    await prisma.licenseSite.upsert({
-      where: { licenseId_siteId: { licenseId: license.id, siteId } },
-      create: { licenseId: license.id, siteId },
-      update: {},
-    });
-  }
 
   const sitesByCode = new Map([
     ['HARBOR', harbor.id],
@@ -260,6 +235,17 @@ async function main(): Promise<void> {
   const blake = await prisma.user.findUniqueOrThrow({ where: { email: DEV_USERS.harbor.email } });
   const casey = await prisma.user.findUniqueOrThrow({ where: { email: DEV_USERS.hill.email } });
   await seedCanopyWeek(organization.id, siteOperator.id, [blake.id, casey.id], [flower.id, veg.id]);
+  await seedInventory({
+    organizationId: organization.id,
+    harborLicenseId: harborLicense.id,
+    hillLicenseId: hillLicense.id,
+    cedarCycleId: cedar.id,
+    glassCycleId: glass.id,
+    flowerRoomId: flower.id,
+    vegRoomId: veg.id,
+    blakeId: blake.id,
+    caseyId: casey.id,
+  });
 
   console.log('Seeded Harbor & Hill Cultivation.');
   console.log('Dev-only logins (also listed in the README):');
@@ -325,7 +311,7 @@ async function upsertActiveCycle(
     observations: Array<{ occurredOn: Date; authorName: string; body: string }>;
     laborEntries: Array<{ occurredOn: Date; personName: string; hours: number; note: string }>;
   },
-): Promise<void> {
+) {
   const existing = await prisma.cropCycle.findFirst({ where: { roomId, name: input.name } });
   const cycle = existing
     ? await prisma.cropCycle.update({
@@ -369,6 +355,184 @@ async function upsertActiveCycle(
   });
   await prisma.cycleLaborEntry.createMany({
     data: input.laborEntries.map((entry) => ({ ...entry, cycleId: cycle.id })),
+  });
+  return cycle;
+}
+
+async function upsertLicense(organizationId: string, licenseNumber: string, siteId: string) {
+  const license = await prisma.license.upsert({
+    where: { organizationId_licenseNumber: { organizationId, licenseNumber } },
+    create: {
+      organizationId,
+      licenseNumber,
+      licenseType: 'producer',
+      jurisdiction: 'US-OR',
+      status: 'active',
+      issuedOn: new Date('2024-03-01'),
+      expiresOn: new Date('2027-03-01'),
+    },
+    update: { licenseType: 'producer', jurisdiction: 'US-OR', status: 'active' },
+  });
+  await prisma.licenseSite.upsert({
+    where: { licenseId_siteId: { licenseId: license.id, siteId } },
+    create: { licenseId: license.id, siteId },
+    update: {},
+  });
+  return license;
+}
+
+function inventoryTag(prefix: string, index: number): string {
+  return `${prefix}${String(index).padStart(24 - prefix.length, '0')}`;
+}
+
+function compareInventoryTags(localTags: string[], importedTags: string[]) {
+  const local = new Set(localTags);
+  const imported = new Set(importedTags);
+  return {
+    matched: localTags.filter((tag) => imported.has(tag)),
+    extraTags: importedTags.filter((tag) => !local.has(tag)),
+    missingTags: localTags.filter((tag) => !imported.has(tag)),
+  };
+}
+
+async function seedInventory(input: {
+  organizationId: string;
+  harborLicenseId: string;
+  hillLicenseId: string;
+  cedarCycleId: string;
+  glassCycleId: string;
+  flowerRoomId: string;
+  vegRoomId: string;
+  blakeId: string;
+  caseyId: string;
+}) {
+  const licenseIds = [input.harborLicenseId, input.hillLicenseId];
+  await prisma.metrcInventoryImport.deleteMany({ where: { licenseId: { in: licenseIds } } });
+  await prisma.plant.deleteMany({ where: { licenseId: { in: licenseIds } } });
+  await prisma.plantBatch.deleteMany({ where: { licenseId: { in: licenseIds } } });
+
+  const cedarStrain = await prisma.strain.upsert({
+    where: { organizationId_name: { organizationId: input.organizationId, name: 'Cedar Nights' } },
+    create: { organizationId: input.organizationId, name: 'Cedar Nights' },
+    update: {},
+  });
+  const glassStrain = await prisma.strain.upsert({
+    where: { organizationId_name: { organizationId: input.organizationId, name: 'Glass Orchard' } },
+    create: { organizationId: input.organizationId, name: 'Glass Orchard' },
+    update: {},
+  });
+
+  const cedarBatch = await prisma.plantBatch.create({
+    data: { licenseId: input.harborLicenseId, strainId: cedarStrain.id, name: 'Cedar Nights flower batch' },
+  });
+  const glassBatch = await prisma.plantBatch.create({
+    data: { licenseId: input.hillLicenseId, strainId: glassStrain.id, name: 'Glass Orchard veg batch' },
+  });
+
+  const harborTags = Array.from({ length: 144 }, (_, index) => inventoryTag('1A4HH', index + 1));
+  const hillTags = Array.from({ length: 86 }, (_, index) => inventoryTag('1A4HW', index + 1));
+  const hillExtraTag = inventoryTag('1A4HW', 99999);
+
+  await prisma.plant.createMany({
+    data: harborTags.map((tag) => ({
+      licenseId: input.harborLicenseId,
+      batchId: cedarBatch.id,
+      strainId: cedarStrain.id,
+      cycleId: input.cedarCycleId,
+      roomId: input.flowerRoomId,
+      tag,
+      stage: 'flower',
+      status: 'active',
+    })),
+  });
+  await prisma.plant.createMany({
+    data: hillTags.map((tag) => ({
+      licenseId: input.hillLicenseId,
+      batchId: glassBatch.id,
+      strainId: glassStrain.id,
+      cycleId: input.glassCycleId,
+      roomId: input.vegRoomId,
+      tag,
+      stage: 'veg',
+      status: 'active',
+    })),
+  });
+
+  const harborPlants = await prisma.plant.findMany({
+    where: { licenseId: input.harborLicenseId },
+    select: { id: true },
+  });
+  const hillPlants = await prisma.plant.findMany({
+    where: { licenseId: input.hillLicenseId },
+    select: { id: true },
+  });
+  await prisma.plantEvent.createMany({
+    data: [
+      ...harborPlants.map((plant) => ({
+        plantId: plant.id,
+        licenseId: input.harborLicenseId,
+        eventType: 'planted',
+        actorUserId: input.blakeId,
+        occurredAt: new Date('2026-09-12T15:00:00.000Z'),
+        toRoomId: input.flowerRoomId,
+        toStage: 'flower',
+        note: 'Counted onto Cedar Nights flower.',
+      })),
+      ...hillPlants.map((plant) => ({
+        plantId: plant.id,
+        licenseId: input.hillLicenseId,
+        eventType: 'planted',
+        actorUserId: input.caseyId,
+        occurredAt: new Date('2026-09-20T15:00:00.000Z'),
+        toRoomId: input.vegRoomId,
+        toStage: 'veg',
+        note: 'Counted onto Glass Orchard veg.',
+      })),
+    ],
+  });
+
+  await prisma.cropCycle.update({ where: { id: input.cedarCycleId }, data: { plantCount: harborTags.length } });
+  await prisma.cropCycle.update({ where: { id: input.glassCycleId }, data: { plantCount: hillTags.length } });
+
+  await recordFixtureImport(input.harborLicenseId, harborTags, harborTags, 'fixture');
+  await recordFixtureImport(input.hillLicenseId, hillTags, [...hillTags, hillExtraTag], 'fixture');
+
+  const unusedUserKey = process.env.METRC_USER_KEY || 'unused-dev-user-key';
+  const unusedIntegratorKey = process.env.METRC_INTEGRATOR_KEY || 'unused-dev-integrator-key';
+  for (const licenseId of licenseIds) {
+    await prisma.metrcConnection.upsert({
+      where: { licenseId },
+      create: {
+        licenseId,
+        userKey: unusedUserKey,
+        integratorKey: unusedIntegratorKey,
+        baseUrl: 'https://api-or.metrc.example',
+      },
+      update: {
+        userKey: unusedUserKey,
+        integratorKey: unusedIntegratorKey,
+        baseUrl: 'https://api-or.metrc.example',
+      },
+    });
+  }
+}
+
+async function recordFixtureImport(licenseId: string, localTags: string[], importedTags: string[], source: string) {
+  const comparison = compareInventoryTags(localTags, importedTags);
+  const discrepancies = [
+    ...comparison.extraTags.map((tag) => ({ licenseId, tag, kind: 'extra_tag' })),
+    ...comparison.missingTags.map((tag) => ({ licenseId, tag, kind: 'missing_tag' })),
+  ];
+  await prisma.metrcInventoryImport.create({
+    data: {
+      licenseId,
+      source,
+      status: 'reconciled',
+      matchedCount: comparison.matched.length,
+      discrepancyCount: discrepancies.length,
+      importedAt: new Date('2026-10-03T16:00:00.000Z'),
+      discrepancies: { create: discrepancies },
+    },
   });
 }
 

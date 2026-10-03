@@ -65,6 +65,7 @@ export class CyclesService {
     startDate: Date;
     expectedHarvestDate: Date;
     status: string;
+    _count: { plants: number };
   }, timeZone: string): CropCycleSummary {
     const startDate = dateKeyFromDbDate(cycle.startDate);
     return {
@@ -72,7 +73,7 @@ export class CyclesService {
       roomId: cycle.roomId,
       name: cycle.name,
       cultivar: cycle.cultivar,
-      plantCount: cycle.plantCount,
+      plantCount: cycle._count.plants,
       stage: cycle.stage,
       startDate,
       expectedHarvestDate: dateKeyFromDbDate(cycle.expectedHarvestDate),
@@ -191,6 +192,7 @@ export class CyclesService {
             template: { include: { versions: { orderBy: { versionNumber: 'desc' as const }, take: 1 } } },
           },
         },
+        _count: { select: { plants: true } },
       },
     });
     if (!cycle) {
@@ -233,5 +235,5 @@ export const activeCycleInclude = {
   where: { status: 'active' },
   orderBy: { startDate: 'desc' as const },
   take: 1,
-  include: historyInclude,
+  include: { ...historyInclude, _count: { select: { plants: true } } },
 };

@@ -22,6 +22,7 @@ model Organization {
   teams             Team[]
   sopRecords        SopRecord[]
   workflowTemplates WorkflowTemplate[]
+  strains           Strain[]
 
   @@map("organizations")
 }
@@ -43,6 +44,7 @@ model User {
   taskAttachments     CycleTaskAttachment[]
   workflowAssignments WorkflowTaskTemplate[] @relation("WorkflowAssignee")
   assignedCycleTasks  CycleTask[]            @relation("CycleTaskAssignee")
+  plantEvents         PlantEvent[]
 
   @@index([organizationId])
   @@map("users")
@@ -163,7 +165,7 @@ model SiteMembership {
   @@map("site_memberships")
 }
 
-/// Regulated license. Inventory will later be scoped here. Phase 1 stores the record only.
+/// Regulated license. Plants, batches, and Metrc comparisons are scoped here, not to the site.
 model License {
   id             String    @id @default(cuid())
   organizationId String    @map("organization_id")
@@ -176,8 +178,13 @@ model License {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  sites        LicenseSite[]
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sites          LicenseSite[]
+  batches        PlantBatch[]
+  plants         Plant[]
+  metrcConnection MetrcConnection?
+  imports        MetrcInventoryImport[]
+  discrepancies  MetrcDiscrepancy[]
 
   @@unique([organizationId, licenseNumber])
   @@index([organizationId])
@@ -198,6 +205,142 @@ model LicenseSite {
   @@map("license_sites")
 }
 
+/// Cultivar name held by the organization. Plants under a license point at one strain.
+model Strain {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  batches      PlantBatch[]
+  plants       Plant[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("strains")
+}
+
+model PlantBatch {
+  id        String   @id @default(cuid())
+  licenseId String   @map("license_id")
+  strainId  String   @map("strain_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  strain  Strain  @relation(fields: [strainId], references: [id], onDelete: Cascade)
+  plants  Plant[]
+
+  @@unique([licenseId, name])
+  @@index([strainId])
+  @@map("plant_batches")
+}
+
+/// One tagged plant. The tag is unique inside its license. cycleId is the crop it is assigned to.
+model Plant {
+  id        String   @id @default(cuid())
+  licenseId String   @map("license_id")
+  batchId   String   @map("batch_id")
+  strainId  String   @map("strain_id")
+  cycleId   String?  @map("cycle_id")
+  roomId    String?  @map("room_id")
+  tag       String
+  stage     String
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  license License      @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  batch   PlantBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  strain  Strain       @relation(fields: [strainId], references: [id], onDelete: Cascade)
+  cycle   CropCycle?   @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  room    Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  events  PlantEvent[]
+
+  @@unique([licenseId, tag])
+  @@index([cycleId])
+  @@index([roomId])
+  @@index([batchId])
+  @@map("plants")
+}
+
+/// Actor and facts for a planted, moved, stage change, or observation. Rows are not overwritten.
+model PlantEvent {
+  id          String   @id @default(cuid())
+  plantId     String   @map("plant_id")
+  licenseId   String   @map("license_id")
+  eventType   String   @map("event_type")
+  actorUserId String   @map("actor_user_id")
+  occurredAt  DateTime @map("occurred_at")
+  fromRoomId  String?  @map("from_room_id")
+  toRoomId    String?  @map("to_room_id")
+  fromStage   String?  @map("from_stage")
+  toStage     String?  @map("to_stage")
+  note        String?  @db.VarChar(2000)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  actor User  @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([plantId, occurredAt])
+  @@index([licenseId])
+  @@map("plant_events")
+}
+
+/// Credentials stay on the server. The inventory import does not read this row and does not call Metrc.
+model MetrcConnection {
+  id            String   @id @default(cuid())
+  licenseId     String   @unique @map("license_id")
+  integratorKey String   @map("integrator_key") @db.VarChar(255)
+  userKey       String   @map("user_key") @db.VarChar(255)
+  baseUrl       String   @map("base_url") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@map("metrc_connections")
+}
+
+model MetrcInventoryImport {
+  id               String   @id @default(cuid())
+  licenseId        String   @map("license_id")
+  source           String
+  status           String
+  matchedCount     Int      @map("matched_count")
+  discrepancyCount Int      @map("discrepancy_count")
+  importedAt       DateTime @map("imported_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  license       License            @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  discrepancies MetrcDiscrepancy[]
+
+  @@index([licenseId, importedAt])
+  @@map("metrc_inventory_imports")
+}
+
+model MetrcDiscrepancy {
+  id        String   @id @default(cuid())
+  importId  String   @map("import_id")
+  licenseId String   @map("license_id")
+  tag       String
+  kind      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  import  MetrcInventoryImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  license License              @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@index([importId])
+  @@index([licenseId])
+  @@map("metrc_discrepancies")
+}
+
 model Room {
   id        String   @id @default(cuid())
   siteId    String   @map("site_id")
@@ -214,6 +357,7 @@ model Room {
   cycleTasks CycleTask[]
   alerts     RoomAlert[]
   readings   EnvironmentalReading[]
+  plants     Plant[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -258,6 +402,7 @@ model CropCycle {
   laborEntries     CycleLaborEntry[]
   harvestSummary   HarvestResultSummary?
   cycleTasks       CycleTask[]
+  plants           Plant[]
 
   @@index([roomId, status])
   @@map("crop_cycles")

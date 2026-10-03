@@ -416,6 +416,109 @@ export const organizationSummarySchema = z.object({
   siteCount: z.number(),
 });
 
+export const metrcPlantPayloadSchema = z.object({
+  Label: z.string().trim().min(1),
+  StrainName: z.string().trim().min(1),
+  GrowthPhase: z.string().trim().min(1),
+  LocationName: z.string().trim().optional(),
+});
+
+export const metrcInventoryPayloadSchema = z.object({
+  LicenseNumber: z.string().trim().min(1),
+  Plants: z.array(metrcPlantPayloadSchema),
+});
+
+export const movePlantSchema = z.object({
+  roomId: z.string().min(1),
+});
+
+export const changePlantStageSchema = z.object({
+  stage: z.string().trim().min(1).max(40),
+});
+
+export const plantObservationSchema = z.object({
+  note: z.string().trim().min(1).max(2000),
+});
+
+export const metrcDiscrepancySchema = z.object({
+  id: z.string(),
+  tag: z.string(),
+  kind: z.enum(['extra_tag', 'missing_tag']),
+});
+
+export const metrcImportSummarySchema = z.object({
+  id: z.string(),
+  source: z.string(),
+  status: z.string(),
+  matchedCount: z.number().int(),
+  discrepancyCount: z.number().int(),
+  importedAt: z.string(),
+  discrepancies: z.array(metrcDiscrepancySchema),
+});
+
+export const complianceLicenseSchema = z.object({
+  id: z.string(),
+  licenseNumber: z.string(),
+  licenseType: z.string(),
+  siteNames: z.array(z.string()),
+  plantCount: z.number().int(),
+  latestImport: metrcImportSummarySchema.nullable(),
+});
+
+export const complianceOverviewSchema = z.object({
+  licenses: z.array(complianceLicenseSchema),
+});
+
+export const inventoryPlantSchema = z.object({
+  id: z.string(),
+  tag: z.string(),
+  strainName: z.string(),
+  stage: z.string(),
+  status: z.string(),
+  roomName: z.string().nullable(),
+  cycleName: z.string().nullable(),
+});
+
+export const licenseInventorySchema = z.object({
+  id: z.string(),
+  licenseNumber: z.string(),
+  licenseType: z.string(),
+  siteNames: z.array(z.string()),
+  plantCount: z.number().int(),
+  listedCount: z.number().int(),
+  plants: z.array(inventoryPlantSchema),
+  latestImport: metrcImportSummarySchema.nullable(),
+});
+
+export const plantEventSchema = z.object({
+  id: z.string(),
+  eventType: z.string(),
+  occurredAt: z.string(),
+  actorName: z.string(),
+  fromRoomName: z.string().nullable(),
+  toRoomName: z.string().nullable(),
+  fromStage: z.string().nullable(),
+  toStage: z.string().nullable(),
+  note: z.string().nullable(),
+});
+
+export const plantDetailSchema = z.object({
+  id: z.string(),
+  tag: z.string(),
+  strainName: z.string(),
+  batchName: z.string(),
+  stage: z.string(),
+  status: z.string(),
+  licenseId: z.string(),
+  licenseNumber: z.string(),
+  siteNames: z.array(z.string()),
+  roomId: z.string().nullable(),
+  roomName: z.string().nullable(),
+  cycleId: z.string().nullable(),
+  cycleName: z.string().nullable(),
+  events: z.array(plantEventSchema),
+});
+
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type Zone = z.infer<typeof zoneSchema>;
 export type CropCycleSummary = z.infer<typeof cropCycleSummarySchema>;
@@ -450,3 +553,11 @@ export type Site = z.infer<typeof siteSchema>;
 export type SessionUser = z.infer<typeof sessionUserSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 export type OrganizationSummary = z.infer<typeof organizationSummarySchema>;
+export type MetrcInventoryPayload = z.infer<typeof metrcInventoryPayloadSchema>;
+export type MovePlant = z.infer<typeof movePlantSchema>;
+export type ChangePlantStage = z.infer<typeof changePlantStageSchema>;
+export type PlantObservation = z.infer<typeof plantObservationSchema>;
+export type ComplianceOverview = z.infer<typeof complianceOverviewSchema>;
+export type LicenseInventory = z.infer<typeof licenseInventorySchema>;
+export type PlantDetail = z.infer<typeof plantDetailSchema>;
+export type MetrcImportSummary = z.infer<typeof metrcImportSummarySchema>;

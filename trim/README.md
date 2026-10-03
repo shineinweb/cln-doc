@@ -1,6 +1,6 @@
 # Trim
 
-Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Compliance stays a placeholder.
+Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file.
 
 The product lives in this `trim/` directory.
 
@@ -65,7 +65,7 @@ These accounts exist only after `pnpm db:seed`. They belong to **Harbor & Hill C
 | Blake Ortiz | `blake.ortiz@harborhill.example` | `HarborHouse-only` | Harbor House only |
 | Casey Nguyen | `casey.nguyen@harborhill.example` | `HillWorks-only` | Hill Works only |
 
-Harbor House (Astoria) has Flower 1 and Dry Room. Hill Works (Hood River) has Veg 1 and Mother Room. A producer license row (`OR-CULT-44821`) is stored and linked to both sites. The API does not expose licenses.
+Harbor House (Astoria) has Flower 1 and Dry Room. Hill Works (Hood River) has Veg 1 and Mother Room. Each facility has its own producer license: Harbor House `OR-CULT-44821`, Hill Works `OR-CULT-55218`. A person who can open a site can read that site’s license inventory. Avery can read both.
 
 Active cycles, both in `America/Los_Angeles`:
 
@@ -75,6 +75,10 @@ Active cycles, both in `America/Los_Angeles`:
 | Hill Works · Veg 1 | Glass Orchard veg | Glass Orchard | 86 | veg | 2026-09-20 | 2026-11-15 |
 
 Each cycle has timeline, movement, observation, and labor rows. Neither has a harvest result. Dry Room and Mother Room have no active cycle. No alerts, environmental readings, or Metrc sync rows are seeded.
+
+Plant counts on the room and crop cycle are the number of tagged plants assigned to that cycle: 144 on Cedar Nights flower and 86 on Glass Orchard veg. Tags are unique per license. Each plant has a planted event naming the actor.
+
+A saved inventory file is compared per license. Harbor House matches all 144 tags. Hill Works has one extra tag, `1A4HW0000000000000099999`, that is not a local plant. That comparison does not change Harbor House. Metrc credentials can be stored for a later phase and are not sent anywhere. The compliance screen shows import status and discrepancies. Submissions are not built.
 
 The template **Canopy week** (28 days, anchored at `cycle_start`, assigned to the Site operator role) is applied to both active cycles:
 
@@ -114,6 +118,10 @@ pnpm build
 - editing a template does not change an existing cycle until a manager applies the new version
 - a reschedule preview does not write dates; confirming does
 - another site cannot read, comment on, or download a task attachment
+- a clean inventory import reconciles to zero discrepancies and does not change plants
+- an extra tag on another license is reported and does not change the first license
+- a user cannot read another site’s license or plants
+- moving a plant writes an event with the actor
 
 The access tests create their own users. They do not depend on the seed passwords above.
 
@@ -127,4 +135,4 @@ DATABASE_URL=mysql://trim:trim@127.0.0.1:3306/trim_test pnpm db:migrate
 
 ## Boundaries
 
-Not built: plant tags, Metrc API calls, harvest operations, environmental charts, analytics, the SOP library, device adapters, email/SMS, and BullMQ business jobs. The worker only connects to Redis and opens the `trim.infrastructure` queue. Photo attachments use the configured S3 bucket.
+Not built: harvest operations, environmental charts, analytics, reviewed Metrc submissions, the transactional outbox, the SOP library, device adapters, email/SMS, and BullMQ business jobs. The worker only connects to Redis and opens the `trim.infrastructure` queue. Photo attachments use the configured S3 bucket. Inventory import reads a saved file and does not call Metrc.

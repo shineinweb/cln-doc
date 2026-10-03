@@ -123,6 +123,34 @@ describe('crop cycles', () => {
     cycleBId = cycleB.id;
     otherCycleId = otherCycle.id;
 
+    const countedLicense = await prisma.license.create({
+      data: {
+        organizationId: fixture.organizationId,
+        licenseNumber: `OR-COUNT-${cycleA.id.slice(-8)}`,
+        licenseType: 'producer',
+        jurisdiction: 'US-OR',
+        sites: { create: { siteId: fixture.siteAId } },
+      },
+    });
+    const countedStrain = await prisma.strain.create({
+      data: { organizationId: fixture.organizationId, name: `Counted ${cycleA.id.slice(-6)}` },
+    });
+    const countedBatch = await prisma.plantBatch.create({
+      data: { licenseId: countedLicense.id, strainId: countedStrain.id, name: 'Counted batch' },
+    });
+    await prisma.plant.createMany({
+      data: [1, 2, 3].map((n) => ({
+        licenseId: countedLicense.id,
+        batchId: countedBatch.id,
+        strainId: countedStrain.id,
+        cycleId: cycleA.id,
+        roomId: fixture.roomAId,
+        tag: `COUNT-${cycleA.id.slice(-4)}-${n}`,
+        stage: 'flower',
+        status: 'active',
+      })),
+    });
+
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication({ logger: false });
     await app.init();
@@ -156,7 +184,8 @@ describe('crop cycles', () => {
       .expect(200);
     const listed = sites.body[0].rooms.find((room: { id: string }) => room.id === fixture.roomAId);
     expect(listed.currentCycle.cultivar).toBe(stored.cultivar);
-    expect(listed.currentCycle.plantCount).toBe(stored.plantCount);
+    expect(stored.plantCount).toBe(40);
+    expect(listed.currentCycle.plantCount).toBe(3);
     expect(listed.currentCycle.name).toBe(stored.name);
     expect(listed.currentCycle.expectedHarvestDate).toBe(stored.expectedHarvestDate.toISOString().slice(0, 10));
     expect(listed.currentCycle.startDate).toBe(stored.startDate.toISOString().slice(0, 10));
@@ -167,7 +196,7 @@ describe('crop cycles', () => {
       .expect(200);
     expect(room.body.currentCycle.id).toBe(stored.id);
     expect(room.body.currentCycle.cultivar).toBe(stored.cultivar);
-    expect(room.body.currentCycle.plantCount).toBe(stored.plantCount);
+    expect(room.body.currentCycle.plantCount).toBe(3);
     expect(room.body.operatingHistory.events.map((event: { title: string }) => event.title)).toEqual(['Opened A']);
     expect(room.body.operatingHistory.laborEntries[0].hours).toBe(2.5);
     expect(room.body.operatingHistory.harvestSummary).toBeNull();

@@ -14,6 +14,9 @@ const envSchema = z.object({
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
   S3_FORCE_PATH_STYLE: z.enum(['true', 'false']).transform((value) => value === 'true'),
+  // Present for a later submission phase. Inventory import does not read them.
+  METRC_INTEGRATOR_KEY: z.string().default(''),
+  METRC_USER_KEY: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

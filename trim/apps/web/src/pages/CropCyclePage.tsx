@@ -62,6 +62,9 @@ export function CropCyclePage() {
         title={cycle.data.name}
         lede={`${cycle.data.cultivar} · ${cycle.data.plantCount} plants · ${roomTypeLabel(cycle.data.stage)} · ${cycleDayLabel(cycle.data.cycleDay)} · harvest ${formatCalendarDate(cycle.data.expectedHarvestDate)}`}
       />
+      <Typography data-testid="cycle-plant-count" sx={{ mb: 2 }}>
+        {cycle.data.plantCount} plants assigned to this cycle
+      </Typography>
       <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
         <Chip label={cycle.data.status} />
         <Chip label={cycleDayLabel(cycle.data.cycleDay)} data-testid="cycle-page-day" />

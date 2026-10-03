@@ -4,10 +4,13 @@ import { RequireAuth } from './auth/RequireAuth';
 import { AppShell } from './layout/AppShell';
 import { SiteProvider } from './layout/SiteProvider';
 import { CompanyPage } from './pages/CompanyPage';
+import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
 import { CropCyclesPage } from './pages/CropCyclesPage';
 import { FacilityPage } from './pages/FacilityPage';
+import { LicenseInventoryPage } from './pages/LicenseInventoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { PlantPage } from './pages/PlantPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
 import { RoomsPage } from './pages/RoomsPage';
@@ -36,16 +39,9 @@ const router = createBrowserRouter([
       { path: 'workflows', element: <WorkflowsPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
       { path: 'tasks/:taskId', element: <TaskPage /> },
-      {
-        path: 'compliance',
-        element: (
-          <PlaceholderPage
-            kicker="Later"
-            title="Compliance"
-            lede="License records are stored apart from facilities so later inventory can be scoped to a license. This screen does not file reports."
-          />
-        ),
-      },
+      { path: 'compliance', element: <CompliancePage /> },
+      { path: 'licenses/:licenseId', element: <LicenseInventoryPage /> },
+      { path: 'plants/:plantId', element: <PlantPage /> },
       {
         path: '*',
         element: (
