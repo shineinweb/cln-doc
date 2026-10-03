@@ -15,7 +15,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 1. Open **Facility** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
 2. Open **Rooms** and choose the room. The page says “Open a room to see its current crop, cycle day, and operating history.”
 3. The room dashboard opens on **Room**. Read **Current crop**: Cultivar, Plants, Stage, Cycle day, and Expected harvest. Cycle day counts the start date as day 1 in `America/Los_Angeles`.
-4. Open **Tasks** and read **Tasks due today**. On October 3, 2026, Flower 1 lists Lower-leaf pass and Veg 1 lists Scout the canopy.
+4. Open **Tasks** and read **Tasks due today**. On October 3, 2026, Flower 1 lists Count plants onto the bench and Lower-leaf pass. Veg 1 lists Scout the canopy.
 5. Read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
 6. Read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
 7. Read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
@@ -28,7 +28,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 **Who.** The person the card names. Blake completes Harbor House assignments. Casey completes Hill Works assignments. Avery sees both lists. A task from the other facility stays off the list.
 
-**When.** On the due date shown on **Workspace**. On October 3, 2026, Lower-leaf pass is due on Flower 1 and Scout the canopy is due on Veg 1.
+**When.** On the due date shown on **Workspace**. On October 3, 2026, Count plants onto the bench and Lower-leaf pass are due on Flower 1, and Scout the canopy is due on Veg 1.
 
 **Steps.**
 
