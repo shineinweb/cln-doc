@@ -87,6 +87,17 @@ describe('defoliation schedule', () => {
     expect(cleared.status).toBe(200);
     expect(cleared.body).toEqual([]);
 
+    const dry = await prisma.room.create({
+      data: { siteId: fixture.siteAId, name: 'Dry schedule', code: `DRY${fixture.roomAId.slice(-6)}`, roomType: 'dry' },
+    });
+    const dryDenied = await request(app.getHttpServer())
+      .put(`/rooms/${dry.id}/defoliations`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ days: [10] });
+    expect(dryDenied.status).toBe(400);
+    expect(dryDenied.body.message).toBe('A dry room does not use a defoliation schedule.');
+    await prisma.room.delete({ where: { id: dry.id } });
+
     const withoutCrop = await request(app.getHttpServer())
       .put(`/rooms/${fixture.roomBId}/defoliations`)
       .set('Authorization', `Bearer ${tokenB}`)

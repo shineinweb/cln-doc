@@ -116,7 +116,7 @@ export function RoomDashboardPage() {
       {tab === 'settings' ? (
         <Box data-testid="room-settings" sx={{ display: 'grid', gap: 3 }}>
           <RoomAlertRules room={room.data} />
-          <DefoliationSchedule room={room.data} />
+          {room.data.roomType === 'dry' ? null : <DefoliationSchedule room={room.data} />}
           {user?.isOrgAdmin ? <ResetRoomForm roomId={room.data.id} roomType={room.data.roomType} /> : null}
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />

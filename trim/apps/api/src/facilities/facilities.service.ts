@@ -266,6 +266,9 @@ export class FacilitiesService {
 
   async saveDefoliations(user: SessionUser, roomId: string, input: DefoliationInput): Promise<Defoliation[]> {
     const room = await this.roomForChange(user, roomId);
+    if (room.roomType === 'dry') {
+      throw new BadRequestException('A dry room does not use a defoliation schedule.');
+    }
     const days = [...input.days].sort((left, right) => left - right);
     if (new Set(days).size !== days.length) {
       throw new BadRequestException('Each defoliation day can be listed once.');
