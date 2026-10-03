@@ -22,7 +22,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { NavGlyph, type GlyphName } from '../components/Graphics';
 import { Mark } from '../components/Mark';
-import { workbench } from '../theme';
+import { displayFont, workbench } from '../theme';
 import { useSites } from './SiteProvider';
 
 const DRAWER_WIDTH = 248;
@@ -60,15 +60,23 @@ export function AppShell() {
   const phoneValue = PHONE_NAV.find((item) => item.match(location.pathname))?.to ?? 'more';
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: workbench.greenhouseDeep, color: '#F4FBF8' }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        color: workbench.ink,
+        background: `linear-gradient(180deg, #3A1868 0%, ${workbench.greenhouseDeep} 46%, #10243A 100%)`,
+      }}
+    >
       <Box sx={{ px: 2.25, pt: 2.5, pb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <Mark />
-          <Typography sx={{ fontFamily: '"Source Serif 4", Georgia, serif', fontSize: 28, lineHeight: 1 }}>
+          <Typography sx={{ fontFamily: displayFont, fontSize: 28, lineHeight: 1, fontWeight: 700 }}>
             Trim
           </Typography>
         </Box>
-        <Typography sx={{ mt: 1.5, color: '#C9DDD4', fontSize: 13 }}>{user?.organizationName}</Typography>
+        <Typography sx={{ mt: 1.5, color: '#D7C6F5', fontSize: 13 }}>{user?.organizationName}</Typography>
       </Box>
       <List sx={{ px: 1, flex: 1, overflowY: 'auto' }}>
         {NAV.map((item) => (
@@ -81,11 +89,11 @@ export function AppShell() {
             sx={{
               borderRadius: 2,
               mb: 0.5,
-              color: '#E7F4EE',
+              color: '#F4EEFF',
               minHeight: 46,
               '&.active': {
-                bgcolor: 'rgba(20, 129, 92, 0.38)',
-                boxShadow: `inset 3px 0 0 ${workbench.gold}`,
+                bgcolor: 'rgba(255, 79, 139, 0.28)',
+                boxShadow: `inset 3px 0 0 ${workbench.sky}`,
               },
             }}
           >
@@ -97,13 +105,13 @@ export function AppShell() {
               secondary={item.hint}
               slotProps={{
                 primary: { sx: { fontWeight: 600, color: 'inherit' } },
-                secondary: { sx: { color: '#F0C9A0', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' } },
+                secondary: { sx: { color: '#FFB4D6', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' } },
               }}
             />
           </ListItemButton>
         ))}
       </List>
-      <Typography sx={{ px: 2.25, pb: 2, color: '#8EAEA2', fontSize: 12 }}>
+      <Typography sx={{ px: 2.25, pb: 2, color: '#C9B6E8', fontSize: 12 }}>
         Room dashboards are the daily center of Trim.
       </Typography>
     </Box>
@@ -114,7 +122,7 @@ export function AppShell() {
       sx={{
         display: 'flex',
         minHeight: '100vh',
-        background: `radial-gradient(900px 280px at 8% -4%, rgba(227, 139, 79, 0.18), transparent 55%), ${workbench.canvas}`,
+        background: `radial-gradient(720px 320px at 0% -8%, rgba(255, 79, 139, 0.32), transparent 55%), radial-gradient(640px 280px at 100% 0%, rgba(61, 220, 255, 0.18), transparent 50%), radial-gradient(520px 320px at 80% 100%, rgba(124, 92, 255, 0.28), transparent 55%), ${workbench.canvas}`,
       }}
     >
       <AppBar
@@ -123,7 +131,7 @@ export function AppShell() {
         sx={{
           width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { sm: `${DRAWER_WIDTH}px` },
-          bgcolor: 'rgba(255, 255, 255, 0.92)',
+          bgcolor: 'rgba(16, 14, 28, 0.88)',
           color: 'text.primary',
           borderBottom: `1px solid ${workbench.line}`,
           backdropFilter: 'blur(12px)',
@@ -169,7 +177,7 @@ export function AppShell() {
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
           ModalProps={{ keepMounted: true }}
-          sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, bgcolor: workbench.greenhouseDeep } }}
+          sx={{ display: { xs: 'block', sm: 'none' }, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, bgcolor: workbench.greenhouseDeep, backgroundImage: 'none' } }}
         >
           {drawer}
         </Drawer>
@@ -210,7 +218,7 @@ export function AppShell() {
           height: 68,
           zIndex: (mui) => mui.zIndex.appBar,
           borderTop: `1px solid ${workbench.line}`,
-          bgcolor: '#fff',
+          bgcolor: workbench.paper,
           pb: 'env(safe-area-inset-bottom)',
         }}
       >

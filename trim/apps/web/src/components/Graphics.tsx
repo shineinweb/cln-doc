@@ -154,16 +154,20 @@ function GlyphPath({ name }: { name: GlyphName }) {
 export function CanopyScene() {
   return (
     <svg viewBox="0 0 640 280" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Greenhouse canopy">
-      <rect width="640" height="280" rx="28" fill="#0E2C24" />
-      <circle cx="520" cy="64" r="36" fill={workbench.gold} opacity="0.95" />
-      <path d="M0 196c80-48 140-48 210 0s130 48 210 0 140-36 220 8v76H0V196Z" fill="#1B7A56" />
-      <path d="M0 220c90-30 150-20 230 10s140 28 220-8 120-24 190 6v52H0V220Z" fill="#14815C" />
-      <g stroke="#F4FBF8" strokeWidth="3" fill="none" opacity="0.85">
+      <rect width="640" height="280" rx="28" fill="#120A28" />
+      <circle cx="86" cy="54" r="4" fill={workbench.sky} />
+      <circle cx="140" cy="36" r="3" fill={workbench.gold} />
+      <circle cx="210" cy="58" r="3" fill="#fff" opacity="0.8" />
+      <circle cx="520" cy="64" r="36" fill={workbench.gold} />
+      <circle cx="500" cy="52" r="28" fill="#FF8A3D" opacity="0.85" />
+      <path d="M0 196c80-48 140-48 210 0s130 48 210 0 140-36 220 8v76H0V196Z" fill="#5B2BE0" />
+      <path d="M0 220c90-30 150-20 230 10s140 28 220-8 120-24 190 6v52H0V220Z" fill="#FF4F8B" />
+      <g stroke={workbench.sky} strokeWidth="3" fill="none">
         <path d="M150 210 V78 h150 v132" />
         <path d="M150 112 h150M150 150 h150M188 78 v132M226 78 v132M264 78 v132" />
         <path d="M150 78 225 42 300 78" />
       </g>
-      <g fill={workbench.mist}>
+      <g fill={workbench.greenhouse}>
         <ellipse cx="188" cy="168" rx="16" ry="28" />
         <ellipse cx="226" cy="160" rx="18" ry="34" />
         <ellipse cx="264" cy="170" rx="15" ry="26" />
@@ -173,8 +177,8 @@ export function CanopyScene() {
         <circle cx="230" cy="134" r="8" />
         <circle cx="262" cy="150" r="6" />
       </g>
-      <rect x="390" y="150" width="70" height="70" rx="16" fill={workbench.blossom} opacity="0.9" />
-      <rect x="476" y="126" width="54" height="94" rx="16" fill={workbench.sky} opacity="0.9" />
+      <rect x="390" y="150" width="70" height="70" rx="16" fill={workbench.violet} />
+      <rect x="476" y="126" width="54" height="94" rx="16" fill={workbench.sky} />
       <rect x="546" y="164" width="48" height="56" rx="14" fill={workbench.copper} />
     </svg>
   );

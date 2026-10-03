@@ -25,7 +25,7 @@ const fieldStyle = {
   padding: '8px 10px',
   borderRadius: 8,
   border: `1px solid ${workbench.line}`,
-  background: '#fff',
+  background: workbench.mist,
   color: workbench.ink,
 };
 
@@ -451,7 +451,7 @@ function ReadingChart({ history, metric }: { history: RoomDetail['readingHistory
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label="Reading history"
-        sx={{ width: '100%', height: 'auto', bgcolor: '#fff', borderRadius: 2 }}
+        sx={{ width: '100%', height: 'auto', bgcolor: workbench.paper, borderRadius: 2 }}
       >
         <line x1={pad} y1={height - pad} x2={width - pad} y2={height - pad} stroke={workbench.line} />
         {coords.length > 1 ? (
@@ -468,7 +468,7 @@ function ReadingChart({ history, metric }: { history: RoomDetail['readingHistory
             cx={point.x}
             cy={point.y}
             r="5"
-            fill={point.sample ? '#fff' : workbench.copper}
+            fill={point.sample ? workbench.paper : workbench.copper}
             stroke={point.sample ? workbench.copper : workbench.copper}
           />
         ))}

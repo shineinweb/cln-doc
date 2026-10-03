@@ -8,7 +8,7 @@ import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { CanopyScene } from '../components/Graphics';
 import { Mark } from '../components/Mark';
-import { workbench } from '../theme';
+import { displayFont, workbench } from '../theme';
 
 export function LoginPage() {
   const { user, loading, login } = useAuth();
@@ -50,26 +50,26 @@ export function LoginPage() {
           justifyContent: { xs: 'flex-start', md: 'space-between' },
           gap: { xs: 2, md: 3 },
           p: { xs: 2.5, sm: 4, md: 6 },
-          bgcolor: workbench.greenhouseDeep,
-          color: '#F4FBF8',
+          background: `linear-gradient(165deg, #4A1878 0%, ${workbench.greenhouseDeep} 46%, #0E3148 100%)`,
+          color: workbench.ink,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Mark size={36} />
-          <Typography sx={{ fontFamily: '"Source Serif 4", Georgia, serif', fontSize: { xs: 32, md: 40 } }}>Trim</Typography>
+          <Typography sx={{ fontFamily: displayFont, fontWeight: 700, fontSize: { xs: 32, md: 40 } }}>Trim</Typography>
         </Box>
         <Box>
-          <Typography sx={{ fontFamily: '"Source Serif 4", Georgia, serif', fontSize: { xs: 32, sm: 40, md: 48 }, lineHeight: 1.05, maxWidth: 480 }}>
+          <Typography sx={{ fontFamily: displayFont, fontWeight: 700, fontSize: { xs: 32, sm: 40, md: 48 }, lineHeight: 1.05, maxWidth: 480 }}>
             Know which rooms are yours before the day starts.
           </Typography>
-          <Typography sx={{ mt: 2, maxWidth: 440, color: '#C9DDD4', fontSize: { xs: 16, md: 18 } }}>
+          <Typography sx={{ mt: 2, maxWidth: 440, color: '#E4D4FF', fontSize: { xs: 16, md: 18 } }}>
             Trim is the cultivation workspace for teams that run more than one facility. Access follows the site.
           </Typography>
         </Box>
         <Box sx={{ height: { xs: 140, sm: 180, md: 220 }, maxWidth: 640 }}>
           <CanopyScene />
         </Box>
-        <Typography sx={{ color: '#8EAEA2', display: { xs: 'none', md: 'block' } }}>
+        <Typography sx={{ color: '#C9B6E8', display: { xs: 'none', md: 'block' } }}>
           Facilities, rooms, and the people assigned to them.
         </Typography>
       </Box>

@@ -8,7 +8,7 @@ import { RoomGlyph } from '../components/Graphics';
 import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
 import { useSites } from '../layout/SiteProvider';
-import { roomTypeColor, roomTypeLabel, workbench } from '../theme';
+import { displayFont, roomTypeColor, roomTypeLabel, workbench } from '../theme';
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -104,7 +104,7 @@ function Stat({ label, value }: { label: string; value: string }) {
     <Card sx={{ bgcolor: workbench.mist }}>
       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
         <Typography sx={{ color: 'text.secondary', fontSize: 13, fontWeight: 600 }}>{label}</Typography>
-        <Typography sx={{ fontFamily: '"Source Serif 4", Georgia, serif', fontSize: 32, lineHeight: 1.1 }}>{value}</Typography>
+        <Typography sx={{ fontFamily: displayFont, fontWeight: 700, fontSize: 32, lineHeight: 1.1 }}>{value}</Typography>
       </CardContent>
     </Card>
   );

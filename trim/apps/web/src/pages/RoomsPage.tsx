@@ -84,7 +84,11 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
             <Box>
               <Chip
                 label={roomTypeLabel(room.roomType)}
-                sx={{ mr: 1, bgcolor: roomTypeColor(room.roomType), color: room.roomType === 'dry' ? '#173128' : '#fff' }}
+                sx={{
+                  mr: 1,
+                  bgcolor: roomTypeColor(room.roomType),
+                  color: room.roomType === 'flower' || room.roomType === 'clone' ? '#fff' : '#173128',
+                }}
               />
               <Button component={RouterLink} to={`/rooms/${room.id}`} data-testid="open-room">
                 Open room
