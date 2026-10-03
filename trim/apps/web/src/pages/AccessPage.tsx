@@ -35,6 +35,7 @@ import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
 import { DeleteRecord, Pager, PAGE_SIZE } from '../records/RecordControls';
+import { UserActivityDashboard } from './UserActivityDashboard';
 
 const MANAGER_ONLY = 'Only a manager can change users, roles, and permissions.';
 
@@ -52,7 +53,7 @@ export function AccessPage() {
       <PageHeader
         kicker="Users"
         title="Users, roles, and permissions"
-        lede="Add and change the people who can sign in, the roles they hold, and the permissions those roles grant. The audit log records sign-ins and these changes."
+        lede="Watch sign-in and access activity, then add or change the people who can sign in, the roles they hold, and the permissions those roles grant."
       />
       <Tabs value={tab} onChange={(_event, value: 'users' | 'roles' | 'permissions') => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="users" label="Users" data-testid="access-tab-users" />
@@ -70,17 +71,57 @@ export function AccessPage() {
 }
 
 function UsersTab({ directory, canManage }: { directory: AccessDirectory; canManage: boolean }) {
+  const [adding, setAdding] = useState(false);
+  const [addedMessage, setAddedMessage] = useState<string | null>(null);
   return (
     <Box>
-      <Typography variant="h2" sx={{ fontSize: 28, mb: 1.5 }}>
-        Users
-      </Typography>
-      {canManage ? <AddUserForm directory={directory} /> : null}
+      <UserActivityDashboard directory={directory} />
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1.5,
+          mb: 1.5,
+        }}
+      >
+        <Typography variant="h2" sx={{ fontSize: 26, m: 0 }}>
+          Users
+        </Typography>
+        {canManage && !adding ? (
+          <Button
+            variant="contained"
+            data-testid="add-user"
+            onClick={() => {
+              setAddedMessage(null);
+              setAdding(true);
+            }}
+          >
+            Add user
+          </Button>
+        ) : null}
+      </Box>
+      {canManage && adding ? (
+        <AddUserForm
+          directory={directory}
+          onClose={() => setAdding(false)}
+          onAdded={() => {
+            setAddedMessage('User added.');
+            setAdding(false);
+          }}
+        />
+      ) : null}
+      {addedMessage ? (
+        <Alert sx={{ mb: 1.5 }} data-testid="user-added">
+          {addedMessage}
+        </Alert>
+      ) : null}
       <UserTable directory={directory} canManage={canManage} />
-      <Typography variant="h2" sx={{ fontSize: 28, mt: 3, mb: 1.5 }}>
+      <Typography variant="h2" sx={{ fontSize: 26, mt: 3, mb: 0.5 }}>
         Audit logs
       </Typography>
-      <Typography sx={{ mb: 1, color: 'text.secondary' }}>
+      <Typography sx={{ mb: 1.5, color: 'text.secondary' }}>
         Sign-ins and changes to users, roles, and permissions.
       </Typography>
       <AuditTable directory={directory} />
@@ -88,50 +129,45 @@ function UsersTab({ directory, canManage }: { directory: AccessDirectory; canMan
   );
 }
 
-function AddUserForm({ directory }: { directory: AccessDirectory }) {
+function AddUserForm({
+  directory,
+  onClose,
+  onAdded,
+}: {
+  directory: AccessDirectory;
+  onClose: () => void;
+  onAdded: () => void;
+}) {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
     mutationFn: (body: AccessUserInput) => apiSend('/access/users', accessUserSchema, body),
     onSuccess: async () => {
       setError(null);
-      setMessage('User added.');
-      setOpen(false);
+      onAdded();
       await queryClient.invalidateQueries({ queryKey: ['access'] });
     },
     onError: (caught) => {
-      setMessage(null);
       setError(caught instanceof ApiError ? caught.message : 'The user could not be saved.');
     },
   });
   const initial = blankUser(directory);
   return (
-    <Box sx={{ mb: 2 }}>
-      {open ? (
-        <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
-          <Typography variant="h3" sx={{ fontSize: 22 }}>
-            Add user
-          </Typography>
-          <UserFields
-            directory={directory}
-            initial={initial}
-            passwordRequired
-            pending={save.isPending}
-            submitLabel="Add user"
-            submitTestId="user-save"
-            onSubmit={(body) => save.mutate(body)}
-            onCancel={() => setOpen(false)}
-          />
-          {error ? <Alert severity="error">{error}</Alert> : null}
-        </Box>
-      ) : (
-        <Button variant="contained" data-testid="add-user" onClick={() => { setMessage(null); setOpen(true); }}>
-          Add user
-        </Button>
-      )}
-      {message ? <Alert sx={{ mt: 2 }} data-testid="user-added">{message}</Alert> : null}
+    <Box sx={{ display: 'grid', gap: 1.5, maxWidth: 560, mb: 2 }}>
+      <Typography variant="h3" sx={{ fontSize: 22 }}>
+        Add user
+      </Typography>
+      <UserFields
+        directory={directory}
+        initial={initial}
+        passwordRequired
+        pending={save.isPending}
+        submitLabel="Add user"
+        submitTestId="user-save"
+        onSubmit={(body) => save.mutate(body)}
+        onCancel={onClose}
+      />
+      {error ? <Alert severity="error">{error}</Alert> : null}
     </Box>
   );
 }
