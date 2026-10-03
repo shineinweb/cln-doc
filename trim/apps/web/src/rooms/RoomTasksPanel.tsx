@@ -336,7 +336,7 @@ function TaskFields({
           inputProps={{ 'data-testid': 'task-due' }}
         />
       ) : null}
-      <EmployeeChecks siteId={siteId} value={assigneeIds} onChange={setAssigneeIds} />
+      <EmployeeMultiSelect siteId={siteId} value={assigneeIds} onChange={setAssigneeIds} />
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Button type="submit" variant="contained" data-testid={submitTestId} disabled={pending}>
           {submitLabel}
@@ -380,34 +380,39 @@ function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: st
   );
 }
 
-function EmployeeChecks({ siteId, value, onChange }: { siteId: string; value: string[]; onChange: (value: string[]) => void }) {
+function EmployeeMultiSelect({ siteId, value, onChange }: { siteId: string; value: string[]; onChange: (value: string[]) => void }) {
   const access = useQuery({
     queryKey: ['access'],
     queryFn: () => apiGet('/access', accessDirectorySchema),
   });
   const people = (access.data?.users ?? []).filter((person) => person.opensEveryFacility || person.siteIds.includes(siteId));
   return (
-    <Box>
-      <Typography sx={{ fontSize: 14, mb: 0.5 }}>Employees</Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', columnGap: 1 }}>
-        {people.map((person) => (
-          <FormControlLabel
-            key={person.id}
-            control={
-              <Checkbox
-                checked={value.includes(person.id)}
-                onChange={() => {
-                  onChange(value.includes(person.id) ? value.filter((id) => id !== person.id) : [...value, person.id]);
-                }}
-                inputProps={{ 'data-testid': `task-employee-${person.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` } as InputHTMLAttributes<HTMLInputElement>}
-              />
-            }
-            label={person.name}
-          />
-        ))}
-      </Box>
-      <Typography sx={{ color: 'text.secondary', fontSize: 13 }}>Optional. Choose one or more.</Typography>
-    </Box>
+    <TextField
+      select
+      label="Employees"
+      value={value}
+      onChange={(event) => {
+        const next = event.target.value;
+        onChange(typeof next === 'string' ? next.split(',').filter(Boolean) : next);
+      }}
+      helperText="Optional. Choose one or more."
+      InputLabelProps={{ shrink: true }}
+      SelectProps={{
+        multiple: true,
+        displayEmpty: true,
+        renderValue: (selected) => {
+          const ids = Array.isArray(selected) ? selected.map(String) : [];
+          return peopleLabel(people.filter((person) => ids.includes(person.id)));
+        },
+        SelectDisplayProps: { 'data-testid': 'task-employees' } as HTMLAttributes<HTMLDivElement>,
+      }}
+    >
+      {people.map((person) => (
+        <MenuItem key={person.id} value={person.id} data-testid={`task-employee-${person.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+          {person.name}
+        </MenuItem>
+      ))}
+    </TextField>
   );
 }
 
