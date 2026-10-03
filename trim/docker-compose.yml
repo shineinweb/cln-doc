@@ -1,0 +1,53 @@
+name: trim
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: trim
+      MYSQL_USER: trim
+      MYSQL_PASSWORD: trim
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./infra/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # S3 API on 9000, console on 9001. Credentials match S3_* in .env.example.
+  # MinIO's published images are no longer anonymously pullable (Docker Hub removed
+  # them; Quay returns 401). RustFS speaks the same S3 API for local development.
+  s3:
+    image: rustfs/rustfs:1.0.0
+    environment:
+      RUSTFS_ACCESS_KEY: trim
+      RUSTFS_SECRET_KEY: trimsecret
+      RUSTFS_VOLUMES: /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - s3_data:/data
+
+volumes:
+  mysql_data:
+  s3_data:

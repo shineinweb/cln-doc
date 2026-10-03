@@ -1,0 +1,41 @@
+{
+  "name": "trim",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Trim — multi-site cannabis cultivation operations.",
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:prepare": "pnpm --filter @trim/contracts build && pnpm --filter @trim/database build",
+    "dev": "pnpm dev:prepare && pnpm --parallel --filter @trim/api --filter @trim/worker --filter @trim/web dev",
+    "dev:api": "pnpm --filter @trim/api dev",
+    "dev:worker": "pnpm --filter @trim/worker dev",
+    "dev:web": "pnpm --filter @trim/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "eslint .",
+    "test": "pnpm --filter @trim/api test",
+    "db:generate": "pnpm --filter @trim/database generate",
+    "db:migrate": "pnpm --filter @trim/database migrate",
+    "db:seed": "pnpm --filter @trim/database seed",
+    "storage:bucket": "pnpm --filter @trim/api storage:bucket"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "msgpackr-extract",
+      "prisma"
+    ]
+  }
+}

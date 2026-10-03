@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS trim_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON trim_test.* TO 'trim'@'%';
+FLUSH PRIVILEGES;
