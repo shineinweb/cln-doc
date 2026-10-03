@@ -183,6 +183,9 @@ describe('site coach', () => {
 
     expect(first.body.statement).toBe(STATEMENT);
     expect(first.body.siteName).toBe('Site A');
+    expect(first.body.helper.rooms.map((room: { name: string }) => room.name)).toContain('Room A');
+    expect(first.body.helper.sops.map((sop: { title: string }) => sop.title)).toContain('Temperature check');
+    expect(first.body.helper.people.length).toBeGreaterThan(0);
     expect(first.body.cycles).toHaveLength(1);
     expect(first.body.cycles[0]).toMatchObject({
       cultivar: 'Test cultivar',
@@ -261,6 +264,52 @@ describe('site coach', () => {
       summary: null,
       message: 'No stored procedure matches that question.',
     });
+
+    const chatAsk = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'How do I check temperature?' })
+      .expect(201);
+    expect(chatAsk.body).toMatchObject({
+      reply: expect.stringContaining('Temperature check'),
+      matchedSopTitle: 'Temperature check',
+      actions: [],
+    });
+
+    const generated = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Generate tasks for Temperature check' })
+      .expect(201);
+    expect(generated.body.actions.length).toBeGreaterThan(0);
+    expect(generated.body.actions[0]).toMatchObject({
+      type: 'task',
+      title: 'Temperature check',
+      roomName: 'Room A',
+      sopTitle: 'Temperature check',
+    });
+    expect(
+      await prisma.roomTask.count({
+        where: { roomId: fixture.roomAId, title: 'Temperature check', sourceAlertId: null },
+      }),
+    ).toBe(1);
+
+    const trained = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Train workers on Temperature check' })
+      .expect(201);
+    expect(trained.body.actions.length).toBeGreaterThan(0);
+    expect(trained.body.actions[0]).toMatchObject({
+      type: 'training',
+      sopTitle: 'Temperature check',
+      title: 'Temperature check training',
+    });
+    expect(
+      await prisma.trainingRecord.count({
+        where: { siteId: fixture.siteAId, sopTitle: 'Temperature check', status: 'assigned' },
+      }),
+    ).toBe(trained.body.actions.length);
 
     await request(app.getHttpServer())
       .get(`/sites/${fixture.siteAId}/coach`)

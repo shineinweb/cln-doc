@@ -1289,6 +1289,28 @@ export const coachLicenseSchema = z.object({
   gaps: z.array(coachGapSchema),
 });
 
+export const coachHelperPersonSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const coachHelperRoomSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const coachHelperSopSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  summary: z.string(),
+});
+
+export const coachHelperSchema = z.object({
+  rooms: z.array(coachHelperRoomSchema),
+  people: z.array(coachHelperPersonSchema),
+  sops: z.array(coachHelperSopSchema),
+});
+
 export const siteCoachSchema = z.object({
   siteId: z.string(),
   siteName: z.string(),
@@ -1296,6 +1318,7 @@ export const siteCoachSchema = z.object({
   notices: z.array(workspaceNoticeSchema),
   licenses: z.array(coachLicenseSchema),
   statement: z.string(),
+  helper: coachHelperSchema,
 });
 
 export const coachQuestionSchema = z.object({
@@ -1307,6 +1330,43 @@ export const coachAnswerSchema = z.object({
   title: z.string().nullable(),
   summary: z.string().nullable(),
   message: z.string(),
+});
+
+export const coachChatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().trim().min(1).max(4000),
+});
+
+export const coachChatRequestSchema = z.object({
+  message: z.string().trim().min(1).max(1000),
+  history: z.array(coachChatMessageSchema).max(20).optional().default([]),
+});
+
+export const coachTaskActionSchema = z.object({
+  type: z.literal('task'),
+  taskId: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  title: z.string(),
+  sopTitle: z.string().nullable(),
+});
+
+export const coachTrainingActionSchema = z.object({
+  type: z.literal('training'),
+  trainingId: z.string(),
+  traineeName: z.string(),
+  title: z.string(),
+  sopTitle: z.string().nullable(),
+});
+
+export const coachChatActionSchema = z.discriminatedUnion('type', [coachTaskActionSchema, coachTrainingActionSchema]);
+
+export const coachChatResponseSchema = z.object({
+  reply: z.string(),
+  matchedSopTitle: z.string().nullable(),
+  matchedSopSummary: z.string().nullable(),
+  actions: z.array(coachChatActionSchema),
+  suggestions: z.array(z.string()),
 });
 
 const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -1540,8 +1600,12 @@ export type CycleTaskDetail = z.infer<typeof cycleTaskDetailSchema>;
 export type WorkspaceNotice = z.infer<typeof workspaceNoticeSchema>;
 export type WorkspaceToday = z.infer<typeof workspaceTodaySchema>;
 export type SiteCoach = z.infer<typeof siteCoachSchema>;
+export type CoachHelper = z.infer<typeof coachHelperSchema>;
 export type CoachQuestion = z.infer<typeof coachQuestionSchema>;
 export type CoachAnswer = z.infer<typeof coachAnswerSchema>;
+export type CoachChatRequest = z.infer<typeof coachChatRequestSchema>;
+export type CoachChatResponse = z.infer<typeof coachChatResponseSchema>;
+export type CoachChatAction = z.infer<typeof coachChatActionSchema>;
 export type RoomTask = z.infer<typeof roomTaskSchema>;
 export type RoomAlert = z.infer<typeof roomAlertSchema>;
 export type EnvironmentalReading = z.infer<typeof environmentalReadingSchema>;

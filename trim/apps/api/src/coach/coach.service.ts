@@ -1,5 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import type { CoachAnswer, SessionUser, SiteCoach, WorkspaceNotice } from '@trim/contracts';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import type {
+  CoachAnswer,
+  CoachChatAction,
+  CoachChatRequest,
+  CoachChatResponse,
+  CoachHelper,
+  SessionUser,
+  SiteCoach,
+  WorkspaceNotice,
+} from '@trim/contracts';
 import { calendarDateInTimeZone, dbDateFromKey } from '../cycles/cycle-day';
 import { assertSiteAccess, authorizedSiteWhere } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,6 +16,12 @@ import { ReportsService } from '../reports/reports.service';
 import { EnvironmentService } from '../environment/environment.service';
 
 const STATEMENT = 'This is a readiness check of stored rows. It is not a state certification.';
+
+const SUGGESTIONS = [
+  'Generate tasks from stored procedures',
+  'Train workers on Canopy scout',
+  'How do I check irrigation?',
+];
 
 const METRIC_LABEL: Record<string, string> = {
   temperature: 'Temperature',
@@ -16,6 +31,7 @@ const METRIC_LABEL: Record<string, string> = {
 };
 
 type SopRow = { id: string; title: string; summary: string };
+type PersonRow = { id: string; name: string };
 
 @Injectable()
 export class CoachService {
@@ -29,7 +45,11 @@ export class CoachService {
     const site = await this.siteFor(user, siteId);
     await this.ensureSite(site.id, site.organizationId, site.timezone);
     const report = await this.reports.siteReport(user, site.id);
-    const [notices, licenses] = await Promise.all([this.listNotices([site.id]), this.readiness(site.id)]);
+    const [notices, licenses, helper] = await Promise.all([
+      this.listNotices([site.id]),
+      this.readiness(site.id),
+      this.helperContext(site.id, site.organizationId),
+    ]);
     return {
       siteId: site.id,
       siteName: site.name,
@@ -37,6 +57,7 @@ export class CoachService {
       notices,
       licenses,
       statement: STATEMENT,
+      helper,
     };
   }
 
@@ -50,6 +71,50 @@ export class CoachService {
     return quoteSop(question, sops);
   }
 
+  async chat(user: SessionUser, siteId: string, body: CoachChatRequest): Promise<CoachChatResponse> {
+    const site = await this.siteFor(user, siteId);
+    await this.ensureSite(site.id, site.organizationId, site.timezone);
+    const helper = await this.helperContext(site.id, site.organizationId);
+    const intent = detectIntent(body.message);
+    if (intent === 'help') {
+      return {
+        reply:
+          'I can generate room tasks from stored procedures, assign worker training from those procedures, and quote a stored procedure when you ask about it. Try “Generate tasks”, “Train workers on Canopy scout”, or ask how to run a procedure.',
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    if (intent === 'generate_tasks') {
+      return this.generateTasks(user, site, helper, body.message);
+    }
+    if (intent === 'train_workers') {
+      return this.trainWorkers(user, site, helper, body.message);
+    }
+    const quoted = quoteSop(body.message, helper.sops);
+    if (quoted.matched) {
+      return {
+        reply: `${quoted.title}. ${quoted.summary}`,
+        matchedSopTitle: quoted.title,
+        matchedSopSummary: quoted.summary,
+        actions: [],
+        suggestions: [
+          `Generate tasks for ${quoted.title}`,
+          `Train workers on ${quoted.title}`,
+          'Generate tasks from stored procedures',
+        ],
+      };
+    }
+    return {
+      reply: `${quoted.message} I can still generate tasks or assign training from the procedures that are stored.`,
+      matchedSopTitle: null,
+      matchedSopSummary: null,
+      actions: [],
+      suggestions: SUGGESTIONS,
+    };
+  }
+
   async notices(user: SessionUser): Promise<WorkspaceNotice[]> {
     const sites = await this.prisma.site.findMany({
       where: authorizedSiteWhere(user),
@@ -59,6 +124,174 @@ export class CoachService {
       await this.ensureSite(site.id, site.organizationId, site.timezone);
     }
     return this.listNotices(sites.map((site) => site.id));
+  }
+
+  private async generateTasks(
+    _user: SessionUser,
+    site: { id: string; organizationId: string; timezone: string; name: string },
+    helper: CoachHelper,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    if (helper.rooms.length === 0) {
+      throw new BadRequestException('This facility has no rooms, so tasks cannot be generated.');
+    }
+    if (helper.sops.length === 0) {
+      throw new BadRequestException('No stored procedures are available to generate tasks from.');
+    }
+    const matched = quoteSop(message, helper.sops);
+    const sops = matched.matched
+      ? helper.sops.filter((sop) => sop.title === matched.title)
+      : helper.sops.slice(0, Math.min(4, helper.sops.length));
+    const dueOn = dbDateFromKey(calendarDateInTimeZone(new Date(), site.timezone));
+    const assigneeIds = helper.people.map((person) => person.id);
+    const actions: CoachChatAction[] = [];
+    for (const sop of sops) {
+      const room = helper.rooms[actions.length % helper.rooms.length]!;
+      const existing = await this.prisma.roomTask.findFirst({
+        where: { roomId: room.id, status: 'open', title: sop.title },
+        select: { id: true },
+      });
+      if (existing) {
+        continue;
+      }
+      const created = await this.prisma.roomTask.create({
+        data: {
+          roomId: room.id,
+          title: sop.title.slice(0, 191),
+          description: sop.summary,
+          kind: 'one_time',
+          dueOn,
+          status: 'open',
+          sopRecordId: sop.id,
+          assignees: { create: assigneeIds.map((userId) => ({ userId })) },
+        },
+      });
+      actions.push({
+        type: 'task',
+        taskId: created.id,
+        roomId: room.id,
+        roomName: room.name,
+        title: sop.title,
+        sopTitle: sop.title,
+      });
+    }
+    if (actions.length === 0) {
+      return {
+        reply: 'Open tasks already cover those stored procedures for this facility. Nothing new was created.',
+        matchedSopTitle: matched.matched ? matched.title : null,
+        matchedSopSummary: matched.matched ? matched.summary : null,
+        actions: [],
+        suggestions: ['Train workers on Canopy scout', 'How do I check irrigation?'],
+      };
+    }
+    const names = actions.map((action) => action.title).join(', ');
+    return {
+      reply: `Created ${actions.length} ${actions.length === 1 ? 'task' : 'tasks'} from stored procedures: ${names}.`,
+      matchedSopTitle: matched.matched ? matched.title : null,
+      matchedSopSummary: matched.matched ? matched.summary : null,
+      actions,
+      suggestions: ['Train workers on those procedures', 'How do I run Canopy scout?'],
+    };
+  }
+
+  private async trainWorkers(
+    user: SessionUser,
+    site: { id: string; organizationId: string; timezone: string; name: string },
+    helper: CoachHelper,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    if (helper.people.length === 0) {
+      throw new BadRequestException('No workers can open this facility, so training cannot be assigned.');
+    }
+    if (helper.sops.length === 0) {
+      throw new BadRequestException('No stored procedures are available for training.');
+    }
+    const matched = quoteSop(message, helper.sops);
+    const sop = matched.matched
+      ? helper.sops.find((row) => row.title === matched.title) ?? helper.sops[0]!
+      : helper.sops[0]!;
+    const trainees = await this.traineesFor(helper.people, site.id, sop.title);
+    if (trainees.length === 0) {
+      return {
+        reply: `Everyone who can open ${site.name} already has training on ${sop.title}.`,
+        matchedSopTitle: sop.title,
+        matchedSopSummary: sop.summary,
+        actions: [],
+        suggestions: ['Generate tasks from stored procedures', `How do I run ${sop.title}?`],
+      };
+    }
+    const actions: CoachChatAction[] = [];
+    for (const person of trainees) {
+      const created = await this.prisma.trainingRecord.create({
+        data: {
+          siteId: site.id,
+          traineeName: person.name,
+          title: `${sop.title} training`.slice(0, 191),
+          sopTitle: sop.title,
+          status: 'assigned',
+          completedOn: null,
+          actorName: user.name,
+        },
+      });
+      actions.push({
+        type: 'training',
+        trainingId: created.id,
+        traineeName: person.name,
+        title: `${sop.title} training`,
+        sopTitle: sop.title,
+      });
+    }
+    const names = actions
+      .filter((action): action is Extract<CoachChatAction, { type: 'training' }> => action.type === 'training')
+      .map((action) => action.traineeName)
+      .join(', ');
+    return {
+      reply: `Assigned ${sop.title} training to ${names}. Open Operations → Training to mark it complete.`,
+      matchedSopTitle: sop.title,
+      matchedSopSummary: sop.summary,
+      actions,
+      suggestions: ['Generate tasks from stored procedures', `How do I run ${sop.title}?`],
+    };
+  }
+
+  private async helperContext(siteId: string, organizationId: string): Promise<CoachHelper> {
+    const [rooms, sops, people] = await Promise.all([
+      this.prisma.room.findMany({ where: { siteId }, orderBy: { name: 'asc' }, select: { id: true, name: true } }),
+      this.prisma.sopRecord.findMany({
+        where: { organizationId },
+        orderBy: { title: 'asc' },
+        select: { id: true, title: true, summary: true },
+      }),
+      this.namedPeopleFor(organizationId, siteId),
+    ]);
+    return { rooms, sops, people };
+  }
+
+  private async namedPeopleFor(organizationId: string, siteId: string): Promise<PersonRow[]> {
+    const ids = await this.peopleFor(organizationId, siteId);
+    if (ids.length === 0) {
+      return [];
+    }
+    const people = await this.prisma.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
+    return people;
+  }
+
+  private async traineesFor(people: PersonRow[], siteId: string, sopTitle: string): Promise<PersonRow[]> {
+    const existing = await this.prisma.trainingRecord.findMany({
+      where: {
+        siteId,
+        sopTitle,
+        status: { in: ['assigned', 'completed'] },
+        traineeName: { in: people.map((person) => person.name) },
+      },
+      select: { traineeName: true },
+    });
+    const trained = new Set(existing.map((row) => row.traineeName));
+    return people.filter((person) => !trained.has(person.name));
   }
 
   private async siteFor(user: SessionUser, siteId: string) {
@@ -222,6 +455,26 @@ export function quoteSop(question: string, sops: Array<{ title: string; summary:
     return { matched: false, title: null, summary: null, message: 'No stored procedure matches that question.' };
   }
   return { matched: true, title: best.title, summary: best.summary, message: best.summary };
+}
+
+export function detectIntent(message: string): 'generate_tasks' | 'train_workers' | 'help' | 'ask' {
+  const text = message.toLowerCase();
+  if (/\b(help|what can you do|capabilities)\b/.test(text)) {
+    return 'help';
+  }
+  if (/\b(train|training|onboard|teach)\b/.test(text) && /\b(worker|workers|staff|team|people|operator|operators|blake|casey|avery)\b/.test(text)) {
+    return 'train_workers';
+  }
+  if (/\btrain(ing)?\b/.test(text) && /\bon\b/.test(text)) {
+    return 'train_workers';
+  }
+  if (/\b(generate|create|make|assign|open)\b/.test(text) && /\b(task|tasks)\b/.test(text)) {
+    return 'generate_tasks';
+  }
+  if (/\bgenerate tasks\b/.test(text) || text.trim() === 'tasks') {
+    return 'generate_tasks';
+  }
+  return 'ask';
 }
 
 function sopForMetric(metric: string, sops: SopRow[]): SopRow | null {
