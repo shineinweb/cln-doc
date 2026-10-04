@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
@@ -56,6 +57,7 @@ export function PackagePage() {
         : null;
   return (
     <Box>
+      <BackLink to={`/harvests/${row.harvestId}`} label={row.harvestName} />
       <PageHeader
         kicker={row.licenseNumber}
         title={row.label}

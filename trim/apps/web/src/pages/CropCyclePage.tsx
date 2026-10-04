@@ -15,6 +15,7 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { can } from '../auth/permissions';
+import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { addCalendarDays, cycleDayLabel, formatCalendarDate, inclusiveDayCount } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
@@ -63,35 +64,41 @@ export function CropCyclePage() {
     return <Alert severity="warning">This crop cycle is not in that room.</Alert>;
   }
 
+  const detail: CropCycleDetail = {
+    ...cycle.data,
+    plants: cycle.data.plants ?? [],
+    licenses: cycle.data.licenses ?? [],
+  };
+
   return (
     <Box>
-      <Button component={RouterLink} to={`/rooms/${cycle.data.roomId}`} sx={{ px: 0, mb: 1 }}>
-        Back to {cycle.data.roomName}
-      </Button>
+      <BackLink to={`/rooms/${detail.roomId}`} label={detail.roomName} />
       <PageHeader
-        kicker={`${cycle.data.siteName} · ${cycle.data.roomName}`}
-        title={cycle.data.name}
-        lede={`${cycle.data.cultivar} · ${cycle.data.plantCount} plants · ${roomTypeLabel(cycle.data.stage)} · ${cycleDayLabel(cycle.data.cycleDay)} · harvest ${formatCalendarDate(cycle.data.expectedHarvestDate)}`}
+        kicker={`${detail.siteName} · ${detail.roomName}`}
+        title={detail.name}
+        lede={`${detail.cultivar} · ${detail.plantCount} plants · ${roomTypeLabel(detail.stage)} · ${cycleDayLabel(detail.cycleDay)} · harvest ${formatCalendarDate(detail.expectedHarvestDate)}`}
       />
+      <Typography data-testid="cycle-plant-count" sx={{ mb: 2, fontSize: 20 }}>
+        {detail.plantCount} plants assigned to this cycle
+      </Typography>
       <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-        <Chip label={cycle.data.status} />
-        <Chip label={cycleDayLabel(cycle.data.cycleDay)} data-testid="cycle-page-day" />
-        <Chip label={`${cycle.data.plantCount} plants`} data-testid="cycle-plant-count" />
-        {cycle.data.workflow ? <Chip label={`${cycle.data.workflow.templateName} v${cycle.data.workflow.versionNumber}`} /> : null}
+        <Chip label={detail.status} />
+        <Chip label={cycleDayLabel(detail.cycleDay)} data-testid="cycle-page-day" />
+        {detail.workflow ? <Chip label={`${detail.workflow.templateName} v${detail.workflow.versionNumber}`} /> : null}
       </Box>
-      <HarvestPanel cycle={cycle.data} />
-      {cycle.data.status === 'active' ? <CycleEditPanel cycle={cycle.data} /> : null}
+      <HarvestPanel cycle={detail} />
+      {detail.status === 'active' ? <CycleEditPanel cycle={detail} /> : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Generated tasks
       </Typography>
-      <TaskList cycleId={cycle.data.id} tasks={cycle.data.tasks} />
+      <TaskList cycleId={detail.id} tasks={detail.tasks} />
       {can(user, 'workflows.manage') ? (
-        <ReschedulePanel cycleId={cycle.data.id} startDate={cycle.data.startDate} workflow={cycle.data.workflow} />
+        <ReschedulePanel cycleId={detail.id} startDate={detail.startDate} workflow={detail.workflow} />
       ) : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Operating history
       </Typography>
-      <OperatingHistoryView history={cycle.data.operatingHistory} timeZone={cycle.data.siteTimezone} />
+      <OperatingHistoryView history={detail.operatingHistory} timeZone={detail.siteTimezone} />
     </Box>
   );
 }

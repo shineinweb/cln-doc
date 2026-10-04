@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
 import { RecordActions, SaveChanges } from '../records/RecordControls';
@@ -58,6 +59,7 @@ export function PlantPage() {
 
   return (
     <Box>
+      <BackLink to={`/licenses/${plant.data.licenseId}`} label={plant.data.licenseNumber} />
       <PageHeader
         kicker={`${plant.data.licenseNumber} · ${plant.data.siteNames.join(', ')}`}
         title={plant.data.tag}
