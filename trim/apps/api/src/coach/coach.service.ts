@@ -17,6 +17,7 @@ import { EnvironmentService } from '../environment/environment.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from '../reports/reports.service';
 import { OpenAiService } from '../serenity/openai.service';
+import { guideExcerpts, guideReply } from '../guides/guide-library';
 import { asSerenity } from '../serenity/serenity';
 
 const STATEMENT = 'This is a readiness check of stored rows. It is not a state certification.';
@@ -87,6 +88,10 @@ export class CoachService {
     if (enriched) {
       return { matched: false, title: null, summary: null, message: enriched };
     }
+    const fromGuide = guideReply(question);
+    if (fromGuide) {
+      return { matched: false, title: null, summary: null, message: asSerenity(fromGuide) };
+    }
     return { ...quoted, message: asSerenity(quoted.message) };
   }
 
@@ -137,12 +142,15 @@ export class CoachService {
       };
     }
     const openaiReply = await this.askOpenAi(user, site, body.message, helper.sops, body.history ?? []);
+    const fromGuide = guideReply(body.message);
     return {
       reply:
         openaiReply ??
-        asSerenity(
-          `${quoted.message} I can still generate tasks, assign training, update defoliation schedules when you confirm, or learn a note with “Remember that…”.`,
-        ),
+        (fromGuide
+          ? asSerenity(fromGuide)
+          : asSerenity(
+              `${quoted.message} I can still generate tasks, assign training, update defoliation schedules when you confirm, or learn a note with “Remember that…”.`,
+            )),
       matchedSopTitle: null,
       matchedSopSummary: null,
       actions: [],
@@ -573,9 +581,11 @@ export class CoachService {
       take: 40,
       select: { content: true, actorName: true },
     });
+    const guides = guideExcerpts(question);
     const context = [
       `Facility: ${site.name}`,
       `Staff asking: ${user.name}`,
+      guides ? `User manual and operating procedures:\n${guides}` : '',
       'Stored procedures:',
       ...sops.map((sop) => `- ${sop.title}: ${sop.summary}`),
       lessons.length

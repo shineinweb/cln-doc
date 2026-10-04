@@ -1,6 +1,6 @@
 # Serenity Universal operating procedures
 
-These procedures are the ones a manager and an employee follow in Serenity. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
+These procedures are the ones a manager and an employee follow in Serenity. Use the search box at the top of this page to find a procedure. Serenity can quote these steps when someone asks how to do the work. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
 
 A page for the other facility says you do not have access. Do not keep going on that page.
 
@@ -313,9 +313,9 @@ The comparison page has no link to a single-facility report. That page is **Faci
 **Steps.**
 
 1. Open **Operations**, then **Room calendar**.
-2. Read the month, then the day lines. A stay names the room, cultivar, and medium. An empty day says open.
+2. Read the month grid. **Previous**, **Next**, and **Today** move the month. A day with a stay shows the room and cultivar. An empty day stays quiet.
 
-**Done.** You can name the cultivar and medium for a date. In October 2026, Flower 1 is Cedar Nights coco and Veg 1 is Glass Orchard soil.
+**Done.** You can name the cultivar and medium for a date from the stay list under the grid.
 
 ## Using a cultivar or medium template
 
@@ -354,7 +354,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 **Steps.**
 
 1. Open **Users**, directly under **Dashboard**. The page opens on **Users**. **Activity** shows the last 14 days of sign-ins and access changes.
-2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters.
+2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters. Add a phone, street, city, region, and postal code when you have them. Choose a photo if you have one; it can also be added on **Edit**.
 3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
 4. Choose **Add user**. The person appears in the table. Use **Search users** or a column header when the list is long. **Audit logs** records the change and can be searched the same way.
 5. **Edit** changes the person. **Delete** removes a person who has not recorded work. Do not delete your own account.
