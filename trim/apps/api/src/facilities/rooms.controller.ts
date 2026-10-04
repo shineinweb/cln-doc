@@ -70,6 +70,16 @@ export class RoomsController {
     return recordRemovedSchema.parse(await this.roomTasks.remove(user, roomId, taskId));
   }
 
+  @Post(':roomId/tasks/:taskId/complete')
+  @RequirePermissions('tasks.write')
+  async completeTask(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    return managedTaskSchema.parse(await this.roomTasks.complete(user, roomId, taskId));
+  }
+
   @Post(':roomId/notes')
   @RequirePermissions('rooms.write')
   async createNote(

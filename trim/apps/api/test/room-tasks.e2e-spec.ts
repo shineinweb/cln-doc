@@ -287,10 +287,31 @@ describe('room tasks', () => {
     );
     expect(workspace.body.duties.some((duty: { title: string }) => duty.title === 'Unified duty')).toBe(true);
 
-    await request(app.getHttpServer())
-      .delete(`/rooms/${fixture.roomAId}/tasks/${created.body.id}`)
+    const finishedRoom = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/tasks/${created.body.id}/complete`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({})
+      .expect(201);
+    expect(finishedRoom.body.id).toBe(created.body.id);
+    expect(
+      await prisma.roomTask.findUniqueOrThrow({ where: { id: created.body.id }, select: { status: true } }),
+    ).toEqual({ status: 'done' });
+
+    const finishedCycle = await request(app.getHttpServer())
+      .post(`/tasks/${cycleTask.id}/complete`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({})
+      .expect(201);
+    expect(finishedCycle.body).toMatchObject({ id: cycleTask.id, status: 'done' });
+
+    const afterFinish = await request(app.getHttpServer())
+      .get('/workspace/today')
       .set('Authorization', `Bearer ${tokenA}`)
       .expect(200);
+    expect(afterFinish.body.tasks.some((task: { id: string }) => task.id === cycleTask.id)).toBe(false);
+    expect(afterFinish.body.roomTasks.some((task: { id: string }) => task.id === created.body.id)).toBe(false);
+
+    await prisma.roomTask.delete({ where: { id: created.body.id } });
     await prisma.cropCycle.delete({ where: { id: cycle.id } });
     await prisma.recurringDuty.deleteMany({ where: { siteId: fixture.siteAId, title: 'Unified duty' } });
   });

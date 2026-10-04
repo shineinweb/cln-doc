@@ -1,6 +1,8 @@
-import { Alert, Box, Skeleton, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
+  managedTaskSchema,
   recordRemovedSchema,
+  recurringViewSchema,
   workspaceTodaySchema,
   type CycleTaskDetail,
   type WorkspaceDuty,
@@ -11,6 +13,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
@@ -169,45 +173,105 @@ function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
 }
 
 function RoomTaskRow({ task }: { task: WorkspaceRoomTask }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
+  const queryClient = useQueryClient();
+  const finish = useMutation({
+    mutationFn: () => apiSend(`/rooms/${task.roomId}/tasks/${task.id}/complete`, managedTaskSchema, {}),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['workspace'] });
+      await queryClient.invalidateQueries({ queryKey: ['room', task.roomId] });
+    },
+  });
   return (
     <Box
       data-testid={`workspace-room-task-${task.id}`}
       sx={{ border: `1px solid ${workbench.line}`, bgcolor: workbench.paper, px: 1.5, py: 1.25 }}
     >
-      <Typography>
-        <KindChip label="Room" />
-        <RouterLink to={`/rooms/${task.roomId}`}>{task.title}</RouterLink>
-        {` · ${task.siteName} · ${task.roomName}`}
-        {task.dueOn ? ` · ${formatCalendarDate(task.dueOn)}` : task.kind === 'recurring' ? ` · ${task.cadence ?? 'recurring'}` : ''}
-      </Typography>
-      <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.35 }}>
-        {task.source === 'alert' ? 'Alert follow-up' : task.source === 'ai' ? 'From Serenity / stored procedure' : 'Room chore'}
-        {task.assignees.length > 0 ? ` · ${task.assignees.map((person) => person.name).join(', ')}` : ''}
-      </Typography>
-      {task.description ? (
-        <Typography sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{task.description}</Typography>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <Box sx={{ flex: 1, minWidth: 200 }}>
+          <Typography>
+            <KindChip label="Room" />
+            <RouterLink to={`/rooms/${task.roomId}`}>{task.title}</RouterLink>
+            {` · ${task.siteName} · ${task.roomName}`}
+            {task.dueOn ? ` · ${formatCalendarDate(task.dueOn)}` : task.kind === 'recurring' ? ` · ${task.cadence ?? 'recurring'}` : ''}
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.35 }}>
+            {task.source === 'alert' ? 'Alert follow-up' : task.source === 'ai' ? 'From Serenity / stored procedure' : 'Room chore'}
+            {task.assignees.length > 0 ? ` · ${task.assignees.map((person) => person.name).join(', ')}` : ''}
+          </Typography>
+          {task.description ? (
+            <Typography sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{task.description}</Typography>
+          ) : null}
+        </Box>
+        {canWrite && task.kind === 'one_time' ? (
+          <Button
+            size="small"
+            variant="contained"
+            data-testid="finish-room-task"
+            disabled={finish.isPending}
+            onClick={() => finish.mutate()}
+          >
+            {finish.isPending ? 'Finishing…' : 'Finished'}
+          </Button>
+        ) : null}
+      </Box>
+      {finish.error ? (
+        <Alert sx={{ mt: 1 }} severity="error">
+          {finish.error.message}
+        </Alert>
       ) : null}
     </Box>
   );
 }
 
 function DutyRow({ duty }: { duty: WorkspaceDuty }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'operations.write');
+  const queryClient = useQueryClient();
+  const finish = useMutation({
+    mutationFn: () => apiSend(`/operations/sites/${duty.siteId}/recurring/${duty.id}/complete`, recurringViewSchema, {}),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['workspace'] });
+      await queryClient.invalidateQueries({ queryKey: ['operations', duty.siteId] });
+    },
+  });
   return (
     <Box
       data-testid={`workspace-duty-${duty.id}`}
       sx={{ border: `1px solid ${workbench.line}`, bgcolor: workbench.paper, px: 1.5, py: 1.25 }}
     >
-      <Typography>
-        <KindChip label="Duty" />
-        <RouterLink to="/operations/recurring">{duty.title}</RouterLink>
-        {` · ${duty.siteName}`}
-        {duty.roomName ? ` · ${duty.roomName}` : ''}
-        {` · next ${formatCalendarDate(duty.nextDueOn)}`}
-      </Typography>
-      <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.35 }}>
-        {duty.cadence} · {duty.assigneeLabel}
-        {duty.sopTitle ? ` · ${duty.sopTitle}` : ''}
-      </Typography>
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <Box sx={{ flex: 1, minWidth: 200 }}>
+          <Typography>
+            <KindChip label="Duty" />
+            <RouterLink to="/operations/recurring">{duty.title}</RouterLink>
+            {` · ${duty.siteName}`}
+            {duty.roomName ? ` · ${duty.roomName}` : ''}
+            {` · next ${formatCalendarDate(duty.nextDueOn)}`}
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.35 }}>
+            {duty.cadence} · {duty.assigneeLabel}
+            {duty.sopTitle ? ` · ${duty.sopTitle}` : ''}
+          </Typography>
+        </Box>
+        {canWrite ? (
+          <Button
+            size="small"
+            variant="contained"
+            data-testid="finish-duty"
+            disabled={finish.isPending}
+            onClick={() => finish.mutate()}
+          >
+            {finish.isPending ? 'Finishing…' : 'Finished'}
+          </Button>
+        ) : null}
+      </Box>
+      {finish.error ? (
+        <Alert sx={{ mt: 1 }} severity="error">
+          {finish.error.message}
+        </Alert>
+      ) : null}
     </Box>
   );
 }

@@ -70,6 +70,20 @@ export class RoomTasksService {
     return { id: existing.id, removed: true, voided: false };
   }
 
+  async complete(user: SessionUser, roomId: string, taskId: string): Promise<ManagedTask> {
+    const room = await this.room(user, roomId);
+    const existing = await this.owned(room.id, taskId);
+    if (existing.kind === 'recurring') {
+      throw new BadRequestException('Recurring room tasks stay on the schedule. Delete the task if it should stop.');
+    }
+    const updated = await this.prisma.roomTask.update({
+      where: { id: existing.id },
+      data: { status: 'done' },
+      include: assigneeInclude,
+    });
+    return toManagedTask(updated);
+  }
+
   private schedule(input: ManagedTaskInput): { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays: string | null; dueOn: Date | null } {
     if (input.kind === 'recurring') {
       if (input.cadence !== 'daily' && input.cadence !== 'weekly') {

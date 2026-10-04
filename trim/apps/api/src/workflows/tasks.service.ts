@@ -130,6 +130,17 @@ export class TasksService {
     return this.toDetail(task);
   }
 
+  async complete(user: SessionUser, taskId: string): Promise<CycleTaskDetail> {
+    const task = await this.loadTask(user, taskId);
+    if (task.status !== 'done') {
+      await this.prisma.cycleTask.update({
+        where: { id: task.id },
+        data: { status: 'done' },
+      });
+    }
+    return this.getTask(user, taskId);
+  }
+
   async comment(user: SessionUser, taskId: string, input: TaskCommentInput): Promise<CycleTaskDetail> {
     await this.loadTask(user, taskId);
     await this.prisma.cycleTaskComment.create({

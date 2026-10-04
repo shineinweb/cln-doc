@@ -44,6 +44,12 @@ export class TasksController {
     return this.tasks.getTask(user, taskId);
   }
 
+  @Post('tasks/:taskId/complete')
+  @RequirePermissions('tasks.write')
+  complete(@CurrentUser() user: SessionUser, @Param('taskId') taskId: string) {
+    return this.tasks.complete(user, taskId);
+  }
+
   @Post('tasks/:taskId/comments')
   @RequirePermissions('tasks.write')
   comment(
