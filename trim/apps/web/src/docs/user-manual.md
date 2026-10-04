@@ -127,7 +127,7 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **Activity** sits at the top of the Users tab. It counts people, sign-ins, access changes, and active people from the audit log for the last 14 days, draws a daily activity chart, and lists the most active people.
 
-**Users** lists every person in a table: name, email, role, and facilities. Use **Search users** to filter the list, and click a column header to sort. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
+**Users** lists every person in a table: name, email, phone, role, and facilities. Use **Search users** to filter the list, and click a column header to sort. **Add user** opens a form for name, email, password, phone, address (street, city, region, postal code), photo, role, and facilities. **Edit** changes that person, including phone, address, and photo. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
 
 **Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for every signed-in action across Serenity modules (opens, creates, changes, deletes). High-frequency status polls such as `/auth/me` and time-clock status are skipped so the log stays readable. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
 

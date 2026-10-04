@@ -1,4 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  SetMetadata,
+  StreamableFile,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import {
   accessDirectorySchema,
   accessPermissionInputSchema,
@@ -16,7 +31,7 @@ import {
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/permissions.guard';
-import { RequirePermissions } from '../auth/require-permissions.decorator';
+import { PERMISSIONS_KEY, RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AccessService } from './access.service';
 
@@ -51,6 +66,36 @@ export class AccessController {
   @Delete('users/:userId')
   async deleteUser(@CurrentUser() user: SessionUser, @Param('userId') userId: string) {
     return recordRemovedSchema.parse(await this.access.deleteUser(user, userId));
+  }
+
+  @Post('users/:userId/photo')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  async uploadPhoto(
+    @CurrentUser() user: SessionUser,
+    @Param('userId') userId: string,
+    @UploadedFile() file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ) {
+    return accessUserSchema.parse(await this.access.setPhoto(user, userId, file));
+  }
+
+  @Get('users/:userId/photo')
+  @SetMetadata(PERMISSIONS_KEY, [])
+  async downloadPhoto(@CurrentUser() user: SessionUser, @Param('userId') userId: string): Promise<StreamableFile> {
+    const file = await this.access.readPhoto(user, userId);
+    return new StreamableFile(file.body, {
+      type: file.contentType,
+      disposition: `inline; filename="${encodeURIComponent(file.fileName)}"`,
+    });
+  }
+
+  @Delete('users/:userId/photo')
+  async deletePhoto(@CurrentUser() user: SessionUser, @Param('userId') userId: string) {
+    return accessUserSchema.parse(await this.access.clearPhoto(user, userId));
   }
 
   @Post('roles')

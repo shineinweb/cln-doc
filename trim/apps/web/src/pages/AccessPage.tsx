@@ -33,9 +33,10 @@ import {
   type AccessUserInput,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type InputHTMLAttributes, type ReactNode } from 'react';
-import { ApiError, apiGet, apiSend } from '../api/client';
+import { useEffect, useState, type InputHTMLAttributes, type ReactNode } from 'react';
+import { ApiError, apiGet, apiSend, apiUpload } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { TOKEN_KEY } from '../auth/storage';
 import { PageHeader } from '../components/PageHeader';
 import {
   DeleteRecord,
@@ -147,7 +148,13 @@ function AddUserForm({
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
-    mutationFn: (body: AccessUserInput) => apiSend('/access/users', accessUserSchema, body),
+    mutationFn: async (body: UserFormValue) => {
+      const created = await apiSend('/access/users', accessUserSchema, body.profile);
+      if (body.photo) {
+        return apiUpload(`/access/users/${created.id}/photo`, accessUserSchema, body.photo);
+      }
+      return created;
+    },
     onSuccess: async () => {
       setError(null);
       onAdded();
@@ -182,7 +189,7 @@ function UserTable({ directory, canManage }: { directory: AccessDirectory; canMa
     directory.users,
     list,
     (person, query) =>
-      [person.name, person.email, person.roleName, facilityLabel(person)].join(' ').toLowerCase().includes(query),
+      [person.name, person.email, person.phone ?? '', person.roleName, facilityLabel(person)].join(' ').toLowerCase().includes(query),
     (person, key) => {
       if (key === 'email') return person.email;
       if (key === 'role') return person.roleName;
@@ -227,6 +234,7 @@ function UserTable({ directory, canManage }: { directory: AccessDirectory; canMa
                       onClick={() => list.toggleSort('email')}
                       testId="user-sort-email"
                     />
+                    <TableCell>Phone</TableCell>
                     <SortableHeader
                       label="Role"
                       active={list.sortKey === 'role'}
@@ -272,7 +280,7 @@ function UserRow({
   const [mode, setMode] = useState<'closed' | 'view' | 'edit'>('closed');
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
-    mutationFn: (body: AccessUserInput) => apiSend(`/access/users/${person.id}`, accessUserSchema, body, 'PATCH'),
+    mutationFn: (body: UserFormValue) => apiSend(`/access/users/${person.id}`, accessUserSchema, body.profile, 'PATCH'),
     onSuccess: async () => {
       setError(null);
       setMode('closed');
@@ -292,9 +300,13 @@ function UserRow({
     <>
       <TableRow data-testid="user-row" hover>
         <TableCell data-testid="user-row-name" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-          {person.name}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <UserAvatar userId={person.id} photoUrl={person.photoUrl} name={person.name} />
+            {person.name}
+          </Box>
         </TableCell>
         <TableCell sx={{ color: 'text.secondary' }}>{person.email}</TableCell>
+        <TableCell data-testid="user-row-phone">{person.phone ?? '—'}</TableCell>
         <TableCell>{person.roleName}</TableCell>
         <TableCell>{facilityLabel(person)}</TableCell>
         <TableCell align="right">
@@ -313,8 +325,10 @@ function UserRow({
       </TableRow>
       {mode === 'view' ? (
         <TableRow>
-          <TableCell colSpan={5}>
+          <TableCell colSpan={6}>
             <Typography>{person.email}</Typography>
+            <Typography>Phone: {person.phone ?? '—'}</Typography>
+            <Typography data-testid="user-row-address">Address: {formatAddress(person)}</Typography>
             <Typography>Role: {person.roleName}</Typography>
             <Typography>Facilities: {facilityLabel(person)}</Typography>
           </TableCell>
@@ -322,15 +336,22 @@ function UserRow({
       ) : null}
       {mode === 'edit' ? (
         <TableRow>
-          <TableCell colSpan={5}>
+          <TableCell colSpan={6}>
             <UserFields
               directory={directory}
+              userId={person.id}
+              photoUrl={person.photoUrl}
               initial={{
                 name: person.name,
                 email: person.email,
                 password: '',
                 roleId: person.roleId ?? directory.roles[0]?.id ?? '',
                 siteIds: person.siteIds,
+                phone: person.phone,
+                addressLine1: person.addressLine1,
+                city: person.city,
+                region: person.region,
+                postalCode: person.postalCode,
               }}
               pending={save.isPending}
               submitLabel="Save changes"
@@ -346,9 +367,13 @@ function UserRow({
   );
 }
 
+type UserFormValue = { profile: AccessUserInput; photo: File | null };
+
 function UserFields({
   directory,
   initial,
+  userId,
+  photoUrl = null,
   passwordRequired = false,
   pending,
   submitLabel,
@@ -358,28 +383,93 @@ function UserFields({
 }: {
   directory: AccessDirectory;
   initial: AccessUserInput;
+  userId?: string;
+  photoUrl?: string | null;
   passwordRequired?: boolean;
   pending?: boolean;
   submitLabel: string;
   submitTestId: string;
-  onSubmit: (body: AccessUserInput) => void;
+  onSubmit: (body: UserFormValue) => void;
   onCancel: () => void;
 }) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState(initial.name);
   const [email, setEmail] = useState(initial.email);
   const [password, setPassword] = useState(initial.password);
   const [roleId, setRoleId] = useState(initial.roleId);
   const [siteIds, setSiteIds] = useState(initial.siteIds);
+  const [phone, setPhone] = useState(initial.phone ?? '');
+  const [addressLine1, setAddressLine1] = useState(initial.addressLine1 ?? '');
+  const [city, setCity] = useState(initial.city ?? '');
+  const [region, setRegion] = useState(initial.region ?? '');
+  const [postalCode, setPostalCode] = useState(initial.postalCode ?? '');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
   const role = directory.roles.find((item) => item.id === roleId);
+  const uploadPhoto = useMutation({
+    mutationFn: (file: File) => apiUpload(`/access/users/${userId}/photo`, accessUserSchema, file),
+    onSuccess: async () => {
+      setPhotoError(null);
+      setPhoto(null);
+      await queryClient.invalidateQueries({ queryKey: ['access'] });
+    },
+    onError: (caught) => setPhotoError(caught instanceof ApiError ? caught.message : 'The photo could not be saved.'),
+  });
+  const clearPhoto = useMutation({
+    mutationFn: () => apiSend(`/access/users/${userId}/photo`, accessUserSchema, undefined, 'DELETE'),
+    onSuccess: async () => {
+      setPhoto(null);
+      setLocalPreview(null);
+      await queryClient.invalidateQueries({ queryKey: ['access'] });
+    },
+    onError: (caught) => setPhotoError(caught instanceof ApiError ? caught.message : 'The photo could not be removed.'),
+  });
   return (
     <Box
       component="form"
       sx={{ display: 'grid', gap: 2, maxWidth: 560 }}
       onSubmit={(event) => {
         event.preventDefault();
-        onSubmit({ name, email, password, roleId, siteIds });
+        onSubmit({
+          profile: { name, email, password, roleId, siteIds, phone, addressLine1, city, region, postalCode },
+          photo: userId ? null : photo,
+        });
       }}
     >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        {localPreview ? (
+          <Box component="img" src={localPreview} alt="" data-testid="user-photo-preview" sx={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }} />
+        ) : (
+          <UserAvatar userId={userId ?? 'new'} photoUrl={photoUrl} name={name || 'New'} size={56} />
+        )}
+        <Box>
+          <Button component="label" size="small" variant="outlined" data-testid="user-photo-button">
+            {userId ? 'Upload photo' : 'Choose photo'}
+            <input
+              hidden
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              data-testid="user-photo"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                setPhoto(file);
+                setLocalPreview(file ? URL.createObjectURL(file) : null);
+                if (file && userId) {
+                  uploadPhoto.mutate(file);
+                }
+                event.target.value = '';
+              }}
+            />
+          </Button>
+          {userId && photoUrl ? (
+            <Button size="small" sx={{ ml: 1 }} disabled={clearPhoto.isPending} onClick={() => clearPhoto.mutate()} data-testid="user-photo-remove">
+              Remove photo
+            </Button>
+          ) : null}
+          {photoError ? <Typography sx={{ color: 'error.main', fontSize: 13, mt: 0.5 }}>{photoError}</Typography> : null}
+        </Box>
+      </Box>
       <TextField
         label="Name"
         value={name}
@@ -408,6 +498,42 @@ function UserFields({
         helperText={passwordRequired ? 'At least 8 characters.' : 'Leave blank to keep the current password.'}
         FormHelperTextProps={{ sx: { mx: 0, mt: 0.75 } }}
         inputProps={{ 'data-testid': 'user-password' }}
+      />
+      <TextField
+        label="Phone"
+        value={phone}
+        onChange={(event) => setPhone(event.target.value)}
+        fullWidth
+        inputProps={{ 'data-testid': 'user-phone' }}
+      />
+      <Typography sx={{ fontWeight: 700 }}>Address</Typography>
+      <TextField
+        label="Street"
+        value={addressLine1}
+        onChange={(event) => setAddressLine1(event.target.value)}
+        fullWidth
+        inputProps={{ 'data-testid': 'user-address-line1' }}
+      />
+      <TextField
+        label="City"
+        value={city}
+        onChange={(event) => setCity(event.target.value)}
+        fullWidth
+        inputProps={{ 'data-testid': 'user-city' }}
+      />
+      <TextField
+        label="Region"
+        value={region}
+        onChange={(event) => setRegion(event.target.value)}
+        fullWidth
+        inputProps={{ 'data-testid': 'user-region' }}
+      />
+      <TextField
+        label="Postal code"
+        value={postalCode}
+        onChange={(event) => setPostalCode(event.target.value)}
+        fullWidth
+        inputProps={{ 'data-testid': 'user-postal-code' }}
       />
       <TextField
         select
@@ -1146,7 +1272,92 @@ function AccessFormShell({
 
 function blankUser(directory: AccessDirectory): AccessUserInput {
   const role = directory.roles.find((item) => !item.opensEveryFacility) ?? directory.roles[0];
-  return { name: '', email: '', password: '', roleId: role?.id ?? '', siteIds: [] };
+  return {
+    name: '',
+    email: '',
+    password: '',
+    roleId: role?.id ?? '',
+    siteIds: [],
+    phone: '',
+    addressLine1: '',
+    city: '',
+    region: '',
+    postalCode: '',
+  };
+}
+
+function formatAddress(person: AccessUser): string {
+  const parts = [person.addressLine1, person.city, person.region, person.postalCode].filter(Boolean);
+  return parts.length ? parts.join(', ') : '—';
+}
+
+function UserAvatar({
+  userId,
+  photoUrl,
+  name,
+  size = 32,
+}: {
+  userId: string;
+  photoUrl: string | null;
+  name: string;
+  size?: number;
+}) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!photoUrl) {
+      setSrc(null);
+      return;
+    }
+    let cancelled = false;
+    let objectUrl = '';
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    void fetch(`/api${photoUrl}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then(async (response) => {
+        if (!response.ok || cancelled) {
+          return;
+        }
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        if (!cancelled) {
+          setSrc(objectUrl);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [photoUrl, userId]);
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+  return (
+    <Box
+      data-testid="user-avatar"
+      sx={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        overflow: 'hidden',
+        bgcolor: workbench.mist,
+        display: 'grid',
+        placeItems: 'center',
+        flexShrink: 0,
+      }}
+    >
+      {src ? (
+        <Box component="img" src={src} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        <Typography sx={{ fontSize: size > 40 ? 16 : 11, fontWeight: 800 }}>{initials || '?'}</Typography>
+      )}
+    </Box>
+  );
 }
 
 function facilityLabel(person: AccessUser): string {

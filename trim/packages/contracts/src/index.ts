@@ -1182,12 +1182,19 @@ export const settingsViewSchema = z.object({
   openai: openAiApiViewSchema,
 });
 
+const optionalProfileText = (max: number) => z.string().trim().max(max).optional().nullable();
+
 export const accessUserInputSchema = z.object({
   name: z.string().trim().min(1).max(191),
   email: z.string().trim().min(1).max(191),
   password: z.string().max(200).optional().default(''),
   roleId: z.string().trim().min(1),
   siteIds: z.array(z.string().trim().min(1)).default([]),
+  phone: optionalProfileText(40),
+  addressLine1: optionalProfileText(191),
+  city: optionalProfileText(120),
+  region: optionalProfileText(120),
+  postalCode: optionalProfileText(32),
 });
 
 export const accessUserSchema = z.object({
@@ -1199,6 +1206,12 @@ export const accessUserSchema = z.object({
   opensEveryFacility: z.boolean(),
   siteIds: z.array(z.string()),
   siteNames: z.array(z.string()),
+  phone: z.string().nullable(),
+  addressLine1: z.string().nullable(),
+  city: z.string().nullable(),
+  region: z.string().nullable(),
+  postalCode: z.string().nullable(),
+  photoUrl: z.string().nullable(),
 });
 
 export const accessRoleInputSchema = z.object({
