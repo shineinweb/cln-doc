@@ -3,6 +3,8 @@ import {
   cycleObservationSchema,
   defoliationInputSchema,
   defoliationSchema,
+  ipmScheduleInputSchema,
+  ipmScheduleSchema,
   managedTaskInputSchema,
   managedTaskSchema,
   recordRemovedSchema,
@@ -10,6 +12,8 @@ import {
   zoneInputSchema,
   type Defoliation,
   type DefoliationInput,
+  type IpmSchedule,
+  type IpmScheduleInput,
   type ManagedTaskInput,
   type RecordRemoved,
   type RoomDetail,
@@ -98,6 +102,16 @@ export class RoomsController {
     @Body(new ZodValidationPipe(defoliationInputSchema)) body: DefoliationInput,
   ): Promise<Defoliation[]> {
     return z.array(defoliationSchema).parse(await this.facilities.saveDefoliations(user, roomId, body));
+  }
+
+  @Put(':roomId/ipm-schedule')
+  @RequirePermissions('rooms.write')
+  async saveIpmSchedule(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(ipmScheduleInputSchema)) body: IpmScheduleInput,
+  ): Promise<IpmSchedule> {
+    return ipmScheduleSchema.parse(await this.facilities.saveIpmSchedule(user, roomId, body));
   }
 
   @Post(':roomId/zones')

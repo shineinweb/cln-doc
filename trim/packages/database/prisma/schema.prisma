@@ -690,6 +690,8 @@ model Room {
   staleAfterMinutes Int      @default(60) @map("stale_after_minutes")
   trolmasterEnabled Boolean  @default(true) @map("trolmaster_enabled")
   trolmasterTest    Boolean  @default(false) @map("trolmaster_test")
+  /// Twice-weekly IPM scout days as sorted CSV, e.g. "tue,fri". Null = unset.
+  ipmWeekdays       String?  @map("ipm_weekdays") @db.VarChar(64)
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

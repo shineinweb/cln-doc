@@ -7,6 +7,8 @@ import type {
   FacilityBoard,
   FacilityBoardCell,
   FacilityBoardColumn,
+  IpmSchedule,
+  IpmScheduleInput,
   OrganizationSummary,
   RecordRemoved,
   Room,
@@ -21,6 +23,7 @@ import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomTasksService } from './room-tasks.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
+import { normalizeWeekdays, parseWeekdays, weekdaysToCsv } from './weekdays';
 
 const roomInclude = {
   zones: { orderBy: { name: 'asc' as const } },
@@ -264,7 +267,21 @@ export class FacilitiesService {
       ...signals,
       managedTasks: await this.roomTasks.list(room.id),
       defoliations: await this.defoliationViews(room.id, current?.startDate ?? null),
+      ipmSchedule: { weekdays: parseWeekdays(room.ipmWeekdays) },
     };
+  }
+
+  async saveIpmSchedule(user: SessionUser, roomId: string, input: IpmScheduleInput): Promise<IpmSchedule> {
+    const room = await this.roomForChange(user, roomId);
+    const weekdays = normalizeWeekdays(input.weekdays);
+    if (weekdays.length !== 0 && weekdays.length !== 2) {
+      throw new BadRequestException('Choose exactly two days for the twice-a-week IPM schedule, or clear both to turn it off.');
+    }
+    await this.prisma.room.update({
+      where: { id: room.id },
+      data: { ipmWeekdays: weekdaysToCsv(weekdays) },
+    });
+    return { weekdays };
   }
 
   async saveDefoliations(user: SessionUser, roomId: string, input: DefoliationInput): Promise<Defoliation[]> {

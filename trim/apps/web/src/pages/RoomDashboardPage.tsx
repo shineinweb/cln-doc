@@ -23,6 +23,7 @@ import { RoomAlertRules, RoomEnvironment } from '../environment/RoomEnvironment'
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { DefoliationSchedule } from '../rooms/DefoliationSchedule';
+import { IpmSchedule } from '../rooms/IpmSchedule';
 import { RoomNotesPanel } from '../rooms/RoomNotesPanel';
 import { RoomTasksPanel } from '../rooms/RoomTasksPanel';
 import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
@@ -123,6 +124,7 @@ export function RoomDashboardPage() {
         <Box data-testid="room-settings" sx={{ display: 'grid', gap: 3 }}>
           <RoomAlertRules room={room.data} />
           {room.data.roomType === 'dry' ? null : <DefoliationSchedule room={room.data} />}
+          <IpmSchedule room={room.data} />
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
           ) : null}

@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { ManagedTask, ManagedTaskInput, RecordRemoved, SessionUser, Weekday } from '@trim/contracts';
+import type { ManagedTask, ManagedTaskInput, RecordRemoved, SessionUser } from '@trim/contracts';
 import { dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assigneesForSite } from './assignee';
 import { assertSiteAccess } from './site-access';
+import { normalizeWeekdays, parseWeekdays } from './weekdays';
 
 @Injectable()
 export class RoomTasksService {
@@ -172,18 +173,6 @@ function toManagedTask(row: {
 }
 
 const assigneeInclude = { assignees: { include: { user: true } } } as const;
-
-const WEEKDAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
-
-function normalizeWeekdays(days: Weekday[] | null | undefined): Weekday[] {
-  const chosen = new Set(days ?? []);
-  return WEEKDAY_ORDER.filter((day) => chosen.has(day));
-}
-
-function parseWeekdays(value: string | null): Weekday[] {
-  const chosen = new Set((value ?? '').split(','));
-  return WEEKDAY_ORDER.filter((day) => chosen.has(day));
-}
 
 function blankDescription(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? '';
