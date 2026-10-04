@@ -499,9 +499,9 @@ export const cropCycleDetailSchema = cropCycleSummarySchema.extend({
   workflow: cycleWorkflowSchema.nullable(),
   tasks: z.array(cycleTaskSummarySchema),
   /** Tagged plants currently on this crop (what Harvest uses). */
-  plants: z.array(cyclePlantSchema),
+  plants: z.array(cyclePlantSchema).default([]),
   /** Licenses that cover this facility — used when adding tags on the crop page. */
-  licenses: z.array(cycleLicenseOptionSchema),
+  licenses: z.array(cycleLicenseOptionSchema).default([]),
 });
 
 /** Add tagged plants directly onto a crop so harvest can run from one page. */

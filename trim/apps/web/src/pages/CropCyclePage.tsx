@@ -209,15 +209,18 @@ function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
   const { user } = useAuth();
   const canAddPlants = can(user, 'inventory.write', 'harvests.write');
   const canHarvest = can(user, 'harvests.write');
-  const [licenseId, setLicenseId] = useState(cycle.licenses[0]?.id ?? '');
+  // Cached cycle payloads from before this panel shipped may omit these arrays.
+  const plants = cycle.plants ?? [];
+  const licenses = cycle.licenses ?? [];
+  const [licenseId, setLicenseId] = useState(licenses[0]?.id ?? '');
   const [tagText, setTagText] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!licenseId && cycle.licenses[0]?.id) {
-      setLicenseId(cycle.licenses[0].id);
+    if (!licenseId && licenses[0]?.id) {
+      setLicenseId(licenses[0].id);
     }
-  }, [cycle.licenses, licenseId]);
+  }, [licenses, licenseId]);
 
   const addPlants = useMutation({
     mutationFn: (body: { tags: string[]; licenseId?: string }) =>
@@ -254,13 +257,13 @@ function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
 
         <Box>
           <Typography sx={{ fontWeight: 700, mb: 0.5 }}>1. Plants on this crop</Typography>
-          {cycle.plants.length === 0 ? (
+          {plants.length === 0 ? (
             <Typography color="text.secondary" data-testid="harvest-needs-plants">
               None yet.
             </Typography>
           ) : (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }} data-testid="cycle-plant-tags">
-              {cycle.plants.map((plant) => (
+              {plants.map((plant) => (
                 <Chip
                   key={plant.id}
                   component={RouterLink}
@@ -286,12 +289,12 @@ function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
               }
               addPlants.mutate({
                 tags,
-                ...(cycle.licenses.length > 1 ? { licenseId } : {}),
+                ...(licenses.length > 1 ? { licenseId } : {}),
               });
             }}
           >
             <Typography sx={{ fontWeight: 700 }}>2. Add tags</Typography>
-            {cycle.licenses.length === 0 ? (
+            {licenses.length === 0 ? (
               <Alert severity="warning">
                 No license covers {cycle.siteName}. Add one under{' '}
                 <Button component={RouterLink} to="/compliance" size="small" sx={{ p: 0, minWidth: 0, verticalAlign: 'baseline' }}>
@@ -301,7 +304,7 @@ function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
               </Alert>
             ) : (
               <>
-                {cycle.licenses.length > 1 ? (
+                {licenses.length > 1 ? (
                   <TextField
                     select
                     label="License"
@@ -310,7 +313,7 @@ function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
                     required
                     inputProps={{ 'data-testid': 'cycle-plant-license' }}
                   >
-                    {cycle.licenses.map((license) => (
+                    {licenses.map((license) => (
                       <MenuItem key={license.id} value={license.id}>
                         {license.licenseNumber}
                       </MenuItem>
@@ -318,7 +321,7 @@ function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
                   </TextField>
                 ) : (
                   <Typography sx={{ color: 'text.secondary' }}>
-                    License {cycle.licenses[0]?.licenseNumber}
+                    License {licenses[0]?.licenseNumber}
                   </Typography>
                 )}
                 <TextField
