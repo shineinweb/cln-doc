@@ -47,6 +47,7 @@ export const theme = createTheme({
         html: {
           overflowX: 'hidden',
           maxWidth: '100%',
+          overscrollBehaviorX: 'none',
         },
         body: {
           backgroundColor: workbench.canvas,
@@ -54,8 +55,16 @@ export const theme = createTheme({
           fontFamily: bodyFont,
           overflowX: 'hidden',
           maxWidth: '100%',
+          overscrollBehaviorX: 'none',
+          // Keep page gestures vertical; wide tables scroll inside their own containers.
+          touchAction: 'pan-y',
         },
-        '#root': { minHeight: '100vh', maxWidth: '100%', overflowX: 'hidden' },
+        '#root': {
+          minHeight: '100vh',
+          maxWidth: '100%',
+          overflowX: 'hidden',
+          overscrollBehaviorX: 'none',
+        },
         a: { color: workbench.sky },
       },
     },
@@ -102,9 +111,14 @@ export const theme = createTheme({
         root: { backgroundImage: 'none' },
       },
     },
-    MuiTable: {
+    MuiTableContainer: {
       styleOverrides: {
-        root: { minWidth: 560 },
+        root: {
+          maxWidth: '100%',
+          overflowX: 'auto',
+          overscrollBehaviorX: 'contain',
+          backgroundColor: 'transparent',
+        },
       },
     },
     MuiTableHead: {
@@ -141,13 +155,6 @@ export const theme = createTheme({
           fontSize: 14,
           paddingTop: 12,
           paddingBottom: 12,
-        },
-      },
-    },
-    MuiTableContainer: {
-      styleOverrides: {
-        root: {
-          backgroundColor: 'transparent',
         },
       },
     },

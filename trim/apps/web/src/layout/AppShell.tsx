@@ -129,6 +129,8 @@ export function AppShell() {
         minHeight: '100vh',
         maxWidth: '100%',
         overflowX: 'hidden',
+        overscrollBehaviorX: 'none',
+        width: '100%',
         background: `radial-gradient(720px 320px at 0% -8%, rgba(255, 79, 139, 0.32), transparent 55%), radial-gradient(640px 280px at 100% 0%, rgba(61, 220, 255, 0.18), transparent 50%), radial-gradient(520px 320px at 80% 100%, rgba(124, 92, 255, 0.28), transparent 55%), ${workbench.canvas}`,
       }}
     >

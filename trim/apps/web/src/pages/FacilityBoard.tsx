@@ -47,6 +47,7 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
         <Alert severity="info">No rooms are recorded for this facility.</Alert>
       ) : (
         <TableContainer
+          data-testid="facility-board-scroll"
           sx={{
             border: `1px solid ${workbench.line}`,
             borderRadius: 2,
@@ -54,9 +55,11 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
             overflowX: 'auto',
             maxWidth: '100%',
             width: '100%',
+            overscrollBehaviorX: 'contain',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
-          <Table size="small" stickyHeader sx={{ minWidth: 720, width: 'max-content' }}>
+          <Table size="small" stickyHeader sx={{ minWidth: 720, width: 'max-content', tableLayout: 'auto' }}>
             <TableHead>
               <TableRow>
                 <TableCell

@@ -146,7 +146,7 @@ export function TablePanel({ children, testId }: { children: ReactNode; testId?:
         bgcolor: workbench.paper,
       }}
     >
-      <TableContainer sx={{ overflowX: 'auto' }}>{children}</TableContainer>
+      <TableContainer sx={{ overflowX: 'auto', maxWidth: '100%', overscrollBehaviorX: 'contain' }}>{children}</TableContainer>
     </Card>
   );
 }

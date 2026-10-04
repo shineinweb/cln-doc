@@ -52,6 +52,9 @@ export function FloatingSerenityChat() {
         gap: 1.25,
         pointerEvents: 'none',
         maxWidth: { sm: 400 },
+        // Keep the fixed shell from contributing to page pan/overflow.
+        width: { xs: 'auto', sm: 'auto' },
+        overflow: 'visible',
       }}
     >
       {open ? (
