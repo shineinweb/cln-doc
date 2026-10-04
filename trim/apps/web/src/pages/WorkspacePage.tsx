@@ -38,11 +38,8 @@ export function WorkspacePage() {
       <PageHeader
         kicker="Tasks"
         title="All tasks due today"
-        lede={`One place for crop-cycle assignments, room chores (including AI and alert follow-ups), and Operations recurring duties due ${formatCalendarDate(data.date)}. Tasks from another facility stay off this list.`}
+        lede={`Crop-cycle work, room chores, and Operations recurring duties due ${formatCalendarDate(data.date)}. Training stays under Operations → Training.`}
       />
-      <Typography sx={{ color: 'text.secondary', mb: 2 }} data-testid="workspace-statement">
-        {data.statement}
-      </Typography>
       {data.notices.length > 0 ? (
         <Box sx={{ display: 'grid', gap: 1.5, mb: 3 }} data-testid="workspace-notices">
           {data.notices.map((notice) => (

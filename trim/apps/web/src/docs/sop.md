@@ -33,7 +33,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 **Steps.**
 
-1. Open **Tasks**. The title is All tasks due today. The introduction names the date.
+1. Open **Tasks**. The title is All tasks due today. The introduction names the date and the three task lists.
 2. Open the assignment card. It shows the facility, room, task title, due date, assignee, and crop.
 3. Read the instructions. Scout the canopy also shows the Canopy scout note: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.” Lower-leaf pass shows the chip Supervisor approval and the line “Depends on Scout the canopy.”
 4. Check the boxes on the card. Scout the canopy uses “Check the first half of the room” and “Check the second half of the room.” Lower-leaf pass uses “Clear the aisle” and “Bag the leaves.”

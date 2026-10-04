@@ -1364,6 +1364,43 @@ export const dashboardAnalyticsSchema = z.object({
   packagesByItem: z.array(dashboardPackageItemSchema),
 });
 
+/** Room × milestone board for a facility (whiteboard-style schedule). */
+export const facilityBoardColumnSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  kind: z.enum(['start', 'defoliation', 'harvest', 'trim', 'chore']),
+  dayNumber: z.number().int().nullable(),
+});
+
+export const facilityBoardCellSchema = z.object({
+  columnKey: z.string(),
+  dates: z.array(z.string()),
+  status: z.enum(['empty', 'scheduled', 'due', 'done', 'overdue']),
+  detail: z.string().nullable(),
+  source: z.enum(['cycle', 'defoliation', 'harvest', 'cycle_task', 'room_task', 'duty']).nullable(),
+});
+
+export const facilityBoardRowSchema = z.object({
+  roomId: z.string(),
+  roomName: z.string(),
+  roomType: z.string(),
+  cycleId: z.string().nullable(),
+  cycleName: z.string().nullable(),
+  cultivar: z.string().nullable(),
+  cells: z.array(facilityBoardCellSchema),
+});
+
+export const facilityBoardSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  timezone: z.string(),
+  today: z.string(),
+  statement: z.string(),
+  columns: z.array(facilityBoardColumnSchema),
+  rows: z.array(facilityBoardRowSchema),
+  notes: z.array(z.string()),
+});
+
 export const coachGapSchema = z.object({
   kind: z.enum(['untagged_plants', 'discrepancies', 'pending_submissions', 'unqueued_packages', 'missing_waste']),
   count: z.number().int(),
@@ -1799,6 +1836,10 @@ export type DashboardAnalytics = z.infer<typeof dashboardAnalyticsSchema>;
 export type DashboardCogs = z.infer<typeof dashboardCogsSchema>;
 export type DashboardTopStrain = z.infer<typeof dashboardTopStrainSchema>;
 export type DashboardPackageItem = z.infer<typeof dashboardPackageItemSchema>;
+export type FacilityBoard = z.infer<typeof facilityBoardSchema>;
+export type FacilityBoardColumn = z.infer<typeof facilityBoardColumnSchema>;
+export type FacilityBoardRow = z.infer<typeof facilityBoardRowSchema>;
+export type FacilityBoardCell = z.infer<typeof facilityBoardCellSchema>;
 export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
 export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;

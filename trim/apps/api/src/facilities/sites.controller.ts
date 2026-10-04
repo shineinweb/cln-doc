@@ -2,10 +2,12 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } f
 import {
   createRoomSchema,
   createSiteSchema,
+  facilityBoardSchema,
   recordRemovedSchema,
   roomPageSchema,
   type CreateRoom,
   type CreateSite,
+  type FacilityBoard,
   type RecordRemoved,
   type Room,
   type SessionUser,
@@ -24,6 +26,11 @@ export class SitesController {
   @Get()
   list(@CurrentUser() user: SessionUser): Promise<Site[]> {
     return this.facilities.listSites(user);
+  }
+
+  @Get(':siteId/board')
+  async board(@CurrentUser() user: SessionUser, @Param('siteId') siteId: string): Promise<FacilityBoard> {
+    return facilityBoardSchema.parse(await this.facilities.facilityBoard(user, siteId));
   }
 
   @Post()
