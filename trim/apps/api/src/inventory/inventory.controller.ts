@@ -12,20 +12,24 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { InventoryService } from './inventory.service';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class InventoryController {
   constructor(private readonly inventory: InventoryService) {}
 
   @Get('compliance')
+  @RequirePermissions('compliance.read', 'inventory.read')
   compliance(@CurrentUser() user: SessionUser) {
     return this.inventory.compliance(user);
   }
 
   @Get('licenses/:licenseId')
+  @RequirePermissions('inventory.read')
   license(
     @CurrentUser() user: SessionUser,
     @Param('licenseId') licenseId: string,
@@ -36,6 +40,7 @@ export class InventoryController {
   }
 
   @Post('licenses/:licenseId/imports')
+  @RequirePermissions('inventory.write')
   importFile(
     @CurrentUser() user: SessionUser,
     @Param('licenseId') licenseId: string,
@@ -45,11 +50,13 @@ export class InventoryController {
   }
 
   @Get('plants/:plantId')
+  @RequirePermissions('inventory.read')
   plant(@CurrentUser() user: SessionUser, @Param('plantId') plantId: string) {
     return this.inventory.plantDetail(user, plantId);
   }
 
   @Post('plants/:plantId/moves')
+  @RequirePermissions('inventory.write')
   move(
     @CurrentUser() user: SessionUser,
     @Param('plantId') plantId: string,
@@ -59,6 +66,7 @@ export class InventoryController {
   }
 
   @Post('plants/:plantId/stages')
+  @RequirePermissions('inventory.write')
   stage(
     @CurrentUser() user: SessionUser,
     @Param('plantId') plantId: string,
@@ -68,6 +76,7 @@ export class InventoryController {
   }
 
   @Post('plants/:plantId/observations')
+  @RequirePermissions('inventory.write')
   observe(
     @CurrentUser() user: SessionUser,
     @Param('plantId') plantId: string,

@@ -16,15 +16,18 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { EnvironmentService } from './environment.service';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class EnvironmentController {
   constructor(private readonly environment: EnvironmentService) {}
 
   @Post('rooms/:roomId/readings')
+  @RequirePermissions('rooms.write')
   async createReading(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -35,6 +38,7 @@ export class EnvironmentController {
   }
 
   @Post('rooms/:roomId/readings/import')
+  @RequirePermissions('rooms.write')
   async importReadings(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -45,6 +49,7 @@ export class EnvironmentController {
   }
 
   @Post('rooms/:roomId/alert-rules')
+  @RequirePermissions('rooms.write')
   async createRule(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -55,6 +60,7 @@ export class EnvironmentController {
   }
 
   @Get('readings/:readingId')
+  @RequirePermissions('rooms.read')
   async getReading(
     @CurrentUser() user: SessionUser,
     @Param('readingId') readingId: string,

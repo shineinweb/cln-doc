@@ -1,12 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import type { CoachAnswer, SessionUser, SiteCoach, WorkspaceNotice } from '@trim/contracts';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import type {
+  CoachAnswer,
+  CoachChatAction,
+  CoachChatRequest,
+  CoachChatResponse,
+  CoachHelper,
+  SessionUser,
+  SiteCoach,
+  WorkspaceNotice,
+} from '@trim/contracts';
+import { hasPermission } from '../auth/permissions';
 import { calendarDateInTimeZone, dbDateFromKey } from '../cycles/cycle-day';
+import { FacilitiesService } from '../facilities/facilities.service';
 import { assertSiteAccess, authorizedSiteWhere } from '../facilities/site-access';
+import { EnvironmentService } from '../environment/environment.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from '../reports/reports.service';
-import { EnvironmentService } from '../environment/environment.service';
+import { OpenAiService } from '../serenity/openai.service';
+import { asSerenity } from '../serenity/serenity';
 
 const STATEMENT = 'This is a readiness check of stored rows. It is not a state certification.';
+
+const SUGGESTIONS = [
+  'Generate tasks from stored procedures',
+  'Train workers on Canopy scout',
+  'How do I check irrigation?',
+  'Remove day 10 defoliation from F1–F4',
+  'Remember that flower rooms prefer 78°F lights-on',
+];
 
 const METRIC_LABEL: Record<string, string> = {
   temperature: 'Temperature',
@@ -16,6 +37,7 @@ const METRIC_LABEL: Record<string, string> = {
 };
 
 type SopRow = { id: string; title: string; summary: string };
+type PersonRow = { id: string; name: string };
 
 @Injectable()
 export class CoachService {
@@ -23,13 +45,19 @@ export class CoachService {
     private readonly prisma: PrismaService,
     private readonly reports: ReportsService,
     private readonly environment: EnvironmentService,
+    private readonly openai: OpenAiService,
+    private readonly facilities: FacilitiesService,
   ) {}
 
   async forSite(user: SessionUser, siteId: string): Promise<SiteCoach> {
     const site = await this.siteFor(user, siteId);
     await this.ensureSite(site.id, site.organizationId, site.timezone);
     const report = await this.reports.siteReport(user, site.id);
-    const [notices, licenses] = await Promise.all([this.listNotices([site.id]), this.readiness(site.id)]);
+    const [notices, licenses, helper] = await Promise.all([
+      this.listNotices([site.id]),
+      this.readiness(site.id),
+      this.helperContext(site.id, site.organizationId),
+    ]);
     return {
       siteId: site.id,
       siteName: site.name,
@@ -37,6 +65,7 @@ export class CoachService {
       notices,
       licenses,
       statement: STATEMENT,
+      helper,
     };
   }
 
@@ -47,7 +76,78 @@ export class CoachService {
       orderBy: { title: 'asc' },
       select: { id: true, title: true, summary: true },
     });
-    return quoteSop(question, sops);
+    const quoted = quoteSop(question, sops);
+    if (quoted.matched) {
+      return {
+        ...quoted,
+        message: asSerenity(`${quoted.title}. ${quoted.summary}`),
+      };
+    }
+    const enriched = await this.askOpenAi(user, site, question, sops, []);
+    if (enriched) {
+      return { matched: false, title: null, summary: null, message: enriched };
+    }
+    return { ...quoted, message: asSerenity(quoted.message) };
+  }
+
+  async chat(user: SessionUser, siteId: string, body: CoachChatRequest): Promise<CoachChatResponse> {
+    const site = await this.siteFor(user, siteId);
+    await this.ensureSite(site.id, site.organizationId, site.timezone);
+    const helper = await this.helperContext(site.id, site.organizationId);
+    const intent = detectIntent(body.message, body.history ?? [], body.pendingProposal ?? null);
+    if (intent === 'help') {
+      return {
+        reply: asSerenity(
+          'I can generate room tasks from stored procedures, assign worker training, quote a stored procedure, update room defoliation schedules when you confirm (for example “Remove day 10 defoliation from F1–F4”), and learn notes with “Remember that…”.',
+        ),
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    if (intent === 'confirm_schedule_update') {
+      return this.withSerenityReply(await this.confirmScheduleUpdate(user, site, helper, body));
+    }
+    if (intent === 'propose_schedule_update') {
+      return this.withSerenityReply(await this.proposeRemoveDefoliation(user, site, helper, body.message));
+    }
+    if (intent === 'teach_serenity') {
+      return this.learnLesson(user, site.organizationId, body.message);
+    }
+    if (intent === 'generate_tasks') {
+      return this.withSerenityReply(await this.generateTasks(user, site, helper, body.message));
+    }
+    if (intent === 'train_workers') {
+      return this.withSerenityReply(await this.trainWorkers(user, site, helper, body.message));
+    }
+    const quoted = quoteSop(body.message, helper.sops);
+    if (quoted.matched) {
+      const openaiReply = await this.askOpenAi(user, site, body.message, helper.sops, body.history ?? [], quoted);
+      return {
+        reply: openaiReply ?? asSerenity(`${quoted.title}. ${quoted.summary}`),
+        matchedSopTitle: quoted.title,
+        matchedSopSummary: quoted.summary,
+        actions: [],
+        suggestions: [
+          `Generate tasks for ${quoted.title}`,
+          `Train workers on ${quoted.title}`,
+          'Generate tasks from stored procedures',
+        ],
+      };
+    }
+    const openaiReply = await this.askOpenAi(user, site, body.message, helper.sops, body.history ?? []);
+    return {
+      reply:
+        openaiReply ??
+        asSerenity(
+          `${quoted.message} I can still generate tasks, assign training, update defoliation schedules when you confirm, or learn a note with “Remember that…”.`,
+        ),
+      matchedSopTitle: null,
+      matchedSopSummary: null,
+      actions: [],
+      suggestions: SUGGESTIONS,
+    };
   }
 
   async notices(user: SessionUser): Promise<WorkspaceNotice[]> {
@@ -59,6 +159,438 @@ export class CoachService {
       await this.ensureSite(site.id, site.organizationId, site.timezone);
     }
     return this.listNotices(sites.map((site) => site.id));
+  }
+
+  private async generateTasks(
+    _user: SessionUser,
+    site: { id: string; organizationId: string; timezone: string; name: string },
+    helper: CoachHelper,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    if (helper.rooms.length === 0) {
+      throw new BadRequestException('This facility has no rooms, so tasks cannot be generated.');
+    }
+    if (helper.sops.length === 0) {
+      throw new BadRequestException('No stored procedures are available to generate tasks from.');
+    }
+    const matched = quoteSop(message, helper.sops);
+    const sops = matched.matched
+      ? helper.sops.filter((sop) => sop.title === matched.title)
+      : helper.sops.slice(0, Math.min(4, helper.sops.length));
+    const dueOn = dbDateFromKey(calendarDateInTimeZone(new Date(), site.timezone));
+    const assigneeIds = helper.people.map((person) => person.id);
+    const actions: CoachChatAction[] = [];
+    for (const sop of sops) {
+      const room = helper.rooms[actions.length % helper.rooms.length]!;
+      const existing = await this.prisma.roomTask.findFirst({
+        where: { roomId: room.id, status: 'open', title: sop.title },
+        select: { id: true },
+      });
+      if (existing) {
+        continue;
+      }
+      const created = await this.prisma.roomTask.create({
+        data: {
+          roomId: room.id,
+          title: sop.title.slice(0, 191),
+          description: sop.summary,
+          kind: 'one_time',
+          dueOn,
+          status: 'open',
+          sopRecordId: sop.id,
+          assignees: { create: assigneeIds.map((userId) => ({ userId })) },
+        },
+      });
+      actions.push({
+        type: 'task',
+        taskId: created.id,
+        roomId: room.id,
+        roomName: room.name,
+        title: sop.title,
+        sopTitle: sop.title,
+      });
+    }
+    if (actions.length === 0) {
+      return {
+        reply: 'Open tasks already cover those stored procedures for this facility. Nothing new was created.',
+        matchedSopTitle: matched.matched ? matched.title : null,
+        matchedSopSummary: matched.matched ? matched.summary : null,
+        actions: [],
+        suggestions: ['Train workers on Canopy scout', 'How do I check irrigation?'],
+      };
+    }
+    const names = actions
+      .filter((action): action is Extract<CoachChatAction, { type: 'task' }> => action.type === 'task')
+      .map((action) => action.title)
+      .join(', ');
+    return {
+      reply: `Created ${actions.length} ${actions.length === 1 ? 'task' : 'tasks'} from stored procedures: ${names}.`,
+      matchedSopTitle: matched.matched ? matched.title : null,
+      matchedSopSummary: matched.matched ? matched.summary : null,
+      actions,
+      suggestions: ['Train workers on those procedures', 'How do I run Canopy scout?'],
+    };
+  }
+
+  private async trainWorkers(
+    user: SessionUser,
+    site: { id: string; organizationId: string; timezone: string; name: string },
+    helper: CoachHelper,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    if (helper.people.length === 0) {
+      throw new BadRequestException('No workers can open this facility, so training cannot be assigned.');
+    }
+    if (helper.sops.length === 0) {
+      throw new BadRequestException('No stored procedures are available for training.');
+    }
+    const matched = quoteSop(message, helper.sops);
+    const sop = matched.matched
+      ? helper.sops.find((row) => row.title === matched.title) ?? helper.sops[0]!
+      : helper.sops[0]!;
+    const trainees = await this.traineesFor(helper.people, site.id, sop.title);
+    if (trainees.length === 0) {
+      return {
+        reply: `Everyone who can open ${site.name} already has training on ${sop.title}.`,
+        matchedSopTitle: sop.title,
+        matchedSopSummary: sop.summary,
+        actions: [],
+        suggestions: ['Generate tasks from stored procedures', `How do I run ${sop.title}?`],
+      };
+    }
+    const actions: CoachChatAction[] = [];
+    for (const person of trainees) {
+      const created = await this.prisma.trainingRecord.create({
+        data: {
+          siteId: site.id,
+          traineeName: person.name,
+          title: `${sop.title} training`.slice(0, 191),
+          sopTitle: sop.title,
+          status: 'assigned',
+          completedOn: null,
+          actorName: user.name,
+        },
+      });
+      actions.push({
+        type: 'training',
+        trainingId: created.id,
+        traineeName: person.name,
+        title: `${sop.title} training`,
+        sopTitle: sop.title,
+      });
+    }
+    const names = actions
+      .filter((action): action is Extract<CoachChatAction, { type: 'training' }> => action.type === 'training')
+      .map((action) => action.traineeName)
+      .join(', ');
+    return {
+      reply: `Assigned ${sop.title} training to ${names}. Open Operations → Training to mark it complete.`,
+      matchedSopTitle: sop.title,
+      matchedSopSummary: sop.summary,
+      actions,
+      suggestions: ['Generate tasks from stored procedures', `How do I run ${sop.title}?`],
+    };
+  }
+
+  private async helperContext(siteId: string, organizationId: string): Promise<CoachHelper> {
+    const [rooms, sops, people] = await Promise.all([
+      this.prisma.room.findMany({
+        where: { siteId },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, code: true },
+      }),
+      this.prisma.sopRecord.findMany({
+        where: { organizationId },
+        orderBy: { title: 'asc' },
+        select: { id: true, title: true, summary: true },
+      }),
+      this.namedPeopleFor(organizationId, siteId),
+    ]);
+    return { rooms, sops, people };
+  }
+
+  private async proposeRemoveDefoliation(
+    user: SessionUser,
+    site: { id: string; name: string },
+    helper: CoachHelper,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    if (!hasPermission(user, 'rooms.write')) {
+      return {
+        reply: 'You need the rooms.write permission before I can change defoliation schedules.',
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    const parsed = parseDefoliationRemoval(message) ?? parseDefoliationRemovalFromHistory([{ role: 'user', content: message }]);
+    if (!parsed) {
+      return {
+        reply:
+          'Tell me which defoliation day and rooms to change, for example “Remove day 10 defoliation from F1–F4”. I will stage the change and ask you to confirm.',
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: ['Remove day 10 defoliation from F1–F4', ...SUGGESTIONS.slice(0, 3)],
+      };
+    }
+    const rooms = resolveRooms(helper.rooms, parsed.roomTokens);
+    if (rooms.length === 0) {
+      return {
+        reply: `I could not match those rooms in ${site.name}. Use room codes like F1 or F2.`,
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: ['Remove day 10 defoliation from F1–F4'],
+      };
+    }
+    const schedules = await this.prisma.roomDefoliation.findMany({
+      where: { roomId: { in: rooms.map((room) => room.id) } },
+      select: { roomId: true, dayNumber: true },
+    });
+    const daysByRoom = new Map<string, number[]>();
+    for (const row of schedules) {
+      const list = daysByRoom.get(row.roomId) ?? [];
+      list.push(row.dayNumber);
+      daysByRoom.set(row.roomId, list);
+    }
+    const proposalRooms = rooms.map((room) => ({
+      roomId: room.id,
+      roomName: room.name,
+      roomCode: room.code,
+      currentDays: [...(daysByRoom.get(room.id) ?? [])].sort((a, b) => a - b),
+    }));
+    const withDay = proposalRooms.filter((room) => room.currentDays.includes(parsed.dayNumber));
+    const withoutDay = proposalRooms.filter((room) => !room.currentDays.includes(parsed.dayNumber));
+    const labels = proposalRooms.map((room) => room.roomCode || room.roomName).join(', ');
+    const summaryParts = [
+      `I can remove day ${parsed.dayNumber} defoliation from ${labels}.`,
+      withDay.length > 0
+        ? `It is currently set on ${withDay.map((room) => room.roomCode || room.roomName).join(', ')}.`
+        : `None of those rooms currently list day ${parsed.dayNumber}.`,
+    ];
+    if (withoutDay.length > 0 && withDay.length > 0) {
+      summaryParts.push(
+        `${withoutDay.map((room) => room.roomCode || room.roomName).join(', ')} already omit day ${parsed.dayNumber}.`,
+      );
+    }
+    summaryParts.push('Reply confirm or YES to apply.');
+    return {
+      reply: summaryParts.join(' '),
+      matchedSopTitle: null,
+      matchedSopSummary: null,
+      actions: [
+        {
+          type: 'proposal',
+          kind: 'remove_defoliation_days',
+          dayNumber: parsed.dayNumber,
+          rooms: proposalRooms,
+          summary: `Remove day ${parsed.dayNumber} defoliation from ${labels}`,
+        },
+      ],
+      suggestions: ['confirm', 'YES', 'Generate tasks from stored procedures'],
+    };
+  }
+
+  private async confirmScheduleUpdate(
+    user: SessionUser,
+    site: { id: string; name: string },
+    helper: CoachHelper,
+    body: CoachChatRequest,
+  ): Promise<CoachChatResponse> {
+    if (!hasPermission(user, 'rooms.write')) {
+      return {
+        reply: 'You need the rooms.write permission before I can change defoliation schedules.',
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    const pending =
+      body.pendingProposal ??
+      pendingProposalFromHistory(body.history ?? [], helper.rooms) ??
+      (() => {
+        const parsed =
+          parseDefoliationRemovalFromHistory(body.history ?? []) ??
+          parseDefoliationRemoval(body.message);
+        if (!parsed) {
+          return null;
+        }
+        const rooms = resolveRooms(helper.rooms, parsed.roomTokens);
+        if (rooms.length === 0) {
+          return null;
+        }
+        return {
+          kind: 'remove_defoliation_days' as const,
+          dayNumber: parsed.dayNumber,
+          roomIds: rooms.map((room) => room.id),
+        };
+      })();
+    if (!pending || pending.kind !== 'remove_defoliation_days') {
+      return {
+        reply:
+          'I do not have a staged schedule change to confirm. Ask me to remove a defoliation day from specific rooms first, for example “Remove day 10 defoliation from F1–F4”.',
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: ['Remove day 10 defoliation from F1–F4', ...SUGGESTIONS.slice(0, 2)],
+      };
+    }
+    const roomById = new Map(helper.rooms.map((room) => [room.id, room]));
+    const actions: CoachChatAction[] = [];
+    const changed: string[] = [];
+    const skipped: string[] = [];
+    for (const roomId of pending.roomIds) {
+      const room = roomById.get(roomId);
+      if (!room) {
+        continue;
+      }
+      const current = await this.prisma.roomDefoliation.findMany({
+        where: { roomId },
+        select: { dayNumber: true },
+        orderBy: { dayNumber: 'asc' },
+      });
+      const currentDays = current.map((row) => row.dayNumber);
+      if (!currentDays.includes(pending.dayNumber)) {
+        skipped.push(room.code || room.name);
+        continue;
+      }
+      const nextDays = currentDays.filter((day) => day !== pending.dayNumber);
+      await this.facilities.saveDefoliations(user, roomId, { days: nextDays });
+      actions.push({
+        type: 'defoliation',
+        roomId,
+        roomName: room.name,
+        removedDay: pending.dayNumber,
+        days: nextDays,
+      });
+      changed.push(room.code || room.name);
+    }
+    if (changed.length === 0 && skipped.length === 0) {
+      return {
+        reply: `I could not apply that change in ${site.name}.`,
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    const parts = [];
+    if (changed.length > 0) {
+      parts.push(`Removed day ${pending.dayNumber} defoliation from ${changed.join(', ')}.`);
+    }
+    if (skipped.length > 0) {
+      parts.push(`Already absent on ${skipped.join(', ')}.`);
+    }
+    parts.push('The facility board D10 column updates when no room still lists that day.');
+    return {
+      reply: parts.join(' '),
+      matchedSopTitle: null,
+      matchedSopSummary: null,
+      actions,
+      suggestions: ['Generate tasks from stored procedures', 'How do I check irrigation?'],
+    };
+  }
+
+  private async namedPeopleFor(organizationId: string, siteId: string): Promise<PersonRow[]> {
+    const ids = await this.peopleFor(organizationId, siteId);
+    if (ids.length === 0) {
+      return [];
+    }
+    const people = await this.prisma.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
+    return people;
+  }
+
+  private async traineesFor(people: PersonRow[], siteId: string, sopTitle: string): Promise<PersonRow[]> {
+    const existing = await this.prisma.trainingRecord.findMany({
+      where: {
+        siteId,
+        sopTitle,
+        status: { in: ['assigned', 'completed'] },
+        traineeName: { in: people.map((person) => person.name) },
+      },
+      select: { traineeName: true },
+    });
+    const trained = new Set(existing.map((row) => row.traineeName));
+    return people.filter((person) => !trained.has(person.name));
+  }
+
+  private withSerenityReply(response: CoachChatResponse): CoachChatResponse {
+    return { ...response, reply: asSerenity(response.reply) };
+  }
+
+  private async learnLesson(
+    user: SessionUser,
+    organizationId: string,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    const content = extractLesson(message);
+    if (!content) {
+      return {
+        reply: asSerenity(
+          'Tell me what to remember after “Remember that…”, for example “Remember that flower rooms prefer 78°F lights-on”.',
+        ),
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    await this.prisma.serenityLesson.create({
+      data: {
+        organizationId,
+        content: content.slice(0, 2000),
+        actorId: user.id,
+        actorName: user.name,
+      },
+    });
+    return {
+      reply: asSerenity(`I learned this and will use it later: ${content}`),
+      matchedSopTitle: null,
+      matchedSopSummary: null,
+      actions: [],
+      suggestions: ['How do I check irrigation?', 'Generate tasks from stored procedures'],
+    };
+  }
+
+  private async askOpenAi(
+    user: SessionUser,
+    site: { id: string; name: string; organizationId: string },
+    question: string,
+    sops: Array<{ title: string; summary: string }>,
+    history: Array<{ role: 'user' | 'assistant'; content: string }>,
+    matched?: { title: string | null; summary: string | null },
+  ): Promise<string | null> {
+    const lessons = await this.prisma.serenityLesson.findMany({
+      where: { organizationId: site.organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 40,
+      select: { content: true, actorName: true },
+    });
+    const context = [
+      `Facility: ${site.name}`,
+      `Staff asking: ${user.name}`,
+      'Stored procedures:',
+      ...sops.map((sop) => `- ${sop.title}: ${sop.summary}`),
+      lessons.length
+        ? `Training notes Serenity was taught:\n${lessons.map((lesson) => `- (${lesson.actorName}) ${lesson.content}`).join('\n')}`
+        : 'No training notes yet.',
+      matched?.title ? `Matched procedure: ${matched.title} — ${matched.summary}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+    const reply = await this.openai.complete(site.organizationId, [
+      { role: 'user', content: `Facility context:\n${context}` },
+      ...history.slice(-12).map((row) => ({ role: row.role, content: row.content })),
+      { role: 'user', content: question },
+    ]);
+    return reply ? asSerenity(reply) : null;
   }
 
   private async siteFor(user: SessionUser, siteId: string) {
@@ -222,6 +754,211 @@ export function quoteSop(question: string, sops: Array<{ title: string; summary:
     return { matched: false, title: null, summary: null, message: 'No stored procedure matches that question.' };
   }
   return { matched: true, title: best.title, summary: best.summary, message: best.summary };
+}
+
+export type CoachIntent =
+  | 'generate_tasks'
+  | 'train_workers'
+  | 'teach_serenity'
+  | 'help'
+  | 'propose_schedule_update'
+  | 'confirm_schedule_update'
+  | 'ask';
+
+export function detectIntent(
+  message: string,
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+  pendingProposal: { kind: string; dayNumber: number; roomIds: string[] } | null = null,
+): CoachIntent {
+  const text = message.toLowerCase();
+  if (/\b(help|what can you do|capabilities|who are you|can'?t you update|cannot update|you cant update)\b/.test(text)) {
+    return 'help';
+  }
+  if (
+    /\b(remember that|remember this|learn that|learn this|note that|from now on|train yourself|train serenity)\b/.test(
+      text,
+    )
+  ) {
+    return 'teach_serenity';
+  }
+  if (/\b(train|training|onboard|teach)\b/.test(text) && /\b(worker|workers|staff|team|people|operator|operators|blake|casey|avery)\b/.test(text)) {
+    return 'train_workers';
+  }
+  if (/\btrain(ing)?\b/.test(text) && /\bon\b/.test(text)) {
+    return 'train_workers';
+  }
+  if (/\b(generate|create|make|assign|open)\b/.test(text) && /\b(task|tasks)\b/.test(text)) {
+    return 'generate_tasks';
+  }
+  if (/\bgenerate tasks\b/.test(text) || text.trim() === 'tasks') {
+    return 'generate_tasks';
+  }
+  if (parseDefoliationRemoval(message)) {
+    return 'propose_schedule_update';
+  }
+  if (isConfirmPhrase(message) && (pendingProposal || hasPendingScheduleContext(history))) {
+    return 'confirm_schedule_update';
+  }
+  return 'ask';
+}
+
+export function parseDefoliationRemoval(message: string): { dayNumber: number; roomTokens: string[] } | null {
+  const text = message.trim();
+  if (!text) {
+    return null;
+  }
+  if (!/\bdefol(?:iation|iate|iating)?\b/i.test(text)) {
+    return null;
+  }
+  if (!/\b(remove|delete|drop|clear|take off|without|update|change)\b/i.test(text)) {
+    return null;
+  }
+  const dayMatch = text.match(/\b(?:day|d)\s*(\d{1,3})\b/i);
+  if (!dayMatch?.[1]) {
+    return null;
+  }
+  const dayNumber = Number(dayMatch[1]);
+  if (!Number.isFinite(dayNumber) || dayNumber < 1) {
+    return null;
+  }
+  const roomTokens = extractRoomTokens(text);
+  if (roomTokens.length === 0) {
+    return null;
+  }
+  return { dayNumber, roomTokens };
+}
+
+export function parseDefoliationRemovalFromHistory(
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+): { dayNumber: number; roomTokens: string[] } | null {
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const entry = history[index]!;
+    const parsed = parseDefoliationRemoval(entry.content);
+    if (parsed) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function isConfirmPhrase(message: string): boolean {
+  return /^(yes|yep|yeah|y|confirm|apply|do it|go ahead|please do|ok|okay|sure)\b[.!]?$/i.test(message.trim());
+}
+
+function hasPendingScheduleContext(history: Array<{ role: 'user' | 'assistant'; content: string }>): boolean {
+  if (pendingProposalFromHistory(history, [])) {
+    return true;
+  }
+  return parseDefoliationRemovalFromHistory(history) != null;
+}
+
+export function pendingProposalFromHistory(
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  rooms: Array<{ id: string; name: string; code: string }>,
+): { kind: 'remove_defoliation_days'; dayNumber: number; roomIds: string[] } | null {
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const entry = history[index]!;
+    if (entry.role !== 'assistant') {
+      continue;
+    }
+    if (!/\b(confirm|yes)\b/i.test(entry.content) || !/\bdefol/i.test(entry.content)) {
+      continue;
+    }
+    const parsed = parseDefoliationRemoval(entry.content);
+    if (!parsed) {
+      continue;
+    }
+    const matched = resolveRooms(rooms, parsed.roomTokens);
+    if (matched.length === 0 && rooms.length === 0) {
+      // Intent detection only needs to know a proposal exists in history.
+      return { kind: 'remove_defoliation_days', dayNumber: parsed.dayNumber, roomIds: ['pending'] };
+    }
+    if (matched.length === 0) {
+      continue;
+    }
+    return {
+      kind: 'remove_defoliation_days',
+      dayNumber: parsed.dayNumber,
+      roomIds: matched.map((room) => room.id),
+    };
+  }
+  const fromUser = parseDefoliationRemovalFromHistory(history.filter((entry) => entry.role === 'user'));
+  if (!fromUser) {
+    return null;
+  }
+  const matched = resolveRooms(rooms, fromUser.roomTokens);
+  if (matched.length === 0 && rooms.length === 0) {
+    return { kind: 'remove_defoliation_days', dayNumber: fromUser.dayNumber, roomIds: ['pending'] };
+  }
+  if (matched.length === 0) {
+    return null;
+  }
+  return {
+    kind: 'remove_defoliation_days',
+    dayNumber: fromUser.dayNumber,
+    roomIds: matched.map((room) => room.id),
+  };
+}
+
+export function extractRoomTokens(message: string): string[] {
+  const tokens = new Set<string>();
+  const range = message.match(/\b([A-Za-z]{1,4})(\d{1,3})\s*[–—-]\s*([A-Za-z]{1,4})?(\d{1,3})\b/);
+  if (range) {
+    const prefix = range[1]!.toUpperCase();
+    const endPrefix = (range[3] || range[1]!).toUpperCase();
+    const start = Number(range[2]);
+    const end = Number(range[4]);
+    if (prefix === endPrefix && Number.isFinite(start) && Number.isFinite(end) && start <= end && end - start < 40) {
+      for (let value = start; value <= end; value += 1) {
+        tokens.add(`${prefix}${value}`);
+      }
+    }
+  }
+  for (const match of message.matchAll(/\b([A-Za-z]{1,4}\d{1,3})\b/g)) {
+    tokens.add(match[1]!.toUpperCase());
+  }
+  for (const match of message.matchAll(/\b(flower|veg|dry|clone)\s*(\d{1,3})\b/gi)) {
+    tokens.add(`${match[1]!.toLowerCase()} ${match[2]}`);
+  }
+  return [...tokens];
+}
+
+export function resolveRooms(
+  rooms: Array<{ id: string; name: string; code: string }>,
+  tokens: string[],
+): Array<{ id: string; name: string; code: string }> {
+  const normalized = tokens.map((token) => token.trim().toLowerCase());
+  const matched = rooms.filter((room) => {
+    const code = room.code.trim().toLowerCase();
+    const name = room.name.trim().toLowerCase();
+    return normalized.some(
+      (token) =>
+        token === code ||
+        token === name ||
+        name.includes(token) ||
+        token.replace(/\s+/g, '') === code ||
+        token.replace(/\s+/g, '') === name.replace(/\s+/g, ''),
+    );
+  });
+  matched.sort((left, right) => left.code.localeCompare(right.code, undefined, { numeric: true }));
+  return matched;
+}
+
+function extractLesson(message: string): string {
+  const patterns = [
+    /^\s*remember\s+(?:that|this)\s*[:,-]?\s*(.+)$/i,
+    /^\s*learn\s+(?:that|this)\s*[:,-]?\s*(.+)$/i,
+    /^\s*note\s+that\s*[:,-]?\s*(.+)$/i,
+    /^\s*from\s+now\s+on\s*[:,-]?\s*(.+)$/i,
+    /^\s*train\s+(?:yourself|serenity)\s*[:,-]?\s*(.+)$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match?.[1]?.trim()) {
+      return match[1].trim();
+    }
+  }
+  return message.replace(/^\s*(remember|learn|note|train yourself|train serenity)\b[:\s-]*/i, '').trim();
 }
 
 function sopForMetric(metric: string, sops: SopRow[]): SopRow | null {
