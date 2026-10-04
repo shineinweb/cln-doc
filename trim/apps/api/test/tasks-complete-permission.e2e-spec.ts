@@ -76,7 +76,10 @@ describe('tasks.complete permission', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({})
       .expect(201);
-    expect(finished.body).toMatchObject({ id: task.id, status: 'done' });
+    expect(finished.body.id).toBe(task.id);
+    expect(
+      await prisma.roomTask.findUniqueOrThrow({ where: { id: task.id }, select: { status: true } }),
+    ).toEqual({ status: 'done' });
 
     await prisma.roomTask.delete({ where: { id: task.id } });
     await restoreOperatorTaskPerms();
