@@ -2,7 +2,7 @@ import { Alert, Box, Button, Card, CardContent, MenuItem, Skeleton, TextField, T
 import { harvestDetailSchema, packageDetailSchema, recordRemovedSchema, scaleSampleViewSchema, tagSampleViewSchema, type HarvestDetail } from '@trim/contracts';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { BackLink } from '../components/BackLink';
@@ -413,6 +413,7 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
   return (
     <Card data-testid="harvest-capture">
       <CardContent>
+        <WeighStation harvest={harvest} />
         {!kinds.has('wet_weight') ? (
           <WeightAction
             testId="wet-weight"
@@ -521,6 +522,132 @@ function NextStep({ harvest }: { harvest: HarvestDetail }) {
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+function WeighStation({ harvest }: { harvest: HarvestDetail }) {
+  const queryClient = useQueryClient();
+  const scanRef = useRef<HTMLInputElement>(null);
+  const weightRef = useRef<HTMLInputElement>(null);
+  const [tag, setTag] = useState('');
+  const [grams, setGrams] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const wetRecorded = harvest.steps.some((step) => step.kind === 'wet_weight');
+
+  useEffect(() => {
+    scanRef.current?.focus();
+  }, [harvest.id]);
+
+  const refresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['harvest', harvest.id] });
+  };
+  const save = useMutation({
+    mutationFn: () =>
+      apiSend(`/harvests/${harvest.id}/weigh`, harvestDetailSchema, {
+        tag: tag.trim(),
+        grams: Number(grams),
+        deviceId: 'harvest-scale',
+      }),
+    onSuccess: async () => {
+      setTag('');
+      setGrams('');
+      setError(null);
+      setMessage('Weight saved.');
+      await refresh();
+      scanRef.current?.focus();
+    },
+    onError: (caught: Error) => {
+      setMessage(null);
+      setError(caught.message);
+      scanRef.current?.focus();
+    },
+  });
+  const useTotal = useMutation({
+    mutationFn: () => apiSend(`/harvests/${harvest.id}/wet-weight`, harvestDetailSchema, { grams: harvest.weighTotalGrams }),
+    onSuccess: async () => {
+      setError(null);
+      setMessage('Wet weight recorded from the plant total.');
+      await refresh();
+    },
+    onError: (caught: Error) => {
+      setMessage(null);
+      setError(caught.message);
+    },
+  });
+
+  return (
+    <Box data-testid="weigh-station" sx={{ display: 'grid', gap: 1.5, mb: 2 }}>
+      <Typography sx={{ fontWeight: 700 }}>Weigh a plant</Typography>
+      <Typography sx={{ color: 'text.secondary' }}>
+        Scan the Metrc tag, then the scale weight. The tag must already be on this harvest. Scanning it again replaces the grams.
+      </Typography>
+      <Box
+        component="input"
+        data-testid="weigh-scan-tag"
+        aria-label="Scan tag"
+        placeholder="Scan tag"
+        value={tag}
+        autoComplete="off"
+        ref={scanRef}
+        onChange={(event) => setTag(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            if (tag.trim()) {
+              weightRef.current?.focus();
+            }
+          }
+        }}
+        sx={{ width: '100%', font: 'inherit', py: 1, px: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+      />
+      <TextField
+        label="Weight (g)"
+        type="number"
+        value={grams}
+        onChange={(event) => setGrams(event.target.value)}
+        inputRef={weightRef}
+        inputProps={{ 'data-testid': 'weigh-grams' }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            if (tag.trim() && Number(grams) > 0) {
+              save.mutate();
+            }
+          }
+        }}
+      />
+      <Button
+        data-testid="save-plant-weight"
+        variant="contained"
+        onClick={() => save.mutate()}
+        disabled={save.isPending || tag.trim().length === 0 || Number(grams) <= 0}
+      >
+        Save weight
+      </Button>
+      {harvest.weighs.length === 0 ? (
+        <Typography sx={{ color: 'text.secondary' }}>No plant weights yet.</Typography>
+      ) : (
+        harvest.weighs.map((row) => (
+          <Typography key={row.id} data-testid="plant-weigh">
+            {row.tag} · {row.weightGrams} g · {formatTimestamp(row.recordedAt)}
+          </Typography>
+        ))
+      )}
+      <Typography data-testid="plant-weigh-total">Total {harvest.weighTotalGrams} g</Typography>
+      {!wetRecorded && harvest.weighTotalGrams > 0 ? (
+        <Button
+          data-testid="use-weigh-total"
+          variant="outlined"
+          onClick={() => useTotal.mutate()}
+          disabled={useTotal.isPending}
+        >
+          Use total as wet weight
+        </Button>
+      ) : null}
+      {message ? <Alert severity="success">{message}</Alert> : null}
+      {error ? <Alert severity="error" data-testid="weigh-error">{error}</Alert> : null}
+    </Box>
   );
 }
 

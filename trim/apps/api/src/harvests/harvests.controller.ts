@@ -5,12 +5,14 @@ import {
   recordWasteSchema,
   recordWeightSchema,
   startDryingSchema,
+  weighPlantSchema,
   type CreateHarvest,
   type CreatePackage,
   type RecordWaste,
   type RecordWeight,
   type SessionUser,
   type StartDrying,
+  type WeighPlant,
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -46,6 +48,16 @@ export class HarvestsController {
   @RequirePermissions('harvests.read')
   getOne(@CurrentUser() user: SessionUser, @Param('harvestId') harvestId: string) {
     return this.harvests.getOne(user, harvestId);
+  }
+
+  @Post('harvests/:harvestId/weigh')
+  @RequirePermissions('harvests.write')
+  weigh(
+    @CurrentUser() user: SessionUser,
+    @Param('harvestId') harvestId: string,
+    @Body(new ZodValidationPipe(weighPlantSchema)) body: WeighPlant,
+  ) {
+    return this.harvests.weighPlant(user, harvestId, body);
   }
 
   @Post('harvests/:harvestId/wet-weight')

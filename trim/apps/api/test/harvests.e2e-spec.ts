@@ -142,7 +142,38 @@ describe('harvest and packages', () => {
       .send({ cycleId: cycleAId })
       .expect(201);
     expect(harvest.body.plants.map((plant: { tag: string }) => plant.tag).sort()).toEqual([tagA1, tagA2].sort());
+    expect(harvest.body.weighs).toEqual([]);
+    expect(harvest.body.weighTotalGrams).toBe(0);
     const harvestId = harvest.body.id as string;
+
+    const weighed = await request(app.getHttpServer())
+      .post(`/harvests/${harvestId}/weigh`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ tag: tagA1, grams: 800, deviceId: 'harvest-scale' })
+      .expect(201);
+    expect(weighed.body.weighs).toEqual([
+      expect.objectContaining({ tag: tagA1, weightGrams: 800, deviceId: 'harvest-scale' }),
+    ]);
+    expect(weighed.body.weighTotalGrams).toBe(800);
+    expect(weighed.body.ledger.wetWeightGrams).toBeNull();
+
+    const unknown = await request(app.getHttpServer())
+      .post(`/harvests/${harvestId}/weigh`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ tag: 'NOT-ON-HARVEST', grams: 100, deviceId: 'harvest-scale' })
+      .expect(400);
+    expect(unknown.body.message).toBe('That tag is not on this harvest.');
+    expect(await prisma.harvestPlantWeigh.count({ where: { harvestId } })).toBe(1);
+
+    const replaced = await request(app.getHttpServer())
+      .post(`/harvests/${harvestId}/weigh`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ tag: tagA1, grams: 900, deviceId: 'harvest-scale' })
+      .expect(201);
+    expect(replaced.body.weighs).toHaveLength(1);
+    expect(replaced.body.weighs[0]).toMatchObject({ tag: tagA1, weightGrams: 900 });
+    expect(replaced.body.weighTotalGrams).toBe(900);
+    expect(replaced.body.weighs[0].id).toBe(weighed.body.weighs[0].id);
 
     await request(app.getHttpServer())
       .post(`/harvests/${harvestId}/wet-weight`)
