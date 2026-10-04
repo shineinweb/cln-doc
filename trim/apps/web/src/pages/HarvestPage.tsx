@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
@@ -43,12 +44,13 @@ export function HarvestPage() {
   const row = harvest.data;
   return (
     <Box>
+      <BackLink to="/harvests" label="Harvests" />
       <PageHeader
         kicker={row.licenseNumber}
         title={row.name}
         lede={`${row.siteName ?? 'Facility'} · ${row.plantCount} plant tags stay on this harvest.`}
       />
-      <Typography data-testid="harvest-plant-count" sx={{ mb: 2 }}>
+      <Typography data-testid="harvest-plant-count" sx={{ mb: 2, fontSize: 20 }}>
         {row.plantCount} plants
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

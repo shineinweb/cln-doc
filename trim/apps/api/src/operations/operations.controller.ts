@@ -23,25 +23,30 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { OperationsService } from './operations.service';
 
 @Controller('operations')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class OperationsController {
   constructor(private readonly operations: OperationsService) {}
 
   @Get('sop-library')
+  @RequirePermissions('operations.read')
   async library(@CurrentUser() user: SessionUser) {
     return sopLibrarySchema.parse(await this.operations.library(user));
   }
 
   @Get('sites/:siteId')
+  @RequirePermissions('operations.read')
   async overview(@CurrentUser() user: SessionUser, @Param('siteId') siteId: string) {
     return operationsOverviewSchema.parse(await this.operations.overview(user, siteId));
   }
 
   @Post('sites/:siteId/irrigation')
+  @RequirePermissions('operations.write')
   async irrigation(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -52,6 +57,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/ipm')
+  @RequirePermissions('operations.write')
   async ipm(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -62,6 +68,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/maintenance')
+  @RequirePermissions('operations.write')
   async maintenance(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -72,6 +79,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/purchasing')
+  @RequirePermissions('operations.write')
   async purchasing(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -82,6 +90,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/sanitation')
+  @RequirePermissions('operations.write')
   async sanitation(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -92,6 +101,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/training')
+  @RequirePermissions('operations.write')
   async training(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -102,6 +112,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/stays')
+  @RequirePermissions('operations.write')
   async stay(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -112,6 +123,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/recurring')
+  @RequirePermissions('operations.write')
   async recurring(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -121,6 +133,7 @@ export class OperationsController {
   }
 
   @Post('sites/:siteId/recurring/:dutyId/complete')
+  @RequirePermissions('operations.write')
   async complete(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -130,6 +143,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/irrigation/:recordId')
+  @RequirePermissions('operations.write')
   async editIrrigation(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -141,6 +155,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/ipm/:recordId')
+  @RequirePermissions('operations.write')
   async editIpm(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -152,6 +167,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/maintenance/:recordId')
+  @RequirePermissions('operations.write')
   async editMaintenance(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -163,6 +179,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/purchasing/:recordId')
+  @RequirePermissions('operations.write')
   async editPurchase(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -174,6 +191,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/sanitation/:recordId')
+  @RequirePermissions('operations.write')
   async editSanitation(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -185,6 +203,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/training/:recordId')
+  @RequirePermissions('operations.write')
   async editTraining(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -196,6 +215,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/stays/:recordId')
+  @RequirePermissions('operations.write')
   async editStay(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -207,6 +227,7 @@ export class OperationsController {
   }
 
   @Patch('sites/:siteId/recurring/:recordId')
+  @RequirePermissions('operations.write')
   async editRecurring(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,
@@ -218,6 +239,7 @@ export class OperationsController {
   }
 
   @Delete('sites/:siteId/:kind/:recordId')
+  @RequirePermissions('operations.write')
   async remove(
     @CurrentUser() user: SessionUser,
     @Param('siteId') siteId: string,

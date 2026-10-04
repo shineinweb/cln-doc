@@ -256,12 +256,25 @@ describe('inventory and metrc import', () => {
 
   it('writes an actor event when a plant moves', async () => {
     const actor = await prisma.user.findUniqueOrThrow({ where: { email: fixture.siteAUser.email } });
+    const cycleA2 = await prisma.cropCycle.create({
+      data: {
+        roomId: roomA2Id,
+        name: 'Move target',
+        cultivar: 'Move',
+        plantCount: 1,
+        stage: 'flower',
+        startDate: new Date('2026-09-12T00:00:00.000Z'),
+        expectedHarvestDate: new Date('2026-10-24T00:00:00.000Z'),
+        status: 'active',
+      },
+    });
     const response = await request(app.getHttpServer())
       .post(`/plants/${plantAId}/moves`)
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ roomId: roomA2Id })
       .expect(201);
     expect(response.body.roomId).toBe(roomA2Id);
+    expect(response.body.cycleId).toBe(cycleA2.id);
     const event = await prisma.plantEvent.findFirstOrThrow({
       where: { plantId: plantAId, eventType: 'moved' },
     });
@@ -270,6 +283,7 @@ describe('inventory and metrc import', () => {
     expect(event.toRoomId).toBe(roomA2Id);
     const stored = await prisma.plant.findUniqueOrThrow({ where: { id: plantAId } });
     expect(stored.roomId).toBe(roomA2Id);
+    expect(stored.cycleId).toBe(cycleA2.id);
 
     const stage = await request(app.getHttpServer())
       .post(`/plants/${plantAId}/stages`)
