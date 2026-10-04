@@ -253,6 +253,7 @@ export function RecordActions({
   keepsHistory = false,
   allowEdit = true,
   allowDelete = true,
+  extraActions,
 }: {
   summary: ReactNode;
   detail: ReactNode;
@@ -263,6 +264,8 @@ export function RecordActions({
   allowEdit?: boolean;
   /** When false, Delete is hidden (read-only roles). */
   allowDelete?: boolean;
+  /** Optional controls rendered before View/Edit/Delete (e.g. Finished). */
+  extraActions?: ReactNode;
 }) {
   const [mode, setMode] = useState<'closed' | 'view' | 'edit'>('closed');
   const editOpen = allowEdit && mode === 'edit';
@@ -271,6 +274,7 @@ export function RecordActions({
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
         <Box sx={{ flex: 1, minWidth: 180 }}>{summary}</Box>
         <RowActions>
+          {extraActions}
           <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
             View
           </Button>

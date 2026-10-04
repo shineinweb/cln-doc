@@ -1,5 +1,6 @@
 import { Alert, Box, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
+  cycleTaskDetailSchema,
   managedTaskSchema,
   recordRemovedSchema,
   recurringViewSchema,
@@ -132,6 +133,8 @@ function Section({
 }
 
 function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['workspace'] });
   const save = useMutation({
@@ -142,33 +145,61 @@ function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
     mutationFn: () => apiSend(`/tasks/${task.id}`, recordRemovedSchema, undefined, 'DELETE'),
     onSuccess: refresh,
   });
+  const finish = useMutation({
+    mutationFn: () => apiSend(`/tasks/${task.id}/complete`, cycleTaskDetailSchema, {}),
+    onSuccess: async () => {
+      await refresh();
+      await queryClient.invalidateQueries({ queryKey: ['room'] });
+      await queryClient.invalidateQueries({ queryKey: ['cycle'] });
+    },
+  });
   return (
-    <RecordActions
-      summary={
-        <Typography>
-          <KindChip label="Cycle" />
-          <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
-          {` · ${task.roomName} · ${formatCalendarDate(task.dueOn)}`}
-        </Typography>
-      }
-      detail={<AssignmentCard task={task} />}
-      editor={
-        <Box
-          component="form"
-          sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            save.mutate({ title: String(form.get('title') ?? ''), dueOn: String(form.get('dueOn') ?? '') });
-          }}
-        >
-          <TextField label="Title" name="title" defaultValue={task.title} required />
-          <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
-          <SaveChanges pending={save.isPending} />
-        </Box>
-      }
-      onDelete={() => remove.mutate()}
-    />
+    <Box>
+      <RecordActions
+        summary={
+          <Typography>
+            <KindChip label="Cycle" />
+            <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
+            {` · ${task.roomName} · ${formatCalendarDate(task.dueOn)}`}
+          </Typography>
+        }
+        detail={<AssignmentCard task={task} />}
+        editor={
+          <Box
+            component="form"
+            sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              save.mutate({ title: String(form.get('title') ?? ''), dueOn: String(form.get('dueOn') ?? '') });
+            }}
+          >
+            <TextField label="Title" name="title" defaultValue={task.title} required />
+            <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
+            <SaveChanges pending={save.isPending} />
+          </Box>
+        }
+        onDelete={() => remove.mutate()}
+        extraActions={
+          canWrite && task.status === 'open' ? (
+            <Button
+              size="small"
+              variant="contained"
+              data-testid="finish-cycle-task"
+              disabled={finish.isPending}
+              onClick={() => finish.mutate()}
+            >
+              {finish.isPending ? 'Finishing…' : 'Finished'}
+            </Button>
+          ) : null
+        }
+      />
+      {finish.error ? (
+        <Alert sx={{ mt: 1 }} severity="error">
+          {finish.error.message}
+        </Alert>
+      ) : null}
+    </Box>
   );
 }
 
@@ -208,7 +239,7 @@ function RoomTaskRow({ task }: { task: WorkspaceRoomTask }) {
           <Button
             size="small"
             variant="contained"
-            data-testid="finish-room-task"
+            data-testid={`finish-room-task-${task.id}`}
             disabled={finish.isPending}
             onClick={() => finish.mutate()}
           >
