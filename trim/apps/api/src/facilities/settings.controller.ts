@@ -2,19 +2,24 @@ import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import {
   generalSettingsSchema,
   metrcApiInputSchema,
+  openAiApiInputSchema,
   settingsViewSchema,
   type GeneralSettings,
   type MetrcApiInput,
+  type OpenAiApiInput,
   type SessionUser,
   type SettingsView,
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { SettingsService } from './settings.service';
 
 @Controller('settings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('settings.manage')
 export class SettingsController {
   constructor(private readonly settings: SettingsService) {}
 
@@ -37,5 +42,13 @@ export class SettingsController {
     @Body(new ZodValidationPipe(metrcApiInputSchema)) body: MetrcApiInput,
   ): Promise<SettingsView> {
     return settingsViewSchema.parse(await this.settings.saveMetrc(user, body));
+  }
+
+  @Post('openai')
+  async saveOpenAi(
+    @CurrentUser() user: SessionUser,
+    @Body(new ZodValidationPipe(openAiApiInputSchema)) body: OpenAiApiInput,
+  ): Promise<SettingsView> {
+    return settingsViewSchema.parse(await this.settings.saveOpenAi(user, body));
   }
 }

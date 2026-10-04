@@ -3,31 +3,41 @@ import {
   cycleObservationSchema,
   defoliationInputSchema,
   defoliationSchema,
+  ipmScheduleInputSchema,
+  ipmScheduleSchema,
   managedTaskInputSchema,
   managedTaskSchema,
   recordRemovedSchema,
   roomNoteInputSchema,
+  transplantInputSchema,
+  transplantSchema,
   zoneInputSchema,
   type Defoliation,
   type DefoliationInput,
+  type IpmSchedule,
+  type IpmScheduleInput,
   type ManagedTaskInput,
   type RecordRemoved,
   type RoomDetail,
   type RoomNoteInput,
   type SessionUser,
+  type Transplant,
+  type TransplantInput,
   type Zone,
   type ZoneInput,
 } from '@trim/contracts';
 import { z } from 'zod';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { CyclesService } from '../cycles/cycles.service';
 import { FacilitiesService } from './facilities.service';
 import { RoomTasksService } from './room-tasks.service';
 
 @Controller('rooms')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class RoomsController {
   constructor(
     private readonly facilities: FacilitiesService,
@@ -36,11 +46,13 @@ export class RoomsController {
   ) {}
 
   @Get(':roomId')
+  @RequirePermissions('rooms.read', 'zones.read')
   get(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string): Promise<RoomDetail> {
     return this.facilities.getRoom(user, roomId);
   }
 
   @Post(':roomId/tasks')
+  @RequirePermissions('tasks.write')
   async createTask(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -50,6 +62,7 @@ export class RoomsController {
   }
 
   @Patch(':roomId/tasks/:taskId')
+  @RequirePermissions('tasks.write')
   async updateTask(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -60,11 +73,23 @@ export class RoomsController {
   }
 
   @Delete(':roomId/tasks/:taskId')
+  @RequirePermissions('tasks.write')
   async deleteTask(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string, @Param('taskId') taskId: string) {
     return recordRemovedSchema.parse(await this.roomTasks.remove(user, roomId, taskId));
   }
 
+  @Post(':roomId/tasks/:taskId/complete')
+  @RequirePermissions('tasks.complete', 'tasks.write')
+  async completeTask(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    return managedTaskSchema.parse(await this.roomTasks.complete(user, roomId, taskId));
+  }
+
   @Post(':roomId/notes')
+  @RequirePermissions('rooms.write')
   async createNote(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -74,6 +99,7 @@ export class RoomsController {
   }
 
   @Put(':roomId/defoliations')
+  @RequirePermissions('rooms.write')
   async saveDefoliations(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -82,7 +108,28 @@ export class RoomsController {
     return z.array(defoliationSchema).parse(await this.facilities.saveDefoliations(user, roomId, body));
   }
 
+  @Put(':roomId/transplants')
+  @RequirePermissions('rooms.write')
+  async saveTransplants(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(transplantInputSchema)) body: TransplantInput,
+  ): Promise<Transplant[]> {
+    return z.array(transplantSchema).parse(await this.facilities.saveTransplants(user, roomId, body));
+  }
+
+  @Put(':roomId/ipm-schedule')
+  @RequirePermissions('rooms.write')
+  async saveIpmSchedule(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(ipmScheduleInputSchema)) body: IpmScheduleInput,
+  ): Promise<IpmSchedule> {
+    return ipmScheduleSchema.parse(await this.facilities.saveIpmSchedule(user, roomId, body));
+  }
+
   @Post(':roomId/zones')
+  @RequirePermissions('zones.write')
   createZone(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -93,11 +140,12 @@ export class RoomsController {
 }
 
 @Controller('zones')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ZonesController {
   constructor(private readonly facilities: FacilitiesService) {}
 
   @Patch(':zoneId')
+  @RequirePermissions('zones.write')
   update(
     @CurrentUser() user: SessionUser,
     @Param('zoneId') zoneId: string,
@@ -107,6 +155,7 @@ export class ZonesController {
   }
 
   @Delete(':zoneId')
+  @RequirePermissions('zones.write')
   async remove(@CurrentUser() user: SessionUser, @Param('zoneId') zoneId: string): Promise<RecordRemoved> {
     return recordRemovedSchema.parse(await this.facilities.deleteZone(user, zoneId));
   }

@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   app.enableCors({ origin: env.WEB_ORIGIN });
   await app.listen(env.API_PORT);
-  console.log(`Trim API listening on http://localhost:${env.API_PORT}`);
+  console.log(`Serenity API listening on http://localhost:${env.API_PORT}`);
 }
 
 void bootstrap().catch((error: unknown) => {

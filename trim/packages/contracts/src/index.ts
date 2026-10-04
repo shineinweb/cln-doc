@@ -9,6 +9,66 @@ export const loginRequestSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters.').max(200),
 });
 
+
+export const forgotPasswordRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email('Enter a valid email address.')
+    .transform((value) => value.toLowerCase()),
+});
+
+export const forgotPasswordResponseSchema = z.object({
+  ok: z.literal(true),
+  message: z.string(),
+});
+
+export const resetPasswordRequestSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: z.string().min(8, 'Password must be at least 8 characters.').max(200),
+});
+
+export const resetPasswordResponseSchema = z.object({
+  ok: z.literal(true),
+  message: z.string(),
+});
+
+export const emailBroadcastInputSchema = z.object({
+  subject: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(20000),
+  siteIds: z.array(z.string()).optional(),
+});
+
+export const emailBroadcastSchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  body: z.string(),
+  recipientCount: z.number().int(),
+  sentAt: z.string().nullable(),
+  createdAt: z.string(),
+  createdByName: z.string(),
+});
+
+export const emailBroadcastListSchema = z.object({
+  broadcasts: z.array(emailBroadcastSchema),
+});
+
+export const emailTemplateKindSchema = z.enum(['password_reset', 'task_assigned', 'marketing']);
+
+export const emailTemplatePreviewInputSchema = z.object({
+  template: emailTemplateKindSchema,
+  subject: z.string().trim().max(200).optional(),
+  body: z.string().trim().max(20000).optional(),
+  recipientName: z.string().trim().max(120).optional(),
+});
+
+export const emailTemplatePreviewSchema = z.object({
+  template: emailTemplateKindSchema,
+  subject: z.string(),
+  html: z.string().min(1),
+  text: z.string().min(1),
+});
+
 export const zoneSchema = z.object({
   id: z.string(),
   roomId: z.string(),
@@ -361,6 +421,26 @@ export const defoliationInputSchema = z.object({
   days: z.array(z.number().int().min(1).max(3650)).max(30),
 });
 
+/** Transplant day numbers counted from the current crop start (Facility board T). */
+export const transplantSchema = z.object({
+  id: z.string(),
+  dayNumber: z.number().int(),
+  date: z.string().nullable(),
+});
+
+export const transplantInputSchema = z.object({
+  days: z.array(z.number().int().min(1).max(3650)).max(30),
+});
+
+/** Twice-a-week IPM scout schedule for a room. Empty weekdays clears the schedule. */
+export const ipmScheduleSchema = z.object({
+  weekdays: z.array(weekdaySchema).max(2),
+});
+
+export const ipmScheduleInputSchema = z.object({
+  weekdays: z.array(weekdaySchema).max(2),
+});
+
 export const roomDetailSchema = roomSchema.extend({
   siteName: z.string(),
   siteCode: z.string(),
@@ -376,6 +456,8 @@ export const roomDetailSchema = roomSchema.extend({
   lastMetrcSync: metrcSyncSchema.nullable(),
   archivedCycles: z.array(archivedCycleSchema),
   defoliations: z.array(defoliationSchema),
+  transplants: z.array(transplantSchema),
+  ipmSchedule: ipmScheduleSchema,
 });
 
 export const cycleTaskSummarySchema = z.object({
@@ -654,9 +736,40 @@ export const workspaceNoticeSchema = z.object({
   sopSummary: z.string().nullable(),
 });
 
+export const workspaceRoomTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  kind: z.enum(['one_time', 'recurring']),
+  cadence: z.enum(['daily', 'weekly']).nullable(),
+  dueOn: z.string().nullable(),
+  roomId: z.string(),
+  roomName: z.string(),
+  siteId: z.string(),
+  siteName: z.string(),
+  source: z.enum(['alert', 'manual', 'ai']),
+  assignees: z.array(taskAssigneeSchema),
+});
+
+export const workspaceDutySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  cadence: z.enum(['daily', 'weekly']),
+  nextDueOn: z.string(),
+  assigneeLabel: z.string(),
+  sopTitle: z.string().nullable(),
+  roomId: z.string().nullable(),
+  roomName: z.string().nullable(),
+  siteId: z.string(),
+  siteName: z.string(),
+});
+
 export const workspaceTodaySchema = z.object({
   date: z.string(),
+  statement: z.string(),
   tasks: z.array(cycleTaskDetailSchema),
+  roomTasks: z.array(workspaceRoomTaskSchema),
+  duties: z.array(workspaceDutySchema),
   notices: z.array(workspaceNoticeSchema),
 });
 
@@ -685,6 +798,8 @@ export const sessionUserSchema = z.object({
   organizationName: z.string(),
   isOrgAdmin: z.boolean(),
   siteIds: z.array(z.string()),
+  /** Permission keys granted by the user’s roles. Org admins still receive the full catalog for UI checks. */
+  permissions: z.array(z.string()),
 });
 
 export const loginResponseSchema = z.object({
@@ -1029,9 +1144,21 @@ export const metrcApiViewSchema = z.object({
   licenseNumber: z.string(),
 });
 
+export const openAiApiInputSchema = z.object({
+  apiKey: z.string().trim().max(4000).optional().default(''),
+  model: z.string().trim().max(191).optional().default('gpt-4o-mini'),
+});
+
+export const openAiApiViewSchema = z.object({
+  apiKeySaved: z.boolean(),
+  model: z.string(),
+  envFallback: z.boolean(),
+});
+
 export const settingsViewSchema = z.object({
   general: generalSettingsViewSchema,
   metrc: metrcApiViewSchema,
+  openai: openAiApiViewSchema,
 });
 
 export const accessUserInputSchema = z.object({
@@ -1276,6 +1403,216 @@ export const comparisonReportSchema = z.object({
   cycles: z.array(cycleReportSchema),
 });
 
+export const dashboardYieldPointSchema = z.object({
+  week: z.string(),
+  grams: z.number(),
+  estimated: z.boolean(),
+});
+
+export const dashboardYieldSeriesSchema = z.object({
+  cultivar: z.string(),
+  points: z.array(dashboardYieldPointSchema),
+});
+
+export const dashboardCogsSchema = z.object({
+  laborCents: z.number().int(),
+  cannabisCents: z.number().int(),
+  nonCannabisCents: z.number().int(),
+  totalCents: z.number().int(),
+});
+
+export const dashboardTopStrainSchema = z.object({
+  strainName: z.string(),
+  harvestCount: z.number().int(),
+  packagedGrams: z.number().int(),
+});
+
+export const dashboardPlantForecastRowSchema = z.object({
+  cultivar: z.string(),
+  values: z.array(z.number().int()),
+});
+
+export const dashboardPackageItemSchema = z.object({
+  label: z.string(),
+  weightGrams: z.number().int(),
+  harvestName: z.string(),
+});
+
+export const dashboardAnalyticsSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  statement: z.string(),
+  yieldGraph: z.object({
+    weeks: z.array(z.string()),
+    cultivars: z.array(z.string()),
+    series: z.array(dashboardYieldSeriesSchema),
+  }),
+  cogs: dashboardCogsSchema,
+  topStrains: z.array(dashboardTopStrainSchema),
+  plantForecast: z.object({
+    dates: z.array(z.string()),
+    rows: z.array(dashboardPlantForecastRowSchema),
+  }),
+  kpis: z.object({
+    packagedMtdGrams: z.number().int(),
+    averageGramsPerPlant: z.number().nullable(),
+  }),
+  packagesByItem: z.array(dashboardPackageItemSchema),
+});
+
+/** Room × milestone board for a facility (whiteboard-style schedule). */
+export const facilityBoardColumnSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  kind: z.enum(['start', 'defoliation', 'harvest', 'transplant', 'chore']),
+  dayNumber: z.number().int().nullable(),
+});
+
+export const facilityBoardCellSchema = z.object({
+  columnKey: z.string(),
+  dates: z.array(z.string()),
+  status: z.enum(['empty', 'scheduled', 'due', 'done', 'overdue']),
+  detail: z.string().nullable(),
+  source: z
+    .enum(['cycle', 'defoliation', 'harvest', 'transplant', 'cycle_task', 'room_task', 'duty', 'schedule'])
+    .nullable(),
+});
+
+export const facilityBoardRowSchema = z.object({
+  roomId: z.string(),
+  roomName: z.string(),
+  roomType: z.string(),
+  cycleId: z.string().nullable(),
+  cycleName: z.string().nullable(),
+  cultivar: z.string().nullable(),
+  cells: z.array(facilityBoardCellSchema),
+});
+
+export const facilityBoardSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  timezone: z.string(),
+  today: z.string(),
+  statement: z.string(),
+  columns: z.array(facilityBoardColumnSchema),
+  rows: z.array(facilityBoardRowSchema),
+  notes: z.array(z.string()),
+});
+
+export const timePunchKindSchema = z.enum(['clock_in', 'lunch_start', 'lunch_end', 'clock_out']);
+
+export const timePunchSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  userName: z.string(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+  kind: timePunchKindSchema,
+  punchedAt: z.string(),
+  note: z.string().nullable(),
+});
+
+export const timePunchInputSchema = z.object({
+  kind: timePunchKindSchema,
+  siteId: z.string().optional().nullable(),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
+export const timeClockStatusSchema = z.object({
+  state: z.enum(['out', 'in', 'lunch']),
+  allowed: z.array(timePunchKindSchema),
+  openSince: z.string().nullable(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+  todayPunches: z.array(timePunchSchema),
+  workedMinutesToday: z.number().int(),
+  lunchMinutesToday: z.number().int(),
+});
+
+export const timePresenceSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  state: z.enum(['in', 'lunch']),
+  since: z.string(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+});
+
+export const timePresenceListSchema = z.object({
+  people: z.array(timePresenceSchema),
+});
+
+export const laborRateViewSchema = z.object({
+  id: z.string(),
+  personName: z.string(),
+  userId: z.string().nullable(),
+  hourlyCents: z.number().int(),
+});
+
+export const laborRateInputSchema = z.object({
+  personName: z.string().trim().min(1).max(120),
+  hourlyCents: z.number().int().min(0).max(1_000_000),
+});
+
+export const payrollDaySchema = z.object({
+  date: z.string(),
+  workedMinutes: z.number().int(),
+  lunchMinutes: z.number().int(),
+  regularMinutes: z.number().int(),
+  overtimeMinutes: z.number().int(),
+});
+
+export const payrollEmployeeSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  hourlyCents: z.number().int().nullable(),
+  workedMinutes: z.number().int(),
+  lunchMinutes: z.number().int(),
+  regularMinutes: z.number().int(),
+  overtimeMinutes: z.number().int(),
+  regularCents: z.number().int(),
+  overtimeCents: z.number().int(),
+  grossCents: z.number().int(),
+  days: z.array(payrollDaySchema),
+  openShift: z.boolean(),
+});
+
+export const payrollReportSchema = z.object({
+  organizationId: z.string(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+  timezone: z.string(),
+  periodStart: z.string(),
+  periodEnd: z.string(),
+  statement: z.string(),
+  accountingNotes: z.array(z.string()),
+  totals: z.object({
+    employees: z.number().int(),
+    workedMinutes: z.number().int(),
+    lunchMinutes: z.number().int(),
+    regularMinutes: z.number().int(),
+    overtimeMinutes: z.number().int(),
+    regularCents: z.number().int(),
+    overtimeCents: z.number().int(),
+    grossCents: z.number().int(),
+    missingRates: z.number().int(),
+  }),
+  employees: z.array(payrollEmployeeSchema),
+  rates: z.array(laborRateViewSchema),
+});
+
+export const payrollAskSchema = z.object({
+  question: z.string().trim().min(1).max(500),
+  periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  siteId: z.string().optional().nullable(),
+});
+
+export const payrollAnswerSchema = z.object({
+  reply: z.string(),
+  report: payrollReportSchema,
+});
+
 export const coachGapSchema = z.object({
   kind: z.enum(['untagged_plants', 'discrepancies', 'pending_submissions', 'unqueued_packages', 'missing_waste']),
   count: z.number().int(),
@@ -1289,6 +1626,29 @@ export const coachLicenseSchema = z.object({
   gaps: z.array(coachGapSchema),
 });
 
+export const coachHelperPersonSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export const coachHelperRoomSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  code: z.string(),
+});
+
+export const coachHelperSopSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  summary: z.string(),
+});
+
+export const coachHelperSchema = z.object({
+  rooms: z.array(coachHelperRoomSchema),
+  people: z.array(coachHelperPersonSchema),
+  sops: z.array(coachHelperSopSchema),
+});
+
 export const siteCoachSchema = z.object({
   siteId: z.string(),
   siteName: z.string(),
@@ -1296,6 +1656,7 @@ export const siteCoachSchema = z.object({
   notices: z.array(workspaceNoticeSchema),
   licenses: z.array(coachLicenseSchema),
   statement: z.string(),
+  helper: coachHelperSchema,
 });
 
 export const coachQuestionSchema = z.object({
@@ -1307,6 +1668,129 @@ export const coachAnswerSchema = z.object({
   title: z.string().nullable(),
   summary: z.string().nullable(),
   message: z.string(),
+});
+
+export const coachChatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().trim().min(1).max(4000),
+});
+
+export const coachPendingProposalSchema = z.object({
+  kind: z.literal('remove_defoliation_days'),
+  dayNumber: z.number().int().positive(),
+  roomIds: z.array(z.string()).min(1),
+});
+
+export const coachChatRequestSchema = z.object({
+  message: z.string().trim().min(1).max(1000),
+  history: z.array(coachChatMessageSchema).max(20).optional().default([]),
+  pendingProposal: coachPendingProposalSchema.optional().nullable(),
+});
+
+export const coachTaskActionSchema = z.object({
+  type: z.literal('task'),
+  taskId: z.string(),
+  roomId: z.string(),
+  roomName: z.string(),
+  title: z.string(),
+  sopTitle: z.string().nullable(),
+});
+
+export const coachTrainingActionSchema = z.object({
+  type: z.literal('training'),
+  trainingId: z.string(),
+  traineeName: z.string(),
+  title: z.string(),
+  sopTitle: z.string().nullable(),
+});
+
+export const coachProposalRoomSchema = z.object({
+  roomId: z.string(),
+  roomName: z.string(),
+  roomCode: z.string(),
+  currentDays: z.array(z.number().int()),
+});
+
+export const coachProposalActionSchema = z.object({
+  type: z.literal('proposal'),
+  kind: z.literal('remove_defoliation_days'),
+  dayNumber: z.number().int().positive(),
+  rooms: z.array(coachProposalRoomSchema).min(1),
+  summary: z.string(),
+});
+
+export const coachDefoliationActionSchema = z.object({
+  type: z.literal('defoliation'),
+  roomId: z.string(),
+  roomName: z.string(),
+  removedDay: z.number().int().positive(),
+  days: z.array(z.number().int()),
+});
+
+export const coachChatActionSchema = z.discriminatedUnion('type', [
+  coachTaskActionSchema,
+  coachTrainingActionSchema,
+  coachProposalActionSchema,
+  coachDefoliationActionSchema,
+]);
+
+export const coachChatResponseSchema = z.object({
+  reply: z.string(),
+  matchedSopTitle: z.string().nullable(),
+  matchedSopSummary: z.string().nullable(),
+  actions: z.array(coachChatActionSchema),
+  suggestions: z.array(z.string()),
+});
+
+export const messageDirectoryPersonSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+});
+
+export const messageDirectorySchema = z.object({
+  people: z.array(messageDirectoryPersonSchema),
+});
+
+export const messageViewSchema = z.object({
+  id: z.string(),
+  authorId: z.string().nullable(),
+  authorName: z.string(),
+  body: z.string(),
+  kind: z.enum(['user', 'assistant', 'system']),
+  createdAt: z.string(),
+});
+
+export const messageThreadSummarySchema = z.object({
+  id: z.string(),
+  kind: z.enum(['direct', 'ai']),
+  title: z.string(),
+  siteId: z.string().nullable(),
+  peerUserId: z.string().nullable(),
+  peerName: z.string().nullable(),
+  lastMessage: z.string().nullable(),
+  lastMessageAt: z.string().nullable(),
+  updatedAt: z.string(),
+});
+
+export const messageThreadDetailSchema = messageThreadSummarySchema.extend({
+  messages: z.array(messageViewSchema),
+});
+
+export const messageThreadListSchema = z.object({
+  threads: z.array(messageThreadSummarySchema),
+});
+
+export const openDirectThreadSchema = z.object({
+  peerUserId: z.string().trim().min(1),
+});
+
+export const openAiThreadSchema = z.object({
+  siteId: z.string().trim().min(1).optional().nullable(),
+});
+
+export const sendMessageInputSchema = z.object({
+  body: z.string().trim().min(1).max(4000),
 });
 
 const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -1516,6 +2000,10 @@ export type Room = z.infer<typeof roomSchema>;
 export type RoomDetail = z.infer<typeof roomDetailSchema>;
 export type Defoliation = z.infer<typeof defoliationSchema>;
 export type DefoliationInput = z.infer<typeof defoliationInputSchema>;
+export type Transplant = z.infer<typeof transplantSchema>;
+export type TransplantInput = z.infer<typeof transplantInputSchema>;
+export type IpmSchedule = z.infer<typeof ipmScheduleSchema>;
+export type IpmScheduleInput = z.infer<typeof ipmScheduleInputSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;
 export type CycleTaskSummary = z.infer<typeof cycleTaskSummarySchema>;
 export type WorkflowTaskInput = z.infer<typeof workflowTaskInputSchema>;
@@ -1538,10 +2026,25 @@ export type RescheduleResult = z.infer<typeof rescheduleResultSchema>;
 export type ReschedulePreview = z.infer<typeof reschedulePreviewSchema>;
 export type CycleTaskDetail = z.infer<typeof cycleTaskDetailSchema>;
 export type WorkspaceNotice = z.infer<typeof workspaceNoticeSchema>;
+export type WorkspaceRoomTask = z.infer<typeof workspaceRoomTaskSchema>;
+export type WorkspaceDuty = z.infer<typeof workspaceDutySchema>;
 export type WorkspaceToday = z.infer<typeof workspaceTodaySchema>;
 export type SiteCoach = z.infer<typeof siteCoachSchema>;
+export type CoachHelper = z.infer<typeof coachHelperSchema>;
 export type CoachQuestion = z.infer<typeof coachQuestionSchema>;
 export type CoachAnswer = z.infer<typeof coachAnswerSchema>;
+export type CoachChatRequest = z.infer<typeof coachChatRequestSchema>;
+export type CoachChatResponse = z.infer<typeof coachChatResponseSchema>;
+export type CoachChatAction = z.infer<typeof coachChatActionSchema>;
+export type MessageDirectoryPerson = z.infer<typeof messageDirectoryPersonSchema>;
+export type MessageDirectory = z.infer<typeof messageDirectorySchema>;
+export type MessageView = z.infer<typeof messageViewSchema>;
+export type MessageThreadSummary = z.infer<typeof messageThreadSummarySchema>;
+export type MessageThreadDetail = z.infer<typeof messageThreadDetailSchema>;
+export type MessageThreadList = z.infer<typeof messageThreadListSchema>;
+export type OpenDirectThread = z.infer<typeof openDirectThreadSchema>;
+export type OpenAiThread = z.infer<typeof openAiThreadSchema>;
+export type SendMessageInput = z.infer<typeof sendMessageInputSchema>;
 export type RoomTask = z.infer<typeof roomTaskSchema>;
 export type RoomAlert = z.infer<typeof roomAlertSchema>;
 export type EnvironmentalReading = z.infer<typeof environmentalReadingSchema>;
@@ -1581,11 +2084,32 @@ export type HarvestWasteView = z.infer<typeof harvestWasteSchema>;
 export type CycleReport = z.infer<typeof cycleReportSchema>;
 export type SiteReport = z.infer<typeof siteReportSchema>;
 export type ComparisonReport = z.infer<typeof comparisonReportSchema>;
+export type DashboardAnalytics = z.infer<typeof dashboardAnalyticsSchema>;
+export type DashboardCogs = z.infer<typeof dashboardCogsSchema>;
+export type DashboardTopStrain = z.infer<typeof dashboardTopStrainSchema>;
+export type DashboardPackageItem = z.infer<typeof dashboardPackageItemSchema>;
+export type FacilityBoard = z.infer<typeof facilityBoardSchema>;
+export type FacilityBoardColumn = z.infer<typeof facilityBoardColumnSchema>;
+export type FacilityBoardRow = z.infer<typeof facilityBoardRowSchema>;
+export type FacilityBoardCell = z.infer<typeof facilityBoardCellSchema>;
+export type TimePunchKind = z.infer<typeof timePunchKindSchema>;
+export type TimePunch = z.infer<typeof timePunchSchema>;
+export type TimePunchInput = z.infer<typeof timePunchInputSchema>;
+export type TimeClockStatus = z.infer<typeof timeClockStatusSchema>;
+export type TimePresenceList = z.infer<typeof timePresenceListSchema>;
+export type LaborRateView = z.infer<typeof laborRateViewSchema>;
+export type LaborRateInput = z.infer<typeof laborRateInputSchema>;
+export type PayrollReport = z.infer<typeof payrollReportSchema>;
+export type PayrollEmployee = z.infer<typeof payrollEmployeeSchema>;
+export type PayrollAsk = z.infer<typeof payrollAskSchema>;
+export type PayrollAnswer = z.infer<typeof payrollAnswerSchema>;
 export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
 export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
 export type MetrcApiInput = z.infer<typeof metrcApiInputSchema>;
 export type MetrcApiView = z.infer<typeof metrcApiViewSchema>;
+export type OpenAiApiInput = z.infer<typeof openAiApiInputSchema>;
+export type OpenAiApiView = z.infer<typeof openAiApiViewSchema>;
 export type SettingsView = z.infer<typeof settingsViewSchema>;
 export type AccessUserInput = z.infer<typeof accessUserInputSchema>;
 export type AccessUser = z.infer<typeof accessUserSchema>;
@@ -1616,3 +2140,15 @@ export type RoomStayInput = z.infer<typeof roomStayInputSchema>;
 export type RecurringInput = z.infer<typeof recurringInputSchema>;
 export type OperationsOverview = z.infer<typeof operationsOverviewSchema>;
 export type SopLibrary = z.infer<typeof sopLibrarySchema>;
+
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>;
+export type ForgotPasswordResponse = z.infer<typeof forgotPasswordResponseSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
+export type ResetPasswordResponse = z.infer<typeof resetPasswordResponseSchema>;
+export type EmailBroadcastInput = z.infer<typeof emailBroadcastInputSchema>;
+export type EmailBroadcast = z.infer<typeof emailBroadcastSchema>;
+export type EmailBroadcastList = z.infer<typeof emailBroadcastListSchema>;
+export type EmailTemplateKind = z.infer<typeof emailTemplateKindSchema>;
+export type EmailTemplatePreviewInput = z.infer<typeof emailTemplatePreviewInputSchema>;
+export type EmailTemplatePreview = z.infer<typeof emailTemplatePreviewSchema>;
+

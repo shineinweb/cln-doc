@@ -3,6 +3,8 @@ import { cycleTaskDetailSchema, recordRemovedSchema } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { RecordActions, SaveChanges } from '../records/RecordControls';
 import { AssignmentCard } from '../tasks/AssignmentCard';
@@ -51,6 +53,8 @@ function TaskEditor({
   dueOn: string;
   onChanged: () => void;
 }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
   const save = useMutation({
     mutationFn: (body: { title: string; dueOn: string }) => apiSend(`/tasks/${taskId}`, recordRemovedSchema, body, 'PATCH'),
     onSuccess: onChanged,
@@ -59,6 +63,9 @@ function TaskEditor({
     mutationFn: () => apiSend(`/tasks/${taskId}`, recordRemovedSchema, undefined, 'DELETE'),
     onSuccess: onChanged,
   });
+  if (!canWrite) {
+    return null;
+  }
   return (
     <RecordActions
       summary={<Alert severity="info" sx={{ py: 0 }}>Open View to work this assignment. Edit changes the title and due date.</Alert>}
@@ -79,6 +86,8 @@ function TaskEditor({
         </Box>
       }
       onDelete={() => remove.mutate()}
+      allowEdit
+      allowDelete
     />
   );
 }

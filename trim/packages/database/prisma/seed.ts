@@ -28,11 +28,62 @@ const DEV_USERS = {
 };
 
 const PERMISSIONS = [
+  { key: 'dashboard.read', description: 'Open the main dashboard' },
+  { key: 'access.manage', description: 'Manage users, roles, permissions, and view the full audit log' },
   { key: 'organization.read', description: 'View the organization profile' },
+  { key: 'facilities.read', description: 'View facilities' },
+  { key: 'facilities.write', description: 'Add, edit, or delete facilities' },
   { key: 'sites.read', description: 'View facilities the user is allowed to open' },
   { key: 'rooms.read', description: 'View rooms inside an authorized facility' },
+  { key: 'rooms.write', description: 'Add, edit, reset, or delete rooms and room settings' },
   { key: 'zones.read', description: 'View zones inside an authorized room' },
+  { key: 'zones.write', description: 'Add, edit, or delete zones' },
+  { key: 'tasks.read', description: 'View crop-cycle, room, and workspace tasks' },
+  { key: 'tasks.write', description: 'Create or edit tasks' },
+  { key: 'tasks.complete', description: 'Mark tasks finished' },
+  { key: 'timeclock.punch', description: 'Clock in, lunch, and clock out' },
+  { key: 'timeclock.manage', description: 'View payroll, set labor rates, and ask AI payroll' },
+  { key: 'compliance.read', description: 'View compliance and Metrc submissions' },
+  { key: 'compliance.write', description: 'Create or change compliance submissions' },
+  { key: 'harvests.read', description: 'View harvests and packages' },
+  { key: 'harvests.write', description: 'Record or change harvests and packages' },
+  { key: 'operations.read', description: 'View Operations lists' },
+  { key: 'operations.write', description: 'Add or change Operations records' },
+  { key: 'reports.read', description: 'View reports and dashboard analytics' },
+  { key: 'coach.use', description: 'Use Serenity, the cultivation AI' },
+  { key: 'messages.use', description: 'Send and read internal messages' },
+  { key: 'communications.manage', description: 'Send organization email announcements and marketing broadcasts' },
+  { key: 'settings.manage', description: 'Change organization settings and API credentials' },
+  { key: 'workflows.manage', description: 'Manage workflow templates and teams' },
+  { key: 'inventory.read', description: 'View plants and license inventory' },
+  { key: 'inventory.write', description: 'Change plants and license inventory' },
 ];
+
+const OPERATOR_PERMISSION_KEYS = new Set([
+  'dashboard.read',
+  'organization.read',
+  'facilities.read',
+  'sites.read',
+  'rooms.read',
+  'rooms.write',
+  'zones.read',
+  'zones.write',
+  'tasks.read',
+  'tasks.write',
+  'tasks.complete',
+  'timeclock.punch',
+  'compliance.read',
+  'compliance.write',
+  'harvests.read',
+  'harvests.write',
+  'operations.read',
+  'operations.write',
+  'reports.read',
+  'coach.use',
+  'messages.use',
+  'inventory.read',
+  'inventory.write',
+]);
 
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
@@ -87,8 +138,34 @@ async function main(): Promise<void> {
     },
   });
 
-  for (const roleId of [orgAdmin.id, siteOperator.id]) {
-    for (const permissionId of permissions.values()) {
+  const facilityAssociate = await prisma.role.upsert({
+    where: { organizationId_key: { organizationId: organization.id, key: 'facility_associate' } },
+    create: {
+      organizationId: organization.id,
+      key: 'facility_associate',
+      name: 'Facility associate',
+      description: 'Day-to-day facility work with the same module set as a site operator.',
+      isOrgWide: false,
+    },
+    update: {
+      name: 'Facility associate',
+      description: 'Day-to-day facility work with the same module set as a site operator.',
+      isOrgWide: false,
+    },
+  });
+
+  for (const permissionId of permissions.values()) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: orgAdmin.id, permissionId } },
+      create: { roleId: orgAdmin.id, permissionId },
+      update: {},
+    });
+  }
+  for (const roleId of [siteOperator.id, facilityAssociate.id]) {
+    for (const [key, permissionId] of permissions.entries()) {
+      if (!OPERATOR_PERMISSION_KEYS.has(key)) {
+        continue;
+      }
       await prisma.rolePermission.upsert({
         where: { roleId_permissionId: { roleId, permissionId } },
         create: { roleId, permissionId },
@@ -226,6 +303,7 @@ async function main(): Promise<void> {
   const rolesByKey = new Map([
     ['org_admin', orgAdmin.id],
     ['site_operator', siteOperator.id],
+    ['facility_associate', facilityAssociate.id],
   ]);
 
   for (const user of Object.values(DEV_USERS)) {

@@ -183,6 +183,9 @@ describe('site coach', () => {
 
     expect(first.body.statement).toBe(STATEMENT);
     expect(first.body.siteName).toBe('Site A');
+    expect(first.body.helper.rooms.map((room: { name: string }) => room.name)).toContain('Room A');
+    expect(first.body.helper.sops.map((sop: { title: string }) => sop.title)).toContain('Temperature check');
+    expect(first.body.helper.people.length).toBeGreaterThan(0);
     expect(first.body.cycles).toHaveLength(1);
     expect(first.body.cycles[0]).toMatchObject({
       cultivar: 'Test cultivar',
@@ -248,19 +251,137 @@ describe('site coach', () => {
       matched: true,
       title: 'Temperature check',
       summary: 'Walk the room and record the temperature.',
-      message: 'Walk the room and record the temperature.',
+      message: expect.stringMatching(/I'm Serenity[\s\S]*Temperature check|Walk the room/),
     });
     const unmatched = await request(app.getHttpServer())
       .post(`/sites/${fixture.siteAId}/coach/ask`)
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ question: 'zzzzqqqq' })
       .expect(201);
-    expect(unmatched.body).toEqual({
+    expect(unmatched.body).toMatchObject({
       matched: false,
       title: null,
       summary: null,
-      message: 'No stored procedure matches that question.',
+      message: expect.stringMatching(/I'm Serenity[\s\S]*No stored procedure matches/),
     });
+
+    const chatAsk = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'How do I check temperature?' })
+      .expect(201);
+    expect(chatAsk.body).toMatchObject({
+      reply: expect.stringMatching(/I'm Serenity[\s\S]*Temperature check/),
+      matchedSopTitle: 'Temperature check',
+      actions: [],
+    });
+
+    const taught = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Remember that flower rooms prefer 78F lights-on' })
+      .expect(201);
+    expect(taught.body.reply).toEqual(expect.stringMatching(/I'm Serenity[\s\S]*78F/i));
+    expect(
+      await prisma.serenityLesson.count({
+        where: { organizationId: fixture.organizationId, content: { contains: '78F' } },
+      }),
+    ).toBe(1);
+
+    const generated = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Generate tasks for Temperature check' })
+      .expect(201);
+    expect(generated.body.actions.length).toBeGreaterThan(0);
+    expect(generated.body.actions[0]).toMatchObject({
+      type: 'task',
+      title: 'Temperature check',
+      roomName: 'Room A',
+      sopTitle: 'Temperature check',
+    });
+    expect(
+      await prisma.roomTask.count({
+        where: { roomId: fixture.roomAId, title: 'Temperature check', sourceAlertId: null },
+      }),
+    ).toBe(1);
+
+    const trained = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Train workers on Temperature check' })
+      .expect(201);
+    expect(trained.body.actions.length).toBeGreaterThan(0);
+    expect(trained.body.actions[0]).toMatchObject({
+      type: 'training',
+      sopTitle: 'Temperature check',
+      title: 'Temperature check training',
+    });
+    expect(
+      await prisma.trainingRecord.count({
+        where: { siteId: fixture.siteAId, sopTitle: 'Temperature check', status: 'assigned' },
+      }),
+    ).toBe(trained.body.actions.length);
+
+    const flowerRooms = [];
+    for (const code of ['F1', 'F2', 'F3', 'F4']) {
+      const room = await prisma.room.create({
+        data: {
+          siteId: fixture.siteAId,
+          code,
+          name: `Flower ${code.slice(1)}`,
+          roomType: 'flower',
+          defoliations: { create: [{ dayNumber: 10 }, { dayNumber: 21 }] },
+        },
+      });
+      flowerRooms.push(room);
+    }
+    const proposed = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Remove day 10 defoliation from F1–F4' })
+      .expect(201);
+    expect(proposed.body.reply).toEqual(expect.stringMatching(/confirm|YES/i));
+    expect(proposed.body.actions[0]).toMatchObject({
+      type: 'proposal',
+      kind: 'remove_defoliation_days',
+      dayNumber: 10,
+    });
+    expect(proposed.body.actions[0].rooms).toHaveLength(4);
+    expect(
+      await prisma.roomDefoliation.count({
+        where: { roomId: { in: flowerRooms.map((room) => room.id) }, dayNumber: 10 },
+      }),
+    ).toBe(4);
+
+    const confirmed = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({
+        message: 'YES',
+        history: [
+          { role: 'user', content: 'Remove day 10 defoliation from F1–F4' },
+          { role: 'assistant', content: proposed.body.reply },
+        ],
+        pendingProposal: {
+          kind: 'remove_defoliation_days',
+          dayNumber: 10,
+          roomIds: flowerRooms.map((room) => room.id),
+        },
+      })
+      .expect(201);
+    expect(confirmed.body.reply).toEqual(expect.stringMatching(/Removed day 10/i));
+    expect(confirmed.body.actions.every((action: { type: string }) => action.type === 'defoliation')).toBe(true);
+    expect(
+      await prisma.roomDefoliation.count({
+        where: { roomId: { in: flowerRooms.map((room) => room.id) }, dayNumber: 10 },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.roomDefoliation.count({
+        where: { roomId: { in: flowerRooms.map((room) => room.id) }, dayNumber: 21 },
+      }),
+    ).toBe(4);
 
     await request(app.getHttpServer())
       .get(`/sites/${fixture.siteAId}/coach`)

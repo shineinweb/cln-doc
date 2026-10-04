@@ -4,20 +4,29 @@ import type {
   CreateSite,
   Defoliation,
   DefoliationInput,
+  FacilityBoard,
+  FacilityBoardCell,
+  FacilityBoardColumn,
+  IpmSchedule,
+  IpmScheduleInput,
   OrganizationSummary,
   RecordRemoved,
   Room,
   RoomDetail,
   SessionUser,
   Site,
+  Transplant,
+  TransplantInput,
+  Weekday,
   Zone,
   ZoneInput,
 } from '@trim/contracts';
-import { addCalendarDays, dateKeyFromDbDate } from '../cycles/cycle-day';
+import { addCalendarDays, calendarDateInTimeZone, dateKeyFromDbDate, zonedDateTimeToUtc } from '../cycles/cycle-day';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomTasksService } from './room-tasks.service';
 import { assertSiteAccess, authorizedSiteWhere } from './site-access';
+import { normalizeWeekdays, parseWeekdays, weekdaysToCsv } from './weekdays';
 
 const roomInclude = {
   zones: { orderBy: { name: 'asc' as const } },
@@ -261,7 +270,22 @@ export class FacilitiesService {
       ...signals,
       managedTasks: await this.roomTasks.list(room.id),
       defoliations: await this.defoliationViews(room.id, current?.startDate ?? null),
+      transplants: await this.transplantViews(room.id, current?.startDate ?? null),
+      ipmSchedule: { weekdays: parseWeekdays(room.ipmWeekdays) },
     };
+  }
+
+  async saveIpmSchedule(user: SessionUser, roomId: string, input: IpmScheduleInput): Promise<IpmSchedule> {
+    const room = await this.roomForChange(user, roomId);
+    const weekdays = normalizeWeekdays(input.weekdays);
+    if (weekdays.length !== 0 && weekdays.length !== 2) {
+      throw new BadRequestException('Choose exactly two days for the twice-a-week IPM schedule, or clear both to turn it off.');
+    }
+    await this.prisma.room.update({
+      where: { id: room.id },
+      data: { ipmWeekdays: weekdaysToCsv(weekdays) },
+    });
+    return { weekdays };
   }
 
   async saveDefoliations(user: SessionUser, roomId: string, input: DefoliationInput): Promise<Defoliation[]> {
@@ -286,8 +310,43 @@ export class FacilitiesService {
     return this.defoliationViews(room.id, current?.startDate ?? null);
   }
 
+  async saveTransplants(user: SessionUser, roomId: string, input: TransplantInput): Promise<Transplant[]> {
+    const room = await this.roomForChange(user, roomId);
+    if (room.roomType === 'dry') {
+      throw new BadRequestException('A dry room does not use a transplant schedule.');
+    }
+    const days = [...input.days].sort((left, right) => left - right);
+    if (new Set(days).size !== days.length) {
+      throw new BadRequestException('Each transplant day can be listed once.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.roomTransplant.deleteMany({ where: { roomId: room.id } }),
+      this.prisma.roomTransplant.createMany({
+        data: days.map((dayNumber) => ({ roomId: room.id, dayNumber })),
+      }),
+    ]);
+    const current = await this.prisma.cropCycle.findFirst({
+      where: { roomId: room.id, status: 'active' },
+      orderBy: { startDate: 'desc' },
+    });
+    return this.transplantViews(room.id, current?.startDate ?? null);
+  }
+
   private async defoliationViews(roomId: string, startDate: Date | null): Promise<Defoliation[]> {
     const rows = await this.prisma.roomDefoliation.findMany({
+      where: { roomId },
+      orderBy: [{ dayNumber: 'asc' }, { createdAt: 'asc' }],
+    });
+    const startKey = startDate ? dateKeyFromDbDate(startDate) : null;
+    return rows.map((row) => ({
+      id: row.id,
+      dayNumber: row.dayNumber,
+      date: startKey ? addCalendarDays(startKey, row.dayNumber - 1) : null,
+    }));
+  }
+
+  private async transplantViews(roomId: string, startDate: Date | null): Promise<Transplant[]> {
+    const rows = await this.prisma.roomTransplant.findMany({
       where: { roomId },
       orderBy: [{ dayNumber: 'asc' }, { createdAt: 'asc' }],
     });
@@ -312,6 +371,109 @@ export class FacilitiesService {
       name: organization.name,
       slug: organization.slug,
       siteCount,
+    };
+  }
+
+  async facilityBoard(user: SessionUser, siteId: string): Promise<FacilityBoard> {
+    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+    assertSiteAccess(user, site);
+    const today = calendarDateInTimeZone(new Date(), site.timezone);
+    // Flower / veg / mother / clone rows only — dry rooms stay off the milestone board.
+    const rooms = await this.prisma.room.findMany({
+      where: { siteId: site.id, roomType: { not: 'dry' } },
+      include: {
+        defoliations: { orderBy: { dayNumber: 'asc' } },
+        transplants: { orderBy: { dayNumber: 'asc' } },
+        cycles: {
+          where: { status: 'active' },
+          orderBy: { startDate: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+    const roomIds = rooms.map((room) => room.id);
+    const [cycleTasks, roomTasks, duties] = await Promise.all([
+      roomIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.cycleTask.findMany({
+            where: { roomId: { in: roomIds } },
+            orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
+          }),
+      roomIds.length === 0
+        ? Promise.resolve([])
+        : this.prisma.roomTask.findMany({
+            where: { roomId: { in: roomIds } },
+            orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
+          }),
+      this.prisma.recurringDuty.findMany({
+        where: { siteId: site.id },
+        orderBy: [{ nextDueOn: 'asc' }, { title: 'asc' }],
+      }),
+    ]);
+
+    const defoliationDays = [
+      ...new Set(rooms.flatMap((room) => room.defoliations.map((row) => row.dayNumber))),
+    ].sort((left, right) => left - right);
+
+    const columns: FacilityBoardColumn[] = [
+      { key: 'start', label: '1st', kind: 'start', dayNumber: null },
+      ...defoliationDays.map((dayNumber) => ({
+        key: `defoliation-${dayNumber}`,
+        label: `D${dayNumber}`,
+        kind: 'defoliation' as const,
+        dayNumber,
+      })),
+      ...BOARD_CHORE_COLUMNS,
+    ];
+
+    const cycleTasksByRoom = groupBy(cycleTasks, (task) => task.roomId);
+    const roomTasksByRoom = groupBy(roomTasks, (task) => task.roomId);
+
+    const rows = rooms.map((room) => {
+      const cycle = room.cycles[0] ?? null;
+      const startKey = cycle ? dateKeyFromDbDate(cycle.startDate) : null;
+      const cells = columns.map((column) =>
+        boardCellForColumn({
+          column,
+          today,
+          timeZone: site.timezone,
+          startKey,
+          cycle,
+          defoliations: room.defoliations,
+          transplants: room.transplants,
+          roomType: room.roomType,
+          cycleTasks: cycleTasksByRoom.get(room.id) ?? [],
+          roomTasks: roomTasksByRoom.get(room.id) ?? [],
+          duties: duties.filter((duty) => duty.roomId == null || duty.roomId === room.id),
+        }),
+      );
+      return {
+        roomId: room.id,
+        roomName: room.name,
+        roomType: room.roomType,
+        cycleId: cycle?.id ?? null,
+        cycleName: cycle?.name ?? null,
+        cultivar: cycle?.cultivar ?? null,
+        cells,
+      };
+    });
+
+    return {
+      siteId: site.id,
+      siteName: site.name,
+      timezone: site.timezone,
+      today,
+      statement:
+        'Facility board: rooms across milestones — crop start, defoliation, transplant (T), harvest, and standard room schedules (sulfur, nets, filters, garden clean, LS, fans).',
+      columns,
+      rows,
+      notes: [
+        'Sulfur on crop day 14. Side net and AC/dehu filters on crop day 35.',
+        'LS is 11 days before expected harvest. Garden clean every 30 days from crop start.',
+        'Wash water filters every Tuesday and Friday. Check all fans and ACs every Friday.',
+        'T shows transplant dates from each room’s Settings → Transplant dates.',
+      ],
     };
   }
 
@@ -434,4 +596,453 @@ function isUniqueConstraint(error: unknown): boolean {
 
 function isForeignKeyConstraint(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2003';
+}
+
+const BOARD_CHORE_COLUMNS: FacilityBoardColumn[] = [
+  { key: 'sulfur', label: 'Sul.', kind: 'chore', dayNumber: null },
+  { key: 'side_net', label: 'Side Net', kind: 'chore', dayNumber: null },
+  { key: 'filters_ac', label: 'Filters AC', kind: 'chore', dayNumber: null },
+  { key: 'ls', label: 'LS', kind: 'chore', dayNumber: null },
+  { key: 'harvest', label: 'H', kind: 'harvest', dayNumber: null },
+  { key: 'transplant', label: 'T', kind: 'transplant', dayNumber: null },
+  { key: 'garden_clean', label: 'Garden Clean', kind: 'chore', dayNumber: null },
+  { key: 'water_filters', label: 'Water Filters', kind: 'chore', dayNumber: null },
+  { key: 'fans_ac', label: 'Fans / AC', kind: 'chore', dayNumber: null },
+];
+
+const BOARD_CHORE_MATCHERS: Record<string, RegExp> = {
+  sulfur: /sulfur|sulphur|\bsul\.?\b/i,
+  side_net: /side\s*net|trellis|netting/i,
+  filters_ac: /filters?\s*ac|ac\s*filters?|hvac\s*filter/i,
+  ls: /\bls\b|light\s*sched|late\s*stage|flip\s*to\s*flower/i,
+  garden_clean: /garden\s*clean|room\s*sanit|clean\s*(the\s*)?room|wipe\s*tables/i,
+  water_filters: /water\s*fil+t/i,
+  fans_ac: /\bfans?\b|odor|dehu|check\s*ac/i,
+};
+
+type BoardCycle = {
+  id: string;
+  name: string;
+  cultivar: string;
+  startDate: Date;
+  expectedHarvestDate: Date;
+  harvestDate: Date | null;
+};
+
+type BoardTask = {
+  title: string;
+  status: string;
+  dueOn: Date | null;
+};
+
+type BoardDuty = {
+  title: string;
+  nextDueOn: Date;
+  roomId: string | null;
+};
+
+function boardCellForColumn(input: {
+  column: FacilityBoardColumn;
+  today: string;
+  timeZone: string;
+  startKey: string | null;
+  cycle: BoardCycle | null;
+  defoliations: Array<{ dayNumber: number }>;
+  transplants: Array<{ dayNumber: number }>;
+  roomType: string;
+  cycleTasks: BoardTask[];
+  roomTasks: BoardTask[];
+  duties: BoardDuty[];
+}): FacilityBoardCell {
+  const { column, today, timeZone, startKey, cycle, defoliations, transplants, roomType } = input;
+
+  if (column.kind === 'start') {
+    if (!startKey) {
+      return emptyCell(column.key);
+    }
+    return datedCell({
+      columnKey: column.key,
+      dates: [startKey],
+      today,
+      done: startKey <= today,
+      detail: cycle?.name ?? null,
+      source: 'cycle',
+    });
+  }
+
+  if (column.kind === 'defoliation') {
+    if (roomType === 'dry') {
+      return emptyCell(column.key);
+    }
+    const dayNumber = column.dayNumber;
+    if (dayNumber == null || !defoliations.some((row) => row.dayNumber === dayNumber)) {
+      return emptyCell(column.key);
+    }
+    if (!startKey) {
+      return {
+        columnKey: column.key,
+        dates: [],
+        status: 'scheduled',
+        detail: `Day ${dayNumber}`,
+        source: 'defoliation',
+      };
+    }
+    const date = addCalendarDays(startKey, dayNumber - 1);
+    return datedCell({
+      columnKey: column.key,
+      dates: [date],
+      today,
+      done: date < today,
+      detail: `Day ${dayNumber}`,
+      source: 'defoliation',
+    });
+  }
+
+  if (column.kind === 'transplant') {
+    if (roomType === 'dry' || transplants.length === 0) {
+      return emptyCell(column.key);
+    }
+    const days = transplants.map((row) => row.dayNumber);
+    const detail = days.map((day) => `Day ${day}`).join(' · ');
+    if (!startKey) {
+      return {
+        columnKey: column.key,
+        dates: [],
+        status: 'scheduled',
+        detail,
+        source: 'transplant',
+      };
+    }
+    const dates = days.map((dayNumber) => addCalendarDays(startKey, dayNumber - 1));
+    return multiDateCell({
+      columnKey: column.key,
+      dates,
+      today,
+      detail,
+      source: 'transplant',
+    });
+  }
+
+  if (column.kind === 'harvest') {
+    if (!cycle) {
+      return emptyCell(column.key);
+    }
+    if (cycle.harvestDate) {
+      const date = dateKeyFromDbDate(cycle.harvestDate);
+      return {
+        columnKey: column.key,
+        dates: [date],
+        status: 'done',
+        detail: cycle.name,
+        source: 'harvest',
+      };
+    }
+    const expected = dateKeyFromDbDate(cycle.expectedHarvestDate);
+    return datedCell({
+      columnKey: column.key,
+      dates: [expected],
+      today,
+      done: false,
+      detail: cycle.name,
+      source: 'harvest',
+    });
+  }
+
+  const matcher = BOARD_CHORE_MATCHERS[column.key];
+  if (!matcher) {
+    return emptyCell(column.key);
+  }
+
+  const cycleMatch = input.cycleTasks.find((task) => matcher.test(task.title));
+  if (cycleMatch) {
+    const date = cycleMatch.dueOn ? dateKeyFromDbDate(cycleMatch.dueOn) : null;
+    const done = cycleMatch.status !== 'open';
+    if (!date) {
+      return {
+        columnKey: column.key,
+        dates: [],
+        status: done ? 'done' : 'scheduled',
+        detail: cycleMatch.title,
+        source: 'cycle_task',
+      };
+    }
+    return datedCell({
+      columnKey: column.key,
+      dates: [date],
+      today,
+      done,
+      detail: cycleMatch.title,
+      source: 'cycle_task',
+    });
+  }
+
+  const roomMatch = input.roomTasks.find((task) => matcher.test(task.title));
+  if (roomMatch) {
+    const date = roomMatch.dueOn ? dateKeyFromDbDate(roomMatch.dueOn) : null;
+    const done = roomMatch.status !== 'open';
+    if (!date) {
+      return {
+        columnKey: column.key,
+        dates: [],
+        status: done ? 'done' : 'scheduled',
+        detail: roomMatch.title,
+        source: 'room_task',
+      };
+    }
+    return datedCell({
+      columnKey: column.key,
+      dates: [date],
+      today,
+      done,
+      detail: roomMatch.title,
+      source: 'room_task',
+    });
+  }
+
+  const dutyMatch = input.duties.find((duty) => matcher.test(duty.title));
+  if (dutyMatch) {
+    const date = dateKeyFromDbDate(dutyMatch.nextDueOn);
+    return datedCell({
+      columnKey: column.key,
+      dates: [date],
+      today,
+      done: false,
+      detail: dutyMatch.title,
+      source: 'duty',
+    });
+  }
+
+  return scheduledChoreCell({
+    columnKey: column.key,
+    today,
+    timeZone,
+    startKey,
+    cycle,
+  });
+}
+
+/** Built-in cadence when no matching task/duty exists. */
+function scheduledChoreCell(input: {
+  columnKey: string;
+  today: string;
+  timeZone: string;
+  startKey: string | null;
+  cycle: BoardCycle | null;
+}): FacilityBoardCell {
+  const { columnKey, today, timeZone, startKey, cycle } = input;
+
+  if (columnKey === 'sulfur') {
+    return cycleDayMilestoneCell({ columnKey, startKey, today, dayNumber: 14, detail: 'Sulfur · day 14' });
+  }
+  if (columnKey === 'side_net') {
+    return cycleDayMilestoneCell({ columnKey, startKey, today, dayNumber: 35, detail: 'Side net · day 35' });
+  }
+  if (columnKey === 'filters_ac') {
+    return cycleDayMilestoneCell({
+      columnKey,
+      startKey,
+      today,
+      dayNumber: 35,
+      detail: 'AC / dehu filters · day 35',
+    });
+  }
+  if (columnKey === 'garden_clean') {
+    if (!startKey) {
+      return emptyCell(columnKey);
+    }
+    const date = nextIntervalOnOrAfter(startKey, today, 30);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: false,
+      detail: 'Garden clean · every 30 days',
+      source: 'schedule',
+    });
+  }
+  if (columnKey === 'ls') {
+    if (!cycle) {
+      return emptyCell(columnKey);
+    }
+    const harvestKey = cycle.harvestDate
+      ? dateKeyFromDbDate(cycle.harvestDate)
+      : dateKeyFromDbDate(cycle.expectedHarvestDate);
+    const date = addCalendarDays(harvestKey, -11);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: Boolean(cycle.harvestDate) || date < today,
+      detail: 'LS · 11 days before harvest',
+      source: 'schedule',
+    });
+  }
+  if (columnKey === 'water_filters') {
+    const date = nextWeekdaysOnOrAfter(today, ['tue', 'fri'], timeZone);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: false,
+      detail: 'Water filters · Tue & Fri',
+      source: 'schedule',
+    });
+  }
+  if (columnKey === 'fans_ac') {
+    const date = nextWeekdaysOnOrAfter(today, ['fri'], timeZone);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: false,
+      detail: 'Fans / ACs · every Friday',
+      source: 'schedule',
+    });
+  }
+
+  return emptyCell(columnKey);
+}
+
+function cycleDayMilestoneCell(input: {
+  columnKey: string;
+  startKey: string | null;
+  today: string;
+  dayNumber: number;
+  detail: string;
+}): FacilityBoardCell {
+  if (!input.startKey) {
+    return emptyCell(input.columnKey);
+  }
+  const date = addCalendarDays(input.startKey, input.dayNumber - 1);
+  return datedCell({
+    columnKey: input.columnKey,
+    dates: [date],
+    today: input.today,
+    done: date < input.today,
+    detail: input.detail,
+    source: 'schedule',
+  });
+}
+
+/** Next occurrence of a cycle-day interval (day 30, 60, 90, …) on or after today. */
+function nextIntervalOnOrAfter(startKey: string, today: string, intervalDays: number): string {
+  for (let n = 1; n < 400; n += 1) {
+    const date = addCalendarDays(startKey, intervalDays * n - 1);
+    if (date >= today) {
+      return date;
+    }
+  }
+  return today;
+}
+
+function nextWeekdaysOnOrAfter(today: string, days: Weekday[], timeZone: string): string {
+  const wanted = new Set(normalizeWeekdays(days));
+  for (let offset = 0; offset < 8; offset += 1) {
+    const key = addCalendarDays(today, offset);
+    if (wanted.has(weekdayOfDateKey(key, timeZone))) {
+      return key;
+    }
+  }
+  return today;
+}
+
+function weekdayOfDateKey(dateKey: string, timeZone: string): Weekday {
+  const instant = zonedDateTimeToUtc(dateKey, '12:00', timeZone);
+  const short = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' })
+    .formatToParts(instant)
+    .find((part) => part.type === 'weekday')
+    ?.value?.toLowerCase()
+    .slice(0, 3);
+  const map: Record<string, Weekday> = {
+    sun: 'sun',
+    mon: 'mon',
+    tue: 'tue',
+    wed: 'wed',
+    thu: 'thu',
+    fri: 'fri',
+    sat: 'sat',
+  };
+  return map[short ?? ''] ?? 'mon';
+}
+
+function emptyCell(columnKey: string): FacilityBoardCell {
+  return {
+    columnKey,
+    dates: [],
+    status: 'empty',
+    detail: null,
+    source: null,
+  };
+}
+
+function datedCell(input: {
+  columnKey: string;
+  dates: string[];
+  today: string;
+  done: boolean;
+  detail: string | null;
+  source: FacilityBoardCell['source'];
+}): FacilityBoardCell {
+  if (input.done) {
+    return {
+      columnKey: input.columnKey,
+      dates: input.dates,
+      status: 'done',
+      detail: input.detail,
+      source: input.source,
+    };
+  }
+  const first = input.dates[0];
+  let status: FacilityBoardCell['status'] = 'scheduled';
+  if (first === input.today) {
+    status = 'due';
+  } else if (first < input.today) {
+    status = 'overdue';
+  }
+  return {
+    columnKey: input.columnKey,
+    dates: input.dates,
+    status,
+    detail: input.detail,
+    source: input.source,
+  };
+}
+
+function multiDateCell(input: {
+  columnKey: string;
+  dates: string[];
+  today: string;
+  detail: string | null;
+  source: FacilityBoardCell['source'];
+}): FacilityBoardCell {
+  const dates = [...input.dates].sort();
+  let status: FacilityBoardCell['status'] = 'scheduled';
+  if (dates.every((date) => date < input.today)) {
+    status = 'done';
+  } else if (dates.some((date) => date === input.today)) {
+    status = 'due';
+  } else if (dates.some((date) => date < input.today)) {
+    status = 'overdue';
+  }
+  return {
+    columnKey: input.columnKey,
+    dates,
+    status,
+    detail: input.detail,
+    source: input.source,
+  };
+}
+
+function groupBy<T>(items: T[], keyOf: (item: T) => string): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    const list = map.get(key);
+    if (list) {
+      list.push(item);
+    } else {
+      map.set(key, [item]);
+    }
+  }
+  return map;
 }

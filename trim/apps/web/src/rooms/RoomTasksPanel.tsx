@@ -1,7 +1,8 @@
 import { Alert, Box, Button, Card, CardContent, Checkbox, FormControlLabel, MenuItem, TextField, Typography } from '@mui/material';
 import {
-  accessDirectorySchema,
+  cycleTaskDetailSchema,
   managedTaskSchema,
+  messageDirectorySchema,
   recordRemovedSchema,
   type ManagedTask,
   type ManagedTaskInput,
@@ -12,6 +13,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type HTMLAttributes, type InputHTMLAttributes } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { formatCalendarDate } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { workbench } from '../theme';
@@ -32,7 +35,8 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
             Tasks
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task has no due date. Description is optional, and you can assign more than one employee.
+            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task has no due date. Description is optional, and you can assign more than one employee. Today’s assigned room chores also appear under{' '}
+            <RouterLink to="/workspace">Tasks</RouterLink> with crop-cycle work and Operations recurring duties.
           </Typography>
           <AddTaskForm roomId={roomId} siteId={siteId} />
           <PagedList
@@ -60,6 +64,8 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
 }
 
 function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -77,6 +83,9 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
       setError(caught instanceof ApiError ? caught.message : 'The task could not be saved.');
     },
   });
+  if (!canWrite) {
+    return null;
+  }
   return (
     <Box sx={{ mb: 2 }}>
       {open ? (
@@ -106,6 +115,9 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
 }
 
 function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: string; task: ManagedTask }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
   const [error, setError] = useState<string | null>(null);
@@ -119,8 +131,30 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
     onSuccess: refresh,
     onError: (caught) => setError(caught instanceof ApiError ? caught.message : 'The task could not be deleted.'),
   });
+  const finish = useMutation({
+    mutationFn: () => apiSend(`/rooms/${roomId}/tasks/${task.id}/complete`, managedTaskSchema, {}),
+    onSuccess: async () => {
+      setError(null);
+      await refresh();
+      await queryClient.invalidateQueries({ queryKey: ['workspace'] });
+    },
+    onError: (caught) => setError(caught instanceof ApiError ? caught.message : 'The task could not be finished.'),
+  });
   return (
     <Box>
+      {canComplete && task.kind === 'one_time' ? (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
+          <Button
+            size="small"
+            variant="contained"
+            data-testid="finish-managed-task"
+            disabled={finish.isPending}
+            onClick={() => finish.mutate()}
+          >
+            {finish.isPending ? 'Finishing…' : 'Finished'}
+          </Button>
+        </Box>
+      ) : null}
       <RecordActions
         summary={
           <Box>
@@ -160,6 +194,8 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
           />
         }
         onDelete={() => remove.mutate()}
+        allowEdit={canWrite}
+        allowDelete={canWrite}
       />
       {error ? <Alert severity="error">{error}</Alert> : null}
     </Box>
@@ -167,6 +203,9 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
 }
 
 function TaskDueRow({ roomId, siteId, task }: { roomId: string; siteId: string; task: DueTask }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
   const [assigneeId, setAssigneeId] = useState(task.assigneeId ?? '');
@@ -179,41 +218,65 @@ function TaskDueRow({ roomId, siteId, task }: { roomId: string; siteId: string; 
     mutationFn: () => apiSend(`/tasks/${task.id}`, recordRemovedSchema, undefined, 'DELETE'),
     onSuccess: refresh,
   });
+  const finish = useMutation({
+    mutationFn: () => apiSend(`/tasks/${task.id}/complete`, cycleTaskDetailSchema, {}),
+    onSuccess: async () => {
+      await refresh();
+      await queryClient.invalidateQueries({ queryKey: ['workspace'] });
+    },
+  });
   return (
-    <RecordActions
-      summary={
-        <Typography data-testid="task-due-today">
-          <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
-          {` · ${task.assigneeLabel} · ${formatCalendarDate(task.dueOn)}`}
-        </Typography>
-      }
-      detail={<Typography>{task.assigneeLabel}</Typography>}
-      editor={
-        <Box
-          component="form"
-          sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            const nextAssignee = assigneeId;
-            const body: { title: string; dueOn: string; assigneeId?: string | null } = {
-              title: String(form.get('title') ?? ''),
-              dueOn: String(form.get('dueOn') ?? ''),
-            };
-            if (nextAssignee !== (task.assigneeId ?? '')) {
-              body.assigneeId = nextAssignee || null;
-            }
-            save.mutate(body);
-          }}
-        >
-          <TextField label="Title" name="title" defaultValue={task.title} required />
-          <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
-          <EmployeeSelect siteId={siteId} value={assigneeId} onChange={setAssigneeId} />
-          <SaveChanges pending={save.isPending} />
+    <Box>
+      {canComplete ? (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
+          <Button
+            size="small"
+            variant="contained"
+            data-testid="finish-due-task"
+            disabled={finish.isPending}
+            onClick={() => finish.mutate()}
+          >
+            {finish.isPending ? 'Finishing…' : 'Finished'}
+          </Button>
         </Box>
-      }
-      onDelete={() => remove.mutate()}
-    />
+      ) : null}
+      <RecordActions
+        summary={
+          <Typography data-testid="task-due-today">
+            <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
+            {` · ${task.assigneeLabel} · ${formatCalendarDate(task.dueOn)}`}
+          </Typography>
+        }
+        detail={<Typography>{task.assigneeLabel}</Typography>}
+        editor={
+          <Box
+            component="form"
+            sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              const nextAssignee = assigneeId;
+              const body: { title: string; dueOn: string; assigneeId?: string | null } = {
+                title: String(form.get('title') ?? ''),
+                dueOn: String(form.get('dueOn') ?? ''),
+              };
+              if (nextAssignee !== (task.assigneeId ?? '')) {
+                body.assigneeId = nextAssignee || null;
+              }
+              save.mutate(body);
+            }}
+          >
+            <TextField label="Title" name="title" defaultValue={task.title} required />
+            <TextField label="Due" name="dueOn" type="date" defaultValue={task.dueOn} required InputLabelProps={{ shrink: true }} />
+            <EmployeeSelect siteId={siteId} value={assigneeId} onChange={setAssigneeId} />
+            <SaveChanges pending={save.isPending} />
+          </Box>
+        }
+        onDelete={() => remove.mutate()}
+        allowEdit={canWrite}
+        allowDelete={canWrite}
+      />
+    </Box>
   );
 }
 
@@ -351,12 +414,27 @@ function TaskFields({
   );
 }
 
-function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: string; onChange: (value: string) => void }) {
-  const access = useQuery({
-    queryKey: ['access'],
-    queryFn: () => apiGet('/access', accessDirectorySchema),
+function useAssigneePeople(siteId: string) {
+  const { user } = useAuth();
+  const directory = useQuery({
+    queryKey: ['messages-directory'],
+    queryFn: () => apiGet('/messages/directory', messageDirectorySchema),
+    enabled: can(user, 'messages.use', 'tasks.write', 'tasks.read'),
   });
-  const people = (access.data?.users ?? []).filter((person) => person.opensEveryFacility || person.siteIds.includes(siteId));
+  const peers = directory.data?.people ?? [];
+  const self =
+    user && (!siteId || user.siteIds.includes(siteId) || user.isOrgAdmin)
+      ? [{ id: user.id, name: user.name, email: user.email }]
+      : [];
+  const byId = new Map<string, { id: string; name: string; email: string }>();
+  for (const person of [...self, ...peers]) {
+    byId.set(person.id, person);
+  }
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: string; onChange: (value: string) => void }) {
+  const people = useAssigneePeople(siteId);
   return (
     <TextField
       select
@@ -381,11 +459,7 @@ function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: st
 }
 
 function EmployeeMultiSelect({ siteId, value, onChange }: { siteId: string; value: string[]; onChange: (value: string[]) => void }) {
-  const access = useQuery({
-    queryKey: ['access'],
-    queryFn: () => apiGet('/access', accessDirectorySchema),
-  });
-  const people = (access.data?.users ?? []).filter((person) => person.opensEveryFacility || person.siteIds.includes(siteId));
+  const people = useAssigneePeople(siteId);
   return (
     <TextField
       select
