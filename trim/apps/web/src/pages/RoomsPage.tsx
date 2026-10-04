@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { useSites } from '../layout/SiteProvider';
@@ -45,6 +47,8 @@ function roomsLede(site: Site): string {
 }
 
 function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'rooms.write');
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
@@ -135,6 +139,8 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
             </Box>
           }
           onDelete={() => remove.mutate()}
+          allowEdit={canWrite}
+          allowDelete={canWrite}
         />
         {error ? <Alert severity="error">{error}</Alert> : null}
       </CardContent>
@@ -143,6 +149,8 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
 }
 
 function AddRoomForm({ siteId }: { siteId: string }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'rooms.write');
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -162,6 +170,10 @@ function AddRoomForm({ siteId }: { siteId: string }) {
       setFormError(caught instanceof ApiError ? caught.message : 'The room could not be saved.');
     },
   });
+
+  if (!canWrite) {
+    return null;
+  }
 
   return (
     <Box>

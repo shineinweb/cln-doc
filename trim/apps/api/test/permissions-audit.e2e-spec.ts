@@ -69,6 +69,53 @@ describe('module permissions and audit logging', () => {
     expect(summaries).toEqual(expect.arrayContaining([expect.stringMatching(/signed in/i)]));
   });
 
+  it('blocks previously ungated void/create routes without write permissions and audits the denial', async () => {
+    // Strip harvests.write / inventory.write from the operator for this check.
+    const harvestPerm = await prisma.permission.findFirst({ where: { key: 'harvests.write' } });
+    const inventoryPerm = await prisma.permission.findFirst({ where: { key: 'inventory.write' } });
+    expect(harvestPerm).toBeTruthy();
+    expect(inventoryPerm).toBeTruthy();
+    const operatorRole = await prisma.role.findFirst({
+      where: { organizationId: fixture.organizationId, key: 'site_operator' },
+    });
+    expect(operatorRole).toBeTruthy();
+    await prisma.rolePermission.deleteMany({
+      where: {
+        roleId: operatorRole!.id,
+        permissionId: { in: [harvestPerm!.id, inventoryPerm!.id] },
+      },
+    });
+    const restrictedToken = await login(fixture.siteAUser.email, fixture.siteAUser.password);
+
+    await request(app.getHttpServer())
+      .delete('/harvests/permission-probe-harvest-id')
+      .set('Authorization', `Bearer ${restrictedToken}`)
+      .expect(403);
+    await request(app.getHttpServer())
+      .post('/licenses/permission-probe-license-id/plants')
+      .set('Authorization', `Bearer ${restrictedToken}`)
+      .send({ batchId: 'permission-probe-batch-id', tag: 'TEMP-TAG', stage: 'veg' })
+      .expect(403);
+
+    const denied = await prisma.auditLog.findMany({
+      where: {
+        organizationId: fixture.organizationId,
+        summary: { contains: '→ 403' },
+      },
+      take: 10,
+    });
+    expect(denied.length).toBeGreaterThan(0);
+
+    // Restore operator write grants for later suites sharing the DB.
+    for (const permissionId of [harvestPerm!.id, inventoryPerm!.id]) {
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: operatorRole!.id, permissionId } },
+        create: { roleId: operatorRole!.id, permissionId },
+        update: {},
+      });
+    }
+  });
+
   async function login(email: string, password: string): Promise<string> {
     const response = await request(app.getHttpServer()).post('/auth/login').send({ email, password }).expect(200);
     expect(Array.isArray(response.body.user.permissions)).toBe(true);

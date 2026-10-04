@@ -135,6 +135,22 @@ async function main(): Promise<void> {
     },
   });
 
+  const facilityAssociate = await prisma.role.upsert({
+    where: { organizationId_key: { organizationId: organization.id, key: 'facility_associate' } },
+    create: {
+      organizationId: organization.id,
+      key: 'facility_associate',
+      name: 'Facility associate',
+      description: 'Day-to-day facility work with the same module set as a site operator.',
+      isOrgWide: false,
+    },
+    update: {
+      name: 'Facility associate',
+      description: 'Day-to-day facility work with the same module set as a site operator.',
+      isOrgWide: false,
+    },
+  });
+
   for (const permissionId of permissions.values()) {
     await prisma.rolePermission.upsert({
       where: { roleId_permissionId: { roleId: orgAdmin.id, permissionId } },
@@ -142,15 +158,17 @@ async function main(): Promise<void> {
       update: {},
     });
   }
-  for (const [key, permissionId] of permissions.entries()) {
-    if (!OPERATOR_PERMISSION_KEYS.has(key)) {
-      continue;
+  for (const roleId of [siteOperator.id, facilityAssociate.id]) {
+    for (const [key, permissionId] of permissions.entries()) {
+      if (!OPERATOR_PERMISSION_KEYS.has(key)) {
+        continue;
+      }
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId, permissionId } },
+        create: { roleId, permissionId },
+        update: {},
+      });
     }
-    await prisma.rolePermission.upsert({
-      where: { roleId_permissionId: { roleId: siteOperator.id, permissionId } },
-      create: { roleId: siteOperator.id, permissionId },
-      update: {},
-    });
   }
 
   const harbor = await upsertSite(organization.id, {

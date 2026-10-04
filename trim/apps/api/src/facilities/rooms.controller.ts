@@ -38,7 +38,7 @@ export class RoomsController {
   ) {}
 
   @Get(':roomId')
-  @RequirePermissions('rooms.read')
+  @RequirePermissions('rooms.read', 'zones.read')
   get(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string): Promise<RoomDetail> {
     return this.facilities.getRoom(user, roomId);
   }

@@ -75,6 +75,7 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/attachments')
+  @RequirePermissions('tasks.write')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),

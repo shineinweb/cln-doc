@@ -251,14 +251,21 @@ export function RecordActions({
   editor,
   onDelete,
   keepsHistory = false,
+  allowEdit = true,
+  allowDelete = true,
 }: {
   summary: ReactNode;
   detail: ReactNode;
   editor: ReactNode;
   onDelete: () => void;
   keepsHistory?: boolean;
+  /** When false, Edit is hidden (read-only roles). */
+  allowEdit?: boolean;
+  /** When false, Delete is hidden (read-only roles). */
+  allowDelete?: boolean;
 }) {
   const [mode, setMode] = useState<'closed' | 'view' | 'edit'>('closed');
+  const editOpen = allowEdit && mode === 'edit';
   return (
     <Box sx={{ py: 1.25, px: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -267,14 +274,16 @@ export function RecordActions({
           <Button size="small" data-testid="view-record" onClick={() => setMode(mode === 'view' ? 'closed' : 'view')}>
             View
           </Button>
-          <Button size="small" data-testid="edit-record" onClick={() => setMode(mode === 'edit' ? 'closed' : 'edit')}>
-            Edit
-          </Button>
-          <DeleteRecord keepsHistory={keepsHistory} onConfirm={onDelete} />
+          {allowEdit ? (
+            <Button size="small" data-testid="edit-record" onClick={() => setMode(mode === 'edit' ? 'closed' : 'edit')}>
+              Edit
+            </Button>
+          ) : null}
+          {allowDelete ? <DeleteRecord keepsHistory={keepsHistory} onConfirm={onDelete} /> : null}
         </RowActions>
       </Box>
       {mode === 'view' ? <Box sx={{ mt: 1 }}>{detail}</Box> : null}
-      {mode === 'edit' ? <Box sx={{ mt: 1 }}>{editor}</Box> : null}
+      {editOpen ? <Box sx={{ mt: 1 }}>{editor}</Box> : null}
     </Box>
   );
 }

@@ -11,6 +11,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
@@ -116,6 +118,7 @@ function useRefresh(siteId: string) {
 }
 
 function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'irrigation');
   const [message, setMessage] = useState<string | null>(null);
@@ -172,6 +175,8 @@ function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -208,7 +213,7 @@ function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
             <TextField label="pH" name="ph" type="number" />
             <TextField label="Nutrient" name="nutrientName" />
             <TextField label="Note" name="note" />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save record
             </Button>
           </Box>
@@ -220,6 +225,7 @@ function IrrigationPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function IpmPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'ipm');
   const [message, setMessage] = useState<string | null>(null);
@@ -259,6 +265,8 @@ function IpmPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -289,7 +297,7 @@ function IpmPanel({ overview }: { overview: OperationsOverview }) {
             </TextField>
             <TextField label="Response" name="response" required />
             <TextField label="Note" name="note" />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save record
             </Button>
           </Box>
@@ -301,6 +309,7 @@ function IpmPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'maintenance');
   const [message, setMessage] = useState<string | null>(null);
@@ -341,6 +350,8 @@ function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -379,7 +390,7 @@ function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
             </TextField>
             <TextField label="Summary" name="summary" required />
             <TextField label="Next due" name="nextDueOn" type="date" InputLabelProps={{ shrink: true }} />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save record
             </Button>
           </Box>
@@ -391,6 +402,7 @@ function MaintenancePanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'purchasing');
   const [message, setMessage] = useState<string | null>(null);
@@ -431,6 +443,8 @@ function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -461,7 +475,7 @@ function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
             <TextField label="Description" name="description" required />
             <TextField label="Quantity" name="quantity" type="number" required />
             <TextField label="Unit cost (cents)" name="unitCostCents" type="number" required />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save purchase
             </Button>
           </Box>
@@ -473,6 +487,7 @@ function PurchasingPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function SanitationPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'sanitation');
   const [message, setMessage] = useState<string | null>(null);
@@ -512,6 +527,8 @@ function SanitationPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -540,7 +557,7 @@ function SanitationPanel({ overview }: { overview: OperationsOverview }) {
               <MenuItem value="done">Done</MenuItem>
               <MenuItem value="follow_up">Needs follow-up</MenuItem>
             </TextField>
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save record
             </Button>
           </Box>
@@ -552,6 +569,7 @@ function SanitationPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function TrainingPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'training');
   const [message, setMessage] = useState<string | null>(null);
@@ -593,6 +611,8 @@ function TrainingPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -621,7 +641,7 @@ function TrainingPanel({ overview }: { overview: OperationsOverview }) {
               <MenuItem value="completed">Completed</MenuItem>
             </TextField>
             <TextField label="Completed on" name="completedOn" type="date" InputLabelProps={{ shrink: true }} />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save training
             </Button>
           </Box>
@@ -633,6 +653,7 @@ function TrainingPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function CalendarPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'stays');
   const [message, setMessage] = useState<string | null>(null);
@@ -678,6 +699,8 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -718,7 +741,7 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
             <TextField label="Medium" name="medium" required />
             <TextField label="Starts" name="startsOn" type="date" required InputLabelProps={{ shrink: true }} />
             <TextField label="Ends" name="endsOn" type="date" required InputLabelProps={{ shrink: true }} />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save stay
             </Button>
           </Box>
@@ -730,6 +753,7 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function RecurringPanel({ overview }: { overview: OperationsOverview }) {
+  const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'recurring');
   const [message, setMessage] = useState<string | null>(null);
@@ -786,6 +810,8 @@ function RecurringPanel({ overview }: { overview: OperationsOverview }) {
               </Box>
             }
             onDelete={() => rows.remove.mutate(row.id)}
+            allowEdit={rows.canWrite}
+            allowDelete={rows.canWrite}
           />
         ))}
       </RecordList>
@@ -825,7 +851,7 @@ function RecurringPanel({ overview }: { overview: OperationsOverview }) {
               ))}
             </TextField>
             <TextField label="Procedure" name="sopTitle" />
-            <Button type="submit" variant="contained" disabled={save.isPending}>
+            <Button type="submit" variant="contained" disabled={save.isPending || !canWriteOps}>
               Save recurring task
             </Button>
           </Box>
@@ -836,6 +862,8 @@ function RecurringPanel({ overview }: { overview: OperationsOverview }) {
 }
 
 function LibraryView({ library, error, pending }: { library: SopLibrary | undefined; error: Error | null; pending: boolean }) {
+  const { user } = useAuth();
+  const canManageSops = can(user, 'workflows.manage');
   const queryClient = useQueryClient();
   const save = useMutation({
     mutationFn: (input: { id: string; title: string; summary: string }) =>
@@ -913,6 +941,8 @@ function LibraryView({ library, error, pending }: { library: SopLibrary | undefi
                 </Box>
               }
               onDelete={() => remove.mutate(entry.id)}
+              allowEdit={canManageSops}
+              allowDelete={canManageSops}
             />
           </CardContent>
         </Card>
@@ -926,6 +956,11 @@ function RecordList({ testId, empty, children }: { testId: string; empty: string
   return <PagedList items={list} empty={empty} testId={testId} render={(item) => item} />;
 }
 
+function useOpsWrite() {
+  const { user } = useAuth();
+  return can(user, 'operations.write');
+}
+
 function useOpsChange(siteId: string, kind: string) {
   const refresh = useRefresh(siteId);
   const save = useMutation({
@@ -937,7 +972,8 @@ function useOpsChange(siteId: string, kind: string) {
     mutationFn: (id: string) => apiSend(`/operations/sites/${siteId}/${kind}/${id}`, operationsOverviewSchema, undefined, 'DELETE'),
     onSuccess: () => refresh(),
   });
-  return { save, remove };
+  const canWrite = useOpsWrite();
+  return { save, remove, canWrite };
 }
 
 function numberOrNull(value: FormDataEntryValue | null): number | null {

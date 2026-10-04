@@ -59,6 +59,7 @@ export class RecordsController {
   }
 
   @Post('cycles/:cycleId/tasks')
+  @RequirePermissions('tasks.write')
   async addTask(
     @CurrentUser() user: SessionUser,
     @Param('cycleId') cycleId: string,
@@ -132,6 +133,7 @@ export class RecordsController {
   }
 
   @Patch('alert-rules/:ruleId')
+  @RequirePermissions('rooms.write')
   async editRule(
     @CurrentUser() user: SessionUser,
     @Param('ruleId') ruleId: string,
@@ -141,6 +143,7 @@ export class RecordsController {
   }
 
   @Delete('alert-rules/:ruleId')
+  @RequirePermissions('rooms.write')
   async deleteRule(@CurrentUser() user: SessionUser, @Param('ruleId') ruleId: string) {
     return recordRemovedSchema.parse(await this.records.deleteAlertRule(user, ruleId));
   }
@@ -156,11 +159,13 @@ export class RecordsController {
   }
 
   @Delete('harvests/:harvestId')
+  @RequirePermissions('harvests.write')
   async voidHarvest(@CurrentUser() user: SessionUser, @Param('harvestId') harvestId: string) {
     return recordRemovedSchema.parse(await this.records.voidHarvest(user, harvestId));
   }
 
   @Patch('harvest-steps/:stepId')
+  @RequirePermissions('harvests.write')
   async editStep(
     @CurrentUser() user: SessionUser,
     @Param('stepId') stepId: string,
@@ -170,6 +175,7 @@ export class RecordsController {
   }
 
   @Delete('harvest-steps/:stepId')
+  @RequirePermissions('harvests.write')
   async voidStep(@CurrentUser() user: SessionUser, @Param('stepId') stepId: string) {
     return recordRemovedSchema.parse(await this.records.voidStep(user, stepId));
   }
@@ -185,6 +191,7 @@ export class RecordsController {
   }
 
   @Delete('wastes/:wasteId')
+  @RequirePermissions('harvests.write')
   async voidWaste(@CurrentUser() user: SessionUser, @Param('wasteId') wasteId: string) {
     return recordRemovedSchema.parse(await this.records.voidWaste(user, wasteId));
   }
@@ -200,6 +207,7 @@ export class RecordsController {
   }
 
   @Delete('packages/:packageId')
+  @RequirePermissions('harvests.write')
   async voidPackage(@CurrentUser() user: SessionUser, @Param('packageId') packageId: string) {
     return recordRemovedSchema.parse(await this.records.voidPackage(user, packageId));
   }
@@ -215,6 +223,7 @@ export class RecordsController {
   }
 
   @Delete('submissions/:submissionId')
+  @RequirePermissions('compliance.write')
   async voidSubmission(@CurrentUser() user: SessionUser, @Param('submissionId') submissionId: string) {
     return recordRemovedSchema.parse(await this.records.voidSubmission(user, submissionId));
   }
@@ -230,11 +239,13 @@ export class RecordsController {
   }
 
   @Delete('plants/:plantId')
+  @RequirePermissions('inventory.write')
   async voidPlant(@CurrentUser() user: SessionUser, @Param('plantId') plantId: string) {
     return recordRemovedSchema.parse(await this.records.voidPlant(user, plantId));
   }
 
   @Post('licenses/:licenseId/batches')
+  @RequirePermissions('inventory.write')
   async addBatch(
     @CurrentUser() user: SessionUser,
     @Param('licenseId') licenseId: string,
@@ -260,6 +271,7 @@ export class RecordsController {
   }
 
   @Post('licenses/:licenseId/plants')
+  @RequirePermissions('inventory.write')
   async addPlant(
     @CurrentUser() user: SessionUser,
     @Param('licenseId') licenseId: string,

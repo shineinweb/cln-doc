@@ -1,7 +1,7 @@
 import { Alert, Box, Button, Card, CardContent, Checkbox, FormControlLabel, MenuItem, TextField, Typography } from '@mui/material';
 import {
-  accessDirectorySchema,
   managedTaskSchema,
+  messageDirectorySchema,
   recordRemovedSchema,
   type ManagedTask,
   type ManagedTaskInput,
@@ -12,6 +12,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type HTMLAttributes, type InputHTMLAttributes } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { formatCalendarDate } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { workbench } from '../theme';
@@ -61,6 +63,8 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
 }
 
 function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -78,6 +82,9 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
       setError(caught instanceof ApiError ? caught.message : 'The task could not be saved.');
     },
   });
+  if (!canWrite) {
+    return null;
+  }
   return (
     <Box sx={{ mb: 2 }}>
       {open ? (
@@ -107,6 +114,8 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
 }
 
 function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: string; task: ManagedTask }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
   const [error, setError] = useState<string | null>(null);
@@ -161,6 +170,8 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
           />
         }
         onDelete={() => remove.mutate()}
+        allowEdit={canWrite}
+        allowDelete={canWrite}
       />
       {error ? <Alert severity="error">{error}</Alert> : null}
     </Box>
@@ -168,6 +179,8 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
 }
 
 function TaskDueRow({ roomId, siteId, task }: { roomId: string; siteId: string; task: DueTask }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
   const [assigneeId, setAssigneeId] = useState(task.assigneeId ?? '');
@@ -214,6 +227,8 @@ function TaskDueRow({ roomId, siteId, task }: { roomId: string; siteId: string; 
         </Box>
       }
       onDelete={() => remove.mutate()}
+      allowEdit={canWrite}
+      allowDelete={canWrite}
     />
   );
 }
@@ -352,12 +367,27 @@ function TaskFields({
   );
 }
 
-function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: string; onChange: (value: string) => void }) {
-  const access = useQuery({
-    queryKey: ['access'],
-    queryFn: () => apiGet('/access', accessDirectorySchema),
+function useAssigneePeople(siteId: string) {
+  const { user } = useAuth();
+  const directory = useQuery({
+    queryKey: ['messages-directory'],
+    queryFn: () => apiGet('/messages/directory', messageDirectorySchema),
+    enabled: can(user, 'messages.use', 'tasks.write', 'tasks.read'),
   });
-  const people = (access.data?.users ?? []).filter((person) => person.opensEveryFacility || person.siteIds.includes(siteId));
+  const peers = directory.data?.people ?? [];
+  const self =
+    user && (!siteId || user.siteIds.includes(siteId) || user.isOrgAdmin)
+      ? [{ id: user.id, name: user.name, email: user.email }]
+      : [];
+  const byId = new Map<string, { id: string; name: string; email: string }>();
+  for (const person of [...self, ...peers]) {
+    byId.set(person.id, person);
+  }
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: string; onChange: (value: string) => void }) {
+  const people = useAssigneePeople(siteId);
   return (
     <TextField
       select
@@ -382,11 +412,7 @@ function EmployeeSelect({ siteId, value, onChange }: { siteId: string; value: st
 }
 
 function EmployeeMultiSelect({ siteId, value, onChange }: { siteId: string; value: string[]; onChange: (value: string[]) => void }) {
-  const access = useQuery({
-    queryKey: ['access'],
-    queryFn: () => apiGet('/access', accessDirectorySchema),
-  });
-  const people = (access.data?.users ?? []).filter((person) => person.opensEveryFacility || person.siteIds.includes(siteId));
+  const people = useAssigneePeople(siteId);
   return (
     <TextField
       select
