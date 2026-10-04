@@ -23,11 +23,12 @@ const STARTER: ChatMessage = {
   id: 'starter',
   role: 'assistant',
   content:
-    'I am the AI helper for this facility. I generate room tasks from stored procedures, assign worker training, and quote procedures when you ask.',
+    "I'm Serenity, Trim's cultivation AI for this facility. I generate room tasks from stored procedures, assign worker training, quote procedures, and learn notes you teach me with “Remember that…”.",
   suggestions: [
     'Generate tasks from stored procedures',
     'Train workers on Canopy scout',
     'How do I check irrigation?',
+    'Remember that flower rooms prefer 78°F lights-on',
   ],
 };
 
@@ -65,12 +66,12 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
   return (
     <Box data-testid="ai-helper">
       <Typography variant="h2" sx={{ fontSize: 28, mb: 0.5 }}>
-        AI helper
+        Serenity
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-        Chat to generate tasks, train workers, or quote a stored procedure. {helper.sops.length} procedures,{' '}
-        {helper.people.length} people, and {helper.rooms.length} rooms are in scope for this facility. Saved chats with
-        people and Trim AI also live under{' '}
+        Chat with Serenity to generate tasks, train workers, quote a stored procedure, or teach her with “Remember
+        that…”. {helper.sops.length} procedures, {helper.people.length} people, and {helper.rooms.length} rooms are in
+        scope for this facility. Saved chats with people and Serenity also live under{' '}
         <Button size="small" variant="text" component={RouterLink} to="/messages" sx={{ px: 0.5, minWidth: 0, verticalAlign: 'baseline' }}>
           Messages
         </Button>
@@ -119,7 +120,7 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
             }}
           >
             <TextField
-              label="Message the AI helper"
+              label="Message Serenity"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               fullWidth

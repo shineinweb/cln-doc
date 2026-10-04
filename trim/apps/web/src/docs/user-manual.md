@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, Serenity, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch** / **Clock out** for the selected facility (status shows Out, In, or Lunch), your name on a wider screen, and **Sign out**. The status dot opens **Time clock** for payroll and the full punch history.
 
@@ -307,27 +307,27 @@ Each crop card has Yield, Cycle duration, Labor, Input costs, and Total cost.
 
 The card also says “Sample environmental readings are excluded. This report does not use their values.” Controller samples and scale samples are not part of these totals. When a crop has no labor entries, the card says “Labor is absent. No labor entries are stored.” When it has no input costs, it says “Input cost is absent. No input costs are stored.”
 
-## AI helper
+## Serenity
 
-**AI helper** sits in the left navigation after Reports. It follows the facility in the top bar. The address stays `/coach`.
+**Serenity** sits in the left navigation after Reports. She is Trim’s cultivation AI and always introduces herself as Serenity. The address stays `/coach`.
 
-**AI helper** opens with a chat box. **Generate tasks** creates open room tasks from stored procedures and assigns them to the people who can open the facility. **Train workers** assigns training records from a stored procedure; open **Operations → Training** to mark them complete. Typing a question about a procedure quotes the matching stored procedure title and summary. If nothing matches, it says “No stored procedure matches that question.”
+**Serenity** opens with a chat box. **Generate tasks** creates open room tasks from stored procedures and assigns them to the people who can open the facility. **Train workers** assigns training records from a stored procedure; open **Operations → Training** to mark them complete. Typing a question about a procedure quotes the matching stored procedure title and summary. Say **Remember that…** to teach Serenity a note she can reuse later. With an OpenAI API key under **Settings → API's → Serenity · OpenAI**, she can answer in fuller language using those notes and procedures. Without a key she still runs on Trim’s stored actions.
 
-Yield, labor, and cost figures stay on **Reports**. The AI helper does not repeat those charts.
+Yield, labor, and cost figures stay on **Reports**. Serenity does not repeat those charts. On **Time clock**, admins can **Ask Serenity** about payroll; she still introduces herself as Serenity.
 
-**Room notices** lists each active room alert. Opening the AI helper creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. The helper does not invent a task that no procedure describes. The same notice appears on **Tasks**, and the room task itself is listed under Room tasks.
+**Room notices** lists each active room alert. Opening Serenity creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. Serenity does not invent a task that no procedure describes. The same notice appears on **Tasks**, and the room task itself is listed under Room tasks.
 
 **Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Trim does not call live Metrc, and it does not send email or SMS.
 
-A person who cannot open the facility does not see that facility’s AI helper.
+A person who cannot open the facility does not see that facility’s Serenity chat.
 
 ## Messages
 
-**Messages** sits in the left navigation after AI helper. The address is `/messages`. It opens for every signed-in user and lists people in the same organization.
+**Messages** sits in the left navigation after Serenity. The address is `/messages`. It opens for every signed-in user and lists people in the same organization.
 
 **Message a person** opens a direct conversation with someone else in the organization. Both people see the same thread. Messages stay inside Trim; Trim does not send email or SMS.
 
-**Chat with AI** opens a saved AI assistant thread for your account. The assistant uses the facility in the top bar the same way **AI helper** does: it can quote stored procedures, generate room tasks, and assign worker training. Reopening **Chat with AI** returns the same saved conversation.
+**Chat with Serenity** opens a saved Serenity thread for your account. She uses the facility in the top bar the same way the Serenity page does: quote stored procedures, generate room tasks, assign worker training, and learn notes. Reopening **Chat with Serenity** returns the same saved conversation.
 
 ## Operations
 

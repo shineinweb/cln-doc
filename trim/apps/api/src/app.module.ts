@@ -14,6 +14,7 @@ import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecordsModule } from './records/records.module';
 import { ReportsModule } from './reports/reports.module';
+import { SerenityModule } from './serenity/serenity.module';
 import { StorageModule } from './storage/storage.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { TimeclockModule } from './timeclock/timeclock.module';
@@ -23,6 +24,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
   imports: [
     PrismaModule,
     StorageModule,
+    SerenityModule,
     AuthModule,
     AuditModule,
     AccessModule,

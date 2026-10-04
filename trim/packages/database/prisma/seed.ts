@@ -49,7 +49,7 @@ const PERMISSIONS = [
   { key: 'operations.read', description: 'View Operations lists' },
   { key: 'operations.write', description: 'Add or change Operations records' },
   { key: 'reports.read', description: 'View reports and dashboard analytics' },
-  { key: 'coach.use', description: 'Use the AI helper' },
+  { key: 'coach.use', description: 'Use Serenity, Trim’s cultivation AI' },
   { key: 'messages.use', description: 'Send and read internal messages' },
   { key: 'settings.manage', description: 'Change organization settings and API credentials' },
   { key: 'workflows.manage', description: 'Manage workflow templates and teams' },

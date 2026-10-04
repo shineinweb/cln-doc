@@ -27,6 +27,8 @@ model Organization {
   strains           Strain[]
   laborRates        LaborRate[]
   metrcApiSetting   MetrcApiSetting?
+  openAiApiSetting  OpenAiApiSetting?
+  serenityLessons   SerenityLesson[]
   auditLogs         AuditLog[]
   messageThreads    MessageThread[]
   timePunches       TimePunch[]
@@ -47,6 +49,37 @@ model MetrcApiSetting {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("metrc_api_settings")
+}
+
+/// OpenAI key used to help Serenity answer and learn from facility training notes.
+model OpenAiApiSetting {
+  id             String   @id @default(cuid())
+  organizationId String   @unique @map("organization_id")
+  apiKey         String   @map("api_key") @db.Text
+  model          String   @default("gpt-4o-mini") @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("openai_api_settings")
+}
+
+/// Notes staff teach Serenity so later answers can reuse them.
+model SerenityLesson {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  content        String   @db.VarChar(2000)
+  actorId        String?  @map("actor_id")
+  actorName      String   @map("actor_name") @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("serenity_lessons")
 }
 
 model User {
@@ -79,6 +112,7 @@ model User {
   messageParticipations MessageParticipant[]
   authoredMessages      Message[]
   timePunches           TimePunch[]
+  serenityLessons       SerenityLesson[]
 
   @@index([organizationId])
   @@map("users")

@@ -2,9 +2,11 @@ import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import {
   generalSettingsSchema,
   metrcApiInputSchema,
+  openAiApiInputSchema,
   settingsViewSchema,
   type GeneralSettings,
   type MetrcApiInput,
+  type OpenAiApiInput,
   type SessionUser,
   type SettingsView,
 } from '@trim/contracts';
@@ -40,5 +42,13 @@ export class SettingsController {
     @Body(new ZodValidationPipe(metrcApiInputSchema)) body: MetrcApiInput,
   ): Promise<SettingsView> {
     return settingsViewSchema.parse(await this.settings.saveMetrc(user, body));
+  }
+
+  @Post('openai')
+  async saveOpenAi(
+    @CurrentUser() user: SessionUser,
+    @Body(new ZodValidationPipe(openAiApiInputSchema)) body: OpenAiApiInput,
+  ): Promise<SettingsView> {
+    return settingsViewSchema.parse(await this.settings.saveOpenAi(user, body));
   }
 }

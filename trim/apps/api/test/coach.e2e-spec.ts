@@ -251,18 +251,18 @@ describe('site coach', () => {
       matched: true,
       title: 'Temperature check',
       summary: 'Walk the room and record the temperature.',
-      message: 'Walk the room and record the temperature.',
+      message: expect.stringMatching(/I'm Serenity[\s\S]*Temperature check|Walk the room/),
     });
     const unmatched = await request(app.getHttpServer())
       .post(`/sites/${fixture.siteAId}/coach/ask`)
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ question: 'zzzzqqqq' })
       .expect(201);
-    expect(unmatched.body).toEqual({
+    expect(unmatched.body).toMatchObject({
       matched: false,
       title: null,
       summary: null,
-      message: 'No stored procedure matches that question.',
+      message: expect.stringMatching(/I'm Serenity[\s\S]*No stored procedure matches/),
     });
 
     const chatAsk = await request(app.getHttpServer())
@@ -271,10 +271,22 @@ describe('site coach', () => {
       .send({ message: 'How do I check temperature?' })
       .expect(201);
     expect(chatAsk.body).toMatchObject({
-      reply: expect.stringContaining('Temperature check'),
+      reply: expect.stringMatching(/I'm Serenity[\s\S]*Temperature check/),
       matchedSopTitle: 'Temperature check',
       actions: [],
     });
+
+    const taught = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Remember that flower rooms prefer 78F lights-on' })
+      .expect(201);
+    expect(taught.body.reply).toEqual(expect.stringMatching(/I'm Serenity[\s\S]*78F/i));
+    expect(
+      await prisma.serenityLesson.count({
+        where: { organizationId: fixture.organizationId, content: { contains: '78F' } },
+      }),
+    ).toBe(1);
 
     const generated = await request(app.getHttpServer())
       .post(`/sites/${fixture.siteAId}/coach/chat`)

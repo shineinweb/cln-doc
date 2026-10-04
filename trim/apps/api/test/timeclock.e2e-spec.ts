@@ -120,7 +120,7 @@ describe('time clock and AI payroll', () => {
       .set('Authorization', `Bearer ${tokenAdmin}`)
       .send({ question: 'What is the total gross pay?', periodStart: day, periodEnd: day, siteId: fixture.siteAId })
       .expect(200);
-    expect(ask.body.reply).toContain('$224.00');
+    expect(ask.body.reply).toEqual(expect.stringMatching(/I'm Serenity[\s\S]*\$224\.00/));
   });
 
   async function login(email: string, password: string): Promise<string> {

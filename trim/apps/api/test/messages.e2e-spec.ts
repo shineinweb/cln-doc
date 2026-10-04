@@ -115,8 +115,10 @@ describe('internal messages and AI chatbot', () => {
       .send({ siteId: fixture.siteAId })
       .expect(201);
     expect(opened.body.kind).toBe('ai');
-    expect(opened.body.title).toBe('AI assistant');
+    expect(opened.body.title).toBe('Serenity');
     expect(opened.body.messages[0]?.kind).toBe('assistant');
+    expect(opened.body.messages[0]?.authorName).toBe('Serenity');
+    expect(opened.body.messages[0]?.body).toEqual(expect.stringMatching(/I'm Serenity/i));
 
     const answered = await request(app.getHttpServer())
       .post(`/messages/threads/${opened.body.id}/messages`)
@@ -124,7 +126,8 @@ describe('internal messages and AI chatbot', () => {
       .send({ body: 'How do I check temperature?' })
       .expect(201);
     const assistant = [...answered.body.messages].reverse().find((row: { kind: string }) => row.kind === 'assistant');
-    expect(assistant?.authorName).toBe('Trim AI');
+    expect(assistant?.authorName).toBe('Serenity');
+    expect(assistant?.body).toEqual(expect.stringMatching(/I'm Serenity/i));
     expect(assistant?.body).toEqual(expect.stringMatching(/Temperature check|stored procedure|procedure/i));
 
     const listed = await request(app.getHttpServer())

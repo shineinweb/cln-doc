@@ -547,44 +547,48 @@ function buildPayrollStatement(
 
 function answerPayrollQuestion(question: string, report: PayrollReport): string {
   const text = question.toLowerCase();
+  const withVoice = (reply: string) =>
+    /^i['’]?m serenity\b/i.test(reply.trim()) ? reply : `I'm Serenity. ${reply}`;
   if (/overtime|ot\b/.test(text)) {
     const leaders = [...report.employees]
       .filter((row) => row.overtimeMinutes > 0)
       .sort((left, right) => right.overtimeMinutes - left.overtimeMinutes)
       .slice(0, 5)
       .map((row) => `${row.userName} ${formatHours(row.overtimeMinutes)}h OT (${formatMoney(row.overtimeCents)})`);
-    return (
+    return withVoice(
       `Overtime for ${report.periodStart}–${report.periodEnd}: ` +
-      `${formatHours(report.totals.overtimeMinutes)} hours costing ${formatMoney(report.totals.overtimeCents)} at 1.5×. ` +
-      (leaders.length ? `Leaders: ${leaders.join('; ')}.` : 'Nobody has overtime in this period.') +
-      ` ${report.statement}`
+        `${formatHours(report.totals.overtimeMinutes)} hours costing ${formatMoney(report.totals.overtimeCents)} at 1.5×. ` +
+        (leaders.length ? `Leaders: ${leaders.join('; ')}.` : 'Nobody has overtime in this period.') +
+        ` ${report.statement}`,
     );
   }
   if (/lunch|break/.test(text)) {
-    return (
+    return withVoice(
       `Unpaid lunch across the period is ${formatHours(report.totals.lunchMinutes)} hours. ` +
-      `Worked time excludes lunch punches. ${report.statement}`
+        `Worked time excludes lunch punches. ${report.statement}`,
     );
   }
   if (/rate|wage|hour/.test(text) && /miss|missing|without|no /.test(text)) {
     const missing = report.employees.filter((row) => row.hourlyCents == null).map((row) => row.userName);
-    return missing.length
-      ? `Missing labor rates for: ${missing.join(', ')}. Set rates on Time clock → Pay rates. ${report.statement}`
-      : `Every employee on this payroll has a stored labor rate. ${report.statement}`;
+    return withVoice(
+      missing.length
+        ? `Missing labor rates for: ${missing.join(', ')}. Set rates on Time clock → Pay rates. ${report.statement}`
+        : `Every employee on this payroll has a stored labor rate. ${report.statement}`,
+    );
   }
   if (/who|highest|most|top/.test(text)) {
     const top = [...report.employees].sort((left, right) => right.grossCents - left.grossCents).slice(0, 5);
-    return (
+    return withVoice(
       `Top gross pay: ` +
-      top.map((row) => `${row.userName} ${formatMoney(row.grossCents)} (${formatHours(row.workedMinutes)}h)`).join('; ') +
-      `. ${report.statement}`
+        top.map((row) => `${row.userName} ${formatMoney(row.grossCents)} (${formatHours(row.workedMinutes)}h)`).join('; ') +
+        `. ${report.statement}`,
     );
   }
   if (/gross|total|pay|payroll|accounting|cost/.test(text)) {
-    return report.statement;
+    return withVoice(report.statement);
   }
-  return (
-    `${report.statement} Ask about overtime, lunch, missing rates, or top earners for a tighter breakdown.`
+  return withVoice(
+    `${report.statement} Ask about overtime, lunch, missing rates, or top earners for a tighter breakdown.`,
   );
 }
 

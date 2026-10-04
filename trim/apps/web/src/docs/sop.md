@@ -229,20 +229,20 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples, the 510 g scale sample, and the sample tag are not in these totals. Hill Works prior lot is not a Glass Orchard yield. A crop with no labor entries says “Labor is absent. No labor entries are stored.” A crop with no input costs says “Input cost is absent. No input costs are stored.”
 
-## AI helper
+## Serenity
 
 **Who.** Anyone who can open the facility. Blake sees Harbor House. Casey sees Hill Works. Avery can switch facilities.
 
-**When.** You want to generate tasks, train workers, quote a procedure, read stored figures, or check readiness for the license jurisdiction.
+**When.** You want to generate tasks, train workers, quote a procedure, teach Serenity a note, read stored figures, or check readiness for the license jurisdiction.
 
 **Steps.**
 
-1. Open **AI helper**. It follows the facility in the top bar. The address is `/coach`.
-2. Use the chat box. Choose **Generate tasks** to create room tasks from stored procedures, or **Train workers** to assign training. Type a procedure question to get a quote.
+1. Open **Serenity**. She introduces herself as Serenity. It follows the facility in the top bar. The address is `/coach`.
+2. Use the chat box. Choose **Generate tasks** to create room tasks from stored procedures, or **Train workers** to assign training. Type a procedure question to get a quote. Say **Remember that…** to teach her.
 3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Tasks**.
 4. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
 5. Open **Reports** when you need yield, labor, and cost figures.
-6. Open **Messages** when you need a saved AI chat or a direct message with someone in the organization. The address is `/messages`.
+6. Open **Messages** when you need a saved Serenity chat or a direct message with someone in the organization. The address is `/messages`.
 
 **Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
 
@@ -250,16 +250,16 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Who.** Anyone signed in. Avery, Blake, and Casey can message people in Harbor & Hill Cultivation.
 
-**When.** You need a direct message inside Trim, or a saved AI chatbot thread that remembers earlier questions.
+**When.** You need a direct message inside Trim, or a saved Serenity thread that remembers earlier questions.
 
 **Steps.**
 
 1. Open **Messages**. The address is `/messages`.
 2. Choose **Message a person**, then pick a name from the organization directory.
 3. Write the message and choose **Send**. The other person sees the same conversation.
-4. Choose **Chat with AI** for a saved Trim AI thread. Ask about procedures, generate tasks, or assign training. The assistant uses the facility in the top bar.
+4. Choose **Chat with Serenity** for a saved Serenity thread. Ask about procedures, generate tasks, assign training, or teach her with **Remember that…**. She uses the facility in the top bar.
 
-**Done.** You can name who received the message and whether the AI assistant replied. Trim does not send email or SMS.
+**Done.** You can name who received the message and whether Serenity replied. Trim does not send email or SMS.
 
 ## Recording irrigation and feed
 

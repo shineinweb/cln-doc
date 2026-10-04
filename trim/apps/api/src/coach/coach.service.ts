@@ -11,9 +11,11 @@ import type {
 } from '@trim/contracts';
 import { calendarDateInTimeZone, dbDateFromKey } from '../cycles/cycle-day';
 import { assertSiteAccess, authorizedSiteWhere } from '../facilities/site-access';
+import { EnvironmentService } from '../environment/environment.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from '../reports/reports.service';
-import { EnvironmentService } from '../environment/environment.service';
+import { OpenAiService } from '../serenity/openai.service';
+import { asSerenity } from '../serenity/serenity';
 
 const STATEMENT = 'This is a readiness check of stored rows. It is not a state certification.';
 
@@ -21,6 +23,7 @@ const SUGGESTIONS = [
   'Generate tasks from stored procedures',
   'Train workers on Canopy scout',
   'How do I check irrigation?',
+  'Remember that flower rooms prefer 78°F lights-on',
 ];
 
 const METRIC_LABEL: Record<string, string> = {
@@ -39,6 +42,7 @@ export class CoachService {
     private readonly prisma: PrismaService,
     private readonly reports: ReportsService,
     private readonly environment: EnvironmentService,
+    private readonly openai: OpenAiService,
   ) {}
 
   async forSite(user: SessionUser, siteId: string): Promise<SiteCoach> {
@@ -68,7 +72,18 @@ export class CoachService {
       orderBy: { title: 'asc' },
       select: { id: true, title: true, summary: true },
     });
-    return quoteSop(question, sops);
+    const quoted = quoteSop(question, sops);
+    if (quoted.matched) {
+      return {
+        ...quoted,
+        message: asSerenity(`${quoted.title}. ${quoted.summary}`),
+      };
+    }
+    const enriched = await this.askOpenAi(user, site, question, sops, []);
+    if (enriched) {
+      return { matched: false, title: null, summary: null, message: enriched };
+    }
+    return { ...quoted, message: asSerenity(quoted.message) };
   }
 
   async chat(user: SessionUser, siteId: string, body: CoachChatRequest): Promise<CoachChatResponse> {
@@ -78,24 +93,29 @@ export class CoachService {
     const intent = detectIntent(body.message);
     if (intent === 'help') {
       return {
-        reply:
-          'I can generate room tasks from stored procedures, assign worker training from those procedures, and quote a stored procedure when you ask about it. Try “Generate tasks”, “Train workers on Canopy scout”, or ask how to run a procedure.',
+        reply: asSerenity(
+          'I can generate room tasks from stored procedures, assign worker training from those procedures, quote a stored procedure when you ask about it, and learn notes you teach me with “Remember that…”. Try “Generate tasks”, “Train workers on Canopy scout”, or ask how to run a procedure.',
+        ),
         matchedSopTitle: null,
         matchedSopSummary: null,
         actions: [],
         suggestions: SUGGESTIONS,
       };
     }
+    if (intent === 'teach_serenity') {
+      return this.learnLesson(user, site.organizationId, body.message);
+    }
     if (intent === 'generate_tasks') {
-      return this.generateTasks(user, site, helper, body.message);
+      return this.withSerenityReply(await this.generateTasks(user, site, helper, body.message));
     }
     if (intent === 'train_workers') {
-      return this.trainWorkers(user, site, helper, body.message);
+      return this.withSerenityReply(await this.trainWorkers(user, site, helper, body.message));
     }
     const quoted = quoteSop(body.message, helper.sops);
     if (quoted.matched) {
+      const openaiReply = await this.askOpenAi(user, site, body.message, helper.sops, body.history ?? [], quoted);
       return {
-        reply: `${quoted.title}. ${quoted.summary}`,
+        reply: openaiReply ?? asSerenity(`${quoted.title}. ${quoted.summary}`),
         matchedSopTitle: quoted.title,
         matchedSopSummary: quoted.summary,
         actions: [],
@@ -106,8 +126,11 @@ export class CoachService {
         ],
       };
     }
+    const openaiReply = await this.askOpenAi(user, site, body.message, helper.sops, body.history ?? []);
     return {
-      reply: `${quoted.message} I can still generate tasks or assign training from the procedures that are stored.`,
+      reply:
+        openaiReply ??
+        asSerenity(`${quoted.message} I can still generate tasks, assign training, or learn a note with “Remember that…”.`),
       matchedSopTitle: null,
       matchedSopSummary: null,
       actions: [],
@@ -294,6 +317,78 @@ export class CoachService {
     return people.filter((person) => !trained.has(person.name));
   }
 
+  private withSerenityReply(response: CoachChatResponse): CoachChatResponse {
+    return { ...response, reply: asSerenity(response.reply) };
+  }
+
+  private async learnLesson(
+    user: SessionUser,
+    organizationId: string,
+    message: string,
+  ): Promise<CoachChatResponse> {
+    const content = extractLesson(message);
+    if (!content) {
+      return {
+        reply: asSerenity(
+          'Tell me what to remember after “Remember that…”, for example “Remember that flower rooms prefer 78°F lights-on”.',
+        ),
+        matchedSopTitle: null,
+        matchedSopSummary: null,
+        actions: [],
+        suggestions: SUGGESTIONS,
+      };
+    }
+    await this.prisma.serenityLesson.create({
+      data: {
+        organizationId,
+        content: content.slice(0, 2000),
+        actorId: user.id,
+        actorName: user.name,
+      },
+    });
+    return {
+      reply: asSerenity(`I learned this and will use it later: ${content}`),
+      matchedSopTitle: null,
+      matchedSopSummary: null,
+      actions: [],
+      suggestions: ['How do I check irrigation?', 'Generate tasks from stored procedures'],
+    };
+  }
+
+  private async askOpenAi(
+    user: SessionUser,
+    site: { id: string; name: string; organizationId: string },
+    question: string,
+    sops: Array<{ title: string; summary: string }>,
+    history: Array<{ role: 'user' | 'assistant'; content: string }>,
+    matched?: { title: string | null; summary: string | null },
+  ): Promise<string | null> {
+    const lessons = await this.prisma.serenityLesson.findMany({
+      where: { organizationId: site.organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 40,
+      select: { content: true, actorName: true },
+    });
+    const context = [
+      `Facility: ${site.name}`,
+      `Staff asking: ${user.name}`,
+      'Stored procedures:',
+      ...sops.map((sop) => `- ${sop.title}: ${sop.summary}`),
+      lessons.length
+        ? `Training notes Serenity was taught:\n${lessons.map((lesson) => `- (${lesson.actorName}) ${lesson.content}`).join('\n')}`
+        : 'No training notes yet.',
+      matched?.title ? `Matched procedure: ${matched.title} — ${matched.summary}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+    const reply = await this.openai.complete(site.organizationId, [
+      { role: 'user', content: `Facility context:\n${context}` },
+      ...history.slice(-12).map((row) => ({ role: row.role, content: row.content })),
+      { role: 'user', content: question },
+    ]);
+    return reply ? asSerenity(reply) : null;
+  }
+
   private async siteFor(user: SessionUser, siteId: string) {
     const site = await this.prisma.site.findUnique({ where: { id: siteId } });
     assertSiteAccess(user, site);
@@ -457,10 +552,19 @@ export function quoteSop(question: string, sops: Array<{ title: string; summary:
   return { matched: true, title: best.title, summary: best.summary, message: best.summary };
 }
 
-export function detectIntent(message: string): 'generate_tasks' | 'train_workers' | 'help' | 'ask' {
+export function detectIntent(
+  message: string,
+): 'generate_tasks' | 'train_workers' | 'teach_serenity' | 'help' | 'ask' {
   const text = message.toLowerCase();
-  if (/\b(help|what can you do|capabilities)\b/.test(text)) {
+  if (/\b(help|what can you do|capabilities|who are you)\b/.test(text)) {
     return 'help';
+  }
+  if (
+    /\b(remember that|remember this|learn that|learn this|note that|from now on|train yourself|train serenity)\b/.test(
+      text,
+    )
+  ) {
+    return 'teach_serenity';
   }
   if (/\b(train|training|onboard|teach)\b/.test(text) && /\b(worker|workers|staff|team|people|operator|operators|blake|casey|avery)\b/.test(text)) {
     return 'train_workers';
@@ -475,6 +579,23 @@ export function detectIntent(message: string): 'generate_tasks' | 'train_workers
     return 'generate_tasks';
   }
   return 'ask';
+}
+
+function extractLesson(message: string): string {
+  const patterns = [
+    /^\s*remember\s+(?:that|this)\s*[:,-]?\s*(.+)$/i,
+    /^\s*learn\s+(?:that|this)\s*[:,-]?\s*(.+)$/i,
+    /^\s*note\s+that\s*[:,-]?\s*(.+)$/i,
+    /^\s*from\s+now\s+on\s*[:,-]?\s*(.+)$/i,
+    /^\s*train\s+(?:yourself|serenity)\s*[:,-]?\s*(.+)$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match?.[1]?.trim()) {
+      return match[1].trim();
+    }
+  }
+  return message.replace(/^\s*(remember|learn|note|train yourself|train serenity)\b[:\s-]*/i, '').trim();
 }
 
 function sopForMetric(metric: string, sops: SopRow[]): SopRow | null {

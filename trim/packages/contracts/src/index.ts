@@ -1062,9 +1062,21 @@ export const metrcApiViewSchema = z.object({
   licenseNumber: z.string(),
 });
 
+export const openAiApiInputSchema = z.object({
+  apiKey: z.string().trim().max(4000).optional().default(''),
+  model: z.string().trim().max(191).optional().default('gpt-4o-mini'),
+});
+
+export const openAiApiViewSchema = z.object({
+  apiKeySaved: z.boolean(),
+  model: z.string(),
+  envFallback: z.boolean(),
+});
+
 export const settingsViewSchema = z.object({
   general: generalSettingsViewSchema,
   metrc: metrcApiViewSchema,
+  openai: openAiApiViewSchema,
 });
 
 export const accessUserInputSchema = z.object({
@@ -1972,6 +1984,8 @@ export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;
 export type MetrcApiInput = z.infer<typeof metrcApiInputSchema>;
 export type MetrcApiView = z.infer<typeof metrcApiViewSchema>;
+export type OpenAiApiInput = z.infer<typeof openAiApiInputSchema>;
+export type OpenAiApiView = z.infer<typeof openAiApiViewSchema>;
 export type SettingsView = z.infer<typeof settingsViewSchema>;
 export type AccessUserInput = z.infer<typeof accessUserInputSchema>;
 export type AccessUser = z.infer<typeof accessUserSchema>;

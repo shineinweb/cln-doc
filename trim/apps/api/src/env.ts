@@ -17,6 +17,9 @@ const envSchema = z.object({
   // Present for a later submission phase. Inventory import does not read them.
   METRC_INTEGRATOR_KEY: z.string().default(''),
   METRC_USER_KEY: z.string().default(''),
+  /** Optional server-wide OpenAI key for Serenity. Organization Settings can override per company. */
+  OPENAI_API_KEY: z.string().default(''),
+  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
 });
 
 export type Env = z.infer<typeof envSchema>;

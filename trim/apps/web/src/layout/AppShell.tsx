@@ -40,7 +40,7 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests', permissions: ['harvests.read'] },
   { to: '/operations', label: 'Operations', end: false, glyph: 'operations', permissions: ['operations.read'] },
   { to: '/reports', label: 'Reports', end: false, glyph: 'reports', permissions: ['reports.read'] },
-  { to: '/coach', label: 'AI helper', end: true, glyph: 'coach', permissions: ['coach.use'] },
+  { to: '/coach', label: 'Serenity', end: true, glyph: 'coach', permissions: ['coach.use'] },
   { to: '/messages', label: 'Messages', end: true, glyph: 'messages', permissions: ['messages.use'] },
   { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual', permissions: ['dashboard.read'] },
   { to: '/settings', label: 'Settings', end: true, glyph: 'settings', permissions: ['settings.manage'] },

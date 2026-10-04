@@ -19,10 +19,10 @@ export function SiteCoachPage() {
     <Box data-testid="site-coach">
       <PageHeader
         kicker={site ? site.name : 'Facility'}
-        title="AI helper"
-        lede="Chat to generate tasks, train workers, and quote stored procedures. A room alert opens one task for the people who can open this facility. Yield and cost figures stay on Reports. The readiness list is not a state certification."
+        title="Serenity"
+        lede="Serenity is Trim’s cultivation AI. Chat to generate tasks, train workers, quote stored procedures, or teach her with “Remember that…”. A room alert opens one task for the people who can open this facility. Yield and cost figures stay on Reports. The readiness list is not a state certification."
       />
-      {!siteId ? <Alert severity="info">Choose a facility to open the AI helper.</Alert> : null}
+      {!siteId ? <Alert severity="info">Choose a facility to open Serenity.</Alert> : null}
       {coach.isPending && siteId ? <Skeleton variant="rounded" height={240} /> : null}
       {coach.error ? <Alert severity="error">{coach.error.message}</Alert> : null}
       {coach.data ? (

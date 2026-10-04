@@ -181,7 +181,7 @@ function RoomTaskRow({ task }: { task: WorkspaceRoomTask }) {
         {task.dueOn ? ` · ${formatCalendarDate(task.dueOn)}` : task.kind === 'recurring' ? ` · ${task.cadence ?? 'recurring'}` : ''}
       </Typography>
       <Typography sx={{ color: 'text.secondary', fontSize: 13, mt: 0.35 }}>
-        {task.source === 'alert' ? 'Alert follow-up' : task.source === 'ai' ? 'From AI / stored procedure' : 'Room chore'}
+        {task.source === 'alert' ? 'Alert follow-up' : task.source === 'ai' ? 'From Serenity / stored procedure' : 'Room chore'}
         {task.assignees.length > 0 ? ` · ${task.assignees.map((person) => person.name).join(', ')}` : ''}
       </Typography>
       {task.description ? (

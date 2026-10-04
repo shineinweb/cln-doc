@@ -13,8 +13,9 @@ import type {
 import { CoachService } from '../coach/coach.service';
 import { assertSiteAccess } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
+import { SERENITY_INTRO, SERENITY_NAME } from '../serenity/serenity';
 
-const AI_NAME = 'Trim AI';
+const AI_NAME = SERENITY_NAME;
 
 @Injectable()
 export class MessagesService {
@@ -104,9 +105,10 @@ export class MessagesService {
       select: { id: true },
     });
     if (existing) {
-      if (siteId) {
-        await this.prisma.messageThread.update({ where: { id: existing.id }, data: { siteId } });
-      }
+      await this.prisma.messageThread.update({
+        where: { id: existing.id },
+        data: { ...(siteId ? { siteId } : {}), title: 'Serenity' },
+      });
       return this.getThread(user, existing.id);
     }
     const created = await this.prisma.messageThread.create({
@@ -115,13 +117,13 @@ export class MessagesService {
         kind: 'ai',
         pairKey,
         siteId,
-        title: 'AI assistant',
+        title: 'Serenity',
         participants: { create: [{ userId: user.id }] },
         messages: {
           create: {
             authorId: null,
             authorName: AI_NAME,
-            body: 'I am the Trim AI assistant. Ask about stored procedures, generate room tasks, or assign worker training for your facility.',
+            body: `${SERENITY_INTRO} Ask about stored procedures, generate room tasks, assign worker training, or teach me with “Remember that…”.`,
             kind: 'assistant',
           },
         },
@@ -173,7 +175,7 @@ export class MessagesService {
           threadId: thread.id,
           authorId: null,
           authorName: AI_NAME,
-          body: 'Choose a facility in the top bar so I can use that site’s rooms, people, and stored procedures.',
+          body: "I'm Serenity. Choose a facility in the top bar so I can use that site’s rooms, people, and stored procedures.",
           kind: 'assistant',
         },
       });
@@ -256,7 +258,7 @@ export class MessagesService {
     return {
       id: row.id,
       kind: row.kind === 'ai' ? 'ai' : 'direct',
-      title: row.kind === 'ai' ? 'AI assistant' : peer?.name ?? row.title,
+      title: row.kind === 'ai' ? SERENITY_NAME : peer?.name ?? row.title,
       siteId: row.siteId,
       peerUserId: peer?.id ?? null,
       peerName: peer?.name ?? null,

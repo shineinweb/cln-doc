@@ -135,7 +135,7 @@ export function TimeClockPage() {
       <PageHeader
         kicker={site?.name ?? 'Workforce'}
         title="Time clock"
-        lede="Clock in, take lunch, and clock out. Admins get AI payroll from stored punches and labor rates — hours and gross pay, not tax filing or bank deposits."
+        lede="Clock in, take lunch, and clock out. Admins can ask Serenity about payroll from stored punches and labor rates — hours and gross pay, not tax filing or bank deposits."
       />
 
       {status.isPending ? <Skeleton variant="rounded" height={180} sx={{ mb: 2 }} /> : null}
@@ -175,7 +175,7 @@ export function TimeClockPage() {
       {canManagePayroll ? (
         <Box sx={{ mt: 4 }} data-testid="timeclock-payroll">
           <Typography variant="h2" sx={{ fontSize: 24, mb: 1 }}>
-            AI payroll & accounting
+            Serenity payroll & accounting
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5, fontSize: 14 }}>
             Uses punches plus labor rates. California-style daily/weekly overtime at 1.5×. Lunch is unpaid.
@@ -223,14 +223,14 @@ export function TimeClockPage() {
             }}
           >
             <TextField
-              label="Ask AI about payroll"
+              label="Ask Serenity about payroll"
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
               sx={{ flex: '1 1 280px' }}
               inputProps={{ 'data-testid': 'payroll-ask' }}
             />
             <Button type="submit" variant="contained" disabled={askAi.isPending} data-testid="payroll-ask-submit">
-              Ask AI
+              Ask Serenity
             </Button>
           </Box>
           {askAi.error ? (

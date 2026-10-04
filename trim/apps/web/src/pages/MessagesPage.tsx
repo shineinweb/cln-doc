@@ -108,8 +108,8 @@ export function MessagesPage() {
     <Box data-testid="messages-page">
       <PageHeader
         kicker="Messages"
-        title="Internal messages and AI chat"
-        lede="Message people in your organization, or keep a saved AI assistant thread that can generate room tasks and worker training for the facility in the top bar."
+        title="Internal messages and Serenity"
+        lede="Message people in your organization, or keep a saved Serenity thread that can generate room tasks, worker training, and learn notes for the facility in the top bar."
       />
       {error ? (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -141,7 +141,7 @@ export function MessagesPage() {
               onClick={() => openAi.mutate()}
               disabled={openAi.isPending}
             >
-              Chat with AI
+              Chat with Serenity
             </Button>
             <Button
               variant="outlined"
@@ -185,7 +185,7 @@ export function MessagesPage() {
             ))}
             {!threads.isPending && orderedThreads.length === 0 ? (
               <Typography sx={{ p: 1.5, color: 'text.secondary' }}>
-                No conversations yet. Message a person or open the AI assistant.
+                No conversations yet. Message a person or open Serenity.
               </Typography>
             ) : null}
           </List>
@@ -207,7 +207,7 @@ export function MessagesPage() {
                 Choose a conversation
               </Typography>
               <Typography sx={{ color: 'text.secondary' }}>
-                Direct messages stay inside your organization. The AI assistant remembers this chat and uses the
+                Direct messages stay inside your organization. Serenity remembers this chat and uses the
                 facility in the top bar for tasks and training.
               </Typography>
             </Box>
@@ -221,7 +221,7 @@ export function MessagesPage() {
                 </Typography>
                 <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
                   {active.kind === 'ai'
-                    ? 'Saved AI chatbot for this account'
+                    ? 'Saved Serenity chat for this account'
                     : `Direct message${active.peerName ? ` with ${active.peerName}` : ''}`}
                 </Typography>
               </Box>
@@ -264,7 +264,7 @@ export function MessagesPage() {
                   maxRows={4}
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
-                  placeholder={active.kind === 'ai' ? 'Ask Trim AI…' : 'Write a message…'}
+                  placeholder={active.kind === 'ai' ? 'Ask Serenity…' : 'Write a message…'}
                   data-testid="messages-draft"
                   disabled={send.isPending}
                 />
@@ -319,7 +319,7 @@ function ThreadRow({
     >
       <ListItemText
         primary={thread.title}
-        secondary={thread.lastMessage ?? (thread.kind === 'ai' ? 'AI assistant' : 'Direct message')}
+        secondary={thread.lastMessage ?? (thread.kind === 'ai' ? 'Serenity' : 'Direct message')}
         primaryTypographyProps={{ noWrap: true }}
         secondaryTypographyProps={{ noWrap: true }}
       />
