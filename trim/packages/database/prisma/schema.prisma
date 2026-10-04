@@ -455,6 +455,7 @@ model Harvest {
   packages     HarvestPackage[]
   scaleSamples ScaleSample[]
   tagSamples   HarvestTagSample[]
+  plantWeighs  HarvestPlantWeigh[]
 
   @@index([licenseId])
   @@index([siteId])
@@ -472,9 +473,29 @@ model HarvestPlant {
   harvest       Harvest               @relation(fields: [harvestId], references: [id], onDelete: Cascade)
   plant         Plant                 @relation(fields: [plantId], references: [id], onDelete: Cascade)
   packagePlants HarvestPackagePlant[]
+  weigh         HarvestPlantWeigh?
 
   @@unique([harvestId, tag])
   @@map("harvest_plants")
+}
+
+/// One scale weight for a Metrc plant tag already on this harvest. A rescan replaces the grams.
+model HarvestPlantWeigh {
+  id             String   @id @default(cuid())
+  harvestId      String   @map("harvest_id")
+  harvestPlantId String   @unique @map("harvest_plant_id")
+  tag            String
+  weightGrams    Int      @map("weight_grams")
+  deviceId       String   @map("device_id")
+  recordedAt     DateTime @map("recorded_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  harvest      Harvest      @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  harvestPlant HarvestPlant @relation(fields: [harvestPlantId], references: [id], onDelete: Cascade)
+
+  @@index([harvestId])
+  @@map("harvest_plant_weighs")
 }
 
 /// Wet weight, drying, dry weight, and trimming. Each row keeps the actor and time.

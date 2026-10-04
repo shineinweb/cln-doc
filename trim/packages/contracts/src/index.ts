@@ -1057,6 +1057,20 @@ export const recordWeightSchema = z.object({
   grams: gramsSchema,
 });
 
+export const weighPlantSchema = z.object({
+  tag: z.string().trim().min(1).max(191),
+  grams: gramsSchema,
+  deviceId: z.string().trim().min(1).max(120),
+});
+
+export const harvestPlantWeighSchema = z.object({
+  id: z.string(),
+  tag: z.string(),
+  weightGrams: z.number().int(),
+  deviceId: z.string(),
+  recordedAt: z.string(),
+});
+
 export const startDryingSchema = z.object({
   roomId: z.string().min(1).optional(),
 });
@@ -1105,6 +1119,8 @@ export const harvestDetailSchema = z.object({
       sourceTagCount: z.number().int(),
     }),
   ),
+  weighs: z.array(harvestPlantWeighSchema),
+  weighTotalGrams: z.number().int(),
   ledger: weightLedgerSchema,
 });
 
@@ -2134,6 +2150,8 @@ export type SubmissionView = z.infer<typeof submissionViewSchema>;
 export type WeightLedger = z.infer<typeof weightLedgerSchema>;
 export type CreateHarvest = z.infer<typeof createHarvestSchema>;
 export type RecordWeight = z.infer<typeof recordWeightSchema>;
+export type WeighPlant = z.infer<typeof weighPlantSchema>;
+export type HarvestPlantWeighView = z.infer<typeof harvestPlantWeighSchema>;
 export type StartDrying = z.infer<typeof startDryingSchema>;
 export type RecordWaste = z.infer<typeof recordWasteSchema>;
 export type CreatePackage = z.infer<typeof createPackageSchema>;

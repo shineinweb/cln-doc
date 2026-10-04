@@ -11,6 +11,7 @@ import type {
   SessionUser,
   StartDrying,
   WeightLedger,
+  WeighPlant,
 } from '@trim/contracts';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -23,6 +24,7 @@ const harvestInclude = {
   steps: { include: { actor: true, room: true }, orderBy: { occurredAt: 'asc' as const } },
   wastes: { include: { actor: true }, orderBy: { recordedAt: 'asc' as const } },
   packages: { include: { plants: true, submissions: { orderBy: { requestedAt: 'desc' as const }, take: 1 } }, orderBy: { recordedAt: 'asc' as const } },
+  plantWeighs: { orderBy: { tag: 'asc' as const } },
 } as const;
 
 type HarvestRecord = {
@@ -63,6 +65,13 @@ type HarvestRecord = {
     weightGrams: number;
     plants: Array<{ tag: string }>;
     voidedAt: Date | null;
+  }>;
+  plantWeighs: Array<{
+    id: string;
+    tag: string;
+    weightGrams: number;
+    deviceId: string;
+    recordedAt: Date;
   }>;
 };
 
@@ -214,6 +223,34 @@ export class HarvestsService {
         data: { status: 'harvested', stage: 'harvested', cycleId: null },
       });
       return created;
+    });
+    return this.getOne(user, harvest.id);
+  }
+
+  async weighPlant(user: SessionUser, harvestId: string, input: WeighPlant): Promise<HarvestDetail> {
+    const harvest = await this.loadAuthorized(user, harvestId);
+    const tag = input.tag.trim();
+    const plant = harvest.plants.find((row) => row.tag === tag);
+    if (!plant) {
+      throw new BadRequestException('That tag is not on this harvest.');
+    }
+    const recordedAt = new Date();
+    await this.prisma.harvestPlantWeigh.upsert({
+      where: { harvestPlantId: plant.id },
+      create: {
+        harvestId: harvest.id,
+        harvestPlantId: plant.id,
+        tag,
+        weightGrams: input.grams,
+        deviceId: input.deviceId,
+        recordedAt,
+      },
+      update: {
+        tag,
+        weightGrams: input.grams,
+        deviceId: input.deviceId,
+        recordedAt,
+      },
     });
     return this.getOne(user, harvest.id);
   }
@@ -446,6 +483,14 @@ export class HarvestsService {
         weightGrams: item.weightGrams,
         sourceTagCount: item.plants.length,
       })),
+      weighs: harvest.plantWeighs.map((row) => ({
+        id: row.id,
+        tag: row.tag,
+        weightGrams: row.weightGrams,
+        deviceId: row.deviceId,
+        recordedAt: row.recordedAt.toISOString(),
+      })),
+      weighTotalGrams: harvest.plantWeighs.reduce((sum, row) => sum + row.weightGrams, 0),
       ledger: this.ledger(harvest),
     };
   }
