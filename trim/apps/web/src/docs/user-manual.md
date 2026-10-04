@@ -8,7 +8,7 @@ The sign-in page says “Your cultivation workspace” and “Use the account is
 
 After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
-The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
+The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch** / **Clock out** for the selected facility (status shows Out, In, or Lunch), your name on a wider screen, and **Sign out**. The status dot opens **Time clock** for payroll and the full punch history.
 
 ## Who can open what
 
@@ -207,11 +207,11 @@ The room × milestone **Facility board** (start, defoliation, harvest, trim, and
 
 ## Time clock
 
-**Time clock** sits in the left navigation after Tasks. The address is `/timeclock`.
+**Time clock** sits in the left navigation after Tasks. The address is `/timeclock`. The same punches also sit in the top bar next to the Facility switcher.
 
 Every signed-in employee can:
 
-- **Clock in**, **Start lunch**, **End lunch**, and **Clock out** (only the next legal punch is enabled).
+- **Clock in**, **Start lunch** / **Lunch**, **End lunch**, and **Clock out** from the top bar or the Time clock page (only the next legal punch is enabled).
 - See today’s punches and worked/lunch minutes for the selected facility.
 - See **Who’s in** — people currently on the clock or on lunch.
 

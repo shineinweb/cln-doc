@@ -24,6 +24,7 @@ import { NavGlyph, type GlyphName } from '../components/Graphics';
 import { Mark } from '../components/Mark';
 import { displayFont, workbench } from '../theme';
 import { useSites } from './SiteProvider';
+import { TopBarClock } from './TopBarClock';
 
 const DRAWER_WIDTH = 248;
 
@@ -165,7 +166,10 @@ export function AppShell() {
             </Select>
           </FormControl>
           <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
-          <Typography sx={{ display: { xs: 'none', md: 'block' }, color: 'text.secondary' }}>{user?.name}</Typography>
+          <TopBarClock siteId={siteId} />
+          <Typography sx={{ display: { xs: 'none', lg: 'block' }, color: 'text.secondary', ml: 0.5 }}>
+            {user?.name}
+          </Typography>
           <Button color="secondary" variant="outlined" onClick={logout} sx={{ flexShrink: 0, px: { xs: 1.25, sm: 2 } }}>
             Sign out
           </Button>
