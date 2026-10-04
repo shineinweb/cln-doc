@@ -68,9 +68,9 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
       <CardContent>
         <RecordActions
           summary={
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0 }}>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0, flexWrap: 'wrap' }}>
               <RoomGlyph color={roomTypeColor(room.roomType)} />
-              <Box sx={{ minWidth: 0 }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="h3" sx={{ fontSize: { xs: 22, sm: 24 } }} data-testid="room-row-name">
                   <RouterLink to={`/rooms/${room.id}`}>{room.name}</RouterLink>
                 </Typography>
@@ -80,6 +80,17 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
                     : 'No active crop'}
                 </Typography>
               </Box>
+              {room.currentCycle ? (
+                <Button
+                  component={RouterLink}
+                  to={`/rooms/${room.id}/cycles/${room.currentCycle.id}`}
+                  data-testid="open-room-cycle"
+                  size="small"
+                  variant="outlined"
+                >
+                  Open cycle
+                </Button>
+              ) : null}
             </Box>
           }
           detail={
@@ -95,16 +106,6 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
               <Button component={RouterLink} to={`/rooms/${room.id}`} data-testid="open-room">
                 Open room
               </Button>
-              {room.currentCycle ? (
-                <Button
-                  component={RouterLink}
-                  to={`/rooms/${room.id}/cycles/${room.currentCycle.id}`}
-                  data-testid="open-room-cycle"
-                  sx={{ ml: 1 }}
-                >
-                  Open cycle
-                </Button>
-              ) : null}
               {room.zones.length > 0 ? (
                 <Typography sx={{ mt: 1 }}>{room.zones.map((zone) => zone.name).join(', ')}</Typography>
               ) : (
