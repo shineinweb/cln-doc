@@ -13,5 +13,6 @@ import { SitesController } from './sites.controller';
   imports: [AuthModule, CyclesModule],
   controllers: [SitesController, RoomsController, ZonesController, OrganizationController, SettingsController],
   providers: [FacilitiesService, SettingsService, RoomTasksService],
+  exports: [FacilitiesService],
 })
 export class FacilitiesModule {}

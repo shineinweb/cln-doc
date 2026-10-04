@@ -23,11 +23,11 @@ const STARTER: ChatMessage = {
   id: 'starter',
   role: 'assistant',
   content:
-    "I'm Serenity, the cultivation AI for this facility. I generate room tasks from stored procedures, assign worker training, quote procedures, and learn notes you teach me with “Remember that…”.",
+    "I'm Serenity, the cultivation AI for this facility. I generate room tasks from stored procedures, assign worker training, quote procedures, update room defoliation schedules when you confirm, and learn notes you teach me with “Remember that…”.",
   suggestions: [
     'Generate tasks from stored procedures',
     'Train workers on Canopy scout',
-    'How do I check irrigation?',
+    'Remove day 10 defoliation from F1–F4',
     'Remember that flower rooms prefer 78°F lights-on',
   ],
 };
@@ -42,8 +42,19 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
   }, [messages]);
 
   const chat = useMutation({
-    mutationFn: ({ message, history }: { message: string; history: Array<{ role: 'user' | 'assistant'; content: string }> }) =>
-      apiSend(`/sites/${siteId}/coach/chat`, coachChatResponseSchema, { message, history }),
+    mutationFn: ({
+      message,
+      history,
+      pendingProposal,
+    }: {
+      message: string;
+      history: Array<{ role: 'user' | 'assistant'; content: string }>;
+      pendingProposal: {
+        kind: 'remove_defoliation_days';
+        dayNumber: number;
+        roomIds: string[];
+      } | null;
+    }) => apiSend(`/sites/${siteId}/coach/chat`, coachChatResponseSchema, { message, history, pendingProposal }),
     onSuccess: (result) => {
       setMessages((current) => [...current, toAssistantMessage(result)]);
     },
@@ -58,9 +69,10 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
       .filter((item) => item.id !== 'starter')
       .slice(-12)
       .map((item) => ({ role: item.role, content: item.content }));
+    const pendingProposal = pendingProposalFromMessages(messages);
     setMessages((current) => [...current, { id: `user-${Date.now()}`, role: 'user', content: trimmed }]);
     setDraft('');
-    chat.mutate({ message: trimmed, history });
+    chat.mutate({ message: trimmed, history, pendingProposal });
   }
 
   return (
@@ -69,9 +81,9 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
         Serenity
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-        Chat with Serenity to generate tasks, train workers, quote a stored procedure, or teach her with “Remember
-        that…”. {helper.sops.length} procedures, {helper.people.length} people, and {helper.rooms.length} rooms are in
-        scope for this facility. Saved chats with people and Serenity also live under{' '}
+        Chat with Serenity to generate tasks, train workers, quote a stored procedure, confirm defoliation schedule
+        updates, or teach her with “Remember that…”. {helper.sops.length} procedures, {helper.people.length} people, and{' '}
+        {helper.rooms.length} rooms are in scope for this facility. Saved chats with people and Serenity also live under{' '}
         <Button size="small" variant="text" component={RouterLink} to="/messages" sx={{ px: 0.5, minWidth: 0, verticalAlign: 'baseline' }}>
           Messages
         </Button>
@@ -252,6 +264,46 @@ function ActionCard({ action }: { action: CoachChatAction }) {
       </Box>
     );
   }
+  if (action.type === 'proposal') {
+    return (
+      <Box
+        data-testid="ai-helper-proposal-action"
+        sx={{
+          px: 1.25,
+          py: 1,
+          borderRadius: 2,
+          border: `1px solid ${workbench.line}`,
+          bgcolor: 'rgba(255, 79, 139, 0.1)',
+        }}
+      >
+        <Typography sx={{ fontWeight: 700 }}>Proposed · {action.summary}</Typography>
+        <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+          {action.rooms.map((room) => room.roomCode || room.roomName).join(', ')} · reply confirm or YES
+        </Typography>
+      </Box>
+    );
+  }
+  if (action.type === 'defoliation') {
+    return (
+      <Box
+        data-testid="ai-helper-defoliation-action"
+        sx={{
+          px: 1.25,
+          py: 1,
+          borderRadius: 2,
+          border: `1px solid ${workbench.line}`,
+          bgcolor: 'rgba(61, 220, 255, 0.08)',
+        }}
+      >
+        <Typography sx={{ fontWeight: 700 }}>
+          Defoliation · removed day {action.removedDay} from {action.roomName}
+        </Typography>
+        <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+          Remaining days: {action.days.length > 0 ? action.days.join(', ') : 'none'}
+        </Typography>
+      </Box>
+    );
+  }
   return (
     <Box
       data-testid="ai-helper-training-action"
@@ -282,6 +334,37 @@ function toAssistantMessage(result: CoachChatResponse): ChatMessage {
   };
 }
 
+function pendingProposalFromMessages(messages: ChatMessage[]): {
+  kind: 'remove_defoliation_days';
+  dayNumber: number;
+  roomIds: string[];
+} | null {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]!;
+    if (message.role !== 'assistant' || !message.actions) {
+      continue;
+    }
+    const proposal = message.actions.find((action) => action.type === 'proposal');
+    if (proposal && proposal.type === 'proposal' && proposal.kind === 'remove_defoliation_days') {
+      return {
+        kind: 'remove_defoliation_days',
+        dayNumber: proposal.dayNumber,
+        roomIds: proposal.rooms.map((room) => room.roomId),
+      };
+    }
+  }
+  return null;
+}
+
 function actionKey(action: CoachChatAction): string {
-  return action.type === 'task' ? `task-${action.taskId}` : `training-${action.trainingId}`;
+  if (action.type === 'task') {
+    return `task-${action.taskId}`;
+  }
+  if (action.type === 'training') {
+    return `training-${action.trainingId}`;
+  }
+  if (action.type === 'proposal') {
+    return `proposal-${action.kind}-${action.dayNumber}-${action.rooms.map((room) => room.roomId).join(',')}`;
+  }
+  return `defoliation-${action.roomId}-${action.removedDay}`;
 }

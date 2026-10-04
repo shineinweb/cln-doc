@@ -1550,6 +1550,7 @@ export const coachHelperPersonSchema = z.object({
 export const coachHelperRoomSchema = z.object({
   id: z.string(),
   name: z.string(),
+  code: z.string(),
 });
 
 export const coachHelperSopSchema = z.object({
@@ -1590,9 +1591,16 @@ export const coachChatMessageSchema = z.object({
   content: z.string().trim().min(1).max(4000),
 });
 
+export const coachPendingProposalSchema = z.object({
+  kind: z.literal('remove_defoliation_days'),
+  dayNumber: z.number().int().positive(),
+  roomIds: z.array(z.string()).min(1),
+});
+
 export const coachChatRequestSchema = z.object({
   message: z.string().trim().min(1).max(1000),
   history: z.array(coachChatMessageSchema).max(20).optional().default([]),
+  pendingProposal: coachPendingProposalSchema.optional().nullable(),
 });
 
 export const coachTaskActionSchema = z.object({
@@ -1612,7 +1620,35 @@ export const coachTrainingActionSchema = z.object({
   sopTitle: z.string().nullable(),
 });
 
-export const coachChatActionSchema = z.discriminatedUnion('type', [coachTaskActionSchema, coachTrainingActionSchema]);
+export const coachProposalRoomSchema = z.object({
+  roomId: z.string(),
+  roomName: z.string(),
+  roomCode: z.string(),
+  currentDays: z.array(z.number().int()),
+});
+
+export const coachProposalActionSchema = z.object({
+  type: z.literal('proposal'),
+  kind: z.literal('remove_defoliation_days'),
+  dayNumber: z.number().int().positive(),
+  rooms: z.array(coachProposalRoomSchema).min(1),
+  summary: z.string(),
+});
+
+export const coachDefoliationActionSchema = z.object({
+  type: z.literal('defoliation'),
+  roomId: z.string(),
+  roomName: z.string(),
+  removedDay: z.number().int().positive(),
+  days: z.array(z.number().int()),
+});
+
+export const coachChatActionSchema = z.discriminatedUnion('type', [
+  coachTaskActionSchema,
+  coachTrainingActionSchema,
+  coachProposalActionSchema,
+  coachDefoliationActionSchema,
+]);
 
 export const coachChatResponseSchema = z.object({
   reply: z.string(),

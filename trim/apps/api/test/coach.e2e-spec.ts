@@ -323,6 +323,66 @@ describe('site coach', () => {
       }),
     ).toBe(trained.body.actions.length);
 
+    const flowerRooms = [];
+    for (const code of ['F1', 'F2', 'F3', 'F4']) {
+      const room = await prisma.room.create({
+        data: {
+          siteId: fixture.siteAId,
+          code,
+          name: `Flower ${code.slice(1)}`,
+          roomType: 'flower',
+          defoliations: { create: [{ dayNumber: 10 }, { dayNumber: 21 }] },
+        },
+      });
+      flowerRooms.push(room);
+    }
+    const proposed = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ message: 'Remove day 10 defoliation from F1–F4' })
+      .expect(201);
+    expect(proposed.body.reply).toEqual(expect.stringMatching(/confirm|YES/i));
+    expect(proposed.body.actions[0]).toMatchObject({
+      type: 'proposal',
+      kind: 'remove_defoliation_days',
+      dayNumber: 10,
+    });
+    expect(proposed.body.actions[0].rooms).toHaveLength(4);
+    expect(
+      await prisma.roomDefoliation.count({
+        where: { roomId: { in: flowerRooms.map((room) => room.id) }, dayNumber: 10 },
+      }),
+    ).toBe(4);
+
+    const confirmed = await request(app.getHttpServer())
+      .post(`/sites/${fixture.siteAId}/coach/chat`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({
+        message: 'YES',
+        history: [
+          { role: 'user', content: 'Remove day 10 defoliation from F1–F4' },
+          { role: 'assistant', content: proposed.body.reply },
+        ],
+        pendingProposal: {
+          kind: 'remove_defoliation_days',
+          dayNumber: 10,
+          roomIds: flowerRooms.map((room) => room.id),
+        },
+      })
+      .expect(201);
+    expect(confirmed.body.reply).toEqual(expect.stringMatching(/Removed day 10/i));
+    expect(confirmed.body.actions.every((action: { type: string }) => action.type === 'defoliation')).toBe(true);
+    expect(
+      await prisma.roomDefoliation.count({
+        where: { roomId: { in: flowerRooms.map((room) => room.id) }, dayNumber: 10 },
+      }),
+    ).toBe(0);
+    expect(
+      await prisma.roomDefoliation.count({
+        where: { roomId: { in: flowerRooms.map((room) => room.id) }, dayNumber: 21 },
+      }),
+    ).toBe(4);
+
     await request(app.getHttpServer())
       .get(`/sites/${fixture.siteAId}/coach`)
       .set('Authorization', `Bearer ${tokenB}`)

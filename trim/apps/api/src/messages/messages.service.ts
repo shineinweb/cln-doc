@@ -197,11 +197,18 @@ export class MessagesService {
     const answer = await this.coach.chat(user, siteId, { message: body, history });
     const extras = answer.actions.length
       ? `\n\n${answer.actions
-          .map((action) =>
-            action.type === 'task'
-              ? `• Task: ${action.title} (${action.roomName})`
-              : `• Training: ${action.traineeName} — ${action.title}`,
-          )
+          .map((action) => {
+            if (action.type === 'task') {
+              return `• Task: ${action.title} (${action.roomName})`;
+            }
+            if (action.type === 'training') {
+              return `• Training: ${action.traineeName} — ${action.title}`;
+            }
+            if (action.type === 'proposal') {
+              return `• Proposed: ${action.summary}`;
+            }
+            return `• Defoliation: removed day ${action.removedDay} from ${action.roomName}`;
+          })
           .join('\n')}`
       : '';
     await this.prisma.message.create({
