@@ -84,7 +84,7 @@ const router = createBrowserRouter([
         path: '*',
         element: (
           <Box>
-            <PlaceholderPage kicker="Trim" title="Page not found" lede="That address is not part of the workspace." />
+            <PlaceholderPage kicker="Serenity" title="Page not found" lede="That address is not part of the workspace." />
           </Box>
         ),
       },

@@ -292,7 +292,7 @@ export class TimeclockService {
       accountingNotes: [
         'Lunch punches are unpaid break time and are excluded from worked hours.',
         'Overtime uses California-style rules for this facility timezone: over 8 hours in a day, then over 40 regular hours in a week, at 1.5× the stored hourly rate.',
-        'Gross pay is regular hours × rate plus overtime hours × 1.5 × rate from Labor rates. Trim does not file taxes, withholdings, or send ACH/payroll deposits.',
+        'Gross pay is regular hours × rate plus overtime hours × 1.5 × rate from Labor rates. Serenity does not file taxes, withholdings, or send ACH/payroll deposits.',
         'Open shifts still clocked in are counted through the moment the report runs.',
       ],
       totals,
@@ -541,7 +541,7 @@ function buildPayrollStatement(
     `gross ${formatMoney(totals.grossCents)}.` +
     (top ? ` Highest gross: ${top.userName} at ${formatMoney(top.grossCents)}.` : '') +
     missing +
-    ' Trim calculates from stored punches and rates; it does not file taxes or run bank payroll.'
+    ' Serenity calculates from stored punches and rates; it does not file taxes or run bank payroll.'
   );
 }
 

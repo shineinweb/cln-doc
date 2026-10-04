@@ -22,8 +22,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { can } from '../auth/permissions';
 import { NavGlyph, type GlyphName } from '../components/Graphics';
-import { Mark } from '../components/Mark';
-import { displayFont, workbench } from '../theme';
+import { workbench } from '../theme';
 import { useSites } from './SiteProvider';
 import { TopBarClock } from './TopBarClock';
 
@@ -74,12 +73,12 @@ export function AppShell() {
       }}
     >
       <Box sx={{ px: 2.25, pt: 2.5, pb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <Mark />
-          <Typography sx={{ fontFamily: displayFont, fontSize: 28, lineHeight: 1, fontWeight: 700 }}>
-            Trim
-          </Typography>
-        </Box>
+        <Box
+          component="img"
+          src="/brand/serenity-wordmark-sm.png"
+          alt="Serenity Universal"
+          sx={{ display: 'block', width: '100%', maxWidth: 196, height: 'auto' }}
+        />
         <Typography sx={{ mt: 1.5, color: '#D7C6F5', fontSize: 13 }}>{user?.organizationName}</Typography>
       </Box>
       <List sx={{ px: 1, flex: 1, overflowY: 'auto' }}>
@@ -116,7 +115,7 @@ export function AppShell() {
         ))}
       </List>
       <Typography sx={{ px: 2.25, pb: 2, color: '#C9B6E8', fontSize: 12 }}>
-        Room dashboards are the daily center of Trim.
+        Room dashboards are the daily center of Serenity.
       </Typography>
     </Box>
   );

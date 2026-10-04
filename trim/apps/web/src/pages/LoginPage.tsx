@@ -56,10 +56,10 @@ export function LoginPage() {
         <Box
           component="img"
           src="/brand/serenity-wordmark.png"
-          alt="Serenity Inventory"
+          alt="Serenity Universal"
           sx={{
             display: 'block',
-            width: { xs: 220, sm: 280, md: 320 },
+            width: { xs: 240, sm: 300, md: 360 },
             maxWidth: '100%',
             height: 'auto',
           }}
@@ -69,7 +69,7 @@ export function LoginPage() {
             Know which rooms are yours before the day starts.
           </Typography>
           <Typography sx={{ mt: 2, maxWidth: 440, color: '#E4D4FF', fontSize: { xs: 16, md: 18 } }}>
-            Trim is the cultivation workspace for teams that run more than one facility. Access follows the site.
+            Serenity is the cultivation workspace for teams that run more than one facility. Access follows the site.
           </Typography>
         </Box>
         <Box sx={{ height: { xs: 140, sm: 180, md: 220 }, maxWidth: 640 }}>

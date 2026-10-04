@@ -37,7 +37,7 @@ export async function apiRequest<T>(path: string, schema: ZodType<T>, init?: Req
   try {
     response = await fetch(`/api${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, 'Trim could not reach the API.');
+    throw new ApiError(0, 'Serenity could not reach the API.');
   }
 
   const text = await response.text();

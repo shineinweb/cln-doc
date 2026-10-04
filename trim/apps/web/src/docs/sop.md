@@ -1,6 +1,6 @@
-# Trim operating procedures
+# Serenity Universal operating procedures
 
-These procedures are the ones a manager and an employee follow in Trim. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
+These procedures are the ones a manager and an employee follow in Serenity. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
 
 A page for the other facility says you do not have access. Do not keep going on that page.
 
@@ -108,12 +108,12 @@ Workflow templates has a **New template** form and **Save template**. That form 
 1. Open **Compliance**. The page says “Imports stay on the license.”
 2. Read the license card. It shows the license number, the facility, and the plant count.
 3. Harbor House, 144 tagged plants, says “No discrepancies.”
-4. Hill Works, 86 tagged plants, lists `1A4HW000000000000099999` as “In the file, not in Trim.”
+4. Hill Works, 86 tagged plants, lists `1A4HW000000000000099999` as “In the file, not in Serenity.”
 5. Choose **Open inventory**. The page says plant totals come from tagged plants on this license, and “Showing N of M tags.” Open a tag to read the plant: tag, strain, stage, room or “No room,” and cycle or “No cycle.”
 
 Compliance has no file-upload control. The card shows the comparison already stored. A license with no comparison says “No inventory file has been compared for this license.” The plant page has no form to add, move, or remove a tag.
 
-**Done.** You can say the Harbor file matches, and you can name the Hill tag that is in the file and not in Trim. The inventory list matches the count on the license card.
+**Done.** You can say the Harbor file matches, and you can name the Hill tag that is in the file and not in Serenity. The inventory list matches the count on the license card.
 
 ## Reviewed sandbox submissions
 
@@ -244,13 +244,13 @@ The comparison page has no link to a single-facility report. That page is **Faci
 5. Open **Reports** when you need yield, labor, and cost figures.
 6. Open **Messages** when you need a saved Serenity chat or a direct message with someone in the organization. The address is `/messages`.
 
-**Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
+**Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Serenity does not call live Metrc and does not send email or SMS.
 
 ## Internal messages
 
 **Who.** Anyone signed in. Avery, Blake, and Casey can message people in Harbor & Hill Cultivation.
 
-**When.** You need a direct message inside Trim, or a saved Serenity thread that remembers earlier questions.
+**When.** You need a direct message inside Serenity, or a saved Serenity thread that remembers earlier questions.
 
 **Steps.**
 
@@ -259,7 +259,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 3. Write the message and choose **Send**. The other person sees the same conversation.
 4. Choose **Chat with Serenity** for a saved Serenity thread. Ask about procedures, generate tasks, assign training, or teach her with **Remember that…**. She uses the facility in the top bar.
 
-**Done.** You can name who received the message and whether Serenity replied. Trim does not send email or SMS.
+**Done.** You can name who received the message and whether Serenity replied. Serenity does not send email or SMS.
 
 ## Recording irrigation and feed
 

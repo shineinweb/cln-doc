@@ -22,7 +22,7 @@ export function SettingsPage() {
       <PageHeader
         kicker="Settings"
         title={user?.organizationName ?? 'Settings'}
-        lede="Company details and the API keys Trim stores for Metrc and Serenity (OpenAI). Saving a key does not call that service until Serenity answers."
+        lede="Company details and the API keys Serenity stores for Metrc and OpenAI. Saving a key does not call that service until Serenity answers."
       />
       <Tabs value={tab} onChange={(_event, value: 'general' | 'apis') => setTab(value)} sx={{ mb: 2 }}>
         <Tab value="general" label="General" data-testid="settings-tab-general" />
@@ -155,7 +155,7 @@ function ApisTab({ settings, canSave }: { settings: SettingsView; canSave: boole
         <Typography sx={{ color: 'text.secondary', mb: 2 }}>
           Metrc authenticates with an integrator API key and a user API key. The integrator key is the username and the
           user API key is the password. The user API key belongs to the Metrc user, not the facility. Requests also send
-          the facility license number. Trim stores these and does not call Metrc.
+          the facility license number. Serenity stores these and does not call Metrc.
         </Typography>
         <Box
           component="form"
@@ -216,8 +216,8 @@ function ApisTab({ settings, canSave }: { settings: SettingsView; canSave: boole
           Serenity · OpenAI
         </Typography>
         <Typography sx={{ color: 'text.secondary', mb: 2 }}>
-          Serenity is Trim’s cultivation AI. An OpenAI key lets her answer with richer language and use notes you teach
-          her (“Remember that…”). Without a key she still runs on Trim’s stored procedures and actions. The key is stored
+          Serenity is the cultivation AI. An OpenAI key lets her answer with richer language and use notes you teach her
+          (“Remember that…”). Without a key she still runs on stored procedures and actions. The key is stored
           for this organization and is never shown again.
         </Typography>
         <Box

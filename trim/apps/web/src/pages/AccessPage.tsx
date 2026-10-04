@@ -127,7 +127,7 @@ function UsersTab({ directory, canManage }: { directory: AccessDirectory; canMan
       <Box sx={{ mt: 3 }}>
         <SectionToolbar title="Audit logs" />
         <Typography sx={{ mb: 1.5, color: 'text.secondary' }}>
-          Sign-ins and every signed-in action across Trim modules.
+          Sign-ins and every signed-in action across Serenity modules.
         </Typography>
         <AuditTable directory={directory} />
       </Box>

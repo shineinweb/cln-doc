@@ -1,6 +1,6 @@
-# Trim
+# Serenity Universal
 
-Trim is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file. Phase 5 reviews Metrc submissions and delivers approved rows through a sandbox outbox. Phase 6 records a harvest, its weights, waste, and packages, and can queue a finished package on that same outbox. Phase 7 records room environment readings by hand or CSV, charts them, and raises stale and out-of-range alerts. Phase 8 reports yield, cycle duration, labor, and cost from stored rows, and shows the formula next to each figure.
+Serenity Universal is a multi-site cannabis cultivation workspace. Phase 1 covers access and the organization → site → room → zone model. Phase 2 adds crop cycles and the room dashboard. Phase 3 adds versioned workflow templates, generated assignments, and the employee workspace. Phase 4 tracks plants by license and compares a saved inventory file. Phase 5 reviews Metrc submissions and delivers approved rows through a sandbox outbox. Phase 6 records a harvest, its weights, waste, and packages, and can queue a finished package on that same outbox. Phase 7 records room environment readings by hand or CSV, charts them, and raises stale and out-of-range alerts. Phase 8 reports yield, cycle duration, labor, and cost from stored rows, and shows the formula next to each figure.
 
 The product lives in this `trim/` directory.
 

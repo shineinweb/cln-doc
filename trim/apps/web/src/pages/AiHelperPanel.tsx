@@ -23,7 +23,7 @@ const STARTER: ChatMessage = {
   id: 'starter',
   role: 'assistant',
   content:
-    "I'm Serenity, Trim's cultivation AI for this facility. I generate room tasks from stored procedures, assign worker training, quote procedures, and learn notes you teach me with “Remember that…”.",
+    "I'm Serenity, the cultivation AI for this facility. I generate room tasks from stored procedures, assign worker training, quote procedures, and learn notes you teach me with “Remember that…”.",
   suggestions: [
     'Generate tasks from stored procedures',
     'Train workers on Canopy scout',

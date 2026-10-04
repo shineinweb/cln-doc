@@ -79,7 +79,7 @@ export class MessagesService {
         messages: {
           create: {
             authorId: null,
-            authorName: 'Trim',
+            authorName: 'Serenity',
             body: `Conversation with ${peer.name}.`,
             kind: 'system',
           },

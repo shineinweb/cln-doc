@@ -11,7 +11,7 @@ import { formatTimestamp } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 
 function discrepancyLabel(kind: 'extra_tag' | 'missing_tag'): string {
-  return kind === 'extra_tag' ? 'In the file, not in Trim' : 'In Trim, not in the file';
+  return kind === 'extra_tag' ? 'In the file, not in Serenity' : 'In Serenity, not in the file';
 }
 
 function statusLabel(status: string): string {

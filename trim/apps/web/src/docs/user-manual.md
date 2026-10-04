@@ -1,12 +1,12 @@
-# Trim user manual
+# Serenity Universal user manual
 
-Trim is the cultivation workspace for Harbor & Hill Cultivation. The room dashboard is the daily center. A license is not the same thing as a facility: plants and packages belong to a license, and rooms belong to a facility.
+Serenity is the cultivation workspace for Harbor & Hill Cultivation. The room dashboard is the daily center. A license is not the same thing as a facility: plants and packages belong to a license, and rooms belong to a facility.
 
-Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
+Open Serenity at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, Serenity, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, Serenity, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Serenity.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch** / **Clock out** for the selected facility (status shows Out, In, or Lunch), your name on a wider screen, and **Sign out**. The status dot opens **Time clock** for payroll and the full punch history.
 
@@ -70,7 +70,7 @@ Charts under the board:
 - **Packaged (MTD)** and **Average g per plant** — month-to-date packaged weight and the dry-weight average.
 - **Packages by Item** — package labels and weights.
 
-Trim does not store sales dollars on these charts. Below the charts are the facility’s rooms and your tasks due today.
+Serenity does not store sales dollars on these charts. Below the charts are the facility’s rooms and your tasks due today.
 
 ## Facility
 
@@ -107,7 +107,7 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **Reset room** sits in the top right of the room page for an organization admin. It opens a form: Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. The start date is day 1, and the form shows the calculated end date for the next crop. Saving closes the current crop, lists it under **Archived crops**, and starts the next crop from the strain. The harvest date, when entered, is stored on the crop being closed. Zones stay on **Zones**. Readings and alert rules stay on **Settings**. An employee does not see **Reset room**.
 
-**Last successful Metrc sync** sits on the room **Settings** tab. With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
+**Last successful Metrc sync** sits on the room **Settings** tab. With nothing recorded, it says “No successful Metrc sync is recorded.” Serenity does not call live Metrc.
 
 **Tasks** has **Add task**. The form asks for a title, an optional **Description**, **One time** or **Recurring**, and optional **Employees**. You can assign more than one employee to the same task from the **Employees** list. Leave that list on Unassigned when nobody is assigned. A one-time task asks for a **Due date**. A recurring task repeats **Daily** or **Weekly** and does not ask for a due date. A weekly task asks for **Days**, and you can choose more than one, such as Tuesday and Friday. **Edit** and **Delete** are on each added task. A description shows under the task title. **Tasks due today** still lists the crop’s tasks. Empty rooms say “No tasks are due today.”
 
@@ -121,7 +121,7 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. Without `settings.manage`, Settings stays out of the navigation and the API refuses the page.
 
-**API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Trim does not call Metrc.
+**API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Serenity does not call Metrc.
 
 ## Users
 
@@ -131,7 +131,7 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **Users** lists every person in a table: name, email, role, and facilities. Use **Search users** to filter the list, and click a column header to sort. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
 
-**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for every signed-in action across Trim modules (opens, creates, changes, deletes). High-frequency status polls such as `/auth/me` and time-clock status are skipped so the log stays readable. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
+**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for every signed-in action across Serenity modules (opens, creates, changes, deletes). High-frequency status polls such as `/auth/me` and time-clock status are skipped so the log stays readable. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
 
 **Roles** lists each role with its description and permissions. Use **Search roles** to filter the list, and click a column header to sort. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
 
@@ -222,7 +222,7 @@ Organization admins also get **AI payroll & accounting**:
 - **Ask AI** about overtime, lunch, missing rates, or top earners.
 - **Save** hourly pay rates by employee name (matched to the signed-in user’s name).
 
-Trim calculates hours and gross pay from punches and rates. It does **not** file taxes, withholdings, or send bank payroll.
+Serenity calculates hours and gross pay from punches and rates. It does **not** file taxes, withholdings, or send bank payroll.
 
 An assignment card shows the facility and room, the task title, the due date, the assignee, and the crop. Chips appear only when the template requires them: Supervisor approval, Photo, Notes, Measurement, or Sign-off. The instructions are on the card. A dependency reads “Depends on …”. A linked SOP shows its title and summary.
 
@@ -237,15 +237,15 @@ On October 3, 2026, the seeded dates put Lower-leaf pass on Flower 1 and Scout t
 Each license card shows the license number, the facility names, the plant count, and **Open inventory**. The seeded licenses are:
 
 - `OR-CULT-44821` at Harbor House, 144 tagged plants. The compared file matches. The card says “No discrepancies.”
-- `OR-CULT-55218` at Hill Works, 86 tagged plants. The compared file has one extra tag, `1A4HW000000000000099999`, labeled “In the file, not in Trim.”
+- `OR-CULT-55218` at Hill Works, 86 tagged plants. The compared file has one extra tag, `1A4HW000000000000099999`, labeled “In the file, not in Serenity.”
 
-A clean comparison shows a chip with the matched count and “0 discrepancies.” A difference is either “In the file, not in Trim” or “In Trim, not in the file.” If nothing has been compared, the card says “No inventory file has been compared for this license.” Compliance does not show a file-upload button. It shows the comparison that is already stored.
+A clean comparison shows a chip with the matched count and “0 discrepancies.” A difference is either “In the file, not in Serenity” or “In Serenity, not in the file.” If nothing has been compared, the card says “No inventory file has been compared for this license.” Compliance does not show a file-upload button. It shows the comparison that is already stored.
 
 **Open inventory** lists tags for that license. The page says plant totals come from tagged plants on the license, and “Showing N of M tags.” Each tag links to the plant. The plant page shows the tag, strain, stage, room or “No room,” cycle or “No cycle,” and the event history. A move reads as who moved the plant from one room to another. A stage change reads as who changed the stage. An observation reads as who noted the text. There is no form on the plant page to move a plant or change its stage.
 
 **Submissions** on the license card are the reviewed sandbox queue. Nothing is sent until a manager approves it. Status words are Pending review, Queued, Succeeded, Failed, Uncertain, Rejected, and Reconciled. Pending review says “Waiting for a manager. Nothing has been sent.”
 
-Avery, and only an organization admin, can set the sandbox result to Success, Definite failure, or Uncertain, then **Approve** or **Reject**. Reject says “Rejected. Nothing was sent.” Approve says “Approved. The outbox will deliver it.” The worker then delivers that row to the local sandbox. Trim does not call production Metrc.
+Avery, and only an organization admin, can set the sandbox result to Success, Definite failure, or Uncertain, then **Approve** or **Reject**. Reject says “Rejected. Nothing was sent.” Approve says “Approved. The outbox will deliver it.” The worker then delivers that row to the local sandbox. Serenity does not call production Metrc.
 
 - Success ends as Succeeded.
 - Definite failure ends as Failed and says “Definite failure. Retry only by queueing a new reviewed submission.” **Queue again** creates a new submission that is waiting for review and has not been sent.
@@ -309,15 +309,15 @@ The card also says “Sample environmental readings are excluded. This report do
 
 ## Serenity
 
-**Serenity** sits in the left navigation after Reports. She is Trim’s cultivation AI and always introduces herself as Serenity. The address stays `/coach`.
+**Serenity** sits in the left navigation after Reports. She is Serenity’s cultivation AI and always introduces herself as Serenity. The address stays `/coach`.
 
-**Serenity** opens with a chat box. **Generate tasks** creates open room tasks from stored procedures and assigns them to the people who can open the facility. **Train workers** assigns training records from a stored procedure; open **Operations → Training** to mark them complete. Typing a question about a procedure quotes the matching stored procedure title and summary. Say **Remember that…** to teach Serenity a note she can reuse later. With an OpenAI API key under **Settings → API's → Serenity · OpenAI**, she can answer in fuller language using those notes and procedures. Without a key she still runs on Trim’s stored actions.
+**Serenity** opens with a chat box. **Generate tasks** creates open room tasks from stored procedures and assigns them to the people who can open the facility. **Train workers** assigns training records from a stored procedure; open **Operations → Training** to mark them complete. Typing a question about a procedure quotes the matching stored procedure title and summary. Say **Remember that…** to teach Serenity a note she can reuse later. With an OpenAI API key under **Settings → API's → Serenity · OpenAI**, she can answer in fuller language using those notes and procedures. Without a key she still runs on Serenity’s stored actions.
 
 Yield, labor, and cost figures stay on **Reports**. Serenity does not repeat those charts. On **Time clock**, admins can **Ask Serenity** about payroll; she still introduces herself as Serenity.
 
 **Room notices** lists each active room alert. Opening Serenity creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. Serenity does not invent a task that no procedure describes. The same notice appears on **Tasks**, and the room task itself is listed under Room tasks.
 
-**Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Trim does not call live Metrc, and it does not send email or SMS.
+**Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Serenity does not call live Metrc, and it does not send email or SMS.
 
 A person who cannot open the facility does not see that facility’s Serenity chat.
 
@@ -325,7 +325,7 @@ A person who cannot open the facility does not see that facility’s Serenity ch
 
 **Messages** sits in the left navigation after Serenity. The address is `/messages`. It opens for every signed-in user and lists people in the same organization.
 
-**Message a person** opens a direct conversation with someone else in the organization. Both people see the same thread. Messages stay inside Trim; Trim does not send email or SMS.
+**Message a person** opens a direct conversation with someone else in the organization. Both people see the same thread. Messages stay inside Serenity; Serenity does not send email or SMS.
 
 **Chat with Serenity** opens a saved Serenity thread for your account. She uses the facility in the top bar the same way the Serenity page does: quote stored procedures, generate room tasks, assign worker training, and learn notes. Reopening **Chat with Serenity** returns the same saved conversation.
 

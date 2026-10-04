@@ -1,7 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import type { SessionUser } from '@trim/contracts';
 
-/** Catalog of module permissions Trim enforces. */
+/** Catalog of module permissions Serenity enforces. */
 export const MODULE_PERMISSIONS = [
   { key: 'dashboard.read', description: 'Open the main dashboard' },
   { key: 'access.manage', description: 'Manage users, roles, permissions, and view the full audit log' },
@@ -24,7 +24,7 @@ export const MODULE_PERMISSIONS = [
   { key: 'operations.read', description: 'View Operations lists' },
   { key: 'operations.write', description: 'Add or change Operations records' },
   { key: 'reports.read', description: 'View reports and dashboard analytics' },
-  { key: 'coach.use', description: 'Use Serenity, Trim’s cultivation AI' },
+  { key: 'coach.use', description: 'Use Serenity, the cultivation AI' },
   { key: 'messages.use', description: 'Send and read internal messages' },
   { key: 'settings.manage', description: 'Change organization settings and API credentials' },
   { key: 'workflows.manage', description: 'Manage workflow templates and teams' },

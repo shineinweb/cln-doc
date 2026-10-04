@@ -153,7 +153,7 @@ describe('TrolMaster credentials', () => {
       expect(chart.body.enabled).toBe(true);
       expect(chart.body.testMode).toBe(true);
       expect(chart.body.series).toEqual([]);
-      expect(chart.body.message).toBe('Sample readings. Trim is not calling Trolmaster.');
+      expect(chart.body.message).toBe('Sample readings. Serenity is not calling Trolmaster.');
       expect(standIn.requests).toEqual([]);
 
       const off = await request(app.getHttpServer())

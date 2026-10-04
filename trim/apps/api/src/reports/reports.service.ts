@@ -98,7 +98,7 @@ export class ReportsService {
     const rateByName = new Map(rates.map((rate) => [rate.personName, rate.hourlyCents]));
     const timeZone = site.timezone;
     const statement =
-      'Dashboard charts use stored harvest weights, labor, input costs, packages, and active crop plant counts. Trim does not store sales dollars.';
+      'Dashboard charts use stored harvest weights, labor, input costs, packages, and active crop plant counts. Serenity does not store sales dollars.';
 
     const actualYield: Array<{ cultivar: string; week: string; grams: number; estimated: boolean }> = [];
     const strainStats = new Map<string, { harvestCount: number; packagedGrams: number }>();

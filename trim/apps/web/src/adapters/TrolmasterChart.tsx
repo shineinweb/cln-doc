@@ -130,7 +130,7 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
       </Box>
       {showingSample ? (
         <Typography data-testid="trolmaster-sample-note" sx={{ color: workbench.gold, fontSize: 14, mb: 1 }}>
-          Sample readings. Trim is not calling Trolmaster.
+          Sample readings. Serenity is not calling Trolmaster.
         </Typography>
       ) : null}
       {plot ? (
@@ -452,7 +452,7 @@ function sampleChart(range: ChartRange, now = Date.now()): TrolmasterChart {
     connected: false,
     enabled: true,
     testMode: true,
-    message: 'Sample readings. Trim is not calling Trolmaster.',
+    message: 'Sample readings. Serenity is not calling Trolmaster.',
     latest: [
       { metric: 'temp', label: 'Temp', value: 80.1, unit: '°F' },
       { metric: 'humid', label: 'Humid', value: 61.2, unit: '%' },

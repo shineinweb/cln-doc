@@ -1,6 +1,6 @@
 # Authentication
 
-Trim Phase 1 uses signed JSON Web Tokens. There is no server session.
+Serenity Phase 1 uses signed JSON Web Tokens. There is no server session.
 
 ## Flow
 
