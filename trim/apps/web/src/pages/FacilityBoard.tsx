@@ -271,23 +271,6 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
         </Box>
       )}
 
-      {data.notes.length > 0 ? (
-        <Box sx={{ mt: 1.5, display: 'grid', gap: 0.5 }} data-testid="facility-board-notes">
-          {data.notes.map((note) => (
-            <Typography
-              key={note}
-              sx={{
-                color: 'text.secondary',
-                fontSize: 13,
-                pl: 1.25,
-                borderLeft: `2px solid ${workbench.violet}`,
-              }}
-            >
-              {note}
-            </Typography>
-          ))}
-        </Box>
-      ) : null}
     </Box>
   );
 }

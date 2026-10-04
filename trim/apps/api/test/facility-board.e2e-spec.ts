@@ -161,8 +161,7 @@ describe('facility board', () => {
       source: 'schedule',
       detail: 'Fans / ACs · every Friday',
     });
-    expect(board.body.notes.some((note: string) => note.includes('Sulfur on crop day 14'))).toBe(true);
-    expect(board.body.notes.some((note: string) => note.includes('Transplant dates'))).toBe(true);
+    expect(board.body.notes).toEqual([]);
   });
 
   async function login(email: string, password: string): Promise<string> {

@@ -468,12 +468,7 @@ export class FacilitiesService {
         'Facility board: rooms across milestones — crop start, defoliation, transplant (T), harvest, and standard room schedules (sulfur, nets, filters, garden clean, LS, fans).',
       columns,
       rows,
-      notes: [
-        'Sulfur on crop day 14. Side net and AC/dehu filters on crop day 35.',
-        'LS is 11 days before expected harvest. Garden clean every 30 days from crop start.',
-        'Wash water filters every Tuesday and Friday. Check all fans and ACs every Friday.',
-        'T shows transplant dates from each room’s Settings → Transplant dates.',
-      ],
+      notes: [],
     };
   }
 
