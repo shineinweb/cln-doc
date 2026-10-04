@@ -28,19 +28,101 @@ export class TasksService {
 
   async workspace(user: SessionUser): Promise<WorkspaceToday> {
     const context = await this.assignmentContext(user.id);
-    const tasks = await this.prisma.cycleTask.findMany({
-      where: { status: 'open', room: { site: authorizedSiteWhere(user) } },
-      include: taskInclude,
-      orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
-    });
+    const siteWhere = authorizedSiteWhere(user);
+    const [tasks, roomTaskRows, dutyRows] = await Promise.all([
+      this.prisma.cycleTask.findMany({
+        where: { status: 'open', room: { site: siteWhere } },
+        include: taskInclude,
+        orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
+      }),
+      this.prisma.roomTask.findMany({
+        where: { status: 'open', room: { site: siteWhere } },
+        include: {
+          assignees: { include: { user: { select: { id: true, name: true } } } },
+          room: { include: { site: true } },
+          sourceAlert: { select: { id: true } },
+          sopRecord: { select: { id: true } },
+        },
+        orderBy: [{ dueOn: 'asc' }, { title: 'asc' }],
+      }),
+      this.prisma.recurringDuty.findMany({
+        where: { site: siteWhere },
+        include: { room: true, site: true },
+        orderBy: [{ nextDueOn: 'asc' }, { title: 'asc' }],
+      }),
+    ]);
     const visible = tasks.filter((task) => {
       const today = calendarDateInTimeZone(new Date(), task.room.site.timezone);
       return dateKeyFromDbDate(task.dueOn) === today && this.isAssigned(user, task, context);
     });
+    const roomTasks = roomTaskRows
+      .filter((task) => {
+        const today = calendarDateInTimeZone(new Date(), task.room.site.timezone);
+        const assigned =
+          user.isOrgAdmin || task.assignees.some((assignment) => assignment.userId === user.id);
+        if (!assigned) {
+          return false;
+        }
+        if (task.kind === 'recurring') {
+          if (task.cadence === 'daily') {
+            return true;
+          }
+          if (task.cadence === 'weekly') {
+            return weekdayKeyInTimeZone(new Date(), task.room.site.timezone, task.weekdays);
+          }
+          return false;
+        }
+        return task.dueOn != null && dateKeyFromDbDate(task.dueOn) === today;
+      })
+      .map((task) => {
+        const cadence: 'daily' | 'weekly' | null =
+          task.cadence === 'daily' || task.cadence === 'weekly' ? task.cadence : null;
+        return {
+          id: task.id,
+          title: task.title,
+          description: task.description?.trim() ? task.description.trim() : null,
+          kind: task.kind === 'recurring' ? ('recurring' as const) : ('one_time' as const),
+          cadence,
+          dueOn: task.dueOn ? dateKeyFromDbDate(task.dueOn) : null,
+          roomId: task.roomId,
+          roomName: task.room.name,
+          siteId: task.room.siteId,
+          siteName: task.room.site.name,
+          source: task.sourceAlertId ? ('alert' as const) : task.sopRecordId ? ('ai' as const) : ('manual' as const),
+          assignees: [...task.assignees]
+            .map((assignment) => ({ id: assignment.user.id, name: assignment.user.name }))
+            .sort((left, right) => left.name.localeCompare(right.name)),
+        };
+      });
+    const duties = dutyRows
+      .filter((duty) => {
+        const today = calendarDateInTimeZone(new Date(), duty.site.timezone);
+        return dateKeyFromDbDate(duty.nextDueOn) <= today;
+      })
+      .map((duty) => ({
+        id: duty.id,
+        title: duty.title,
+        cadence: duty.cadence === 'weekly' ? ('weekly' as const) : ('daily' as const),
+        nextDueOn: dateKeyFromDbDate(duty.nextDueOn),
+        assigneeLabel: duty.assigneeLabel,
+        sopTitle: duty.sopTitle,
+        roomId: duty.roomId,
+        roomName: duty.room?.name ?? null,
+        siteId: duty.siteId,
+        siteName: duty.site.name,
+      }));
     const date = visible[0]
       ? dateKeyFromDbDate(visible[0].dueOn)
       : calendarDateInTimeZone(new Date(), 'America/Los_Angeles');
-    return { date, tasks: visible.map((task) => this.toDetail(task)), notices: await this.coach.notices(user) };
+    return {
+      date,
+      statement:
+        'Tasks due today from crop cycles, room chores (including AI and alert follow-ups), and Operations recurring duties. Training stays under Operations → Training.',
+      tasks: visible.map((task) => this.toDetail(task)),
+      roomTasks,
+      duties,
+      notices: await this.coach.notices(user),
+    };
   }
 
   async getTask(user: SessionUser, taskId: string): Promise<CycleTaskDetail> {
@@ -224,6 +306,26 @@ export class TasksService {
 
 function safeFileName(name: string): string {
   const base = name.split(/[/\\]/).pop() ?? 'photo';
-  const cleaned = base.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').slice(0, 80);
+  const cleaned = base.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-').slice(0, 80);
   return cleaned || 'photo';
+}
+
+function weekdayKeyInTimeZone(instant: Date, timeZone: string, weekdays: string | null): boolean {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).formatToParts(instant);
+  const short = parts.find((part) => part.type === 'weekday')?.value?.toLowerCase() ?? '';
+  const map: Record<string, string> = {
+    sun: 'sun',
+    mon: 'mon',
+    tue: 'tue',
+    wed: 'wed',
+    thu: 'thu',
+    fri: 'fri',
+    sat: 'sat',
+  };
+  const key = map[short.slice(0, 3)];
+  if (!key) {
+    return false;
+  }
+  const chosen = new Set((weekdays ?? '').split(',').map((day) => day.trim()).filter(Boolean));
+  return chosen.has(key);
 }

@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks assigned to you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Tasks, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -39,7 +39,7 @@ Opening a room, crop cycle, harvest, package, plant, reading, or facility report
 
 A Harbor House gateway cannot post a reading into a Hill Works room. The message is “This gateway cannot write that room.” That is true even for Avery.
 
-Workspace says “Tasks from another facility stay off this list.” Times on a room use that facility’s timezone, `America/Los_Angeles`. A timestamp you type without a timezone is read as local time at the facility.
+**Tasks** says tasks from another facility stay off the list. Times on a room use that facility’s timezone, `America/Los_Angeles`. A timestamp you type without a timezone is read as local time at the facility.
 
 ## Changing a record
 
@@ -187,9 +187,17 @@ Avery can save three things on this page:
 
 **Cultivar** and **Medium** are optional. Leave them blank when the template is not for one cultivar or one medium. A filled card adds “Cultivar …” and “Medium …”. The seeded templates are **Cedar Nights coco week** (Cultivar Cedar Nights, Medium coco, task Check runoff, linked to Irrigation pass) and **Glass Orchard soil week** (Cultivar Glass Orchard, Medium soil, task Scout the benches, linked to IPM scout). Canopy week has neither, so it stays a general template.
 
-## Workspace
+## Tasks
 
-**Workspace** is titled Employee workspace. The introduction names the date and says tasks from another facility stay off the list. If nothing is due, it says “Nothing is assigned to you today.”
+**Tasks** sits in the left navigation after Workflows. The address stays `/workspace`. The title is “All tasks due today.”
+
+This is the single place for work due today:
+
+- **Crop cycle tasks** — workflow assignments with evidence (open `/tasks/` plus the id).
+- **Room tasks** — room chores, AI-generated tasks, and alert follow-ups (open the room).
+- **Recurring duties** — Operations recurring duties whose next due date is today or earlier (open **Operations → Recurring tasks**).
+
+Training stays under **Operations → Training** and is not listed as a task. Tasks from another facility stay off the list. If nothing is due across those three lists, the page says nothing is due for you today.
 
 An assignment card shows the facility and room, the task title, the due date, the assignee, and the crop. Chips appear only when the template requires them: Supervisor approval, Photo, Notes, Measurement, or Sign-off. The instructions are on the card. A dependency reads “Depends on …”. A linked SOP shows its title and summary.
 
@@ -282,7 +290,7 @@ The card also says “Sample environmental readings are excluded. This report do
 
 Yield, labor, and cost figures stay on **Reports**. The AI helper does not repeat those charts.
 
-**Room notices** lists each active room alert. Opening the AI helper creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. The helper does not invent a task that no procedure describes. The same notice appears on **Workspace**.
+**Room notices** lists each active room alert. Opening the AI helper creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. The helper does not invent a task that no procedure describes. The same notice appears on **Tasks**, and the room task itself is listed under Room tasks.
 
 **Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Trim does not call live Metrc, and it does not send email or SMS.
 

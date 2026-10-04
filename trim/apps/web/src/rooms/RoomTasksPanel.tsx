@@ -32,7 +32,8 @@ export function RoomTasksPanel({ roomId, siteId, tasksDueToday, managedTasks }: 
             Tasks
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task has no due date. Description is optional, and you can assign more than one employee.
+            Add a one-time task, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task has no due date. Description is optional, and you can assign more than one employee. Today’s assigned room chores also appear under{' '}
+            <RouterLink to="/workspace">Tasks</RouterLink> with crop-cycle work and Operations recurring duties.
           </Typography>
           <AddTaskForm roomId={roomId} siteId={siteId} />
           <PagedList

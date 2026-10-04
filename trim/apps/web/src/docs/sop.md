@@ -29,11 +29,11 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 **Who.** The person the card names. Blake completes Harbor House assignments. Casey completes Hill Works assignments. Avery sees both lists. A task from the other facility stays off the list.
 
-**When.** On the due date shown on **Workspace**. On October 3, 2026, Count plants onto the bench and Lower-leaf pass are due on Flower 1, and Scout the canopy is due on Veg 1.
+**When.** On the due date shown on **Tasks**. On October 3, 2026, Count plants onto the bench and Lower-leaf pass are due on Flower 1, and Scout the canopy is due on Veg 1.
 
 **Steps.**
 
-1. Open **Workspace**. The title is Employee workspace. The introduction names the date.
+1. Open **Tasks**. The title is All tasks due today. The introduction names the date.
 2. Open the assignment card. It shows the facility, room, task title, due date, assignee, and crop.
 3. Read the instructions. Scout the canopy also shows the Canopy scout note: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.” Lower-leaf pass shows the chip Supervisor approval and the line “Depends on Scout the canopy.”
 4. Check the boxes on the card. Scout the canopy uses “Check the first half of the room” and “Check the second half of the room.” Lower-leaf pass uses “Clear the aisle” and “Bag the leaves.”
@@ -43,7 +43,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 Chips for Measurement or Sign-off can appear on a card. The card has no separate measurement field and no sign-off field.
 
-**Done.** The boxes you checked stay checked. Saved notes, the photo file name, and your comment are on the card. If nothing is due, Workspace says “Nothing is assigned to you today.”
+**Done.** The boxes you checked stay checked. Saved notes, the photo file name, and your comment are on the card. If nothing is due across crop cycles, room chores, and recurring duties, Tasks says nothing is due for you today.
 
 ## Starting a cycle from a template
 
@@ -239,7 +239,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 1. Open **AI helper**. It follows the facility in the top bar. The address is `/coach`.
 2. Use the chat box. Choose **Generate tasks** to create room tasks from stored procedures, or **Train workers** to assign training. Type a procedure question to get a quote.
-3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Workspace**.
+3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Tasks**.
 4. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
 5. Open **Reports** when you need yield, labor, and cost figures.
 6. Open **Messages** when you need a saved AI chat or a direct message with someone in the organization. The address is `/messages`.

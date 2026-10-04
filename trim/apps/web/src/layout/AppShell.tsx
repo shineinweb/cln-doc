@@ -33,7 +33,7 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/facilities', label: 'Facility', end: true, glyph: 'facility' },
   { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms' },
   { to: '/workflows', label: 'Workflows', end: true, glyph: 'workflows' },
-  { to: '/workspace', label: 'Workspace', end: true, glyph: 'workspace' },
+  { to: '/workspace', label: 'Tasks', end: true, glyph: 'workspace' },
   { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance' },
   { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests' },
   { to: '/operations', label: 'Operations', end: false, glyph: 'operations' },
@@ -47,7 +47,7 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
 const PHONE_NAV = [
   { to: '/', label: 'Dashboard', glyph: 'dashboard' as const, match: (path: string) => path === '/' },
   { to: '/rooms', label: 'Rooms', glyph: 'rooms' as const, match: (path: string) => path.startsWith('/rooms') },
-  { to: '/workspace', label: 'Workspace', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace') },
+  { to: '/workspace', label: 'Tasks', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace') },
   { to: '/harvests', label: 'Harvests', glyph: 'harvests' as const, match: (path: string) => path.startsWith('/harvests') },
 ];
 

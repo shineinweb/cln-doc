@@ -751,6 +751,9 @@ function RecurringPanel({ overview }: { overview: OperationsOverview }) {
   });
   return (
     <Box>
+      <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
+        Duties due today also appear under Tasks so crop-cycle work, room chores, and recurring duties share one daily list.
+      </Typography>
       <RecordList testId="recurring-list" empty="No recurring tasks yet.">
         {overview.recurring.map((row) => (
           <RecordActions

@@ -654,9 +654,40 @@ export const workspaceNoticeSchema = z.object({
   sopSummary: z.string().nullable(),
 });
 
+export const workspaceRoomTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  kind: z.enum(['one_time', 'recurring']),
+  cadence: z.enum(['daily', 'weekly']).nullable(),
+  dueOn: z.string().nullable(),
+  roomId: z.string(),
+  roomName: z.string(),
+  siteId: z.string(),
+  siteName: z.string(),
+  source: z.enum(['alert', 'manual', 'ai']),
+  assignees: z.array(taskAssigneeSchema),
+});
+
+export const workspaceDutySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  cadence: z.enum(['daily', 'weekly']),
+  nextDueOn: z.string(),
+  assigneeLabel: z.string(),
+  sopTitle: z.string().nullable(),
+  roomId: z.string().nullable(),
+  roomName: z.string().nullable(),
+  siteId: z.string(),
+  siteName: z.string(),
+});
+
 export const workspaceTodaySchema = z.object({
   date: z.string(),
+  statement: z.string(),
   tasks: z.array(cycleTaskDetailSchema),
+  roomTasks: z.array(workspaceRoomTaskSchema),
+  duties: z.array(workspaceDutySchema),
   notices: z.array(workspaceNoticeSchema),
 });
 
@@ -1706,6 +1737,8 @@ export type RescheduleResult = z.infer<typeof rescheduleResultSchema>;
 export type ReschedulePreview = z.infer<typeof reschedulePreviewSchema>;
 export type CycleTaskDetail = z.infer<typeof cycleTaskDetailSchema>;
 export type WorkspaceNotice = z.infer<typeof workspaceNoticeSchema>;
+export type WorkspaceRoomTask = z.infer<typeof workspaceRoomTaskSchema>;
+export type WorkspaceDuty = z.infer<typeof workspaceDutySchema>;
 export type WorkspaceToday = z.infer<typeof workspaceTodaySchema>;
 export type SiteCoach = z.infer<typeof siteCoachSchema>;
 export type CoachHelper = z.infer<typeof coachHelperSchema>;
