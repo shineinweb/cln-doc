@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch** / **Clock out** for the selected facility (status shows Out, In, or Lunch), your name on a wider screen, and **Sign out**. The status dot opens **Time clock** for payroll and the full punch history.
 
@@ -14,9 +14,9 @@ The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch*
 
 | Person | Email | Password | What opens |
 | --- | --- | --- | --- |
-| Avery Chen | `avery.chen@harborhill.example` | `HarborHill-admin` | Organization admin. Both facilities, both licenses, template editing, reschedule, and submission review. |
-| Blake Ortiz | `blake.ortiz@harborhill.example` | `HarborHouse-only` | Harbor House only. Hill Works stays hidden, and a Hill Works address says he does not have access. |
-| Casey Nguyen | `casey.nguyen@harborhill.example` | `HillWorks-only` | Hill Works only. Harbor House stays hidden. |
+| Avery Chen | `avery.chen@harborhill.example` | `HarborHill-admin` | Organization admin. Full permission catalog, both facilities, both licenses, Users, Settings, payroll, template editing, reschedule, and submission review. |
+| Blake Ortiz | `blake.ortiz@harborhill.example` | `HarborHouse-only` | Site operator for Harbor House. Day-to-day modules only (no Users, Settings, workflow manage, or payroll manage). Hill Works stays hidden. |
+| Casey Nguyen | `casey.nguyen@harborhill.example` | `HillWorks-only` | Site operator for Hill Works. Same day-to-day module set as Blake. Harbor House stays hidden. |
 
 These are the seeded accounts for this workspace.
 
@@ -76,7 +76,7 @@ Trim does not store sales dollars on these charts. Below the charts are the faci
 
 **Facility** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility. The top bar also has a **Facility** switcher that chooses the same site and opens Rooms.
 
-**Add facility** opens the form. The form asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. **Cancel** closes the form without saving. The code is taken from the name. **Edit** opens the stored name and address. **Save changes** writes them, and the code stays the same. **Delete** asks “Delete this record?” and then removes the facility and its rooms. You can edit or delete a facility you can open. Avery Chen can add a facility and can edit or delete Harbor House or Hill Works. Blake Ortiz can add a facility, and it appears on his list. He can edit Harbor House. He cannot edit or delete Hill Works.
+**Add facility** opens when you hold `facilities.write`. The form asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. **Cancel** closes the form without saving. The code is taken from the name. **Edit** opens the stored name and address. **Save changes** writes them, and the code stays the same. **Delete** asks “Delete this record?” and then removes the facility and its rooms. Avery Chen can add, edit, or delete Harbor House or Hill Works. Blake Ortiz and Casey Nguyen can open their assigned facilities but do not get **Add facility**, **Edit**, or **Delete** on the Facility page.
 
 If an account has no membership, the page says “No facilities are assigned to this account.”
 
@@ -117,27 +117,27 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 ## Settings
 
-**Settings** sits after SOP. It opens for every signed-in user. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
+**Settings** sits after SOP when you hold `settings.manage`. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
 
-**General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. An employee sees the fields and “Only a manager can change settings.”
+**General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. Without `settings.manage`, Settings stays out of the navigation and the API refuses the page.
 
 **API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Trim does not call Metrc.
 
 ## Users
 
-**Users** sits directly under **Dashboard** in the left navigation. It opens for every signed-in user. Three tabs sit under the title: **Users**, **Roles**, and **Permissions**. The page opens on **Users**.
+**Users** sits directly under **Dashboard** when you hold `access.manage`. Three tabs sit under the title: **Users**, **Roles**, and **Permissions**. The page opens on **Users**. Without that permission, Users stays out of the navigation and the API refuses the page.
 
 **Activity** sits at the top of the Users tab. It counts people, sign-ins, access changes, and active people from the audit log for the last 14 days, draws a daily activity chart, and lists the most active people.
 
 **Users** lists every person in a table: name, email, role, and facilities. Use **Search users** to filter the list, and click a column header to sort. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
 
-**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for changes to users, roles, and permissions. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
+**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for every signed-in action across Trim modules (opens, creates, changes, deletes). High-frequency status polls such as `/auth/me` and time-clock status are skipped so the log stays readable. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
 
 **Roles** lists each role with its description and permissions. Use **Search roles** to filter the list, and click a column header to sort. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
 
-**Permissions** lists each key and description. Use **Search permissions** to filter the list, and click a column header to sort. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
+**Permissions** lists each module key and description (`dashboard.read`, `rooms.write`, `timeclock.punch`, and the rest of the catalog). Use **Search permissions** to filter the list, and click a column header to sort. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
 
-An employee sees the tables and “Only a manager can change users, roles, and permissions.”
+A person without `access.manage` does not open **Users**. A custom role can receive individual module keys without organization-admin rights.
 
 Readings and alert rules are on the room **Settings** tab.
 

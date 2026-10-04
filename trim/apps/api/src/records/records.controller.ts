@@ -32,15 +32,18 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { RecordsService } from './records.service';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class RecordsController {
   constructor(private readonly records: RecordsService) {}
 
   @Patch('cycles/:cycleId')
+  @RequirePermissions('tasks.write')
   async editCycle(
     @CurrentUser() user: SessionUser,
     @Param('cycleId') cycleId: string,
@@ -50,6 +53,7 @@ export class RecordsController {
   }
 
   @Delete('cycles/:cycleId')
+  @RequirePermissions('tasks.write')
   async deleteCycle(@CurrentUser() user: SessionUser, @Param('cycleId') cycleId: string) {
     return recordRemovedSchema.parse(await this.records.deleteCycle(user, cycleId));
   }
@@ -64,6 +68,7 @@ export class RecordsController {
   }
 
   @Patch('tasks/:taskId')
+  @RequirePermissions('tasks.write')
   async editTask(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -73,11 +78,13 @@ export class RecordsController {
   }
 
   @Delete('tasks/:taskId')
+  @RequirePermissions('tasks.write')
   async deleteTask(@CurrentUser() user: SessionUser, @Param('taskId') taskId: string) {
     return recordRemovedSchema.parse(await this.records.deleteTask(user, taskId));
   }
 
   @Patch('workflows/templates/:templateId')
+  @RequirePermissions('workflows.manage')
   async editTemplate(
     @CurrentUser() user: SessionUser,
     @Param('templateId') templateId: string,
@@ -87,11 +94,13 @@ export class RecordsController {
   }
 
   @Delete('workflows/templates/:templateId')
+  @RequirePermissions('workflows.manage')
   async deleteTemplate(@CurrentUser() user: SessionUser, @Param('templateId') templateId: string) {
     return recordRemovedSchema.parse(await this.records.deleteTemplate(user, templateId));
   }
 
   @Patch('workflows/sops/:sopId')
+  @RequirePermissions('workflows.manage')
   async editSop(
     @CurrentUser() user: SessionUser,
     @Param('sopId') sopId: string,
@@ -101,11 +110,13 @@ export class RecordsController {
   }
 
   @Delete('workflows/sops/:sopId')
+  @RequirePermissions('workflows.manage')
   async deleteSop(@CurrentUser() user: SessionUser, @Param('sopId') sopId: string) {
     return recordRemovedSchema.parse(await this.records.deleteSop(user, sopId));
   }
 
   @Patch('readings/:readingId')
+  @RequirePermissions('rooms.write')
   async editReading(
     @CurrentUser() user: SessionUser,
     @Param('readingId') readingId: string,
@@ -115,6 +126,7 @@ export class RecordsController {
   }
 
   @Delete('readings/:readingId')
+  @RequirePermissions('rooms.write')
   async deleteReading(@CurrentUser() user: SessionUser, @Param('readingId') readingId: string) {
     return recordRemovedSchema.parse(await this.records.deleteReading(user, readingId));
   }
@@ -134,6 +146,7 @@ export class RecordsController {
   }
 
   @Patch('harvests/:harvestId')
+  @RequirePermissions('harvests.write')
   async editHarvest(
     @CurrentUser() user: SessionUser,
     @Param('harvestId') harvestId: string,
@@ -162,6 +175,7 @@ export class RecordsController {
   }
 
   @Patch('wastes/:wasteId')
+  @RequirePermissions('harvests.write')
   async editWaste(
     @CurrentUser() user: SessionUser,
     @Param('wasteId') wasteId: string,
@@ -176,6 +190,7 @@ export class RecordsController {
   }
 
   @Patch('packages/:packageId')
+  @RequirePermissions('harvests.write')
   async editPackage(
     @CurrentUser() user: SessionUser,
     @Param('packageId') packageId: string,
@@ -190,6 +205,7 @@ export class RecordsController {
   }
 
   @Patch('submissions/:submissionId')
+  @RequirePermissions('compliance.write')
   async editSubmission(
     @CurrentUser() user: SessionUser,
     @Param('submissionId') submissionId: string,
@@ -204,6 +220,7 @@ export class RecordsController {
   }
 
   @Patch('plants/:plantId')
+  @RequirePermissions('inventory.write')
   async editPlant(
     @CurrentUser() user: SessionUser,
     @Param('plantId') plantId: string,
@@ -227,6 +244,7 @@ export class RecordsController {
   }
 
   @Patch('batches/:batchId')
+  @RequirePermissions('inventory.write')
   async editBatch(
     @CurrentUser() user: SessionUser,
     @Param('batchId') batchId: string,
@@ -236,6 +254,7 @@ export class RecordsController {
   }
 
   @Delete('batches/:batchId')
+  @RequirePermissions('inventory.write')
   async deleteBatch(@CurrentUser() user: SessionUser, @Param('batchId') batchId: string) {
     return recordRemovedSchema.parse(await this.records.deleteBatch(user, batchId));
   }

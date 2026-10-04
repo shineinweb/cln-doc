@@ -52,7 +52,7 @@ import {
 import { workbench } from '../theme';
 import { UserActivityDashboard } from './UserActivityDashboard';
 
-const MANAGER_ONLY = 'Only a manager can change users, roles, and permissions.';
+const MANAGER_ONLY = 'You need the access.manage permission to change users, roles, and permissions.';
 
 export function AccessPage() {
   const { user } = useAuth();
@@ -61,7 +61,7 @@ export function AccessPage() {
     queryKey: ['access'],
     queryFn: () => apiGet('/access', accessDirectorySchema),
   });
-  const canManage = Boolean(user?.isOrgAdmin);
+  const canManage = Boolean(user?.isOrgAdmin || user?.permissions.includes('access.manage'));
 
   return (
     <Box>
@@ -127,7 +127,7 @@ function UsersTab({ directory, canManage }: { directory: AccessDirectory; canMan
       <Box sx={{ mt: 3 }}>
         <SectionToolbar title="Audit logs" />
         <Typography sx={{ mb: 1.5, color: 'text.secondary' }}>
-          Sign-ins and changes to users, roles, and permissions.
+          Sign-ins and every signed-in action across Trim modules.
         </Typography>
         <AuditTable directory={directory} />
       </Box>

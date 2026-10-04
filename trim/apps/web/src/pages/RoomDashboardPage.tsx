@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { addCalendarDays, cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
@@ -67,7 +68,7 @@ export function RoomDashboardPage() {
   const cycle = room.data.currentCycle;
 
   return (
-    <ResetRoom roomId={room.data.id} roomType={room.data.roomType} enabled={Boolean(user?.isOrgAdmin)}>
+    <ResetRoom roomId={room.data.id} roomType={room.data.roomType} enabled={can(user, 'workflows.manage', 'rooms.write')}>
       {({ button, panel }) => (
     <Box>
       <PageHeader

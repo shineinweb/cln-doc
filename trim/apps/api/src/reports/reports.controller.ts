@@ -10,10 +10,13 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ReportsService } from './reports.service';
 
 @Controller('reports')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequirePermissions('reports.read')
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 

@@ -716,6 +716,8 @@ export const sessionUserSchema = z.object({
   organizationName: z.string(),
   isOrgAdmin: z.boolean(),
   siteIds: z.array(z.string()),
+  /** Permission keys granted by the user’s roles. Org admins still receive the full catalog for UI checks. */
+  permissions: z.array(z.string()),
 });
 
 export const loginResponseSchema = z.object({

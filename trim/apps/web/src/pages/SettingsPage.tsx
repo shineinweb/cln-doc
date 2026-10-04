@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const canSave = can(user, 'settings.manage');
   const [tab, setTab] = useState<'general' | 'apis'>('general');
   const settings = useQuery({
     queryKey: ['settings'],
@@ -28,8 +30,8 @@ export function SettingsPage() {
       </Tabs>
       {settings.isPending ? <Typography>Loading settings.</Typography> : null}
       {settings.error ? <Alert severity="error">{settings.error.message}</Alert> : null}
-      {settings.data && tab === 'general' ? <GeneralTab settings={settings.data} canSave={Boolean(user?.isOrgAdmin)} /> : null}
-      {settings.data && tab === 'apis' ? <ApisTab settings={settings.data} canSave={Boolean(user?.isOrgAdmin)} /> : null}
+      {settings.data && tab === 'general' ? <GeneralTab settings={settings.data} canSave={canSave} /> : null}
+      {settings.data && tab === 'apis' ? <ApisTab settings={settings.data} canSave={canSave} /> : null}
     </Box>
   );
 }

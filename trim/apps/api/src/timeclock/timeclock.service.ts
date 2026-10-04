@@ -140,8 +140,8 @@ export class TimeclockService {
     siteId?: string | null,
   ): Promise<TimePunch[]> {
     const subjectId = targetUserId && targetUserId !== user.id ? targetUserId : user.id;
-    if (subjectId !== user.id && !user.isOrgAdmin) {
-      throw new ForbiddenException('Only an organization admin can open another employee’s timecard.');
+    if (subjectId !== user.id && !user.isOrgAdmin && !user.permissions.includes('timeclock.manage')) {
+      throw new ForbiddenException('You do not have permission for timeclock.manage.');
     }
     const subject = await this.prisma.user.findUnique({ where: { id: subjectId } });
     if (!subject || subject.organizationId !== user.organizationId) {
@@ -179,8 +179,8 @@ export class TimeclockService {
   }
 
   async saveRate(user: SessionUser, input: LaborRateInput): Promise<LaborRateView> {
-    if (!user.isOrgAdmin) {
-      throw new ForbiddenException('Only an organization admin can set pay rates.');
+    if (!user.isOrgAdmin && !user.permissions.includes('timeclock.manage')) {
+      throw new ForbiddenException('You do not have permission for timeclock.manage.');
     }
     const rate = await this.prisma.laborRate.upsert({
       where: {
@@ -214,8 +214,8 @@ export class TimeclockService {
     periodEnd: string,
     siteId?: string | null,
   ): Promise<PayrollReport> {
-    if (!user.isOrgAdmin) {
-      throw new ForbiddenException('Only an organization admin can open payroll.');
+    if (!user.isOrgAdmin && !user.permissions.includes('timeclock.manage')) {
+      throw new ForbiddenException('You do not have permission for timeclock.manage.');
     }
     assertDateOrder(periodStart, periodEnd);
     const timezone = await this.timezoneFor(user, siteId);

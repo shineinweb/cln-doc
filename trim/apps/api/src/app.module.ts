@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AccessModule } from './access/access.module';
 import { AdaptersModule } from './adapters/adapters.module';
+import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { CoachModule } from './coach/coach.module';
 import { CyclesModule } from './cycles/cycles.module';
@@ -23,6 +24,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     PrismaModule,
     StorageModule,
     AuthModule,
+    AuditModule,
     AccessModule,
     CyclesModule,
     FacilitiesModule,

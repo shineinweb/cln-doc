@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { formatTimestamp } from '../crops/format';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
@@ -234,7 +235,7 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
           Waiting for a manager. Nothing has been sent.
         </Typography>
       ) : null}
-      {user?.isOrgAdmin && submission.status === 'pending_review' ? (
+      {can(user, 'compliance.write') && submission.status === 'pending_review' ? (
         <Box sx={{ display: 'flex', gap: 1, mt: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <Box
             component="select"
@@ -255,7 +256,7 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
           </Button>
         </Box>
       ) : null}
-      {user?.isOrgAdmin && submission.status === 'uncertain' ? (
+      {can(user, 'compliance.write') && submission.status === 'uncertain' ? (
         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
           <Button data-testid="reconcile-landed" variant="outlined" onClick={() => reconcile.mutate('landed')} disabled={reconcile.isPending}>
             Sandbox says landed
@@ -265,7 +266,7 @@ function SubmissionCard({ submission }: { submission: SubmissionView }) {
           </Button>
         </Box>
       ) : null}
-      {user?.isOrgAdmin && submission.canQueueAgain ? (
+      {can(user, 'compliance.write') && submission.canQueueAgain ? (
         <Button data-testid="queue-again" sx={{ mt: 1 }} onClick={() => queueAgain.mutate()} disabled={queueAgain.isPending}>
           Queue again
         </Button>

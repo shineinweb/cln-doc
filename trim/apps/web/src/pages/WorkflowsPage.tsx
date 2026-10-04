@@ -17,6 +17,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 
@@ -99,7 +100,7 @@ export function WorkflowsPage() {
         testId="workflow-templates"
         render={(template) => <TemplateRow key={template.id} template={template} />}
       />
-      {user?.isOrgAdmin ? (
+      {can(user, 'workflows.manage') ? (
         <Box sx={{ display: 'grid', gap: 2, mt: 3 }}>
           <SopForm />
           <Typography sx={{ color: 'text.secondary' }}>

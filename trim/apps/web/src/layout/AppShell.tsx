@@ -20,6 +20,7 @@ import {
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { NavGlyph, type GlyphName } from '../components/Graphics';
 import { Mark } from '../components/Mark';
 import { displayFont, workbench } from '../theme';
@@ -28,28 +29,28 @@ import { TopBarClock } from './TopBarClock';
 
 const DRAWER_WIDTH = 248;
 
-const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: GlyphName }[] = [
-  { to: '/', label: 'Dashboard', end: true, glyph: 'dashboard' },
-  { to: '/access', label: 'Users', end: true, glyph: 'access' },
-  { to: '/facilities', label: 'Facility', end: true, glyph: 'facility' },
-  { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms' },
-  { to: '/workspace', label: 'Tasks', end: true, glyph: 'workspace' },
-  { to: '/timeclock', label: 'Time clock', end: true, glyph: 'timeclock' },
-  { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance' },
-  { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests' },
-  { to: '/operations', label: 'Operations', end: false, glyph: 'operations' },
-  { to: '/reports', label: 'Reports', end: false, glyph: 'reports' },
-  { to: '/coach', label: 'AI helper', end: true, glyph: 'coach' },
-  { to: '/messages', label: 'Messages', end: true, glyph: 'messages' },
-  { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual' },
-  { to: '/settings', label: 'Settings', end: true, glyph: 'settings' },
+const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: GlyphName; permissions: string[] }[] = [
+  { to: '/', label: 'Dashboard', end: true, glyph: 'dashboard', permissions: ['dashboard.read'] },
+  { to: '/access', label: 'Users', end: true, glyph: 'access', permissions: ['access.manage'] },
+  { to: '/facilities', label: 'Facility', end: true, glyph: 'facility', permissions: ['facilities.read', 'sites.read'] },
+  { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms', permissions: ['rooms.read'] },
+  { to: '/workspace', label: 'Tasks', end: true, glyph: 'workspace', permissions: ['tasks.read'] },
+  { to: '/timeclock', label: 'Time clock', end: true, glyph: 'timeclock', permissions: ['timeclock.punch'] },
+  { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance', permissions: ['compliance.read'] },
+  { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests', permissions: ['harvests.read'] },
+  { to: '/operations', label: 'Operations', end: false, glyph: 'operations', permissions: ['operations.read'] },
+  { to: '/reports', label: 'Reports', end: false, glyph: 'reports', permissions: ['reports.read'] },
+  { to: '/coach', label: 'AI helper', end: true, glyph: 'coach', permissions: ['coach.use'] },
+  { to: '/messages', label: 'Messages', end: true, glyph: 'messages', permissions: ['messages.use'] },
+  { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual', permissions: ['dashboard.read'] },
+  { to: '/settings', label: 'Settings', end: true, glyph: 'settings', permissions: ['settings.manage'] },
 ];
 
 const PHONE_NAV = [
-  { to: '/', label: 'Dashboard', glyph: 'dashboard' as const, match: (path: string) => path === '/' },
-  { to: '/rooms', label: 'Rooms', glyph: 'rooms' as const, match: (path: string) => path.startsWith('/rooms') },
-  { to: '/workspace', label: 'Tasks', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace') },
-  { to: '/harvests', label: 'Harvests', glyph: 'harvests' as const, match: (path: string) => path.startsWith('/harvests') },
+  { to: '/', label: 'Dashboard', glyph: 'dashboard' as const, match: (path: string) => path === '/', permissions: ['dashboard.read'] },
+  { to: '/rooms', label: 'Rooms', glyph: 'rooms' as const, match: (path: string) => path.startsWith('/rooms'), permissions: ['rooms.read'] },
+  { to: '/workspace', label: 'Tasks', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace'), permissions: ['tasks.read'] },
+  { to: '/harvests', label: 'Harvests', glyph: 'harvests' as const, match: (path: string) => path.startsWith('/harvests'), permissions: ['harvests.read'] },
 ];
 
 export function AppShell() {
@@ -58,7 +59,9 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const phoneValue = PHONE_NAV.find((item) => item.match(location.pathname))?.to ?? 'more';
+  const navItems = NAV.filter((item) => can(user, ...item.permissions));
+  const phoneItems = PHONE_NAV.filter((item) => can(user, ...item.permissions));
+  const phoneValue = phoneItems.find((item) => item.match(location.pathname))?.to ?? 'more';
 
   const drawer = (
     <Box
@@ -80,7 +83,7 @@ export function AppShell() {
         <Typography sx={{ mt: 1.5, color: '#D7C6F5', fontSize: 13 }}>{user?.organizationName}</Typography>
       </Box>
       <List sx={{ px: 1, flex: 1, overflowY: 'auto' }}>
-        {NAV.map((item) => (
+        {navItems.map((item) => (
           <ListItemButton
             key={item.to}
             component={NavLink}
@@ -166,7 +169,7 @@ export function AppShell() {
             </Select>
           </FormControl>
           <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
-          <TopBarClock siteId={siteId} />
+          {can(user, 'timeclock.punch') ? <TopBarClock siteId={siteId} /> : null}
           <Typography sx={{ display: { xs: 'none', lg: 'block' }, color: 'text.secondary', ml: 0.5 }}>
             {user?.name}
           </Typography>
@@ -226,7 +229,7 @@ export function AppShell() {
           pb: 'env(safe-area-inset-bottom)',
         }}
       >
-        {PHONE_NAV.map((item) => (
+        {phoneItems.map((item) => (
           <BottomNavigationAction
             key={item.to}
             label={item.label}

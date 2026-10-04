@@ -23,6 +23,8 @@ import {
 import { z } from 'zod';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { TimeclockService } from './timeclock.service';
 
@@ -32,11 +34,12 @@ const dateQuery = z
   .optional();
 
 @Controller('timeclock')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class TimeclockController {
   constructor(private readonly timeclock: TimeclockService) {}
 
   @Get('status')
+  @RequirePermissions('timeclock.punch')
   async status(
     @CurrentUser() user: SessionUser,
     @Query('siteId') siteId?: string,
@@ -45,6 +48,7 @@ export class TimeclockController {
   }
 
   @Post('punch')
+  @RequirePermissions('timeclock.punch')
   @HttpCode(200)
   async punch(
     @CurrentUser() user: SessionUser,
@@ -54,6 +58,7 @@ export class TimeclockController {
   }
 
   @Get('presence')
+  @RequirePermissions('timeclock.punch', 'timeclock.manage')
   async presence(
     @CurrentUser() user: SessionUser,
     @Query('siteId') siteId?: string,
@@ -62,6 +67,7 @@ export class TimeclockController {
   }
 
   @Get('timecard')
+  @RequirePermissions('timeclock.punch', 'timeclock.manage')
   async timecard(
     @CurrentUser() user: SessionUser,
     @Query('from') from: string,
@@ -80,11 +86,13 @@ export class TimeclockController {
   }
 
   @Get('rates')
+  @RequirePermissions('timeclock.manage')
   async rates(@CurrentUser() user: SessionUser): Promise<LaborRateView[]> {
     return z.array(laborRateViewSchema).parse(await this.timeclock.listRates(user));
   }
 
   @Post('rates')
+  @RequirePermissions('timeclock.manage')
   @HttpCode(200)
   async saveRate(
     @CurrentUser() user: SessionUser,
@@ -94,6 +102,7 @@ export class TimeclockController {
   }
 
   @Get('payroll')
+  @RequirePermissions('timeclock.manage')
   async payroll(
     @CurrentUser() user: SessionUser,
     @Query('from') from: string,
@@ -109,6 +118,7 @@ export class TimeclockController {
   }
 
   @Post('payroll/ask')
+  @RequirePermissions('timeclock.manage')
   @HttpCode(200)
   async ask(
     @CurrentUser() user: SessionUser,

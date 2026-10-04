@@ -53,9 +53,10 @@ export class SettingsService {
   }
 
   private assertManager(user: SessionUser) {
-    if (!user.isOrgAdmin) {
-      throw new ForbiddenException('Only a manager can change settings.');
+    if (user.isOrgAdmin || user.permissions.includes('settings.manage')) {
+      return;
     }
+    throw new ForbiddenException('You do not have permission for settings.manage.');
   }
 
   private async organization(user: SessionUser) {

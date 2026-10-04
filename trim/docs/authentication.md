@@ -26,7 +26,9 @@ A signed-in user belongs to one organization.
 - A site in the caller's organization without membership returns `403`.
 - Missing or invalid tokens return `401`.
 
-Permission keys (`sites.read`, `rooms.read`, and so on) are stored so later modules can check capabilities. Phase 1 site routes enforce the organization boundary and site membership, not individual permission keys.
+Permission keys (`dashboard.read`, `sites.read`, `rooms.write`, `access.manage`, and the rest of the module catalog) are enforced on API controllers through `PermissionsGuard` + `@RequirePermissions(...)`. Organization admins (`isOrgWide`) bypass key checks and receive the full catalog on `/auth/me` for UI gating. Site operators receive the day-to-day key set (not `access.manage`, `settings.manage`, `workflows.manage`, `facilities.write`, or `timeclock.manage`). Site membership still limits which facilities open after a permission check passes.
+
+Every authenticated API call (except health, login, `/auth/me`, and time-clock status polls) is written to `audit_logs` by the global audit interceptor. Sign-ins and access-directory mutations also keep their richer summaries.
 
 ## Passwords
 

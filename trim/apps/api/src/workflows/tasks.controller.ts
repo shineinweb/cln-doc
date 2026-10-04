@@ -22,25 +22,30 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { TasksService } from './tasks.service';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class TasksController {
   constructor(private readonly tasks: TasksService) {}
 
   @Get('workspace/today')
+  @RequirePermissions('tasks.read', 'dashboard.read')
   today(@CurrentUser() user: SessionUser) {
     return this.tasks.workspace(user);
   }
 
   @Get('tasks/:taskId')
+  @RequirePermissions('tasks.read')
   get(@CurrentUser() user: SessionUser, @Param('taskId') taskId: string) {
     return this.tasks.getTask(user, taskId);
   }
 
   @Post('tasks/:taskId/comments')
+  @RequirePermissions('tasks.write')
   comment(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -50,6 +55,7 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/checklist')
+  @RequirePermissions('tasks.write')
   checklist(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -59,6 +65,7 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/evidence')
+  @RequirePermissions('tasks.write')
   evidence(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -83,6 +90,7 @@ export class TasksController {
   }
 
   @Get('tasks/:taskId/attachments/:attachmentId')
+  @RequirePermissions('tasks.read')
   async download(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,

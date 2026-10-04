@@ -33,6 +33,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
 import { displayFont, workbench } from '../theme';
@@ -48,6 +49,7 @@ export function TimeClockPage() {
   const { user } = useAuth();
   const { siteId, site } = useSites();
   const queryClient = useQueryClient();
+  const canManagePayroll = can(user, 'timeclock.manage');
   const [periodStart, setPeriodStart] = useState(() => weekStartToday());
   const [periodEnd, setPeriodEnd] = useState(() => todayKey());
   const [question, setQuestion] = useState('Summarize payroll and overtime for this period');
@@ -68,7 +70,7 @@ export function TimeClockPage() {
   const rates = useQuery({
     queryKey: ['timeclock-rates'],
     queryFn: () => apiGet('/timeclock/rates', z.array(laborRateViewSchema)),
-    enabled: Boolean(user?.isOrgAdmin),
+    enabled: canManagePayroll,
   });
   const payroll = useQuery({
     queryKey: ['timeclock-payroll', periodStart, periodEnd, payrollSiteId],
@@ -77,7 +79,7 @@ export function TimeClockPage() {
         `/timeclock/payroll?from=${periodStart}&to=${periodEnd}${payrollSiteId ? `&siteId=${payrollSiteId}` : ''}`,
         payrollReportSchema,
       ),
-    enabled: Boolean(user?.isOrgAdmin && periodStart && periodEnd),
+    enabled: Boolean(canManagePayroll && periodStart && periodEnd),
   });
 
   const punch = useMutation({
@@ -170,7 +172,7 @@ export function TimeClockPage() {
         </Box>
       ) : null}
 
-      {user?.isOrgAdmin ? (
+      {canManagePayroll ? (
         <Box sx={{ mt: 4 }} data-testid="timeclock-payroll">
           <Typography variant="h2" sx={{ fontSize: 24, mb: 1 }}>
             AI payroll & accounting

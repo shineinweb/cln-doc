@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { addCalendarDays, cycleDayLabel, formatCalendarDate, inclusiveDayCount } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
@@ -86,7 +87,9 @@ export function CropCyclePage() {
         Generated tasks
       </Typography>
       <TaskList cycleId={cycle.data.id} tasks={cycle.data.tasks} />
-      {user?.isOrgAdmin ? <ReschedulePanel cycleId={cycle.data.id} startDate={cycle.data.startDate} workflow={cycle.data.workflow} /> : null}
+      {can(user, 'workflows.manage') ? (
+        <ReschedulePanel cycleId={cycle.data.id} startDate={cycle.data.startDate} workflow={cycle.data.workflow} />
+      ) : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Operating history
       </Typography>

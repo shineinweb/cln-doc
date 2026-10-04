@@ -347,7 +347,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 ## Adding a user
 
-**Who.** Avery, the organization admin. An employee sees **Users** and cannot save.
+**Who.** Avery, or anyone with `access.manage`. A site operator does not see **Users** in the navigation.
 
 **When.** A new person needs a sign-in.
 
