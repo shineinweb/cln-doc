@@ -19,12 +19,36 @@ import { displayFont, roomTypeColor, workbench } from '../theme';
 
 const STATUS_STYLE: Record<
   Exclude<FacilityBoardCell['status'], 'empty'>,
-  { color: string; bg: string; label: string }
+  { color: string; bg: string; cellBg: string; border: string; label: string }
 > = {
-  done: { color: workbench.greenhouse, bg: 'rgba(46, 230, 166, 0.12)', label: 'Done' },
-  due: { color: workbench.gold, bg: 'rgba(255, 209, 102, 0.14)', label: 'Due' },
-  overdue: { color: workbench.copper, bg: 'rgba(255, 138, 61, 0.14)', label: 'Overdue' },
-  scheduled: { color: workbench.ink, bg: 'rgba(246, 243, 255, 0.06)', label: 'Scheduled' },
+  done: {
+    color: '#B8FFE4',
+    bg: 'rgba(46, 230, 166, 0.28)',
+    cellBg: 'rgba(46, 230, 166, 0.10)',
+    border: workbench.greenhouse,
+    label: 'Done',
+  },
+  due: {
+    color: '#FFF1C2',
+    bg: 'rgba(255, 209, 102, 0.32)',
+    cellBg: 'rgba(255, 209, 102, 0.12)',
+    border: workbench.gold,
+    label: 'Due',
+  },
+  overdue: {
+    color: '#FFE0C8',
+    bg: 'rgba(255, 138, 61, 0.34)',
+    cellBg: 'rgba(255, 138, 61, 0.14)',
+    border: workbench.copper,
+    label: 'Overdue',
+  },
+  scheduled: {
+    color: workbench.ink,
+    bg: 'rgba(61, 220, 255, 0.18)',
+    cellBg: 'rgba(61, 220, 255, 0.07)',
+    border: workbench.sky,
+    label: 'Scheduled',
+  },
 };
 
 export function FacilityBoard({ siteId }: { siteId: string }) {
@@ -80,17 +104,17 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 0.6,
-                px: 1,
-                py: 0.35,
+                px: 1.1,
+                py: 0.4,
                 borderRadius: 999,
-                border: `1px solid ${workbench.line}`,
+                border: `1px solid ${STATUS_STYLE[status].border}`,
                 bgcolor: STATUS_STYLE[status].bg,
                 color: STATUS_STYLE[status].color,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 800,
               }}
             >
-              <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 'currentColor' }} />
+              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: STATUS_STYLE[status].border }} />
               {STATUS_STYLE[status].label}
             </Box>
           ))}
@@ -314,6 +338,8 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
         px: 0.5,
         py: 0.85,
         verticalAlign: 'middle',
+        bgcolor: style.cellBg,
+        boxShadow: `inset 0 -2px 0 ${style.border}`,
       }}
     >
       <Tooltip title={tip} arrow>
@@ -326,14 +352,15 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
             minWidth: 56,
             maxWidth: 96,
             px: 0.9,
-            py: 0.45,
+            py: 0.5,
             borderRadius: 1.25,
             bgcolor: style.bg,
             color: style.color,
-            border: `1px solid ${style.color}55`,
-            fontWeight: cell.status === 'due' || cell.status === 'overdue' ? 800 : 600,
+            border: `1px solid ${style.border}`,
+            fontWeight: cell.status === 'due' || cell.status === 'overdue' ? 800 : 700,
             fontSize: 12,
             lineHeight: 1.2,
+            letterSpacing: '0.01em',
             textDecoration: cell.status === 'done' && cell.dates.length > 0 ? 'line-through' : 'none',
             textDecorationThickness: 1.5,
             whiteSpace: 'nowrap',
