@@ -28,6 +28,7 @@ model Organization {
   laborRates        LaborRate[]
   metrcApiSetting   MetrcApiSetting?
   auditLogs         AuditLog[]
+  messageThreads    MessageThread[]
 
   @@map("organizations")
 }
@@ -74,6 +75,8 @@ model User {
   metrcReconciles      MetrcAttempt[]    @relation("AttemptReconciler")
   auditLogs            AuditLog[]
   roomTaskAssignments  RoomTaskAssignee[]
+  messageParticipations MessageParticipant[]
+  authoredMessages      Message[]
 
   @@index([organizationId])
   @@map("users")
@@ -202,6 +205,7 @@ model Site {
   roomStays          RoomStay[]
   recurringDuties    RecurringDuty[]
   trolmasterConnections TrolmasterConnection[]
+  messageThreads        MessageThread[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -1419,4 +1423,57 @@ model MetrcSync {
 
   @@index([siteId, succeededAt])
   @@map("metrc_syncs")
+}
+
+/// Direct messages between people, or a persisted AI assistant thread.
+model MessageThread {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  kind           String
+  /// Sorted pair key: `direct:userA:userB` or `ai:userId`.
+  pairKey        String   @map("pair_key")
+  siteId         String?  @map("site_id")
+  title          String   @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site         Site?                @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  participants MessageParticipant[]
+  messages     Message[]
+
+  @@unique([organizationId, pairKey])
+  @@index([organizationId, updatedAt])
+  @@map("message_threads")
+}
+
+model MessageParticipant {
+  id         String    @id @default(cuid())
+  threadId   String    @map("thread_id")
+  userId     String    @map("user_id")
+  lastReadAt DateTime? @map("last_read_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@map("message_participants")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  threadId   String   @map("thread_id")
+  authorId   String?  @map("author_id")
+  authorName String   @map("author_name") @db.VarChar(191)
+  body       String   @db.Text
+  kind       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([threadId, createdAt])
+  @@map("messages")
 }

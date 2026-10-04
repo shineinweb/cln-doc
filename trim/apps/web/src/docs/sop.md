@@ -242,8 +242,24 @@ The comparison page has no link to a single-facility report. That page is **Faci
 3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Workspace**.
 4. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
 5. Open **Reports** when you need yield, labor, and cost figures.
+6. Open **Messages** when you need a saved AI chat or a direct message with someone in the organization. The address is `/messages`.
 
 **Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
+
+## Internal messages
+
+**Who.** Anyone signed in. Avery, Blake, and Casey can message people in Harbor & Hill Cultivation.
+
+**When.** You need a direct message inside Trim, or a saved AI chatbot thread that remembers earlier questions.
+
+**Steps.**
+
+1. Open **Messages**. The address is `/messages`.
+2. Choose **Message a person**, then pick a name from the organization directory.
+3. Write the message and choose **Send**. The other person sees the same conversation.
+4. Choose **Chat with AI** for a saved Trim AI thread. Ask about procedures, generate tasks, or assign training. The assistant uses the facility in the top bar.
+
+**Done.** You can name who received the message and whether the AI assistant replied. Trim does not send email or SMS.
 
 ## Recording irrigation and feed
 

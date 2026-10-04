@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -272,6 +272,14 @@ Yield, labor, and cost figures stay on **Reports**. The AI helper does not repea
 **Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Trim does not call live Metrc, and it does not send email or SMS.
 
 A person who cannot open the facility does not see that facility’s AI helper.
+
+## Messages
+
+**Messages** sits in the left navigation after AI helper. The address is `/messages`. It opens for every signed-in user and lists people in the same organization.
+
+**Message a person** opens a direct conversation with someone else in the organization. Both people see the same thread. Messages stay inside Trim; Trim does not send email or SMS.
+
+**Chat with AI** opens a saved AI assistant thread for your account. The assistant uses the facility in the top bar the same way **AI helper** does: it can quote stored procedures, generate room tasks, and assign worker training. Reopening **Chat with AI** returns the same saved conversation.
 
 ## Operations
 

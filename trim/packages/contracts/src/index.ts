@@ -1369,6 +1369,57 @@ export const coachChatResponseSchema = z.object({
   suggestions: z.array(z.string()),
 });
 
+export const messageDirectoryPersonSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+});
+
+export const messageDirectorySchema = z.object({
+  people: z.array(messageDirectoryPersonSchema),
+});
+
+export const messageViewSchema = z.object({
+  id: z.string(),
+  authorId: z.string().nullable(),
+  authorName: z.string(),
+  body: z.string(),
+  kind: z.enum(['user', 'assistant', 'system']),
+  createdAt: z.string(),
+});
+
+export const messageThreadSummarySchema = z.object({
+  id: z.string(),
+  kind: z.enum(['direct', 'ai']),
+  title: z.string(),
+  siteId: z.string().nullable(),
+  peerUserId: z.string().nullable(),
+  peerName: z.string().nullable(),
+  lastMessage: z.string().nullable(),
+  lastMessageAt: z.string().nullable(),
+  updatedAt: z.string(),
+});
+
+export const messageThreadDetailSchema = messageThreadSummarySchema.extend({
+  messages: z.array(messageViewSchema),
+});
+
+export const messageThreadListSchema = z.object({
+  threads: z.array(messageThreadSummarySchema),
+});
+
+export const openDirectThreadSchema = z.object({
+  peerUserId: z.string().trim().min(1),
+});
+
+export const openAiThreadSchema = z.object({
+  siteId: z.string().trim().min(1).optional().nullable(),
+});
+
+export const sendMessageInputSchema = z.object({
+  body: z.string().trim().min(1).max(4000),
+});
+
 const dateKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const optionalRoomSchema = z.string().trim().min(1).optional().nullable();
 
@@ -1606,6 +1657,15 @@ export type CoachAnswer = z.infer<typeof coachAnswerSchema>;
 export type CoachChatRequest = z.infer<typeof coachChatRequestSchema>;
 export type CoachChatResponse = z.infer<typeof coachChatResponseSchema>;
 export type CoachChatAction = z.infer<typeof coachChatActionSchema>;
+export type MessageDirectoryPerson = z.infer<typeof messageDirectoryPersonSchema>;
+export type MessageDirectory = z.infer<typeof messageDirectorySchema>;
+export type MessageView = z.infer<typeof messageViewSchema>;
+export type MessageThreadSummary = z.infer<typeof messageThreadSummarySchema>;
+export type MessageThreadDetail = z.infer<typeof messageThreadDetailSchema>;
+export type MessageThreadList = z.infer<typeof messageThreadListSchema>;
+export type OpenDirectThread = z.infer<typeof openDirectThreadSchema>;
+export type OpenAiThread = z.infer<typeof openAiThreadSchema>;
+export type SendMessageInput = z.infer<typeof sendMessageInputSchema>;
 export type RoomTask = z.infer<typeof roomTaskSchema>;
 export type RoomAlert = z.infer<typeof roomAlertSchema>;
 export type EnvironmentalReading = z.infer<typeof environmentalReadingSchema>;

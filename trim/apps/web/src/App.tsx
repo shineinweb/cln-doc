@@ -14,6 +14,7 @@ import { HarvestPage } from './pages/HarvestPage';
 import { HarvestsPage } from './pages/HarvestsPage';
 import { LicenseInventoryPage } from './pages/LicenseInventoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { MessagesPage } from './pages/MessagesPage';
 import { OperationsPage } from './pages/OperationsPage';
 import { PackagePage } from './pages/PackagePage';
 import { PlantPage } from './pages/PlantPage';
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: 'operations/:area', element: <OperationsPage /> },
       { path: 'reports', element: <ReportsPage /> },
       { path: 'coach', element: <SiteCoachPage /> },
+      { path: 'messages', element: <MessagesPage /> },
       { path: 'user-manual', element: <UserManualPage /> },
       { path: 'sop', element: <SopPage /> },
       { path: 'settings', element: <SettingsPage /> },

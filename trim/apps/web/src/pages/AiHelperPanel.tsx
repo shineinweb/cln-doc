@@ -69,7 +69,12 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
       </Typography>
       <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
         Chat to generate tasks, train workers, or quote a stored procedure. {helper.sops.length} procedures,{' '}
-        {helper.people.length} people, and {helper.rooms.length} rooms are in scope for this facility.
+        {helper.people.length} people, and {helper.rooms.length} rooms are in scope for this facility. Saved chats with
+        people and Trim AI also live under{' '}
+        <Button size="small" variant="text" component={RouterLink} to="/messages" sx={{ px: 0.5, minWidth: 0, verticalAlign: 'baseline' }}>
+          Messages
+        </Button>
+        .
       </Typography>
       <Card
         sx={{

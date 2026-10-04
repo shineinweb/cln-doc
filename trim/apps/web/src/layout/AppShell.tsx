@@ -39,6 +39,7 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/operations', label: 'Operations', end: false, glyph: 'operations' },
   { to: '/reports', label: 'Reports', end: false, glyph: 'reports' },
   { to: '/coach', label: 'AI helper', end: true, glyph: 'coach' },
+  { to: '/messages', label: 'Messages', end: true, glyph: 'messages' },
   { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual' },
   { to: '/settings', label: 'Settings', end: true, glyph: 'settings' },
 ];
