@@ -1461,7 +1461,7 @@ export const facilityBoardCellSchema = z.object({
   dates: z.array(z.string()),
   status: z.enum(['empty', 'scheduled', 'due', 'done', 'overdue']),
   detail: z.string().nullable(),
-  source: z.enum(['cycle', 'defoliation', 'harvest', 'cycle_task', 'room_task', 'duty']).nullable(),
+  source: z.enum(['cycle', 'defoliation', 'harvest', 'cycle_task', 'room_task', 'duty', 'schedule']).nullable(),
 });
 
 export const facilityBoardRowSchema = z.object({

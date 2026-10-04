@@ -133,7 +133,37 @@ describe('facility board', () => {
       detail: 'Wash water filters',
       status: 'scheduled',
     });
-    expect(board.body.notes.length).toBeGreaterThan(0);
+    // Built-in schedules when no matching task exists.
+    expect(byKey.sulfur).toMatchObject({
+      dates: ['2026-10-14'],
+      source: 'schedule',
+      detail: 'Sulfur · day 14',
+    });
+    expect(byKey.side_net).toMatchObject({
+      dates: ['2026-11-04'],
+      source: 'schedule',
+      detail: 'Side net · day 35',
+    });
+    expect(byKey.filters_ac).toMatchObject({
+      dates: ['2026-11-04'],
+      source: 'schedule',
+      detail: 'AC / dehu filters · day 35',
+    });
+    expect(byKey.ls).toMatchObject({
+      dates: ['2026-11-20'],
+      source: 'schedule',
+      detail: 'LS · 11 days before harvest',
+    });
+    expect(byKey.garden_clean).toMatchObject({
+      source: 'schedule',
+      detail: 'Garden clean · every 30 days',
+    });
+    expect(byKey.garden_clean.dates[0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(byKey.fans_ac).toMatchObject({
+      source: 'schedule',
+      detail: 'Fans / ACs · every Friday',
+    });
+    expect(board.body.notes.some((note: string) => note.includes('Sulfur on crop day 14'))).toBe(true);
   });
 
   async function login(email: string, password: string): Promise<string> {

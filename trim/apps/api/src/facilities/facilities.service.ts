@@ -15,10 +15,11 @@ import type {
   RoomDetail,
   SessionUser,
   Site,
+  Weekday,
   Zone,
   ZoneInput,
 } from '@trim/contracts';
-import { addCalendarDays, calendarDateInTimeZone, dateKeyFromDbDate } from '../cycles/cycle-day';
+import { addCalendarDays, calendarDateInTimeZone, dateKeyFromDbDate, zonedDateTimeToUtc } from '../cycles/cycle-day';
 import { activeCycleInclude, CyclesService } from '../cycles/cycles.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomTasksService } from './room-tasks.service';
@@ -397,6 +398,7 @@ export class FacilitiesService {
         boardCellForColumn({
           column,
           today,
+          timeZone: site.timezone,
           startKey,
           cycle,
           defoliations: room.defoliations,
@@ -423,13 +425,14 @@ export class FacilitiesService {
       timezone: site.timezone,
       today,
       statement:
-        'Facility board: rooms across the top milestones — crop start, defoliation days, harvest, trim, and matching room chores or Operations duties.',
+        'Facility board: rooms across milestones — crop start, defoliation, harvest, and standard room schedules (sulfur, nets, filters, garden clean, LS, fans).',
       columns,
       rows,
       notes: [
+        'Sulfur on crop day 14. Side net and AC/dehu filters on crop day 35.',
+        'LS is 11 days before expected harvest. Garden clean every 30 days from crop start.',
+        'Wash water filters every Tuesday and Friday. Check all fans and ACs every Friday.',
         'Anytime work happens in a flower room, check the drippers.',
-        'Check fans, ACs, and dehumidifiers every Friday.',
-        'Wash water filters every Tuesday and Friday.',
       ],
     };
   }
@@ -604,6 +607,7 @@ type BoardDuty = {
 function boardCellForColumn(input: {
   column: FacilityBoardColumn;
   today: string;
+  timeZone: string;
   startKey: string | null;
   cycle: BoardCycle | null;
   defoliations: Array<{ dayNumber: number }>;
@@ -612,7 +616,7 @@ function boardCellForColumn(input: {
   roomTasks: BoardTask[];
   duties: BoardDuty[];
 }): FacilityBoardCell {
-  const { column, today, startKey, cycle, defoliations, roomType } = input;
+  const { column, today, timeZone, startKey, cycle, defoliations, roomType } = input;
 
   if (column.kind === 'start') {
     if (!startKey) {
@@ -745,7 +749,157 @@ function boardCellForColumn(input: {
     });
   }
 
-  return emptyCell(column.key);
+  return scheduledChoreCell({
+    columnKey: column.key,
+    today,
+    timeZone,
+    startKey,
+    cycle,
+  });
+}
+
+/** Built-in cadence when no matching task/duty exists. */
+function scheduledChoreCell(input: {
+  columnKey: string;
+  today: string;
+  timeZone: string;
+  startKey: string | null;
+  cycle: BoardCycle | null;
+}): FacilityBoardCell {
+  const { columnKey, today, timeZone, startKey, cycle } = input;
+
+  if (columnKey === 'sulfur') {
+    return cycleDayMilestoneCell({ columnKey, startKey, today, dayNumber: 14, detail: 'Sulfur · day 14' });
+  }
+  if (columnKey === 'side_net') {
+    return cycleDayMilestoneCell({ columnKey, startKey, today, dayNumber: 35, detail: 'Side net · day 35' });
+  }
+  if (columnKey === 'filters_ac') {
+    return cycleDayMilestoneCell({
+      columnKey,
+      startKey,
+      today,
+      dayNumber: 35,
+      detail: 'AC / dehu filters · day 35',
+    });
+  }
+  if (columnKey === 'garden_clean') {
+    if (!startKey) {
+      return emptyCell(columnKey);
+    }
+    const date = nextIntervalOnOrAfter(startKey, today, 30);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: false,
+      detail: 'Garden clean · every 30 days',
+      source: 'schedule',
+    });
+  }
+  if (columnKey === 'ls') {
+    if (!cycle) {
+      return emptyCell(columnKey);
+    }
+    const harvestKey = cycle.harvestDate
+      ? dateKeyFromDbDate(cycle.harvestDate)
+      : dateKeyFromDbDate(cycle.expectedHarvestDate);
+    const date = addCalendarDays(harvestKey, -11);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: Boolean(cycle.harvestDate) || date < today,
+      detail: 'LS · 11 days before harvest',
+      source: 'schedule',
+    });
+  }
+  if (columnKey === 'water_filters') {
+    const date = nextWeekdaysOnOrAfter(today, ['tue', 'fri'], timeZone);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: false,
+      detail: 'Water filters · Tue & Fri',
+      source: 'schedule',
+    });
+  }
+  if (columnKey === 'fans_ac') {
+    const date = nextWeekdaysOnOrAfter(today, ['fri'], timeZone);
+    return datedCell({
+      columnKey,
+      dates: [date],
+      today,
+      done: false,
+      detail: 'Fans / ACs · every Friday',
+      source: 'schedule',
+    });
+  }
+
+  return emptyCell(columnKey);
+}
+
+function cycleDayMilestoneCell(input: {
+  columnKey: string;
+  startKey: string | null;
+  today: string;
+  dayNumber: number;
+  detail: string;
+}): FacilityBoardCell {
+  if (!input.startKey) {
+    return emptyCell(input.columnKey);
+  }
+  const date = addCalendarDays(input.startKey, input.dayNumber - 1);
+  return datedCell({
+    columnKey: input.columnKey,
+    dates: [date],
+    today: input.today,
+    done: date < input.today,
+    detail: input.detail,
+    source: 'schedule',
+  });
+}
+
+/** Next occurrence of a cycle-day interval (day 30, 60, 90, …) on or after today. */
+function nextIntervalOnOrAfter(startKey: string, today: string, intervalDays: number): string {
+  for (let n = 1; n < 400; n += 1) {
+    const date = addCalendarDays(startKey, intervalDays * n - 1);
+    if (date >= today) {
+      return date;
+    }
+  }
+  return today;
+}
+
+function nextWeekdaysOnOrAfter(today: string, days: Weekday[], timeZone: string): string {
+  const wanted = new Set(normalizeWeekdays(days));
+  for (let offset = 0; offset < 8; offset += 1) {
+    const key = addCalendarDays(today, offset);
+    if (wanted.has(weekdayOfDateKey(key, timeZone))) {
+      return key;
+    }
+  }
+  return today;
+}
+
+function weekdayOfDateKey(dateKey: string, timeZone: string): Weekday {
+  const instant = zonedDateTimeToUtc(dateKey, '12:00', timeZone);
+  const short = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' })
+    .formatToParts(instant)
+    .find((part) => part.type === 'weekday')
+    ?.value?.toLowerCase()
+    .slice(0, 3);
+  const map: Record<string, Weekday> = {
+    sun: 'sun',
+    mon: 'mon',
+    tue: 'tue',
+    wed: 'wed',
+    thu: 'thu',
+    fri: 'fri',
+    sat: 'sat',
+  };
+  return map[short ?? ''] ?? 'mon';
 }
 
 function emptyCell(columnKey: string): FacilityBoardCell {
