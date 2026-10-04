@@ -1,6 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import type { SessionUser } from '@trim/contracts';
-import { Observable, from, of, switchMap, map, catchError, throwError } from 'rxjs';
+import { Observable, from, of, switchMap, map } from 'rxjs';
 import type { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { AuditService } from './audit.service';
 
@@ -35,21 +35,6 @@ export class AuditInterceptor implements NestInterceptor {
             summary: `${user.name} ${method} ${path}`,
           }),
         ).pipe(map(() => value));
-      }),
-      catchError((error) => {
-        if (!shouldLog || !user) {
-          return throwError(() => error);
-        }
-        const status = typeof error?.status === 'number' ? error.status : typeof error?.getStatus === 'function' ? error.getStatus() : null;
-        const statusPart = status ? ` → ${status}` : ' → failed';
-        return from(
-          this.audit.record(user, {
-            action: actionLabel(method),
-            entityType: entityTypeFromPath(path),
-            entityId: entityIdFromPath(path),
-            summary: `${user.name} ${method} ${path}${statusPart}`.slice(0, 500),
-          }),
-        ).pipe(switchMap(() => throwError(() => error)));
       }),
     );
   }

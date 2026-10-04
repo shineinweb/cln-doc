@@ -42,7 +42,7 @@ describe('TrolMaster credentials', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ roomId: fixture.roomBId, controllerId: 'other-controller', apiCredential: secret });
     expect(denied.status).toBe(403);
-    expect(denied.body.message).toBe('You do not have access to this site');
+    expect(denied.body.message).toBe('You do not have permission for settings.manage.');
 
     const wrongRoom = await request(app.getHttpServer())
       .post(`/sites/${fixture.siteAId}/trolmaster`)

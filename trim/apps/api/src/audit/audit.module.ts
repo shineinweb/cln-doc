@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditExceptionFilter } from './audit.exception-filter';
 import { AuditInterceptor } from './audit.interceptor';
 import { AuditService } from './audit.service';
 
@@ -10,6 +11,10 @@ import { AuditService } from './audit.service';
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AuditExceptionFilter,
     },
   ],
   exports: [AuditService],

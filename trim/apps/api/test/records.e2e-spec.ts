@@ -132,22 +132,22 @@ describe('record changes', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ name: 'Taken' })
       .expect(403);
-    expect(deniedEdit.body.message).toBe('You do not have access to this site');
+    expect(deniedEdit.body.message).toBe('You do not have permission for facilities.write.');
 
     const denied = await request(app.getHttpServer())
       .delete(`/sites/${fixture.siteBId}`)
       .set('Authorization', `Bearer ${tokenA}`)
       .expect(403);
-    expect(denied.body.message).toBe('You do not have access to this site');
+    expect(denied.body.message).toBe('You do not have permission for facilities.write.');
 
-    const addedByOperator = await request(app.getHttpServer())
+    const deniedCreate = await request(app.getHttpServer())
       .post('/sites')
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ name: 'Operator Shed', city: 'Astoria', region: 'OR' })
-      .expect(201);
+      .expect(403);
+    expect(deniedCreate.body.message).toBe('You do not have permission for facilities.write.');
     const operatorList = await request(app.getHttpServer()).get('/sites').set('Authorization', `Bearer ${tokenA}`).expect(200);
     const operatorIds = operatorList.body.map((site: { id: string }) => site.id);
-    expect(operatorIds).toContain(addedByOperator.body.id);
     expect(operatorIds).not.toContain(fixture.siteBId);
 
     await request(app.getHttpServer())
