@@ -322,8 +322,9 @@ export class FacilitiesService {
     const site = await this.prisma.site.findUnique({ where: { id: siteId } });
     assertSiteAccess(user, site);
     const today = calendarDateInTimeZone(new Date(), site.timezone);
+    // Flower / veg / mother / clone rows only — dry rooms stay off the milestone board.
     const rooms = await this.prisma.room.findMany({
-      where: { siteId: site.id },
+      where: { siteId: site.id, roomType: { not: 'dry' } },
       include: {
         defoliations: { orderBy: { dayNumber: 'asc' } },
         cycles: {

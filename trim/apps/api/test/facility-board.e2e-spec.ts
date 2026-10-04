@@ -58,6 +58,14 @@ describe('facility board', () => {
         assigneeLabel: 'Floor',
       },
     });
+    await prisma.room.create({
+      data: {
+        siteId: fixture.siteAId,
+        name: 'Dry staging',
+        code: 'DRY-BOARD',
+        roomType: 'dry',
+      },
+    });
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     await app.init();
@@ -70,6 +78,7 @@ describe('facility board', () => {
     await prisma.roomTask.deleteMany({ where: { roomId: fixture.roomAId } });
     await prisma.roomDefoliation.deleteMany({ where: { roomId: fixture.roomAId } });
     await prisma.cropCycle.deleteMany({ where: { roomId: fixture.roomAId, name: 'Board crop' } });
+    await prisma.room.deleteMany({ where: { siteId: fixture.siteAId, code: 'DRY-BOARD' } });
     await prisma.$disconnect();
     if (app) {
       await app.close();
@@ -100,6 +109,9 @@ describe('facility board', () => {
         'water_filters',
       ]),
     );
+
+    expect(board.body.rows.every((item: { roomType: string }) => item.roomType !== 'dry')).toBe(true);
+    expect(board.body.rows.some((item: { roomName: string }) => item.roomName === 'Dry staging')).toBe(false);
 
     const row = board.body.rows.find((item: { roomId: string }) => item.roomId === fixture.roomAId);
     expect(row).toBeTruthy();
