@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Skeleton,
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
 } from '@mui/material';
 import { facilityBoardSchema, type FacilityBoardCell, type FacilityBoardColumn } from '@trim/contracts';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { apiGet } from '../api/client';
 import { displayFont, roomTypeColor, workbench } from '../theme';
@@ -52,10 +54,29 @@ const STATUS_STYLE: Record<
 };
 
 export function FacilityBoard({ siteId }: { siteId: string }) {
+  const [fullscreen, setFullscreen] = useState(false);
   const board = useQuery({
     queryKey: ['facility-board', siteId],
     queryFn: () => apiGet(`/sites/${siteId}/board`, facilityBoardSchema),
   });
+
+  useEffect(() => {
+    if (!fullscreen) {
+      return;
+    }
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [fullscreen]);
 
   if (board.isPending) {
     return <Skeleton variant="rounded" height={280} sx={{ mb: 3 }} data-testid="facility-board-loading" />;
@@ -73,7 +94,26 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
 
   const data = board.data;
   return (
-    <Box data-testid="facility-board" sx={{ mb: 4 }}>
+    <Box
+      data-testid="facility-board"
+      data-fullscreen={fullscreen ? 'true' : 'false'}
+      sx={
+        fullscreen
+          ? {
+              position: 'fixed',
+              inset: 0,
+              zIndex: (theme) => theme.zIndex.modal + 2,
+              bgcolor: workbench.canvas,
+              mb: 0,
+              p: { xs: 1.5, md: 2.5 },
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              overflow: 'hidden',
+            }
+          : { mb: 4 }
+      }
+    >
       <Box
         sx={{
           display: 'flex',
@@ -82,42 +122,53 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
           justifyContent: 'space-between',
           gap: 1.5,
           mb: 1.5,
+          flexShrink: 0,
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h2" sx={{ fontSize: 26, mb: 0.35 }}>
+          <Typography variant="h2" sx={{ fontSize: fullscreen ? 28 : 26, mb: 0.35 }}>
             Facility board
           </Typography>
           <Typography sx={{ color: 'text.secondary', fontSize: 14, maxWidth: 640 }}>
             {data.siteName}: rooms × milestones for the selected facility. Scroll sideways for every chore column.
           </Typography>
         </Box>
-        <Box
-          sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
-          data-testid="facility-board-legend"
-          aria-label="Status legend"
-        >
-          {(Object.keys(STATUS_STYLE) as Array<keyof typeof STATUS_STYLE>).map((status) => (
-            <Box
-              key={status}
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.6,
-                px: 1.1,
-                py: 0.4,
-                borderRadius: 999,
-                border: `1px solid ${STATUS_STYLE[status].border}`,
-                bgcolor: STATUS_STYLE[status].bg,
-                color: STATUS_STYLE[status].color,
-                fontSize: 12,
-                fontWeight: 800,
-              }}
-            >
-              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: STATUS_STYLE[status].border }} />
-              {STATUS_STYLE[status].label}
-            </Box>
-          ))}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
+            data-testid="facility-board-legend"
+            aria-label="Status legend"
+          >
+            {(Object.keys(STATUS_STYLE) as Array<keyof typeof STATUS_STYLE>).map((status) => (
+              <Box
+                key={status}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.6,
+                  px: 1.1,
+                  py: 0.4,
+                  borderRadius: 999,
+                  border: `1px solid ${STATUS_STYLE[status].border}`,
+                  bgcolor: STATUS_STYLE[status].bg,
+                  color: STATUS_STYLE[status].color,
+                  fontSize: 12,
+                  fontWeight: 800,
+                }}
+              >
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: STATUS_STYLE[status].border }} />
+                {STATUS_STYLE[status].label}
+              </Box>
+            ))}
+          </Box>
+          <Button
+            variant={fullscreen ? 'outlined' : 'contained'}
+            size="small"
+            data-testid="facility-board-fullscreen"
+            onClick={() => setFullscreen((open) => !open)}
+          >
+            {fullscreen ? 'Exit full screen' : 'Full screen'}
+          </Button>
         </Box>
       </Box>
 
@@ -131,14 +182,21 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
             bgcolor: workbench.paper,
             overflow: 'hidden',
             maxWidth: '100%',
+            flex: fullscreen ? 1 : undefined,
+            minHeight: fullscreen ? 0 : undefined,
+            display: fullscreen ? 'flex' : undefined,
+            flexDirection: fullscreen ? 'column' : undefined,
           }}
         >
           <TableContainer
             data-testid="facility-board-scroll"
             sx={{
               overflowX: 'auto',
+              overflowY: fullscreen ? 'auto' : undefined,
               maxWidth: '100%',
               width: '100%',
+              flex: fullscreen ? 1 : undefined,
+              minHeight: fullscreen ? 0 : undefined,
               overscrollBehaviorX: 'contain',
               WebkitOverflowScrolling: 'touch',
               touchAction: 'pan-x pan-y',
