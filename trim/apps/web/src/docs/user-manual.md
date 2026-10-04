@@ -131,9 +131,9 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for every signed-in action across Serenity modules (opens, creates, changes, deletes). High-frequency status polls such as `/auth/me` and time-clock status are skipped so the log stays readable. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
 
-**Roles** lists each role with its description and permissions. Use **Search roles** to filter the list, and click a column header to sort. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
+**Roles** lists each role with its description and permissions. Use **Search roles** to filter the list, and click a column header to sort. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds. For floor staff who only finish assigned work, grant `tasks.read` and `tasks.complete` without `tasks.write` so they can mark tasks finished but cannot create or edit them.
 
-**Permissions** lists each module key and description (`dashboard.read`, `rooms.write`, `timeclock.punch`, and the rest of the catalog). Use **Search permissions** to filter the list, and click a column header to sort. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
+**Permissions** lists each module key and description (`dashboard.read`, `rooms.write`, `tasks.complete`, `timeclock.punch`, and the rest of the catalog). `tasks.write` is create or edit tasks. `tasks.complete` is mark tasks finished. Use **Search permissions** to filter the list, and click a column header to sort. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
 
 A person without `access.manage` does not open **Users**. A custom role can receive individual module keys without organization-admin rights.
 

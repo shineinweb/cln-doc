@@ -146,6 +146,7 @@ function Section({
 function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
   const { user } = useAuth();
   const canWrite = can(user, 'tasks.write');
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['workspace'] });
   const save = useMutation({
@@ -191,8 +192,10 @@ function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
           </Box>
         }
         onDelete={() => remove.mutate()}
+        allowEdit={canWrite}
+        allowDelete={canWrite}
         extraActions={
-          canWrite && task.status === 'open' ? (
+          canComplete && task.status === 'open' ? (
             <Button
               size="small"
               variant="contained"
@@ -216,7 +219,7 @@ function WorkspaceRow({ task }: { task: CycleTaskDetail }) {
 
 function RoomTaskRow({ task }: { task: WorkspaceRoomTask }) {
   const { user } = useAuth();
-  const canWrite = can(user, 'tasks.write');
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const finish = useMutation({
     mutationFn: () => apiSend(`/rooms/${task.roomId}/tasks/${task.id}/complete`, managedTaskSchema, {}),
@@ -246,7 +249,7 @@ function RoomTaskRow({ task }: { task: WorkspaceRoomTask }) {
             <Typography sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{task.description}</Typography>
           ) : null}
         </Box>
-        {canWrite && task.kind === 'one_time' ? (
+        {canComplete && task.kind === 'one_time' ? (
           <Button
             size="small"
             variant="contained"

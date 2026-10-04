@@ -3,10 +3,14 @@ import { cycleTaskDetailSchema, type CycleTaskDetail } from '@trim/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { apiSend, apiUpload } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { formatCalendarDate } from '../crops/format';
 import { TOKEN_KEY } from '../auth/storage';
 
 export function AssignmentCard({ task }: { task: CycleTaskDetail }) {
+  const { user } = useAuth();
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const [comment, setComment] = useState('');
   const [notes, setNotes] = useState(task.notes ?? '');
@@ -85,7 +89,7 @@ export function AssignmentCard({ task }: { task: CycleTaskDetail }) {
           {task.requiresMeasurement ? <Chip size="small" label="Measurement" /> : null}
           {task.requiresSignOff ? <Chip size="small" label="Sign-off" /> : null}
         </Box>
-        {open ? (
+        {open && canComplete ? (
           <Button
             variant="contained"
             color="primary"
@@ -113,6 +117,7 @@ export function AssignmentCard({ task }: { task: CycleTaskDetail }) {
             control={
               <Checkbox
                 checked={item.checked}
+                disabled={!canComplete}
                 onChange={(event) => toggle.mutate({ itemId: item.id, checked: event.target.checked })}
               />
             }
@@ -124,62 +129,84 @@ export function AssignmentCard({ task }: { task: CycleTaskDetail }) {
             {error}
           </Alert>
         ) : null}
-        <TextField
-          label="Notes"
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          fullWidth
-          multiline
-          minRows={2}
-          sx={{ mt: 2 }}
-        />
-        <Button sx={{ mt: 1 }} onClick={() => saveNotes.mutate()} disabled={saveNotes.isPending}>
-          Save notes
-        </Button>
-        <Box sx={{ mt: 2 }}>
-          <Button component="label" variant="outlined">
-            Add photo
-            <input
-              hidden
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              data-testid="task-photo"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) {
-                  upload.mutate(file);
-                }
-              }}
+        {canComplete ? (
+          <>
+            <TextField
+              label="Notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              fullWidth
+              multiline
+              minRows={2}
+              sx={{ mt: 2 }}
             />
-          </Button>
-          {task.attachments.map((file) => (
-            <Button key={file.id} sx={{ ml: 1 }} onClick={() => downloadAttachment(task.id, file.id, file.fileName)}>
-              {file.fileName}
+            <Button sx={{ mt: 1 }} onClick={() => saveNotes.mutate()} disabled={saveNotes.isPending}>
+              Save notes
             </Button>
-          ))}
-        </Box>
-        <Box sx={{ mt: 3 }}>
-          <Typography sx={{ fontWeight: 600, mb: 1 }}>Comments</Typography>
-          {task.comments.length === 0 ? (
-            <Typography sx={{ color: 'text.secondary' }}>No comments yet.</Typography>
-          ) : (
-            task.comments.map((entry) => (
-              <Typography key={entry.id} sx={{ mb: 1 }}>
-                {entry.authorName}: {entry.body}
-              </Typography>
-            ))
-          )}
-          <TextField
-            label="Comment"
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-            fullWidth
-            sx={{ mt: 1 }}
-          />
-          <Button sx={{ mt: 1 }} variant="contained" disabled={!comment.trim() || sendComment.isPending} onClick={() => sendComment.mutate()}>
-            Add comment
-          </Button>
-        </Box>
+            <Box sx={{ mt: 2 }}>
+              <Button component="label" variant="outlined">
+                Add photo
+                <input
+                  hidden
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  data-testid="task-photo"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      upload.mutate(file);
+                    }
+                  }}
+                />
+              </Button>
+              {task.attachments.map((file) => (
+                <Button key={file.id} sx={{ ml: 1 }} onClick={() => downloadAttachment(task.id, file.id, file.fileName)}>
+                  {file.fileName}
+                </Button>
+              ))}
+            </Box>
+            <Box sx={{ mt: 3 }}>
+              <Typography sx={{ fontWeight: 600, mb: 1 }}>Comments</Typography>
+              {task.comments.length === 0 ? (
+                <Typography sx={{ color: 'text.secondary' }}>No comments yet.</Typography>
+              ) : (
+                task.comments.map((entry) => (
+                  <Typography key={entry.id} sx={{ mb: 1 }}>
+                    {entry.authorName}: {entry.body}
+                  </Typography>
+                ))
+              )}
+              <TextField
+                label="Comment"
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                fullWidth
+                sx={{ mt: 1 }}
+              />
+              <Button sx={{ mt: 1 }} variant="contained" disabled={!comment.trim() || sendComment.isPending} onClick={() => sendComment.mutate()}>
+                Add comment
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Box sx={{ mt: 2 }}>
+            {task.attachments.map((file) => (
+              <Button key={file.id} sx={{ mr: 1 }} onClick={() => downloadAttachment(task.id, file.id, file.fileName)}>
+                {file.fileName}
+              </Button>
+            ))}
+            {task.comments.length > 0 ? (
+              <Box sx={{ mt: 2 }}>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>Comments</Typography>
+                {task.comments.map((entry) => (
+                  <Typography key={entry.id} sx={{ mb: 1 }}>
+                    {entry.authorName}: {entry.body}
+                  </Typography>
+                ))}
+              </Box>
+            ) : null}
+          </Box>
+        )}
       </CardContent>
     </Card>
   );

@@ -45,13 +45,13 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/complete')
-  @RequirePermissions('tasks.write')
+  @RequirePermissions('tasks.complete', 'tasks.write')
   complete(@CurrentUser() user: SessionUser, @Param('taskId') taskId: string) {
     return this.tasks.complete(user, taskId);
   }
 
   @Post('tasks/:taskId/comments')
-  @RequirePermissions('tasks.write')
+  @RequirePermissions('tasks.complete', 'tasks.write')
   comment(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -61,7 +61,7 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/checklist')
-  @RequirePermissions('tasks.write')
+  @RequirePermissions('tasks.complete', 'tasks.write')
   checklist(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -71,7 +71,7 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/evidence')
-  @RequirePermissions('tasks.write')
+  @RequirePermissions('tasks.complete', 'tasks.write')
   evidence(
     @CurrentUser() user: SessionUser,
     @Param('taskId') taskId: string,
@@ -81,7 +81,7 @@ export class TasksController {
   }
 
   @Post('tasks/:taskId/attachments')
-  @RequirePermissions('tasks.write')
+  @RequirePermissions('tasks.complete', 'tasks.write')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),

@@ -79,7 +79,7 @@ export class RoomsController {
   }
 
   @Post(':roomId/tasks/:taskId/complete')
-  @RequirePermissions('tasks.write')
+  @RequirePermissions('tasks.complete', 'tasks.write')
   async completeTask(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,

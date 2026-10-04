@@ -117,6 +117,7 @@ function AddTaskForm({ roomId, siteId }: { roomId: string; siteId: string }) {
 function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: string; task: ManagedTask }) {
   const { user } = useAuth();
   const canWrite = can(user, 'tasks.write');
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +142,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
   });
   return (
     <Box>
-      {canWrite && task.kind === 'one_time' ? (
+      {canComplete && task.kind === 'one_time' ? (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
           <Button
             size="small"
@@ -204,6 +205,7 @@ function ManagedTaskRow({ roomId, siteId, task }: { roomId: string; siteId: stri
 function TaskDueRow({ roomId, siteId, task }: { roomId: string; siteId: string; task: DueTask }) {
   const { user } = useAuth();
   const canWrite = can(user, 'tasks.write');
+  const canComplete = can(user, 'tasks.complete', 'tasks.write');
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['room', roomId] });
   const [assigneeId, setAssigneeId] = useState(task.assigneeId ?? '');
@@ -225,7 +227,7 @@ function TaskDueRow({ roomId, siteId, task }: { roomId: string; siteId: string; 
   });
   return (
     <Box>
-      {canWrite ? (
+      {canComplete ? (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
           <Button
             size="small"
