@@ -1,13 +1,9 @@
 import { Alert, Box, Button, Card, CardContent, MenuItem, TextField, Typography } from '@mui/material';
 import {
-  facilityBoardSchema,
   operationsOverviewSchema,
   recordRemovedSchema,
   recurringViewSchema,
   sopLibrarySchema,
-  type FacilityBoard,
-  type FacilityBoardCell,
-  type FacilityBoardColumn,
   type OperationsOverview,
   type SopLibrary,
 } from '@trim/contracts';
@@ -21,16 +17,6 @@ import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { workbench } from '../theme';
-
-const BOARD_STATUS_STYLE: Record<
-  Exclude<FacilityBoardCell['status'], 'empty'>,
-  { border: string; bg: string }
-> = {
-  done: { border: workbench.greenhouse, bg: 'rgba(46, 230, 166, 0.14)' },
-  due: { border: workbench.gold, bg: 'rgba(255, 209, 102, 0.16)' },
-  overdue: { border: workbench.copper, bg: 'rgba(255, 138, 61, 0.16)' },
-  scheduled: { border: workbench.sky, bg: 'rgba(61, 220, 255, 0.12)' },
-};
 
 const AREAS = [
   ['irrigation', 'Irrigation and feed'],
@@ -53,7 +39,7 @@ const AREA_COPY: Record<Area, string> = {
   purchasing: 'Record what this facility ordered and whether it has arrived.',
   sanitation: 'Record the area, the method, and whether the pass is done.',
   training: 'Record who was trained and which procedure they used.',
-  calendar: 'Room stays plus Facility board crop windows and milestone dates for this facility.',
+  calendar: 'See which cultivar and medium occupy each room.',
   recurring: 'A repeating task stays on the list. Marking it done moves the next due date.',
   library: 'Procedures cited by a template task or by a cycle task. Cycle tasks from another facility stay off this list.',
 };
@@ -667,34 +653,6 @@ function TrainingPanel({ overview }: { overview: OperationsOverview }) {
   );
 }
 
-type BoardOccupancy = {
-  id: string;
-  roomId: string;
-  roomName: string;
-  cultivar: string;
-  cycleName: string;
-  startsOn: string;
-  endsOn: string;
-};
-
-type BoardMilestone = {
-  id: string;
-  roomId: string;
-  roomName: string;
-  columnKey: string;
-  columnLabel: string;
-  kind: FacilityBoardColumn['kind'];
-  date: string;
-  status: Exclude<FacilityBoardCell['status'], 'empty'>;
-  detail: string | null;
-  cultivar: string | null;
-};
-
-type CalendarDayItem =
-  | { kind: 'stay'; stay: OperationsOverview['stays'][number] }
-  | { kind: 'crop'; crop: BoardOccupancy }
-  | { kind: 'milestone'; milestone: BoardMilestone };
-
 function CalendarPanel({ overview }: { overview: OperationsOverview }) {
   const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
@@ -704,11 +662,6 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
   const [message, setMessage] = useState<string | null>(null);
   const [monthKey, setMonthKey] = useState(() => calendarMonthKey(new Date(), timeZone));
   const todayKey = calendarDateKey(new Date(), timeZone);
-  const board = useQuery({
-    queryKey: ['facility-board', overview.siteId],
-    queryFn: () => apiGet(`/sites/${overview.siteId}/board`, facilityBoardSchema),
-  });
-  const boardItems = useMemo(() => boardCalendarItems(board.data ?? null), [board.data]);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/stays`, operationsOverviewSchema, body),
     onSuccess: async () => {
@@ -717,10 +670,7 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
     },
     onError: (error: Error) => setMessage(error.message),
   });
-  const grid = useMemo(
-    () => buildMonthGrid(monthKey, overview.stays, boardItems.occupancy, boardItems.milestones),
-    [monthKey, overview.stays, boardItems],
-  );
+  const grid = useMemo(() => buildMonthGrid(monthKey, overview.stays), [monthKey, overview.stays]);
   const monthLabel = useMemo(() => {
     const [year, month] = monthKey.split('-').map(Number);
     return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
@@ -756,25 +706,10 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
             Next
           </Button>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Button size="small" variant="outlined" onClick={() => setMonthKey(calendarMonthKey(new Date(), timeZone))} data-testid="calendar-today">
-            Today
-          </Button>
-          <Button size="small" component={RouterLink} to="/workspace" variant="text" data-testid="calendar-facility-board-link">
-            Facility board
-          </Button>
-        </Box>
+        <Button size="small" variant="outlined" onClick={() => setMonthKey(calendarMonthKey(new Date(), timeZone))} data-testid="calendar-today">
+          Today
+        </Button>
       </Box>
-
-      <Typography sx={{ color: 'text.secondary', fontSize: 13, mb: 1.25 }} data-testid="calendar-board-note">
-        {board.isPending
-          ? 'Loading Facility board crop windows…'
-          : board.error
-            ? `Facility board unavailable: ${board.error.message}`
-            : boardItems.occupancy.length === 0 && boardItems.milestones.length === 0
-              ? 'No active Facility board crops for this facility yet. Manual room stays still appear below.'
-              : `${boardItems.occupancy.length} active crop window${boardItems.occupancy.length === 1 ? '' : 's'} and ${boardItems.milestones.length} milestone date${boardItems.milestones.length === 1 ? '' : 's'} from the Facility board.`}
-      </Typography>
 
       <Box
         data-testid="room-calendar"
@@ -821,7 +756,7 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
                 <Box
                   key={`pad-${monthKey}-${index}`}
                   sx={{
-                    minHeight: { xs: 72, md: 108 },
+                    minHeight: { xs: 64, md: 92 },
                     bgcolor: workbench.canvas,
                     borderRight: `1px solid ${workbench.line}`,
                     borderBottom: `1px solid ${workbench.line}`,
@@ -830,22 +765,20 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
                 />
               );
             }
-            const items = cell.items;
+            const occupied = cell.stays;
             const isToday = cell.key === todayKey;
             const col = index % 7;
-            const hasCrop = items.some((item) => item.kind === 'crop' || item.kind === 'stay');
             return (
               <Box
                 key={cell.key}
                 data-testid="calendar-day"
                 data-date={cell.key}
-                data-item-count={items.length}
                 sx={{
-                  minHeight: { xs: 72, md: 108 },
+                  minHeight: { xs: 64, md: 92 },
                   p: 0.75,
                   borderRight: col === 6 ? 0 : `1px solid ${workbench.line}`,
                   borderBottom: `1px solid ${workbench.line}`,
-                  bgcolor: hasCrop ? 'rgba(255, 79, 139, 0.08)' : workbench.paper,
+                  bgcolor: occupied.length > 0 ? 'rgba(255, 79, 139, 0.08)' : workbench.paper,
                   boxShadow: isToday ? `inset 0 0 0 2px ${workbench.leaf}` : 'none',
                   display: 'grid',
                   alignContent: 'start',
@@ -868,11 +801,48 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
                 >
                   {cell.day}
                 </Typography>
-                {items.slice(0, 4).map((item) => (
-                  <CalendarDayChip key={calendarItemKey(item)} item={item} />
+                {occupied.slice(0, 3).map((stay) => (
+                  <Box
+                    key={stay.id}
+                    title={`${stay.roomName} · ${stay.cultivar} · ${stay.medium}`}
+                    sx={{
+                      px: 0.6,
+                      py: 0.2,
+                      borderRadius: 0.75,
+                      bgcolor: workbench.mist,
+                      borderLeft: `2px solid ${workbench.sky}`,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 10, md: 11 },
+                        fontWeight: 700,
+                        lineHeight: 1.25,
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {stay.roomName}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        display: { xs: 'none', sm: 'block' },
+                        fontSize: 10,
+                        color: 'text.secondary',
+                        lineHeight: 1.2,
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {stay.cultivar}
+                    </Typography>
+                  </Box>
                 ))}
-                {items.length > 4 ? (
-                  <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>+{items.length - 4} more</Typography>
+                {occupied.length > 3 ? (
+                  <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>+{occupied.length - 3} more</Typography>
                 ) : null}
               </Box>
             );
@@ -880,18 +850,7 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
         </Box>
       </Box>
 
-      {boardItems.occupancy.length > 0 ? (
-        <Box sx={{ mb: 2.5 }} data-testid="board-crop-list">
-          <Typography sx={{ fontWeight: 700, mb: 1, fontSize: 14 }}>Facility board crops</Typography>
-          {boardItems.occupancy.map((crop) => (
-            <Typography key={crop.id} data-testid="board-crop-row" sx={{ color: 'text.secondary', fontSize: 13, mb: 0.35 }}>
-              {crop.roomName} · {crop.cycleName} · {crop.cultivar} · {crop.startsOn} – {crop.endsOn}
-            </Typography>
-          ))}
-        </Box>
-      ) : null}
-
-      <RecordList testId="stay-list" empty="No manual room stays are recorded for this facility.">
+      <RecordList testId="stay-list" empty="No room stays are recorded for this facility.">
         {overview.stays.map((row) => (
           <RecordActions
             key={row.id}
@@ -957,215 +916,6 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
   );
 }
 
-function CalendarDayChip({ item }: { item: CalendarDayItem }) {
-  if (item.kind === 'stay') {
-    const stay = item.stay;
-    return (
-      <Box
-        data-testid="calendar-stay-chip"
-        title={`${stay.roomName} · ${stay.cultivar} · ${stay.medium}`}
-        sx={{
-          px: 0.6,
-          py: 0.2,
-          borderRadius: 0.75,
-          bgcolor: workbench.mist,
-          borderLeft: `2px solid ${workbench.sky}`,
-          overflow: 'hidden',
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: { xs: 10, md: 11 },
-            fontWeight: 700,
-            lineHeight: 1.25,
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-          }}
-        >
-          {stay.roomName}
-        </Typography>
-        <Typography
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            fontSize: 10,
-            color: 'text.secondary',
-            lineHeight: 1.2,
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-          }}
-        >
-          {stay.cultivar}
-        </Typography>
-      </Box>
-    );
-  }
-
-  if (item.kind === 'crop') {
-    const crop = item.crop;
-    return (
-      <Box
-        data-testid="calendar-crop-chip"
-        title={`${crop.roomName} · ${crop.cycleName} · ${crop.cultivar}`}
-        sx={{
-          px: 0.6,
-          py: 0.2,
-          borderRadius: 0.75,
-          bgcolor: 'rgba(46, 230, 166, 0.10)',
-          borderLeft: `2px solid ${workbench.greenhouse}`,
-          overflow: 'hidden',
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: { xs: 10, md: 11 },
-            fontWeight: 700,
-            lineHeight: 1.25,
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-          }}
-        >
-          {crop.roomName}
-        </Typography>
-        <Typography
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            fontSize: 10,
-            color: 'text.secondary',
-            lineHeight: 1.2,
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden',
-          }}
-        >
-          {crop.cultivar}
-        </Typography>
-      </Box>
-    );
-  }
-
-  const milestone = item.milestone;
-  const style = BOARD_STATUS_STYLE[milestone.status];
-  return (
-    <Box
-      data-testid="calendar-milestone-chip"
-      data-column={milestone.columnKey}
-      data-status={milestone.status}
-      title={`${milestone.roomName} · ${milestone.columnLabel}${milestone.detail ? ` · ${milestone.detail}` : ''} · ${milestone.status}`}
-      sx={{
-        px: 0.55,
-        py: 0.15,
-        borderRadius: 0.75,
-        bgcolor: style.bg,
-        borderLeft: `2px solid ${style.border}`,
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'baseline',
-        gap: 0.5,
-        minWidth: 0,
-      }}
-    >
-      <Typography
-        sx={{
-          fontSize: { xs: 10, md: 11 },
-          fontWeight: 800,
-          lineHeight: 1.25,
-          whiteSpace: 'nowrap',
-          flexShrink: 0,
-        }}
-      >
-        {milestone.columnLabel}
-      </Typography>
-      <Typography
-        sx={{
-          display: { xs: 'none', sm: 'block' },
-          fontSize: 10,
-          color: 'text.secondary',
-          lineHeight: 1.2,
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          overflow: 'hidden',
-          minWidth: 0,
-        }}
-      >
-        {milestone.roomName}
-      </Typography>
-    </Box>
-  );
-}
-
-function calendarItemKey(item: CalendarDayItem): string {
-  if (item.kind === 'stay') return `stay-${item.stay.id}`;
-  if (item.kind === 'crop') return `crop-${item.crop.id}`;
-  return `ms-${item.milestone.id}`;
-}
-
-function boardCalendarItems(board: FacilityBoard | null): { occupancy: BoardOccupancy[]; milestones: BoardMilestone[] } {
-  if (!board) {
-    return { occupancy: [], milestones: [] };
-  }
-  const columns = new Map(board.columns.map((column) => [column.key, column]));
-  const occupancy: BoardOccupancy[] = [];
-  const milestones: BoardMilestone[] = [];
-
-  for (const row of board.rows) {
-    if (!row.cycleId) {
-      continue;
-    }
-    const startDates = row.cells.find((cell) => cell.columnKey === 'start')?.dates ?? [];
-    const harvestDates = row.cells.find((cell) => cell.columnKey === 'harvest')?.dates ?? [];
-    const startsOn = startDates[0];
-    const endsOn = harvestDates[0];
-    if (startsOn && endsOn && startsOn <= endsOn) {
-      occupancy.push({
-        id: `${row.roomId}-crop`,
-        roomId: row.roomId,
-        roomName: row.roomName,
-        cultivar: row.cultivar ?? row.cycleName ?? 'Crop',
-        cycleName: row.cycleName ?? 'Crop',
-        startsOn,
-        endsOn,
-      });
-    }
-
-    for (const cell of row.cells) {
-      if (cell.status === 'empty' || cell.dates.length === 0) {
-        continue;
-      }
-      const column = columns.get(cell.columnKey);
-      if (!column) {
-        continue;
-      }
-      // Weekly board chores flood the month; keep them only when action is needed.
-      if (
-        (cell.columnKey === 'water_filters' || cell.columnKey === 'fans_ac') &&
-        cell.status !== 'due' &&
-        cell.status !== 'overdue'
-      ) {
-        continue;
-      }
-      for (const date of cell.dates) {
-        milestones.push({
-          id: `${row.roomId}-${cell.columnKey}-${date}`,
-          roomId: row.roomId,
-          roomName: row.roomName,
-          columnKey: cell.columnKey,
-          columnLabel: column.label,
-          kind: column.kind,
-          date,
-          status: cell.status,
-          detail: cell.detail,
-          cultivar: row.cultivar,
-        });
-      }
-    }
-  }
-
-  return { occupancy, milestones };
-}
-
 function calendarMonthKey(date: Date, timeZone: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit' }).format(date);
 }
@@ -1188,36 +938,21 @@ function shiftMonthKey(monthKey: string, delta: number): string {
 function buildMonthGrid(
   monthKey: string,
   stays: OperationsOverview['stays'],
-  occupancy: BoardOccupancy[],
-  milestones: BoardMilestone[],
-): Array<{ key: string; day: number; items: CalendarDayItem[] } | null> {
+): Array<{ key: string; day: number; stays: OperationsOverview['stays'] } | null> {
   const [year, month] = monthKey.split('-').map(Number);
   const daysInMonth = new Date(Date.UTC(year ?? 2026, month ?? 1, 0)).getUTCDate();
   const firstWeekday = new Date(Date.UTC(year ?? 2026, (month ?? 1) - 1, 1)).getUTCDay();
-  const cells: Array<{ key: string; day: number; items: CalendarDayItem[] } | null> = [];
+  const cells: Array<{ key: string; day: number; stays: OperationsOverview['stays'] } | null> = [];
   for (let i = 0; i < firstWeekday; i += 1) {
     cells.push(null);
   }
   for (let day = 1; day <= daysInMonth; day += 1) {
     const key = `${monthKey}-${String(day).padStart(2, '0')}`;
-    const dayStays = stays.filter((stay) => stay.startsOn <= key && stay.endsOn >= key);
-    const stayRoomIds = new Set(dayStays.map((stay) => stay.roomId));
-    const dayMilestones = milestones.filter((milestone) => milestone.date === key);
-    const roomsWithMilestone = new Set(dayMilestones.map((milestone) => milestone.roomId));
-    // On milestone days, the marker (H / D21 / Sul.) stands in for that room's crop bar.
-    const dayCrops = occupancy.filter(
-      (crop) =>
-        crop.startsOn <= key &&
-        crop.endsOn >= key &&
-        !stayRoomIds.has(crop.roomId) &&
-        !roomsWithMilestone.has(crop.roomId),
-    );
-    const items: CalendarDayItem[] = [
-      ...dayStays.map((stay) => ({ kind: 'stay' as const, stay })),
-      ...dayMilestones.map((milestone) => ({ kind: 'milestone' as const, milestone })),
-      ...dayCrops.map((crop) => ({ kind: 'crop' as const, crop })),
-    ];
-    cells.push({ key, day, items });
+    cells.push({
+      key,
+      day,
+      stays: stays.filter((stay) => stay.startsOn <= key && stay.endsOn >= key),
+    });
   }
   while (cells.length % 7 !== 0) {
     cells.push(null);
