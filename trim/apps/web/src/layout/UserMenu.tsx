@@ -100,14 +100,6 @@ export function UserMenu({
           User Profile
         </MenuItem>
         <MenuItem
-          component={RouterLink}
-          to="/settings"
-          data-testid="user-menu-settings"
-          onClick={() => setAnchor(null)}
-        >
-          User Settings
-        </MenuItem>
-        <MenuItem
           data-testid="user-menu-logout"
           onClick={() => {
             setAnchor(null);
