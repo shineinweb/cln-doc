@@ -345,18 +345,56 @@ function PunchPanel({
             {error}
           </Alert>
         ) : null}
-        {status.todayPunches.length > 0 ? (
-          <Box sx={{ mt: 2 }} data-testid="timeclock-today-punches">
-            {status.todayPunches.map((punch) => (
-              <Typography key={punch.id} sx={{ fontSize: 14, color: 'text.secondary' }}>
-                {KIND_LABEL[punch.kind]} · {formatTime(punch.punchedAt)}
-                {punch.siteName ? ` · ${punch.siteName}` : ''}
-              </Typography>
-            ))}
-          </Box>
-        ) : null}
+        {status.todayPunches.length > 0 ? <TodayPunchHistory punches={status.todayPunches} /> : null}
       </CardContent>
     </Card>
+  );
+}
+
+const TODAY_PUNCH_PREVIEW = 5;
+
+function TodayPunchHistory({ punches }: { punches: TimeClockStatus['todayPunches'] }) {
+  const [expanded, setExpanded] = useState(false);
+  const newestFirst = [...punches].reverse();
+  const visible = expanded ? newestFirst : newestFirst.slice(0, TODAY_PUNCH_PREVIEW);
+  const hiddenCount = Math.max(0, newestFirst.length - TODAY_PUNCH_PREVIEW);
+
+  return (
+    <Box sx={{ mt: 2 }} data-testid="timeclock-today-punches">
+      <Typography sx={{ fontWeight: 700, fontSize: 14, mb: 0.75 }}>
+        Today’s punches · {punches.length}
+      </Typography>
+      <Box
+        sx={{
+          maxHeight: expanded ? 220 : 'none',
+          overflowY: expanded ? 'auto' : 'visible',
+          pr: expanded ? 0.5 : 0,
+          border: `1px solid ${workbench.line}`,
+          borderRadius: 2,
+          bgcolor: 'rgba(16, 14, 28, 0.35)',
+          px: 1.25,
+          py: 1,
+        }}
+      >
+        {visible.map((punch) => (
+          <Typography key={punch.id} sx={{ fontSize: 14, color: 'text.secondary', py: 0.2 }}>
+            {KIND_LABEL[punch.kind]} · {formatTime(punch.punchedAt)}
+            {punch.siteName ? ` · ${punch.siteName}` : ''}
+          </Typography>
+        ))}
+      </Box>
+      {hiddenCount > 0 ? (
+        <Button
+          size="small"
+          variant="text"
+          data-testid="timeclock-today-punches-toggle"
+          onClick={() => setExpanded((current) => !current)}
+          sx={{ mt: 0.5, px: 0.5 }}
+        >
+          {expanded ? 'Show fewer' : `Show ${hiddenCount} earlier`}
+        </Button>
+      ) : null}
+    </Box>
   );
 }
 
