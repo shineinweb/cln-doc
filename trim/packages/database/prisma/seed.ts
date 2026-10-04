@@ -300,6 +300,7 @@ async function main(): Promise<void> {
   const rolesByKey = new Map([
     ['org_admin', orgAdmin.id],
     ['site_operator', siteOperator.id],
+    ['facility_associate', facilityAssociate.id],
   ]);
 
   for (const user of Object.values(DEV_USERS)) {
