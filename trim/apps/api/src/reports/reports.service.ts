@@ -146,7 +146,27 @@ export class ReportsService {
       }
     }
 
-    const avgGramsPerPlant = dryPlantCount > 0 ? dryPlantSum / dryPlantCount : null;
+    let avgGramsPerPlant = dryPlantCount > 0 ? dryPlantSum / dryPlantCount : null;
+    if (avgGramsPerPlant === null) {
+      const orgHarvests = await this.prisma.harvest.findMany({
+        where: { site: { organizationId: user.organizationId }, voidedAt: null },
+        include: {
+          plants: { select: { id: true } },
+          steps: { where: { voidedAt: null, kind: 'dry_weight' }, select: { weightGrams: true } },
+        },
+      });
+      let orgDry = 0;
+      let orgPlants = 0;
+      for (const harvest of orgHarvests) {
+        const dry = harvest.steps[0]?.weightGrams ?? null;
+        if (dry === null || harvest.plants.length === 0) {
+          continue;
+        }
+        orgDry += dry;
+        orgPlants += harvest.plants.length;
+      }
+      avgGramsPerPlant = orgPlants > 0 ? orgDry / orgPlants : null;
+    }
     const estimatedYield: Array<{ cultivar: string; week: string; grams: number; estimated: boolean }> = [];
     if (avgGramsPerPlant !== null) {
       for (const cycle of cycles) {
