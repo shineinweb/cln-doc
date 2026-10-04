@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import type { ComparisonReport, CycleReport, SessionUser, SiteReport } from '@trim/contracts';
+import type { ComparisonReport, CycleReport, DashboardAnalytics, SessionUser, SiteReport } from '@trim/contracts';
 import { calendarDateInTimeZone, cycleDayNumber, dateKeyFromDbDate } from '../cycles/cycle-day';
 import { assertSiteAccess, authorizedSiteWhere } from '../facilities/site-access';
 import { PrismaService } from '../prisma/prisma.service';
@@ -55,6 +55,218 @@ export class ReportsService {
       siteName: site.name,
       siteTimezone: site.timezone,
       cycles,
+    };
+  }
+
+  async dashboard(user: SessionUser, siteId: string): Promise<DashboardAnalytics> {
+    const site = await this.prisma.site.findUnique({ where: { id: siteId } });
+    if (!site || site.organizationId !== user.organizationId) {
+      throw new NotFoundException('Report not found');
+    }
+    if (!user.isOrgAdmin && !user.siteIds.includes(site.id)) {
+      throw new ForbiddenException('You do not have access to this report.');
+    }
+    assertSiteAccess(user, site);
+
+    const [cycles, harvests, stays, rates] = await Promise.all([
+      this.prisma.cropCycle.findMany({
+        where: { room: { siteId: site.id } },
+        include: {
+          room: true,
+          laborEntries: true,
+          inputCosts: true,
+        },
+        orderBy: [{ cultivar: 'asc' }, { name: 'asc' }],
+      }),
+      this.prisma.harvest.findMany({
+        where: { siteId: site.id, voidedAt: null },
+        include: {
+          cycle: { select: { cultivar: true } },
+          plants: { include: { plant: { include: { strain: { select: { name: true } } } } } },
+          steps: { where: { voidedAt: null } },
+          packages: { where: { voidedAt: null }, orderBy: { recordedAt: 'desc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.roomStay.findMany({
+        where: { siteId: site.id },
+        orderBy: [{ cultivar: 'asc' }, { startsOn: 'asc' }],
+      }),
+      this.prisma.laborRate.findMany({ where: { organizationId: user.organizationId } }),
+    ]);
+
+    const rateByName = new Map(rates.map((rate) => [rate.personName, rate.hourlyCents]));
+    const timeZone = site.timezone;
+    const statement =
+      'Dashboard charts use stored harvest weights, labor, input costs, packages, and active crop plant counts. Trim does not store sales dollars.';
+
+    const actualYield: Array<{ cultivar: string; week: string; grams: number; estimated: boolean }> = [];
+    const strainStats = new Map<string, { harvestCount: number; packagedGrams: number }>();
+    let packagedMtdGrams = 0;
+    let dryPlantSum = 0;
+    let dryPlantCount = 0;
+    const packagesByItem: DashboardAnalytics['packagesByItem'] = [];
+    const monthPrefix = calendarDateInTimeZone(new Date(), timeZone).slice(0, 7);
+
+    for (const harvest of harvests) {
+      const dry = harvest.steps.find((step) => step.kind === 'dry_weight')?.weightGrams ?? null;
+      const harvestedAt = harvest.steps.find((step) => step.kind === 'harvested')?.occurredAt ?? null;
+      const packagedGrams = harvest.packages.reduce((sum, row) => sum + row.weightGrams, 0);
+      const cultivar =
+        harvest.cycle?.cultivar ??
+        harvest.plants.find((row) => row.plant.strain?.name)?.plant.strain?.name ??
+        cultivarFromHarvestName(harvest.name);
+      const plantCount = harvest.plants.length;
+      if (dry !== null && harvestedAt) {
+        actualYield.push({
+          cultivar,
+          week: weekStartKey(calendarDateInTimeZone(harvestedAt, timeZone)),
+          grams: dry,
+          estimated: false,
+        });
+      }
+      if (dry !== null && plantCount > 0) {
+        dryPlantSum += dry;
+        dryPlantCount += plantCount;
+      }
+      const strain = strainStats.get(cultivar) ?? { harvestCount: 0, packagedGrams: 0 };
+      strain.harvestCount += 1;
+      strain.packagedGrams += packagedGrams;
+      strainStats.set(cultivar, strain);
+      for (const pkg of harvest.packages) {
+        packagesByItem.push({
+          label: pkg.label,
+          weightGrams: pkg.weightGrams,
+          harvestName: harvest.name,
+        });
+        const recorded = calendarDateInTimeZone(pkg.recordedAt, timeZone);
+        if (recorded.startsWith(monthPrefix)) {
+          packagedMtdGrams += pkg.weightGrams;
+        }
+      }
+    }
+
+    const avgGramsPerPlant = dryPlantCount > 0 ? dryPlantSum / dryPlantCount : null;
+    const estimatedYield: Array<{ cultivar: string; week: string; grams: number; estimated: boolean }> = [];
+    if (avgGramsPerPlant !== null) {
+      for (const cycle of cycles) {
+        if (cycle.status !== 'active' || cycle.plantCount <= 0) {
+          continue;
+        }
+        const hasHarvest = harvests.some((harvest) => harvest.cycleId === cycle.id);
+        if (hasHarvest) {
+          continue;
+        }
+        const week = weekStartKey(dateKeyFromDbDate(cycle.expectedHarvestDate));
+        estimatedYield.push({
+          cultivar: cycle.cultivar,
+          week,
+          grams: Math.round(cycle.plantCount * avgGramsPerPlant),
+          estimated: true,
+        });
+      }
+    }
+
+    const yieldRows = [...actualYield, ...estimatedYield];
+    const weekSet = new Set(yieldRows.map((row) => row.week));
+    const weeks = [...weekSet].sort();
+    const cultivarSet = new Set(yieldRows.map((row) => row.cultivar));
+    const cultivars = [...cultivarSet].sort();
+    const series = cultivars.map((cultivar) => ({
+      cultivar,
+      points: weeks.map((week) => {
+        const match = yieldRows.find((row) => row.cultivar === cultivar && row.week === week);
+        return {
+          week,
+          grams: match?.grams ?? 0,
+          estimated: match?.estimated ?? false,
+        };
+      }),
+    }));
+
+    let laborCents = 0;
+    let cannabisCents = 0;
+    let nonCannabisCents = 0;
+    for (const cycle of cycles) {
+      for (const entry of cycle.laborEntries) {
+        const hourly = rateByName.get(entry.personName);
+        if (hourly == null) {
+          continue;
+        }
+        laborCents += Math.round(Number(entry.hours) * hourly);
+      }
+      for (const input of cycle.inputCosts) {
+        const cost = Math.round(Number(input.quantity) * input.unitCostCents);
+        if (isCannabisInput(input.description)) {
+          cannabisCents += cost;
+        } else {
+          nonCannabisCents += cost;
+        }
+      }
+    }
+
+    const topStrains = [...strainStats.entries()]
+      .map(([strainName, stats]) => ({
+        strainName,
+        harvestCount: stats.harvestCount,
+        packagedGrams: stats.packagedGrams,
+      }))
+      .sort((left, right) => right.packagedGrams - left.packagedGrams || right.harvestCount - left.harvestCount)
+      .slice(0, 8);
+
+    const forecastDates = forecastDateKeys(timeZone, 4);
+    const forecastCultivars = [
+      ...new Set([
+        ...cycles.filter((cycle) => cycle.status === 'active').map((cycle) => cycle.cultivar),
+        ...stays.map((stay) => stay.cultivar),
+      ]),
+    ].sort();
+    const plantForecast = {
+      dates: forecastDates,
+      rows: forecastCultivars.map((cultivar) => ({
+        cultivar,
+        values: forecastDates.map((date) => {
+          const fromCycles = cycles
+            .filter(
+              (cycle) =>
+                cycle.status === 'active' &&
+                cycle.cultivar === cultivar &&
+                dateKeyFromDbDate(cycle.startDate) <= date &&
+                dateKeyFromDbDate(cycle.expectedHarvestDate) >= date,
+            )
+            .reduce((sum, cycle) => sum + cycle.plantCount, 0);
+          if (fromCycles > 0) {
+            return fromCycles;
+          }
+          const openStay = stays.some(
+            (stay) =>
+              stay.cultivar === cultivar &&
+              dateKeyFromDbDate(stay.startsOn) <= date &&
+              dateKeyFromDbDate(stay.endsOn) >= date,
+          );
+          return openStay ? 1 : 0;
+        }),
+      })),
+    };
+
+    return {
+      siteId: site.id,
+      siteName: site.name,
+      statement,
+      yieldGraph: { weeks, cultivars, series },
+      cogs: {
+        laborCents,
+        cannabisCents,
+        nonCannabisCents,
+        totalCents: laborCents + cannabisCents + nonCannabisCents,
+      },
+      topStrains,
+      plantForecast,
+      kpis: {
+        packagedMtdGrams,
+        averageGramsPerPlant: avgGramsPerPlant,
+      },
+      packagesByItem: packagesByItem.slice(0, 12),
     };
   }
 
@@ -249,4 +461,33 @@ export class ReportsService {
       formula: `Completed duration = calendar days from ${startDate} through ${harvestDate} in ${timeZone}, counting the start date as day 1.`,
     };
   }
+}
+
+function cultivarFromHarvestName(name: string): string {
+  const trimmed = name.replace(/\s+harvest$/i, '').replace(/\s+flower$/i, '').trim();
+  return trimmed.length > 0 ? trimmed : name;
+}
+
+function isCannabisInput(description: string): boolean {
+  return /cannabis|flower|nutrient|clone|trim|biomass/i.test(description);
+}
+
+function weekStartKey(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const utc = new Date(Date.UTC(year!, month! - 1, day!));
+  const weekday = utc.getUTCDay();
+  const offset = weekday === 0 ? -6 : 1 - weekday;
+  utc.setUTCDate(utc.getUTCDate() + offset);
+  return utc.toISOString().slice(0, 10);
+}
+
+function forecastDateKeys(timeZone: string, count: number): string[] {
+  const today = calendarDateInTimeZone(new Date(), timeZone);
+  const [year, month, day] = today.split('-').map(Number);
+  const keys: string[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const utc = new Date(Date.UTC(year!, month! - 1, day! + index));
+    keys.push(utc.toISOString().slice(0, 10));
+  }
+  return keys;
 }

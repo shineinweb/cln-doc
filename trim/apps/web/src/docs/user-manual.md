@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks assigned to you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -52,6 +52,21 @@ Rooms, zones, and Operations rows are removed. Plants, packages, harvest weights
 Reports stay calculated. A report total has no **Delete**.
 
 Add forms that were already on a page keep their buttons: **Add room**, **Save record**, **Save purchase**, **Save training**, **Save stay**, **Save recurring task**, **Save template**, **Save SOP**, **Save reading**, **Save alert rule**, and **Mark done**. New add buttons are **Add facility**, **Add zone**, **Start cycle**, **Add task**, **Add batch**, and **Add plant**.
+
+## Dashboard
+
+**Dashboard** is the first item in the left navigation. It follows the facility in the top bar.
+
+Under the counts, the page shows facility charts built from stored rows:
+
+- **Estimated Yield Graph** — dry grams by week and cultivar. Harvested cycles use stored dry weight. Open cycles use plant count times this facility’s average grams per plant when that average exists.
+- **COGS Breakdown** — labor, cannabis inputs, and non-cannabis inputs from stored labor rates and input costs.
+- **Top Performing Strains** — harvest count and packaged grams by strain.
+- **Plant Forecast** — active crop plant counts across the next four days.
+- **Packaged (MTD)** and **Average g per plant** — month-to-date packaged weight and the dry-weight average.
+- **Packages by Item** — package labels and weights.
+
+Trim does not store sales dollars on these charts. Below the charts are the facility’s rooms and your tasks due today.
 
 ## Facility
 

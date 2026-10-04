@@ -9,10 +9,11 @@ import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
 import { useSites } from '../layout/SiteProvider';
 import { displayFont, roomTypeColor, roomTypeLabel, workbench } from '../theme';
+import { DashboardCharts } from './DashboardCharts';
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const { sites, site, loading, error } = useSites();
+  const { sites, site, siteId, loading, error } = useSites();
   const workspace = useQuery({
     queryKey: ['workspace'],
     queryFn: () => apiGet('/workspace/today', workspaceTodaySchema),
@@ -27,7 +28,7 @@ export function DashboardPage() {
         title="Dashboard"
         lede={
           site
-            ? `${site.name} is selected. The counts and rooms below follow that facility. Tasks due today are the ones assigned to you.`
+            ? `${site.name} is selected. Yield, COGS, and plant charts below use stored rows for this facility. Tasks due today are the ones assigned to you.`
             : 'Choose a facility in the top bar to see its rooms.'
         }
       />
@@ -48,6 +49,7 @@ export function DashboardPage() {
           <Stat label="Tasks due" value={workspace.data ? String(workspace.data.tasks.length) : '—'} />
         </Box>
       ) : null}
+      {siteId ? <DashboardCharts siteId={siteId} /> : null}
       <Typography variant="h2" sx={{ fontSize: 26, mb: 1.5 }}>
         Rooms
       </Typography>

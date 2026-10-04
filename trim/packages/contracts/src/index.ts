@@ -1276,6 +1276,63 @@ export const comparisonReportSchema = z.object({
   cycles: z.array(cycleReportSchema),
 });
 
+export const dashboardYieldPointSchema = z.object({
+  week: z.string(),
+  grams: z.number(),
+  estimated: z.boolean(),
+});
+
+export const dashboardYieldSeriesSchema = z.object({
+  cultivar: z.string(),
+  points: z.array(dashboardYieldPointSchema),
+});
+
+export const dashboardCogsSchema = z.object({
+  laborCents: z.number().int(),
+  cannabisCents: z.number().int(),
+  nonCannabisCents: z.number().int(),
+  totalCents: z.number().int(),
+});
+
+export const dashboardTopStrainSchema = z.object({
+  strainName: z.string(),
+  harvestCount: z.number().int(),
+  packagedGrams: z.number().int(),
+});
+
+export const dashboardPlantForecastRowSchema = z.object({
+  cultivar: z.string(),
+  values: z.array(z.number().int()),
+});
+
+export const dashboardPackageItemSchema = z.object({
+  label: z.string(),
+  weightGrams: z.number().int(),
+  harvestName: z.string(),
+});
+
+export const dashboardAnalyticsSchema = z.object({
+  siteId: z.string(),
+  siteName: z.string(),
+  statement: z.string(),
+  yieldGraph: z.object({
+    weeks: z.array(z.string()),
+    cultivars: z.array(z.string()),
+    series: z.array(dashboardYieldSeriesSchema),
+  }),
+  cogs: dashboardCogsSchema,
+  topStrains: z.array(dashboardTopStrainSchema),
+  plantForecast: z.object({
+    dates: z.array(z.string()),
+    rows: z.array(dashboardPlantForecastRowSchema),
+  }),
+  kpis: z.object({
+    packagedMtdGrams: z.number().int(),
+    averageGramsPerPlant: z.number().nullable(),
+  }),
+  packagesByItem: z.array(dashboardPackageItemSchema),
+});
+
 export const coachGapSchema = z.object({
   kind: z.enum(['untagged_plants', 'discrepancies', 'pending_submissions', 'unqueued_packages', 'missing_waste']),
   count: z.number().int(),
@@ -1705,6 +1762,10 @@ export type HarvestWasteView = z.infer<typeof harvestWasteSchema>;
 export type CycleReport = z.infer<typeof cycleReportSchema>;
 export type SiteReport = z.infer<typeof siteReportSchema>;
 export type ComparisonReport = z.infer<typeof comparisonReportSchema>;
+export type DashboardAnalytics = z.infer<typeof dashboardAnalyticsSchema>;
+export type DashboardCogs = z.infer<typeof dashboardCogsSchema>;
+export type DashboardTopStrain = z.infer<typeof dashboardTopStrainSchema>;
+export type DashboardPackageItem = z.infer<typeof dashboardPackageItemSchema>;
 export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
 export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;

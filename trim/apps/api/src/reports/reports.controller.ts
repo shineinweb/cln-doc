@@ -1,5 +1,13 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { comparisonReportSchema, siteReportSchema, type ComparisonReport, type SessionUser, type SiteReport } from '@trim/contracts';
+import {
+  comparisonReportSchema,
+  dashboardAnalyticsSchema,
+  siteReportSchema,
+  type ComparisonReport,
+  type DashboardAnalytics,
+  type SessionUser,
+  type SiteReport,
+} from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ReportsService } from './reports.service';
@@ -12,6 +20,11 @@ export class ReportsController {
   @Get('comparison')
   async comparison(@CurrentUser() user: SessionUser): Promise<ComparisonReport> {
     return comparisonReportSchema.parse(await this.reports.comparison(user));
+  }
+
+  @Get('sites/:siteId/dashboard')
+  async dashboard(@CurrentUser() user: SessionUser, @Param('siteId') siteId: string): Promise<DashboardAnalytics> {
+    return dashboardAnalyticsSchema.parse(await this.reports.dashboard(user, siteId));
   }
 
   @Get('sites/:siteId')
