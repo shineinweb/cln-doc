@@ -40,7 +40,7 @@ describe('organization settings', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ companyName: 'Denied Co', title: 'Nope', description: 'Nope' });
     expect(denied.status).toBe(403);
-    expect(denied.body.message).toBe('Only a manager can change settings.');
+    expect(denied.body.message).toBe('You do not have permission for settings.manage.');
 
     const saved = await request(app.getHttpServer())
       .patch('/settings/general')

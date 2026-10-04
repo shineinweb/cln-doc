@@ -13,7 +13,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!user && error && !(error instanceof ApiError && error.status === 401)) {
     return (
       <Status
-        title="Trim is not reachable"
+        title="Serenity is not reachable"
         body={error.message}
         action={
           <Button variant="contained" onClick={logout}>
