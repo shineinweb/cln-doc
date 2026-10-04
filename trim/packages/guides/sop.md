@@ -1,377 +1,364 @@
-# Serenity Universal operating procedures
+# Serenity operating procedures
 
-These procedures are the ones a manager and an employee follow in Serenity. Use the search box at the top of this page to find a procedure. Serenity can quote these steps when someone asks how to do the work. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
+These procedures match the signed-in workspace. The top bar **Facility** switcher selects the site. When **Newton** is selected, flower rooms are **F1** through **F9** and the dry room is **D1**. **Noble** is the other facility. Use a room name only as an example of what that facility shows.
 
-A page for the other facility says you do not have access. Do not keep going on that page.
+Each procedure is one section. On the SOP page, **Search operating procedures** filters these sections. Serenity reads the same text when someone asks how to do the job.
 
 ## Daily room check
 
-**Who.** The person who can open that facility. Blake checks Flower 1 and Dry Room. Casey checks Veg 1 and Mother Room. Avery can check either facility.
+**Who.** Anyone who can open **Rooms** for the facility selected in the top bar.
 
-**When.** At the start of the shift, before today’s assignment.
-
-**Steps.**
-
-1. Open **Facility** and select the facility card. Harbor House is Astoria. Hill Works is Hood River.
-2. Open **Rooms** and choose the room. The page says “Open a room to see its zones, readings, and operating history.”
-3. The room dashboard opens on **Dashboard**. Read the Trolmaster chart, then **Operating history**. The chart shows Temp, Humid, CO2, VPD, and Light when Trolmaster is on and a controller is saved on **Trolmaster settings**. **24 Hour**, **Week**, and **Month** change the window. **Test on** draws a sample of that history and does not call Trolmaster. **Trolmaster off** says “Trolmaster is off.” Open **Zones** for the zone list. Open **Settings** for **Defoliation schedule**, **Last successful Metrc sync**, readings, alerts, the gateway, and the controller sample. **Add defoliation** adds a day number. Day 1 is the current crop’s start date, so day 10 is the tenth day. **Save schedule** stores every day and shows the date. A dry room does not show **Defoliation schedule**. The room does not show a current-crop card. Cycle day is on the crop cycle page, and it counts the start date as day 1 in `America/Los_Angeles`. A flower room also has **Trolmaster settings**. That tab stores a controller id and API credential. The Dashboard tab checks that credential with Trolmaster. It names the controller when the credential lists it, and draws the chart when history points come back.
-4. Open **Tasks**. **Add task** can save a one-time task with a due date, a daily task, or a weekly task on chosen days such as Tuesday and Friday. A recurring task does not ask for a due date. The form has an optional description and can assign more than one employee. Then read **Tasks due today**. On October 3, 2026, Flower 1 lists Count plants onto the bench and Lower-leaf pass. Veg 1 lists Scout the canopy.
-5. Open **Notes**. **Add note** saves a note on the current crop for later. Choose a category, such as Environment or Pests, a date, a time, and write the note. The line shows the date and time, the author, the category, and the note. If none are stored, it says “No notes are recorded for this crop.”
-6. On **Settings**, read **Last successful Metrc sync**. With nothing stored, it says “No successful Metrc sync is recorded.”
-7. On **Settings**, read **Latest environmental readings** for Temperature, Relative humidity, CO₂, and Substrate. A metric with no reading, or whose newest reading is older than 60 minutes on Flower 1 or Veg 1, shows **Stale**. A row marked sample shows **Sample data**.
-8. On **Settings**, read **Active alerts**. Flower 1 keeps “Relative humidity is stale. No reading is newer than 60 minutes.” when the humidity reading is older than 60 minutes. A room with no matching rule says “No active alerts.”
-9. On **Settings**, read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
-10. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Notes**, and “No tasks are due today” on **Tasks**. The room list row says “No active crop.”
-
-**Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on the room’s **Current crop** card. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
-
-## Completing today’s assignment
-
-**Who.** The person the card names. Blake completes Harbor House assignments. Casey completes Hill Works assignments. Avery sees both lists. A task from the other facility stays off the list.
-
-**When.** On the due date shown on **Tasks**. On October 3, 2026, Count plants onto the bench and Lower-leaf pass are due on Flower 1, and Scout the canopy is due on Veg 1.
+**When.** At the start of the shift, before other room work, once per room you are responsible for.
 
 **Steps.**
 
-1. Open **Tasks**. The title is All tasks due today. The introduction names the date and the three task lists.
-2. Open the assignment card. It shows the facility, room, task title, due date, assignee, and crop.
-3. Read the instructions. Scout the canopy also shows the Canopy scout note: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.” Lower-leaf pass shows the chip Supervisor approval and the line “Depends on Scout the canopy.”
-4. Check the boxes on the card. Scout the canopy uses “Check the first half of the room” and “Check the second half of the room.” Lower-leaf pass uses “Clear the aisle” and “Bag the leaves.”
-5. Type **Notes** and choose **Save notes** when the work needs a written record.
-6. Choose **Add photo** when a picture is required. The file must be jpeg, png, webp, or gif. The file name appears on the card. Choose that name to open it again.
-7. Type **Comment** and choose **Add comment**. Your name and the comment stay on the card.
+1. Confirm the top bar **Facility** is the site you are walking, such as Newton.
+2. Open **Rooms** and press **Open room** on the room, for example **F1**.
+3. On **Dashboard**, read **Current crop**: cultivar, plant count, stage, cycle day, and harvest date. Press **Open cycle** only if you need the crop page. If the card says no active crop, stop and tell a manager before you treat the room as planted.
+4. Read the Trolmaster chart on **Dashboard** when the room is a flower room.
+5. Open **Settings**. Read **Latest environmental readings** and **Active alerts**. A stale reading is older than the minutes shown on that card. “No active alerts.” means the room is inside its rules.
+6. Open **Notes**. Read the latest notes for this crop.
+7. Open **Tasks** on the room and note anything still open. The facility-wide list is **Tasks** in the left menu.
+8. Leave the room page when the crop, readings, alerts, and open tasks are recorded in your pass. Write a note if something was off.
 
-Chips for Measurement or Sign-off can appear on a card. The card has no separate measurement field and no sign-off field.
+**Done.** You can name the crop, say whether alerts are clear, and say which tasks are still open.
 
-**Done.** The boxes you checked stay checked. Saved notes, the photo file name, and your comment are on the card. If nothing is due across crop cycles, room chores, and recurring duties, Tasks says nothing is due for you today.
+## Facility board milestones
 
-## Starting a cycle from a template
+**Who.** Anyone who can open **Tasks**.
 
-**Who.** Avery. Blake and Casey see “Managers create templates. You can still work the assignments they generate.”
-
-**When.** You need to confirm that an active cycle is already running on a template, or you are preparing the template a cycle uses.
-
-**Steps.**
-
-1. Open **Workflow templates** from Settings, or go to `/workflows`. The page says templates are blueprints and that a template is applied when a cycle starts.
-2. Read **Canopy week**. The card says “Version 1 of 1 · 28 days · starts at cycle_start.” The tasks are Day 1 Count plants onto the bench, Day 14 Scout the canopy, and Day 22 Lower-leaf pass.
-3. Open **Rooms**, open the room, and choose **Open cycle** on **Current crop**.
-4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
-
-Workflow templates has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Workflow templates**, or on the cycle page. **Crop details** on the cycle page opens the crop form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
-
-**Reset room** sits in the top right of the room page, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones stay on **Zones**. Readings and alert rules stay on **Settings**. The other tabs are **Tasks**, **Notes**, **Zones**, and, on a flower room, **Trolmaster settings**.
-
-**Done.** The cycle page shows the template chip and the generated tasks. A cycle with no template says “This cycle has no workflow assignments yet.”
-
-## Reschedule preview before confirm
-
-**Who.** Avery. The **Reschedule** panel is not on the cycle page for Blake or Casey.
-
-**When.** The cycle start date needs to move, and you want to see the new task dates before they are saved.
+**When.** During the daily room check, and whenever you need the week’s defoliation, harvest, transplant, or chore dates for the selected facility.
 
 **Steps.**
 
-1. Open the crop cycle.
-2. In **Reschedule**, read “Current start” and “Preview the task dates before anything is written.”
-3. Set **New start date**.
-4. Choose **Preview**. The page lists each task as “title: from → to” and says “Preview only. Nothing has been saved.”
-5. If the dates are wrong, change **New start date**. Preview clears, and **Confirm reschedule** stays off until you preview again.
-6. Choose **Confirm reschedule** only after the preview lines are the dates you want.
+1. Set **Facility** in the top bar.
+2. Open **Tasks**. The **Facility board** is at the top. The subtitle names the facility.
+3. Find the room row. Dry rooms are not on this grid.
+4. Read across the columns: **1st** is crop start, **D21** and **D35** (and any other **D** column) are defoliation days from room **Settings**, **H** is harvest, **T** is transplant, and the named columns are chores (**Sul.**, **Side Net**, **Filters AC**, **LS**, **Garden Clean**, **Water Filters**, **Fans / AC**).
+5. Use the legend: **Done**, **Due**, **Overdue**, **Scheduled**. A cell shows the month and day.
+6. Press the room name to open the room when a cell is **Due** or **Overdue**.
+7. Change a defoliation or transplant date on the room **Settings** tab (**Defoliation schedule** or **Transplant schedule**, then **Save schedule**). The board itself does not edit.
+8. Press **Full screen** when you need the grid full screen. Press **Exit full screen** or the Escape key to leave it.
 
-**Done.** The page says “Reschedule saved.” The cycle start date and the due dates on **Generated tasks** match the preview. Expected harvest moves with the start date.
+**Done.** You know which milestone is due for each room you checked, and any date change was saved on room **Settings**.
 
-## Template versions
+## Completing a task
 
-**Who.** Avery.
+**Who.** The person assigned to the task, or someone whose role includes tasks.write.
 
-**When.** You are checking which version a cycle uses, or a newer version of that template is already stored and this cycle should move to it.
-
-**Steps.**
-
-1. Open **Workflow templates** from Settings, or go to `/workflows`. Each card says “Version N of M.” Canopy week is version 1 of 1. The introduction says editing a template creates a new version and leaves existing cycles on the version they already have.
-2. **New template** and **Save template** create version 1 of a new name. Saving the name Canopy week again says “A workflow template with that name already exists.” That form does not edit the existing template.
-3. Open the crop cycle. The chip shows the version that cycle already has, such as **Canopy week v1**.
-4. **Apply version N** appears only when a newer version of that template is already stored. It is not on Canopy week while the template is still version 1 of 1.
-5. When the button is present, choose **Apply version N**.
-
-**Done.** After apply, the page says “The newer template version is now assigned to this cycle.” The chip and **Generated tasks** match that version. A cycle you do not apply stays on the version it already has.
-
-## License inventory import
-
-**Who.** Anyone who can open the license. Avery sees both. Blake sees `OR-CULT-44821` at Harbor House. Casey sees `OR-CULT-55218` at Hill Works.
-
-**When.** You need to know whether the stored inventory file matches the tagged plants.
+**When.** On the due date, or the same day you finish the work.
 
 **Steps.**
 
-1. Open **Compliance**. The page says “Imports stay on the license.”
-2. Read the license card. It shows the license number, the facility, and the plant count.
-3. Harbor House, 144 tagged plants, says “No discrepancies.”
-4. Hill Works, 86 tagged plants, lists `1A4HW000000000000099999` as “In the file, not in Serenity.”
-5. Choose **Open inventory**. The page says plant totals come from tagged plants on this license, and “Showing N of M tags.” Open a tag to read the plant: tag, strain, stage, room or “No room,” and cycle or “No cycle.”
+1. Open **Tasks**. Find the card under **Crop cycle tasks**, **Room tasks**, or **Recurring duties**. You can also open the room, then the **Tasks** tab.
+2. Read the chips. **Notes**, **Photo**, **Measurement**, **Sign-off**, or **Supervisor approval** must be satisfied before the task can finish.
+3. Press the card if you need the task page. The page says to open **View** to do the work. **Edit** changes **Title** and **Due** only, and only when you can write tasks.
+4. In **View**, fill **Notes** and press **Save notes** when notes are required. Add a **Comment** with **Add comment** when you need a trail. Attach the photo or measurement the card asks for.
+5. Press **Finished**. The button reads **Finishing…** while it saves. A completed card shows the **Finished** chip.
+6. If **Finished** does nothing, a required note, photo, measurement, or sign-off is still empty.
 
-Compliance has no file-upload control. The card shows the comparison already stored. A license with no comparison says “No inventory file has been compared for this license.” The plant page has no form to add, move, or remove a tag.
+**Done.** The card shows **Finished** and no longer appears on today’s open list.
 
-**Done.** You can say the Harbor file matches, and you can name the Hill tag that is in the file and not in Serenity. The inventory list matches the count on the license card.
+## Recording a room note
 
-## Reviewed sandbox submissions
+**Who.** Anyone who can open the room and write notes for its active crop.
 
-**Who.** Avery. Approve, Reject, and the sandbox result are not shown to Blake or Casey. The page says “Only a manager can review submissions” if someone else tries. A move or stage change is sent only after the manager approves it, and only to the sandbox.
-
-**When.** A submission on the license card says Pending review, or an earlier send came back Failed or Uncertain and needs a decision.
+**When.** During the room check, after an irrigation, scout, equipment issue, or anything the next shift needs to see.
 
 **Steps.**
 
-1. Open **Compliance** and find **Submissions** on the license card.
-2. Read the tag or package label, the event, the note, and the status. Pending review says “Waiting for a manager. Nothing has been sent.”
-3. The seeded rows, still pending until you approve them, are:
-   - Harbor House move, note “Submit the Harbor House move.”, sandbox result Success.
-   - Hill Works stage change, note “Submit the Hill Works stage change.”, sandbox result Definite failure.
-   - Harbor House stage change, note “Submit the Harbor House stage change.”, sandbox result Uncertain.
+1. Open the room and select the **Notes** tab.
+2. If the page says the room has no active crop, do not invent a note there. Start or confirm a crop first.
+3. Press **Add note**.
+4. Set **Category** to General, Environment, Irrigation, Canopy, Pests, Nutrients, Equipment, or Harvest.
+5. Set **Date** and **Time**.
+6. Type the **Note** so the next person can act on it without asking you.
+7. Press **Add note**. The new line shows the time and your name.
 
-**Success.**
+**Done.** The note is on the **Notes** tab for that crop.
 
-1. Set the sandbox menu to **Success**.
-2. Choose **Approve**. The card says “Approved. The outbox will deliver it.” and the status becomes Queued.
-3. Leave the page open. It checks again while the status is Queued.
+## Starting or resetting a crop
 
-**Done for success.** The status is Succeeded. The attempt line names the request, Avery, the time, and the outcome. That change will not be sent again.
+**Who.** A manager whose role includes rooms.write or workflows.manage. **Reset room** is hidden for everyone else.
 
-**Definite failure.**
+**When.** The current crop is closed, or the room has no active crop and the next crop is ready to plan.
 
-1. Set the sandbox menu to **Definite failure**.
-2. Choose **Approve** and wait through Queued.
+**Steps.**
 
-**Done for failure.** The status is Failed. The card says “Definite failure. Retry only by queueing a new reviewed submission.” Choose **Queue again**. The new row says “A new submission is waiting for review. It has not been sent.” and is Pending review. Review that new row before anything is sent.
+1. Open the room, for example Newton **F1**.
+2. Read **Current crop**. If a crop is still active, confirm it should close. Reset archives it.
+3. Press **Reset room** in the header.
+4. Enter **Strain**, **Plant count**, and **Stage**.
+5. Set **Start date**. That date is day 1.
+6. Enter **Cycle duration in days**. Read the calculated end-of-cycle line before you continue.
+7. Enter **Harvest date** only when you want it stored on the crop that is closing. Leave it blank to skip.
+8. Press **Reset room**. **Cancel** leaves the current crop in place.
+9. Confirm **Current crop** shows the new crop and the previous one is under **Settings** → **Archived crops**.
+10. Zones, readings, and alert rules stay where they were. Reset does not create plant tags. Add tags on the crop page before harvest.
+11. Open **Settings** and set **Defoliation schedule** and **Transplant schedule** for the new crop, then **Save schedule** on each card.
 
-**Uncertain.**
-
-1. Set the sandbox menu to **Uncertain**.
-2. Choose **Approve** and wait through Queued.
-
-**Done for uncertain.** The status is Uncertain. The card says “This change will not be sent again until the sandbox says whether it landed.”
-
-**Reconcile.**
-
-1. On an Uncertain row, choose one finding.
-2. **Sandbox says landed** says “Sandbox says the write landed. It will not be sent again.”
-3. **Sandbox says it did not land** says “Sandbox says the write did not land. A new reviewed submission can be queued.” Choose **Queue again** only after that finding. The new row waits for review.
-
-**Done for reconcile.** The status is Reconciled. The attempt line includes the reconciliation result. A landed result is not sent again. A not-landed result can be queued again as a new Pending review row.
-
-**Reject.** On a Pending review row, **Reject** says “Rejected. Nothing was sent.”
-
-A package uses the same sandbox. On the package page, choose Success, Definite failure, or Uncertain, then **Queue for review**. The page then says “Queued for review. Nothing has been sent.” Finish the review on **Compliance**.
+**Done.** **Current crop** names the new strain, day 1 matches the start date you entered, and the previous crop is archived.
 
 ## Harvest through package
 
-**Who.** Anyone who can open the facility. Blake can harvest Harbor House. Casey can harvest Hill Works. Avery can harvest either. **Harvest this crop** is on the crop cycle page while that crop still has plants. Flower 1’s current crop does not show it. Veg 1 does.
+**Who.** Anyone with harvests.write for the facility. People with only harvests.read can look and cannot save weights or packages. Plant tags are added by someone with inventory permission.
 
-**When.** The crop is cut and you are recording wet weight through the package. Veg crops stay in the room until they are cut.
-
-**Steps.**
-
-1. Open **Rooms**, open the room, then **Open cycle**. Choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
-2. Enter **Wet weight (g)** and choose **Record wet weight**.
-3. Choose **Start drying**.
-4. Enter **Dry weight (g)** and choose **Record dry weight**.
-5. Choose **Record trimming**.
-6. Enter **Waste note** and **Waste (g)**, then choose **Record waste**.
-7. Under Package, enter **Package weight (g)** and the package tag.
-8. In **Scan a source tag**, type or wedge-scan a plant tag and press Enter. Repeat for each tag, or choose **Include harvested tags**. The line under the buttons counts source tags selected.
-9. Choose **Create package**. It stays off until the tag, the weight, and at least one source tag are present. The package page opens.
-10. Choose the sandbox result and **Queue for review**.
-
-The weight that counts is the number you type. **Sample scale weight** sits beside the ledger and does not change wet, dry, packaged, waste, or unaccounted weight. The scan field is keyboard entry. It is not an RFID reader.
-
-**Done.** The ledger shows Wet weight, Dry weight, Packaged, Waste, and Unaccounted. Unaccounted is dry weight minus packaged minus waste. The package page shows the label, grams, your name, the time, the ledger line, and the source tags. After queueing, it says “Queued for review. Nothing has been sent.” once.
-
-The stored Cedar Nights flower harvest on `OR-CULT-44821` is already through this sequence: wet 18240 g, dry 4120 g, packaged 3600 g, waste 240 g, unaccounted 280 g, package `1A4PKGCEDARNIGHTS00001`. The sample beside it is `hh-sample-scale`, 510 g, labeled Sample data. That 510 g is not part of the ledger. Hill Works prior lot has no veg cut and is not the Glass Orchard crop.
-
-## Recording a reading
-
-**Who.** Anyone who can open the room. Blake records Harbor House rooms. Casey records Hill Works rooms. Avery can record either. A Harbor House gateway cannot write a Hill Works room. The message is “This gateway cannot write that room.” Blake opening the Hill Works gateway sees “You do not have access to this gateway.” once.
-
-**When.** During the room check, or when a sensor posts a live value.
+**When.** The crop is ready to cut, after the tags are on the crop.
 
 **Steps.**
 
-1. Open the room dashboard and choose the **Settings** tab.
-2. Under **Record a reading**, enter Device, Metric, Value, Unit, Timestamp, and Quality. Quality is Good, Suspect, or Bad.
-3. Leave **Sample data** unchecked for a live sensor. Check it only when the row is not a live sensor.
-4. Choose **Save reading**. A time you type without a timezone is the facility’s local time.
-5. To load a file instead, use **Import a CSV**. The columns are `device_id`, `metric`, `value`, `unit`, `recorded_at`, `quality`, and `sample`. Choose **Import readings**.
-6. For a live gateway post, use **Environment gateway** on the room **Settings** tab. Harbor House environment says it posts a live reading and is not sample data. Enter Device, Metric, Value, Unit, Timestamp, and Quality, then **Post gateway reading**. There is no sample checkbox on that form.
-7. To add an alert, set **Alert rule** to “Stale metric” or “Outside a range,” enter Minimum and Maximum for a range, and choose **Save alert rule**.
+1. Open the room and press **Open cycle**.
+2. On **Harvest**, read **1. Plants on this crop**. **None yet.** means stop and add tags before you cut.
+3. Under **2. Add tags**, choose **License**, enter **Plant tags**, and press **Add tags to crop**. Use **Compliance** if you need the license inventory first.
+4. Under **3. Cut the crop**, press **Harvest this crop**.
+5. Open **Harvests** and press the new harvest. The back link **Harvests** returns to the list.
+6. Enter **Wet weight (g)** and press **Start drying**.
+7. When the flower is dry, enter **Dry weight (g)** and press **Record trimming**.
+8. Under **Package**, enter **Package weight (g)** and **Package tag**. Press **Include harvested tags** or **Scan a source tag** so the package has source tags.
+9. Press **Create package**. The button stays off until the label, weight, and at least one source tag are present.
+10. Open the package from **Packages**. Press **Queue for review** when the package should enter the Compliance submission queue.
+11. On **Compliance**, a manager uses **Approve** or **Reject**. That queue is the reviewed sandbox path. It is not a live Metrc send.
 
-A controller sample is not this procedure. It stays on **Controller sample**, labeled Sample data, and it does not clear or create a range alert.
+**Done.** Wet weight, dry weight, and at least one package are on the harvest, and the package is queued when your site requires review.
 
-**Done.** **Latest environmental readings** shows the device, value, unit, and time. A manual save says “Reading saved.” or “Sample reading saved.” A gateway post names the device, value, and unit and says “This is a live reading.” A sample row shows **Sample data** and is not the live value for a range alert. A live temperature newer than 60 minutes is not stale. Humidity stays stale when its own newest reading is older than 60 minutes and the stale rule is on. The page says “Alert rule saved.” after you save a rule.
+## Readings and alerts
 
-## Reading yield and cost
+**Who.** Anyone who can open the room. Saving a reading or an alert rule requires permission to write rooms.
 
-**Who.** Avery reads both facilities. Blake reads Harbor House cycles. Casey reads Hill Works cycles. A facility report for the other site says “You do not have access to this report.”
-
-**When.** After harvest weights, labor, and input costs are stored, or when you need to see that an open cycle has no yield yet.
-
-**Steps.**
-
-1. Open **Reports**. The title is Cultivar and room comparison. Each figure is computed from stored harvest, labor, and cost rows, and the formula under a number is the calculation.
-2. On the crop card, read **Yield**. Cedar Nights shows grams per plant from dry weight 4120 g divided by 144 plants, and the ledger line “Packaged 3600 g + waste 240 g + unaccounted 280 g = dry weight 4120 g.” Glass Orchard says “This cycle has not been harvested, so yield is absent.”
-3. Read **Cycle duration**. Cedar Nights, started 2026-09-12 and harvested 2026-10-03, says “Completed duration: 22 days.” An open cycle says “Days since start” and “Completed duration is absent.”
-4. Read **Labor**. Blake Ortiz is 5.5 hours at 2800 cents. Casey Nguyen is 4 hours at 2600 cents. The line under each name is hours times that person’s stored rate.
-5. Read **Input costs**. Flower nutrients is 2 at 1500 cents. Veg media is 1 at 4200 cents.
-6. Read **Total cost**. Cedar Nights is 18400 cents. Glass Orchard is 14600 cents. The formula is labor cost plus input cost.
-7. Read the sample line. It says sample environmental readings are excluded and gives the excluded count.
-
-The comparison page has no link to a single-facility report. That page is **Facility report** at `/reports/sites/` plus the facility id, and it uses the same sections for the cycles on that facility.
-
-**Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples, the 510 g scale sample, and the sample tag are not in these totals. Hill Works prior lot is not a Glass Orchard yield. A crop with no labor entries says “Labor is absent. No labor entries are stored.” A crop with no input costs says “Input cost is absent. No input costs are stored.”
-
-## Serenity
-
-**Who.** Anyone who can open the facility. Blake sees Harbor House. Casey sees Hill Works. Avery can switch facilities.
-
-**When.** You want to generate tasks, train workers, quote a procedure, teach Serenity a note, read stored figures, or check readiness for the license jurisdiction.
+**When.** During the daily room check, and whenever a sensor looks wrong.
 
 **Steps.**
 
-1. Open **Serenity**. She introduces herself as Serenity. It follows the facility in the top bar. The address is `/coach`.
-2. Use the chat box. Choose **Generate tasks** to create room tasks from stored procedures, or **Train workers** to assign training. Type a procedure question to get a quote. Say **Remember that…** to teach her.
-3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Tasks**.
-4. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
-5. Open **Reports** when you need yield, labor, and cost figures.
-6. Open **Messages** when you need a saved Serenity chat or a direct message with someone in the organization. The address is `/messages`.
+1. Open the room and select **Settings**.
+2. Read **Latest environmental readings**. Note any metric marked stale. The card states how many minutes make a reading stale, and the facility time zone.
+3. Read **Active alerts**. “No active alerts.” means nothing is open.
+4. To record a value by hand, use **Record a reading**. Enter **Device**, **Metric** (Temperature, Relative humidity, CO₂, or Substrate), **Value**, **Unit**, **Timestamp**, and **Quality** (Good, Suspect, or Bad).
+5. Check **Sample data** only for a sample. Leave it off for a real reading.
+6. Press **Save reading**. Or use **Import a CSV** and **Import readings** when the values are in a file.
+7. To change a limit, open **Alert rules**, set **Metric**, **Kind**, **Minimum**, and **Maximum**, and press **Save alert rule**.
+8. If the site has an **Environment gateway**, use **Post gateway reading** for a live post. A gateway belongs to one facility and cannot write a room on the other facility.
+9. On a flower room, sensor charts can also come from **Trolmaster settings**. That tab is separate from the reading form.
 
-**Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Serenity does not call live Metrc and does not send email or SMS.
-
-## Internal messages
-
-**Who.** Anyone signed in. Avery, Blake, and Casey can message people in Harbor & Hill Cultivation.
-
-**When.** You need a direct message inside Serenity, or a saved Serenity thread that remembers earlier questions.
-
-**Steps.**
-
-1. Open **Messages**. The address is `/messages`.
-2. Choose **Message a person**, then pick a name from the organization directory.
-3. Write the message and choose **Send**. The other person sees the same conversation.
-4. Choose **Chat with Serenity** for a saved Serenity thread. Ask about procedures, generate tasks, assign training, or teach her with **Remember that…**. She uses the facility in the top bar.
-
-**Done.** You can name who received the message and whether Serenity replied. Serenity does not send email or SMS.
+**Done.** The latest value is on **Latest environmental readings**, and any new alert is visible on **Active alerts** and on **Serenity** room notices.
 
 ## Recording irrigation and feed
 
-**Who.** Anyone who can open the room. Blake records Harbor House. Casey records Hill Works. Avery can record either.
+**Who.** Anyone with operations.write for the selected facility.
 
-**When.** After a water or nutrient pass.
+**When.** Each irrigation or feed pass, the same day it happens.
 
 **Steps.**
 
-1. Open **Operations**, then **Irrigation and feed**.
-2. Read the stored rows for the facility in the switcher.
-3. Choose the room, date, Irrigation or Feed, method, volume, EC, pH, and nutrient.
-4. Choose **Save record**.
+1. Set **Facility** in the top bar.
+2. Open **Operations**. Press **Irrigation and feed**.
+3. Choose **Room**, for example **F1**.
+4. Set **Date** and **Kind** (**Irrigation** or **Feed**).
+5. Enter **Method**, **Volume (L)**, **EC**, **pH**, **Nutrient**, and **Note**.
+6. Press **Save record**.
+7. Confirm the new row is on the list. Volumes stay on this facility.
 
-**Done.** The new row is on the list with your name. The page says “Irrigation and feed record saved.” Flower 1’s stored feed is Drip, 12 L, Flower nutrients, EC 1.8, pH 5.9.
+**Done.** The pass is on the Irrigation and feed list for that room and date.
 
 ## Recording an IPM scout
 
-**Who.** Anyone who can open the room.
+**Who.** Anyone with operations.write. The two scout days are set by a manager on the room **IPM schedule**.
 
-**When.** After walking the room, including when you find nothing.
-
-**Steps.**
-
-1. Open **Operations**, then **IPM**.
-2. Choose the room, date, target, Clear or Present, and the response.
-3. Choose **Save record**.
-
-**Done.** The list shows the target, Clear or Present, and the response. Flower 1 shows Thrips, Clear, Monitor. A clear scout stays on the list.
-
-## Completing a recurring task
-
-**Who.** The assignee named on the row, or anyone who can open that facility.
-
-**When.** On or after the next due date.
+**When.** On the scheduled scout day, including a day when you find nothing.
 
 **Steps.**
 
-1. Open **Operations**, then **Recurring tasks**.
-2. Read the next due date, Daily or Weekly, the room, and the procedure name.
-3. Choose **Mark done**.
+1. Open the room **Settings** tab and read **IPM schedule** so you know the two weekdays. Tuesday and Friday are the suggestion until someone saves another pair.
+2. Open **Operations** and press **IPM**.
+3. Choose **Room** and **Date**.
+4. Enter **Target**.
+5. Set **Finding** to **Clear** or **Present**.
+6. Enter **Response** and **Note**. A clear scout still needs a response, such as “no action.”
+7. Press **Save record**.
 
-**Done.** The page says “Next due date moved.” A weekly task moves seven days later. A daily task moves one day later. Check drip lines on Flower 1 is weekly and starts at 2026-10-04.
+**Done.** The scout is on the IPM list, including clear passes.
 
-## Reading the room calendar
+## Recording maintenance
 
-**Who.** Anyone who can open the facility.
+**Who.** Anyone with operations.write.
 
-**When.** Before you plan a room, or when you need the cultivar and medium for the dates a crop occupies it.
-
-**Steps.**
-
-1. Open **Operations**, then **Room calendar**.
-2. Read the month grid. **Previous**, **Next**, and **Today** move the month. A day with a stay shows the room and cultivar. An empty day stays quiet.
-
-**Done.** You can name the cultivar and medium for a date from the stay list under the grid.
-
-## Using a cultivar or medium template
-
-**Who.** Avery, when saving a template. Blake and Casey can read the template cards.
-
-**When.** The work belongs to one cultivar or one medium.
+**When.** When preventive work or a repair is done, or when you schedule the next due date.
 
 **Steps.**
 
-1. Open **Workflow templates** from Settings, or go to `/workflows`.
-2. Read the card. **Cedar Nights coco week** says Cultivar Cedar Nights and Medium coco. **Glass Orchard soil week** says Cultivar Glass Orchard and Medium soil. Canopy week has no cultivar or medium.
-3. To add one, use **New template**. Fill **Cultivar**, **Medium**, or leave either blank, then **Save template**.
+1. Open **Operations** and press **Maintenance**.
+2. Choose **Room**, or leave the room blank for a facility-wide asset.
+3. Set **Date**, **Asset**, and **Kind** (**Preventive** or **Repair**).
+4. Enter **Summary** and **Next due** when the asset should come up again.
+5. Press **Save record**.
 
-**Done.** The new card shows the cultivar and medium you entered. Existing cycles stay on the version they already have.
+**Done.** The asset and the next due date are on the Maintenance list.
 
-## Reading the SOP library
+## Recording a purchase
 
-**Who.** Any signed-in user. Cycle tasks from another facility stay off the list.
+**Who.** Anyone with operations.write.
 
-**When.** You need the procedure tied to a task.
+**When.** When the facility orders something, and again when it arrives.
 
 **Steps.**
 
-1. Open **Operations**, then **SOP library**.
-2. Read the procedure title and summary.
-3. Read the template line or the facility, room, cycle, and task line under it.
+1. Open **Operations** and press **Purchasing**.
+2. Enter **Vendor**, **Ordered on**, **Description**, **Quantity**, and **Unit cost (cents)**.
+3. Set **Status** to **Requested** when it is ordered, or **Received** when it has arrived.
+4. Press **Save purchase**.
+5. When a requested order arrives, edit the row and set **Status** to **Received**.
 
-**Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The operating document stays at `/sop` and is linked from the User manual.
+**Done.** The order is on the Purchasing list with the current status.
+
+## Recording sanitation
+
+**Who.** Anyone with operations.write.
+
+**When.** After each sanitation pass.
+
+**Steps.**
+
+1. Open **Operations** and press **Sanitation**.
+2. Set **Date**, **Area**, and **Method**.
+3. Set **Outcome** to **Done** or **Needs follow-up**.
+4. Press **Save record**.
+5. If the outcome is **Needs follow-up**, say what is left in the method or tell the next shift in a room note.
+
+**Done.** The pass is on the Sanitation list with an outcome.
+
+## Recording training
+
+**Who.** Anyone with operations.write who ran the training.
+
+**When.** When training is assigned, and again when the person finishes.
+
+**Steps.**
+
+1. Open **Operations** and press **Training**.
+2. Enter **Trainee**, **Title**, and **Procedure** (the SOP title they used).
+3. Set **Status** to **Assigned**, or **Completed** with **Completed on** when they are done.
+4. Press **Save training**.
+
+**Done.** The trainee and status are on the Training list.
+
+## Room calendar
+
+**Who.** Anyone who can open **Operations**. Saving a stay requires operations.write.
+
+**When.** When a cultivar and medium will occupy a room for a date range, and when you check who is in a room this month.
+
+**Steps.**
+
+1. Set **Facility** in the top bar.
+2. Open **Operations** and press **Room calendar**.
+3. Press **Previous**, **Next**, or **Today** to move the month. Today is outlined.
+4. Read the bars. Each stay shows the room, cultivar, and medium. An empty day is quiet on purpose.
+5. To add a stay, enter **Label**, **Cultivar**, **Medium**, **Starts**, and **Ends**, then press **Save stay**.
+6. This grid is manual stays. It does not show Facility board milestones. Milestones stay on **Tasks**.
+
+**Done.** The month shows the stay you saved, on the rooms and dates you entered.
+
+## Recurring duties
+
+**Who.** Anyone with operations.write creates the duty. The assignee marks it done.
+
+**When.** When a job repeats daily or weekly, and on each due date.
+
+**Steps.**
+
+1. Open **Operations** and press **Recurring tasks**.
+2. Enter **Title**, **Cadence** (**Daily** or **Weekly**), **Next due**, **Assignee**, **Room**, and **Procedure**.
+3. Press **Save recurring task**.
+4. On the due date, open **Tasks** and find the card under **Recurring duties**, or stay on this list and press **Mark done**.
+5. Marking it done moves **Next due** forward. The duty stays on the list.
+
+**Done.** The duty shows the next due date after this occurrence.
+
+## Time clock punches
+
+**Who.** Anyone whose role includes timeclock.punch. Payroll totals require timeclock.manage.
+
+**When.** When you arrive, when you start and end lunch, and when you leave. Punch the facility you are actually in.
+
+**Steps.**
+
+1. Set **Facility** in the top bar to the site you are working, such as Newton.
+2. Read the status: **Out**, **In**, or **Lunch**.
+3. From **Out**, press **Clock in**.
+4. From **In**, press **Lunch** when you leave for lunch, or **Clock out** when the shift ends.
+5. From **Lunch**, press **End lunch** when you are back. Lunch is unpaid.
+6. You can punch from the top bar or from **Time clock**. Both use the selected facility.
+7. Open **Time clock** and read **Who’s in** if you need to see who is **On the clock** or **On lunch**.
+8. Managers with payroll access set **From** and **To**, press **Refresh payroll**, and read **Regular hrs**, **OT hrs**, and **Gross**. They maintain **Hourly $** under **Pay rates** with **Save rate**.
+
+**Done.** Your status matches where you are, and **Who’s in** lists you while you are clocked in.
 
 ## Adding a user
 
-**Who.** Avery, or anyone with `access.manage`. A site operator does not see **Users** in the navigation.
+**Who.** A person with access.manage. **Users** is hidden for everyone else.
 
-**When.** A new person needs a sign-in.
-
-**Steps.**
-
-1. Open **Users**, directly under **Dashboard**. The page opens on **Users**. **Activity** shows the last 14 days of sign-ins and access changes.
-2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters. Add a phone, street, city, region, and postal code when you have them. Choose a photo if you have one; it can also be added on **Edit**.
-3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
-4. Choose **Add user**. The person appears in the table. Use **Search users** or a column header when the list is long. **Audit logs** records the change and can be searched the same way.
-5. **Edit** changes the person. **Delete** removes a person who has not recorded work. Do not delete your own account.
-
-**Done.** The new person is in the Users table, and the audit log names who added them.
-
-## Capturing a harvest on a phone
-
-**Who.** Anyone who can open the harvest.
-
-**When.** You are recording weights or a sample tag on a narrow screen.
+**When.** When someone new needs to sign in.
 
 **Steps.**
 
-1. Open the harvest.
-2. Use the capture card at the top. Enter the weight the next step asks for. The fields and buttons use the width of the screen.
-3. To store a scanner sample, fill Device, Tag, Timestamp, and Quality under **Sample tag**, then **Save sample tag**.
-4. Type source tags in **Scan a source tag** and press Enter only when you are creating a package. That field is the package step. The sample tag is separate.
+1. Open **Users**. Stay on the **Users** tab.
+2. Press **Add user**.
+3. Enter **Name**, **Email**, and **Password** (at least 8 characters). Give the password to the person through your organization’s channel. Do not put it in a room note or in this procedure.
+4. Enter **Phone**.
+5. Under **Address**, enter **Street**, **City**, **Region**, and **Postal code**.
+6. Choose **Role**. The role decides the menu they see and which facilities they can open. **Opens every facility** is set on the role, under the **Roles** tab.
+7. Press **Choose photo** and pick a JPEG, PNG, WebP, or GIF if you have one.
+8. Save the form. The account is created, then the photo is stored. The table shows the photo or initials, the phone, and the role.
+9. Press **View** on the new row and confirm **Address** is the street, city, region, and postal code you entered.
 
-**Done.** The ledger shows the weights you typed. A sample tag shows Sample data and leaves wet, dry, packaged, waste, unaccounted, and the plant tags unchanged. The seeded sample is `hh-sample-rfid`, tag `1A4HH000000000000000001`, beside the Cedar Nights ledger.
+**Done.** The person can sign in, and **View** shows phone, address, and photo.
+
+## Updating your profile
+
+**Who.** Every signed-in person, for their own record. You do not need access to **Users**.
+
+**When.** When your phone, address, or photo changes.
+
+**Steps.**
+
+1. Press your photo or initials at the right of the top bar.
+2. Press **User Profile**. The title is **User Profile**.
+3. Press **Change photo** and choose a JPEG, PNG, WebP, or GIF. The picture replaces your initials in the top bar after it uploads.
+4. Edit **Phone**, **Street**, **City**, **Region**, and **Postal code**.
+5. Press **Save profile**. Name and email stay as issued.
+6. **Logout** in the same menu ends the session. It does not change the profile.
+
+**Done.** **User Profile** shows the new phone and address, and the top bar shows the new photo.
+
+## Sending a message
+
+**Who.** Anyone with messages.use.
+
+**When.** When you need another person in the organization, or Serenity, without leaving the workspace.
+
+**Steps.**
+
+1. Open **Messages**.
+2. Press the person’s name to open a direct conversation. If the list says “No other people yet.”, no one else is available to message.
+3. Type the message and press **Send**.
+4. To talk to the assistant here, press **Chat with Serenity**, type, and press **Send**.
+5. Announcements to the whole organization are not sent from Messages. A manager opens **Email**, writes **Subject** and the body under **Compose announcement**, and presses **Send to organization**.
+
+**Done.** The message is in the conversation, or the announcement is under **Recent sends**.
+
+## Asking Serenity
+
+**Who.** Anyone with coach.use.
+
+**When.** When you need the steps for a job in this document or in the user manual, or a procedure stored on the facility.
+
+**Steps.**
+
+1. Set **Facility** in the top bar. Serenity answers for that site.
+2. Open **Serenity**, or press the floating **Serenity** button and then **Open full Serenity page** if you want the full page.
+3. Ask a how-to in plain language, for example how to clock in or how to reset a room.
+4. Read the reply. It should follow the numbered steps in the matching section of the user manual or these procedures and name that section.
+5. To teach a facility note, start the message with “Remember that…”.
+6. To change a defoliation schedule through chat, wait for the proposal and confirm it. A casual sentence does not change room **Settings**.
+7. Yield, cost, and payroll totals stay on **Reports**, **Dashboard**, and **Time clock**. Use those pages for the figures.
+
+**Done.** You have the steps from the named section, or a confirmed schedule change, and you did not need a password from the guide.

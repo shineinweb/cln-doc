@@ -31,15 +31,41 @@ function terms(question: string): string[] {
   return [...new Set(question.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 2))];
 }
 
+function sectionScore(section: GuideSection, words: string[]): number {
+  const title = section.title.toLowerCase();
+  const body = section.text.toLowerCase();
+  return words.reduce((total, word) => {
+    const inTitle = title.includes(word) ? 3 : 0;
+    const inBody = body.includes(word) ? 1 : 0;
+    return total + inTitle + inBody;
+  }, 0);
+}
+
+/** The slice of a long section that actually contains the question's words. */
+function matchingSlice(text: string, words: string[], limit = 1400): string {
+  if (text.length <= limit) {
+    return text;
+  }
+  const lower = text.toLowerCase();
+  let bestAt = 0;
+  let bestScore = -1;
+  for (let index = 0; index < text.length; index += 80) {
+    const slice = lower.slice(index, index + limit);
+    const score = words.reduce((total, word) => total + (slice.includes(word) ? 1 : 0), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestAt = index;
+    }
+  }
+  const start = bestAt === 0 ? 0 : Math.max(0, text.lastIndexOf('\n', bestAt));
+  return text.slice(start, start + limit).trim();
+}
+
 /** Sections from the user manual and operating procedures that match the question. */
 export function guideExcerpts(question: string, limit = 4): string {
   const words = terms(question);
   const ranked = loadGuides()
-    .map((section) => {
-      const haystack = `${section.title} ${section.text}`.toLowerCase();
-      const score = words.reduce((total, word) => total + (haystack.includes(word) ? 1 : 0), 0);
-      return { section, score };
-    })
+    .map((section) => ({ section, score: sectionScore(section, words) }))
     .filter((row) => row.score > 0)
     .sort((left, right) => right.score - left.score)
     .slice(0, limit);
@@ -47,7 +73,7 @@ export function guideExcerpts(question: string, limit = 4): string {
     return '';
   }
   return ranked
-    .map((row) => `${row.section.source} — ${row.section.title}\n${row.section.text.slice(0, 900)}`)
+    .map((row) => `${row.section.source} — ${row.section.title}\n${matchingSlice(row.section.text, words)}`)
     .join('\n\n');
 }
 
