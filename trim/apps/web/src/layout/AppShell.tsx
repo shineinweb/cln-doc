@@ -23,6 +23,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { can } from '../auth/permissions';
 import { NavGlyph, type GlyphName } from '../components/Graphics';
 import { workbench } from '../theme';
+import { FloatingSerenityChat } from './FloatingSerenityChat';
 import { useSites } from './SiteProvider';
 import { TopBarClock } from './TopBarClock';
 
@@ -244,6 +245,7 @@ export function AppShell() {
           onClick={() => setMobileOpen(true)}
         />
       </BottomNavigation>
+      <FloatingSerenityChat />
     </Box>
   );
 }

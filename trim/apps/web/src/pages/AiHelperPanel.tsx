@@ -32,7 +32,16 @@ const STARTER: ChatMessage = {
   ],
 };
 
-export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: CoachHelper }) {
+export function AiHelperPanel({
+  siteId,
+  helper,
+  compact = false,
+}: {
+  siteId: string;
+  helper: CoachHelper;
+  /** Slim layout for the floating chat shell (hides page lede and footer shortcuts). */
+  compact?: boolean;
+}) {
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([STARTER]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -76,42 +85,62 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
   }
 
   return (
-    <Box data-testid="ai-helper">
-      <Typography variant="h2" sx={{ fontSize: 28, mb: 0.5 }}>
-        Serenity
-      </Typography>
-      <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
-        Chat with Serenity to generate tasks, train workers, quote a stored procedure, confirm defoliation schedule
-        updates, or teach her with “Remember that…”. {helper.sops.length} procedures, {helper.people.length} people, and{' '}
-        {helper.rooms.length} rooms are in scope for this facility. Saved chats with people and Serenity also live under{' '}
-        <Button size="small" variant="text" component={RouterLink} to="/messages" sx={{ px: 0.5, minWidth: 0, verticalAlign: 'baseline' }}>
-          Messages
-        </Button>
-        .
-      </Typography>
+    <Box data-testid="ai-helper" sx={compact ? { height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 } : undefined}>
+      {compact ? null : (
+        <>
+          <Typography variant="h2" sx={{ fontSize: 28, mb: 0.5 }}>
+            Serenity
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
+            Chat with Serenity to generate tasks, train workers, quote a stored procedure, confirm defoliation schedule
+            updates, or teach her with “Remember that…”. {helper.sops.length} procedures, {helper.people.length} people, and{' '}
+            {helper.rooms.length} rooms are in scope for this facility. Saved chats with people and Serenity also live under{' '}
+            <Button size="small" variant="text" component={RouterLink} to="/messages" sx={{ px: 0.5, minWidth: 0, verticalAlign: 'baseline' }}>
+              Messages
+            </Button>
+            .
+          </Typography>
+        </>
+      )}
       <Card
         sx={{
           backgroundImage: 'none',
           bgcolor: workbench.paper,
-          border: `1px solid ${workbench.line}`,
+          border: compact ? 0 : `1px solid ${workbench.line}`,
           overflow: 'hidden',
+          flex: compact ? 1 : undefined,
+          display: compact ? 'flex' : undefined,
+          flexDirection: compact ? 'column' : undefined,
+          minHeight: 0,
+          borderRadius: compact ? 0 : undefined,
         }}
       >
-        <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+        <CardContent
+          sx={{
+            p: 0,
+            '&:last-child': { pb: 0 },
+            flex: compact ? 1 : undefined,
+            display: compact ? 'flex' : undefined,
+            flexDirection: compact ? 'column' : undefined,
+            minHeight: 0,
+          }}
+        >
           <Box
             data-testid="ai-helper-transcript"
             sx={{
               display: 'grid',
               gap: 1.25,
-              maxHeight: 420,
+              maxHeight: compact ? 'none' : 420,
+              flex: compact ? 1 : undefined,
               overflowY: 'auto',
               px: 2,
               py: 2,
               bgcolor: 'rgba(16, 14, 28, 0.55)',
+              minHeight: 0,
             }}
           >
             {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} onSuggest={send} pending={chat.isPending} />
+              <MessageBubble key={message.id} message={message} onSuggest={send} pending={chat.isPending} compact={compact} />
             ))}
             <div ref={bottomRef} />
           </Box>
@@ -120,7 +149,7 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
             sx={{
               display: 'grid',
               gap: 1,
-              gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+              gridTemplateColumns: compact ? '1fr auto' : { xs: '1fr', sm: '1fr auto' },
               alignItems: 'start',
               px: 2,
               py: 1.5,
@@ -138,7 +167,7 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
               fullWidth
               multiline
               minRows={1}
-              maxRows={4}
+              maxRows={compact ? 3 : 4}
               inputProps={{ 'data-testid': 'ai-helper-input' }}
             />
             <Button
@@ -146,7 +175,7 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
               variant="contained"
               disabled={chat.isPending || draft.trim().length === 0}
               data-testid="ai-helper-send"
-              sx={{ minWidth: 108, justifySelf: { sm: 'stretch' } }}
+              sx={{ minWidth: compact ? 84 : 108, alignSelf: { sm: 'stretch' } }}
             >
               Send
             </Button>
@@ -158,29 +187,31 @@ export function AiHelperPanel({ siteId, helper }: { siteId: string; helper: Coac
           ) : null}
         </CardContent>
       </Card>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
-        <Button
-          size="small"
-          variant="outlined"
-          data-testid="ai-helper-generate-tasks"
-          disabled={chat.isPending}
-          onClick={() => send('Generate tasks from stored procedures')}
-        >
-          Generate tasks
-        </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          data-testid="ai-helper-train-workers"
-          disabled={chat.isPending}
-          onClick={() => send('Train workers on Canopy scout')}
-        >
-          Train workers
-        </Button>
-        <Button size="small" variant="text" component={RouterLink} to="/operations/training">
-          Open training
-        </Button>
-      </Box>
+      {compact ? null : (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            data-testid="ai-helper-generate-tasks"
+            disabled={chat.isPending}
+            onClick={() => send('Generate tasks from stored procedures')}
+          >
+            Generate tasks
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            data-testid="ai-helper-train-workers"
+            disabled={chat.isPending}
+            onClick={() => send('Train workers on Canopy scout')}
+          >
+            Train workers
+          </Button>
+          <Button size="small" variant="text" component={RouterLink} to="/operations/training">
+            Open training
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }
@@ -189,10 +220,12 @@ function MessageBubble({
   message,
   onSuggest,
   pending,
+  compact = false,
 }: {
   message: ChatMessage;
   onSuggest: (value: string) => void;
   pending: boolean;
+  compact?: boolean;
 }) {
   const mine = message.role === 'user';
   return (
@@ -200,7 +233,7 @@ function MessageBubble({
       data-testid={mine ? 'ai-helper-user-message' : 'ai-helper-assistant-message'}
       sx={{
         justifySelf: mine ? 'end' : 'start',
-        maxWidth: { xs: '92%', sm: '80%' },
+        maxWidth: compact ? '95%' : { xs: '92%', sm: '80%' },
         display: 'grid',
         gap: 1,
       }}
