@@ -44,12 +44,18 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          overflowX: 'hidden',
+          maxWidth: '100%',
+        },
         body: {
           backgroundColor: workbench.canvas,
           color: workbench.ink,
           fontFamily: bodyFont,
+          overflowX: 'hidden',
+          maxWidth: '100%',
         },
-        '#root': { minHeight: '100vh' },
+        '#root': { minHeight: '100vh', maxWidth: '100%', overflowX: 'hidden' },
         a: { color: workbench.sky },
       },
     },

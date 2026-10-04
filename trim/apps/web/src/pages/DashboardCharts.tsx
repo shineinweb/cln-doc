@@ -374,7 +374,7 @@ function PlantForecastTable({ forecast }: { forecast: DashboardAnalytics['plantF
   const median = flat.length === 0 ? 0 : [...flat].sort((a, b) => a - b)[Math.floor(flat.length / 2)]!;
 
   return (
-    <Box sx={{ overflowX: 'auto' }}>
+    <Box sx={{ overflowX: 'auto', maxWidth: '100%', width: '100%' }}>
       <Table size="small">
         <TableHead>
           <TableRow>

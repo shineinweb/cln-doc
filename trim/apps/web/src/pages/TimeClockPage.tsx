@@ -10,6 +10,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -417,34 +418,36 @@ function PayrollPanel({ report }: { report: PayrollReport }) {
         <Stat label="OT hrs" value={formatHours(report.totals.overtimeMinutes)} />
         <Stat label="Gross" value={formatMoney(report.totals.grossCents)} />
       </Box>
-      <Table size="small" data-testid="payroll-table">
-        <TableHead>
-          <TableRow>
-            <TableCell>Employee</TableCell>
-            <TableCell align="right">Worked</TableCell>
-            <TableCell align="right">Lunch</TableCell>
-            <TableCell align="right">Regular</TableCell>
-            <TableCell align="right">OT</TableCell>
-            <TableCell align="right">Gross</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {report.employees.map((row) => (
-            <TableRow key={row.userId} hover>
-              <TableCell>
-                {row.userName}
-                {row.openShift ? ' · open' : ''}
-                {row.hourlyCents == null ? ' · no rate' : ''}
-              </TableCell>
-              <TableCell align="right">{formatHours(row.workedMinutes)}</TableCell>
-              <TableCell align="right">{formatHours(row.lunchMinutes)}</TableCell>
-              <TableCell align="right">{formatHours(row.regularMinutes)}</TableCell>
-              <TableCell align="right">{formatHours(row.overtimeMinutes)}</TableCell>
-              <TableCell align="right">{formatMoney(row.grossCents)}</TableCell>
+      <TableContainer sx={{ maxWidth: '100%', width: '100%', overflowX: 'auto' }}>
+        <Table size="small" data-testid="payroll-table" sx={{ minWidth: 560 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Employee</TableCell>
+              <TableCell align="right">Worked</TableCell>
+              <TableCell align="right">Lunch</TableCell>
+              <TableCell align="right">Regular</TableCell>
+              <TableCell align="right">OT</TableCell>
+              <TableCell align="right">Gross</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {report.employees.map((row) => (
+              <TableRow key={row.userId} hover>
+                <TableCell>
+                  {row.userName}
+                  {row.openShift ? ' · open' : ''}
+                  {row.hourlyCents == null ? ' · no rate' : ''}
+                </TableCell>
+                <TableCell align="right">{formatHours(row.workedMinutes)}</TableCell>
+                <TableCell align="right">{formatHours(row.lunchMinutes)}</TableCell>
+                <TableCell align="right">{formatHours(row.regularMinutes)}</TableCell>
+                <TableCell align="right">{formatHours(row.overtimeMinutes)}</TableCell>
+                <TableCell align="right">{formatMoney(row.grossCents)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Box sx={{ mt: 1.5 }}>
         {report.accountingNotes.map((note) => (
           <Typography key={note} sx={{ color: 'text.secondary', fontSize: 13 }}>
@@ -461,22 +464,24 @@ function RatesTable({ rates }: { rates: LaborRateView[] }) {
     return <Alert severity="info">No labor rates stored yet.</Alert>;
   }
   return (
-    <Table size="small" data-testid="rates-table">
-      <TableHead>
-        <TableRow>
-          <TableCell>Name</TableCell>
-          <TableCell align="right">Hourly</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {rates.map((rate) => (
-          <TableRow key={rate.id}>
-            <TableCell>{rate.personName}</TableCell>
-            <TableCell align="right">{formatMoney(rate.hourlyCents)}</TableCell>
+    <TableContainer sx={{ maxWidth: '100%', width: '100%', overflowX: 'auto' }}>
+      <Table size="small" data-testid="rates-table">
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell align="right">Hourly</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {rates.map((rate) => (
+            <TableRow key={rate.id}>
+              <TableCell>{rate.personName}</TableCell>
+              <TableCell align="right">{formatMoney(rate.hourlyCents)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 

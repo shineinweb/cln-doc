@@ -52,9 +52,11 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
             borderRadius: 2,
             bgcolor: workbench.paper,
             overflowX: 'auto',
+            maxWidth: '100%',
+            width: '100%',
           }}
         >
-          <Table size="small" stickyHeader sx={{ minWidth: 720 }}>
+          <Table size="small" stickyHeader sx={{ minWidth: 720, width: 'max-content' }}>
             <TableHead>
               <TableRow>
                 <TableCell

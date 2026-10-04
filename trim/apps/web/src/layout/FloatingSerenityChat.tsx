@@ -43,13 +43,15 @@ export function FloatingSerenityChat() {
       sx={{
         position: 'fixed',
         right: { xs: 16, sm: 24 },
+        left: { xs: 16, sm: 'auto' },
         bottom: { xs: 84, sm: 24 },
         zIndex: (theme) => theme.zIndex.modal,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'flex-end',
+        alignItems: { xs: 'stretch', sm: 'flex-end' },
         gap: 1.25,
         pointerEvents: 'none',
+        maxWidth: { sm: 400 },
       }}
     >
       {open ? (
@@ -58,7 +60,8 @@ export function FloatingSerenityChat() {
           data-testid="floating-serenity-panel"
           sx={{
             pointerEvents: 'auto',
-            width: { xs: 'min(100vw - 32px, 400px)', sm: 400 },
+            width: { xs: '100%', sm: 400 },
+            maxWidth: '100%',
             height: { xs: 'min(70vh, 560px)', sm: 560 },
             display: 'flex',
             flexDirection: 'column',
