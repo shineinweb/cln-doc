@@ -18,89 +18,100 @@ import { useAuth } from '../auth/AuthProvider';
 import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
+import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { AssignmentCard } from '../tasks/AssignmentCard';
 import { workbench } from '../theme';
+import { FacilityBoard } from './FacilityBoard';
 
 export function WorkspacePage() {
+  const { siteId } = useSites();
   const workspace = useQuery({
     queryKey: ['workspace'],
     queryFn: () => apiGet('/workspace/today', workspaceTodaySchema),
   });
 
-  if (workspace.isPending) {
-    return <Skeleton variant="rounded" height={220} />;
-  }
-  if (workspace.error || !workspace.data) {
-    return <Alert severity="error">{workspace.error?.message ?? 'Assignments could not be loaded.'}</Alert>;
-  }
-
   const data = workspace.data;
-  const total = data.tasks.length + data.roomTasks.length + data.duties.length;
+  const total = data ? data.tasks.length + data.roomTasks.length + data.duties.length : 0;
 
   return (
     <Box data-testid="workspace-tasks">
       <PageHeader
         kicker="Tasks"
         title="All tasks due today"
-        lede={`Crop-cycle work, room chores, and Operations recurring duties due ${formatCalendarDate(data.date)}. Training stays under Operations → Training.`}
+        lede={
+          data
+            ? `Facility board for the selected site, then crop-cycle work, room chores, and Operations recurring duties due ${formatCalendarDate(data.date)}. Training stays under Operations → Training.`
+            : 'Facility board for the selected site, then crop-cycle work, room chores, and Operations recurring duties due today.'
+        }
       />
-      {data.notices.length > 0 ? (
-        <Box sx={{ display: 'grid', gap: 1.5, mb: 3 }} data-testid="workspace-notices">
-          {data.notices.map((notice) => (
-            <Alert key={notice.alertId} severity="warning" data-testid="workspace-notice">
-              {`${notice.siteName} · ${notice.roomName}. ${notice.message} Task: ${notice.taskTitle}.`}
-              {notice.sopTitle ? ` Procedure: ${notice.sopTitle}.` : ''}{' '}
-              <RouterLink to={`/rooms/${notice.roomId}`}>Open room</RouterLink>
-            </Alert>
-          ))}
-        </Box>
+      {siteId ? <FacilityBoard siteId={siteId} /> : <Alert severity="info" sx={{ mb: 3 }}>Choose a facility in the top bar to load the facility board.</Alert>}
+
+      {workspace.isPending ? <Skeleton variant="rounded" height={220} /> : null}
+      {workspace.error ? (
+        <Alert severity="error">{workspace.error.message ?? 'Assignments could not be loaded.'}</Alert>
       ) : null}
 
-      <Section
-        title="Crop cycle tasks"
-        count={data.tasks.length}
-        testId="workspace-cycle-section"
-        empty="No crop-cycle assignments due today."
-      >
-        <PagedList
-          items={data.tasks}
-          empty="No crop-cycle assignments due today."
-          testId="workspace-list"
-          render={(task) => <WorkspaceRow key={task.id} task={task} />}
-        />
-      </Section>
+      {data ? (
+        <>
+          {data.notices.length > 0 ? (
+            <Box sx={{ display: 'grid', gap: 1.5, mb: 3 }} data-testid="workspace-notices">
+              {data.notices.map((notice) => (
+                <Alert key={notice.alertId} severity="warning" data-testid="workspace-notice">
+                  {`${notice.siteName} · ${notice.roomName}. ${notice.message} Task: ${notice.taskTitle}.`}
+                  {notice.sopTitle ? ` Procedure: ${notice.sopTitle}.` : ''}{' '}
+                  <RouterLink to={`/rooms/${notice.roomId}`}>Open room</RouterLink>
+                </Alert>
+              ))}
+            </Box>
+          ) : null}
 
-      <Section
-        title="Room tasks"
-        count={data.roomTasks.length}
-        testId="workspace-room-section"
-        empty="No room chores assigned to you today."
-      >
-        <Box sx={{ display: 'grid', gap: 1 }} data-testid="workspace-room-list">
-          {data.roomTasks.map((task) => (
-            <RoomTaskRow key={task.id} task={task} />
-          ))}
-        </Box>
-      </Section>
+          <Section
+            title="Crop cycle tasks"
+            count={data.tasks.length}
+            testId="workspace-cycle-section"
+            empty="No crop-cycle assignments due today."
+          >
+            <PagedList
+              items={data.tasks}
+              empty="No crop-cycle assignments due today."
+              testId="workspace-list"
+              render={(task) => <WorkspaceRow key={task.id} task={task} />}
+            />
+          </Section>
 
-      <Section
-        title="Recurring duties"
-        count={data.duties.length}
-        testId="workspace-duty-section"
-        empty="No Operations recurring duties are due."
-      >
-        <Box sx={{ display: 'grid', gap: 1 }} data-testid="workspace-duty-list">
-          {data.duties.map((duty) => (
-            <DutyRow key={duty.id} duty={duty} />
-          ))}
-        </Box>
-      </Section>
+          <Section
+            title="Room tasks"
+            count={data.roomTasks.length}
+            testId="workspace-room-section"
+            empty="No room chores assigned to you today."
+          >
+            <Box sx={{ display: 'grid', gap: 1 }} data-testid="workspace-room-list">
+              {data.roomTasks.map((task) => (
+                <RoomTaskRow key={task.id} task={task} />
+              ))}
+            </Box>
+          </Section>
 
-      {total === 0 ? (
-        <Alert severity="info" sx={{ mt: 1 }} data-testid="workspace-empty">
-          Nothing is due for you today across crop cycles, room chores, or recurring duties.
-        </Alert>
+          <Section
+            title="Recurring duties"
+            count={data.duties.length}
+            testId="workspace-duty-section"
+            empty="No Operations recurring duties are due."
+          >
+            <Box sx={{ display: 'grid', gap: 1 }} data-testid="workspace-duty-list">
+              {data.duties.map((duty) => (
+                <DutyRow key={duty.id} duty={duty} />
+              ))}
+            </Box>
+          </Section>
+
+          {total === 0 ? (
+            <Alert severity="info" sx={{ mt: 1 }} data-testid="workspace-empty">
+              Nothing is due for you today across crop cycles, room chores, or recurring duties.
+            </Alert>
+          ) : null}
+        </>
       ) : null}
     </Box>
   );

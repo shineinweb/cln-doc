@@ -6,7 +6,7 @@ Open Serenity at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, Serenity, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Serenity.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, Serenity, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks due for you today. The **Facility board** lives on **Tasks**. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Serenity.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch** / **Clock out** for the selected facility (status shows Out, In, or Lunch), your name on a wider screen, and **Sign out**. The status dot opens **Time clock** for payroll and the full punch history.
 
@@ -57,11 +57,9 @@ Add forms that were already on a page keep their buttons: **Add room**, **Save r
 
 **Dashboard** is the first item in the left navigation. It follows the facility in the top bar.
 
-Under the counts, the page shows the **Facility board**, then facility charts built from stored rows.
+Under the counts, the page shows facility charts built from stored rows.
 
-**Facility board** is a rooms × milestones grid for the selected facility. Rows are rooms. Columns include crop start (**1st**), each stored defoliation day (**D10**, **D21**, and so on), harvest (**H**), trim (**T**), and matching chores such as dripper checks, sulfur, side net, filters, garden clean, water filters, and fans/AC. Dates come from the active crop start, the room’s defoliation schedule, expected or actual harvest, and title-matched crop tasks, room chores, or Operations recurring duties. Past defoliation dates and finished harvests show as done. Today’s dates show as due. Missed dates show as overdue. Reminders under the grid cover dripper checks, Friday fan/AC/dehu checks, and Tuesday/Friday water-filter washes.
-
-Charts under the board:
+Charts on Dashboard:
 
 - **Estimated Yield Graph** — dry grams by week and cultivar. Harvested cycles use stored dry weight. Open cycles use plant count times this facility’s average grams per plant when that average exists.
 - **COGS Breakdown** — labor, cannabis inputs, and non-cannabis inputs from stored labor rates and input costs.
@@ -70,7 +68,7 @@ Charts under the board:
 - **Packaged (MTD)** and **Average g per plant** — month-to-date packaged weight and the dry-weight average.
 - **Packages by Item** — package labels and weights.
 
-Serenity does not store sales dollars on these charts. Below the charts are the facility’s rooms and your tasks due today.
+Serenity does not store sales dollars on these charts. Below the charts are the facility’s rooms and your tasks due today. Open **Tasks** for the room × milestone **Facility board**.
 
 ## Facility
 
@@ -203,7 +201,7 @@ This is the single place for work due today:
 - **Room tasks** — room chores, AI-generated tasks, and alert follow-ups (open the room).
 - **Recurring duties** — Operations recurring duties whose next due date is today or earlier (open **Operations → Recurring tasks**).
 
-The room × milestone **Facility board** (start, defoliation, harvest, trim, and matching chores) stays on **Dashboard**. Tasks from another facility stay off the list. If nothing is due across those three lists, the page says nothing is due for you today.
+The room × milestone **Facility board** sits at the top of **Tasks**. It is a rooms × milestones grid for the selected facility: crop start (**1st**), each stored defoliation day (**D10**, **D21**, and so on), harvest (**H**), trim (**T**), and matching chores such as dripper checks, sulfur, side net, filters, garden clean, water filters, and fans/AC. Dates come from the active crop start, the room’s defoliation schedule, expected or actual harvest, and title-matched crop tasks, room chores, or Operations recurring duties. Status chips mark done, due, overdue, and scheduled work. Scroll sideways for every column. Reminders under the grid cover dripper checks, Friday fan/AC/dehu checks, and Tuesday/Friday water-filter washes. Tasks from another facility stay off the assignment lists. If nothing is due across those three lists, the page says nothing is due for you today.
 
 ## Time clock
 

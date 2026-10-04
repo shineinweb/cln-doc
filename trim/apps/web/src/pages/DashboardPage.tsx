@@ -10,7 +10,6 @@ import { formatCalendarDate } from '../crops/format';
 import { useSites } from '../layout/SiteProvider';
 import { displayFont, roomTypeColor, roomTypeLabel, workbench } from '../theme';
 import { DashboardCharts } from './DashboardCharts';
-import { FacilityBoard } from './FacilityBoard';
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -29,7 +28,7 @@ export function DashboardPage() {
         title="Dashboard"
         lede={
           site
-            ? `${site.name} is selected. The facility board, yield charts, rooms, and tasks due today all use this facility.`
+            ? `${site.name} is selected. Yield charts, rooms, and tasks due today use this facility. Open Tasks for the facility board.`
             : 'Choose a facility in the top bar to see its rooms.'
         }
       />
@@ -57,7 +56,6 @@ export function DashboardPage() {
           />
         </Box>
       ) : null}
-      {siteId ? <FacilityBoard siteId={siteId} /> : null}
       {siteId ? <DashboardCharts siteId={siteId} /> : null}
       <Typography variant="h2" sx={{ fontSize: 26, mb: 1.5 }}>
         Rooms
