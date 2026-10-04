@@ -9,6 +9,50 @@ export const loginRequestSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters.').max(200),
 });
 
+
+export const forgotPasswordRequestSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email('Enter a valid email address.')
+    .transform((value) => value.toLowerCase()),
+});
+
+export const forgotPasswordResponseSchema = z.object({
+  ok: z.literal(true),
+  message: z.string(),
+});
+
+export const resetPasswordRequestSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: z.string().min(8, 'Password must be at least 8 characters.').max(200),
+});
+
+export const resetPasswordResponseSchema = z.object({
+  ok: z.literal(true),
+  message: z.string(),
+});
+
+export const emailBroadcastInputSchema = z.object({
+  subject: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(20000),
+  siteIds: z.array(z.string()).optional(),
+});
+
+export const emailBroadcastSchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  body: z.string(),
+  recipientCount: z.number().int(),
+  sentAt: z.string().nullable(),
+  createdAt: z.string(),
+  createdByName: z.string(),
+});
+
+export const emailBroadcastListSchema = z.object({
+  broadcasts: z.array(emailBroadcastSchema),
+});
+
 export const zoneSchema = z.object({
   id: z.string(),
   roomId: z.string(),
@@ -2052,3 +2096,12 @@ export type RoomStayInput = z.infer<typeof roomStayInputSchema>;
 export type RecurringInput = z.infer<typeof recurringInputSchema>;
 export type OperationsOverview = z.infer<typeof operationsOverviewSchema>;
 export type SopLibrary = z.infer<typeof sopLibrarySchema>;
+
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>;
+export type ForgotPasswordResponse = z.infer<typeof forgotPasswordResponseSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
+export type ResetPasswordResponse = z.infer<typeof resetPasswordResponseSchema>;
+export type EmailBroadcastInput = z.infer<typeof emailBroadcastInputSchema>;
+export type EmailBroadcast = z.infer<typeof emailBroadcastSchema>;
+export type EmailBroadcastList = z.infer<typeof emailBroadcastListSchema>;
+

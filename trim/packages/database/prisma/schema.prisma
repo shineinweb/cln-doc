@@ -32,6 +32,7 @@ model Organization {
   auditLogs         AuditLog[]
   messageThreads    MessageThread[]
   timePunches       TimePunch[]
+  emailBroadcasts   EmailBroadcast[]
 
   @@map("organizations")
 }
@@ -87,6 +88,7 @@ model User {
   organizationId String   @map("organization_id")
   email          String   @unique
   name           String
+  emailNotificationsEnabled Boolean @default(true) @map("email_notifications_enabled")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -113,6 +115,9 @@ model User {
   authoredMessages      Message[]
   timePunches           TimePunch[]
   serenityLessons       SerenityLesson[]
+  passwordResetTokens   PasswordResetToken[]
+  emailBroadcastsCreated EmailBroadcast[] @relation("EmailBroadcastAuthor")
+  emailBroadcastReceipts EmailBroadcastRecipient[]
 
   @@index([organizationId])
   @@map("users")
@@ -1535,4 +1540,57 @@ model Message {
 
   @@index([threadId, createdAt])
   @@map("messages")
+}
+
+
+/// One-time password reset token. Only the hash is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+/// Admin one-off email to organization members (marketing / announcement foundation).
+model EmailBroadcast {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  subject        String    @db.VarChar(200)
+  body           String    @db.Text
+  createdById    String    @map("created_by_id")
+  recipientCount Int       @default(0) @map("recipient_count")
+  sentAt         DateTime? @map("sent_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("EmailBroadcastAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  recipients   EmailBroadcastRecipient[]
+
+  @@index([organizationId, createdAt])
+  @@map("email_broadcasts")
+}
+
+model EmailBroadcastRecipient {
+  id          String   @id @default(cuid())
+  broadcastId String   @map("broadcast_id")
+  userId      String   @map("user_id")
+  email       String   @db.VarChar(191)
+  status      String   @db.VarChar(32)
+  error       String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  broadcast EmailBroadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([broadcastId])
+  @@index([userId])
+  @@map("email_broadcast_recipients")
 }

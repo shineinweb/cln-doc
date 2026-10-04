@@ -3,7 +3,7 @@ import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material'
 import { loginRequestSchema, type LoginRequest } from '@trim/contracts';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Navigate } from 'react-router-dom';
+import { Link as RouterLink, Navigate, useLocation } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { CanopyScene } from '../components/Graphics';
@@ -11,6 +11,8 @@ import { displayFont, workbench } from '../theme';
 
 export function LoginPage() {
   const { user, loading, login } = useAuth();
+  const location = useLocation();
+  const notice = (location.state as { notice?: string } | null)?.notice ?? null;
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<LoginRequest>({
     resolver: zodResolver(loginRequestSchema),
@@ -91,6 +93,7 @@ export function LoginPage() {
             Use the account issued by your organization.
           </Typography>
           <Stack spacing={2}>
+            {notice ? <Alert severity="success" data-testid="login-notice">{notice}</Alert> : null}
             {formError ? <Alert severity="error">{formError}</Alert> : null}
             <TextField
               label="Email"
@@ -118,6 +121,9 @@ export function LoginPage() {
               data-testid="login-submit"
             >
               {form.formState.isSubmitting ? 'Signing in…' : 'Sign in'}
+            </Button>
+            <Button component={RouterLink} to="/forgot-password" variant="text" data-testid="forgot-password-link" sx={{ alignSelf: 'flex-start', px: 0.5 }}>
+              Forgot password?
             </Button>
           </Stack>
         </Box>

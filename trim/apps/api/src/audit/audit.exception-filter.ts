@@ -10,7 +10,7 @@ import type { Response } from 'express';
 import type { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { AuditService } from './audit.service';
 
-const SKIP = new Set(['/health', '/auth/login', '/auth/me']);
+const SKIP = new Set(['/health', '/auth/login', '/auth/forgot-password', '/auth/reset-password', '/auth/me']);
 const SKIP_GET = new Set(['/timeclock/status']);
 
 /**

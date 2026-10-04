@@ -33,3 +33,14 @@ Every authenticated API call (except health, login, `/auth/me`, and time-clock s
 ## Passwords
 
 Hashes are bcrypt. Login failures use the same response for an unknown email and a wrong password.
+
+## Password reset
+
+1. `POST /auth/forgot-password` accepts an email and always returns a generic success message (no email enumeration).
+2. When the email matches a user with credentials, Serenity stores a hashed one-hour reset token and emails a link to `{WEB_ORIGIN}/reset-password?token=…` through `MailService` (`MAIL_DRIVER=console` locally, or SendGrid when configured).
+3. `POST /auth/reset-password` accepts `{ token, password }`, updates `credentials.password_hash`, and marks the token used.
+
+## Email notifications and marketing
+
+- Assigning people on a room task sends a transactional email when `users.email_notifications_enabled` is true.
+- Org admins with `communications.manage` can send one-off announcement/marketing broadcasts from **Email** (`POST /communications/broadcasts`).

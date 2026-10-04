@@ -1,13 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { ManagedTask, ManagedTaskInput, RecordRemoved, SessionUser, Weekday } from '@trim/contracts';
 import { dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assigneesForSite } from './assignee';
 import { assertSiteAccess } from './site-access';
 
 @Injectable()
 export class RoomTasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async list(roomId: string): Promise<ManagedTask[]> {
     const rows = await this.prisma.roomTask.findMany({
@@ -36,6 +40,13 @@ export class RoomTasksService {
       },
       include: assigneeInclude,
     });
+    this.notifications.notifyRoomTaskAssigned({
+      assigneeIds: assignees.map((person) => person.id),
+      title: created.title,
+      roomName: room.name,
+      siteName: room.site.name,
+      dueOn: created.dueOn ? dateKeyFromDbDate(created.dueOn) : null,
+    });
     return toManagedTask(created);
   }
 
@@ -59,6 +70,15 @@ export class RoomTasksService {
         },
       },
       include: assigneeInclude,
+    });
+    const previous = new Set(existing.assignees.map((row) => row.userId));
+    const newlyAssigned = assignees.map((person) => person.id).filter((id) => !previous.has(id));
+    this.notifications.notifyRoomTaskAssigned({
+      assigneeIds: newlyAssigned,
+      title: updated.title,
+      roomName: room.name,
+      siteName: room.site.name,
+      dueOn: updated.dueOn ? dateKeyFromDbDate(updated.dueOn) : null,
     });
     return toManagedTask(updated);
   }
@@ -114,7 +134,10 @@ export class RoomTasksService {
   }
 
   private async owned(roomId: string, taskId: string) {
-    const task = await this.prisma.roomTask.findFirst({ where: { id: taskId, roomId } });
+    const task = await this.prisma.roomTask.findFirst({
+      where: { id: taskId, roomId },
+      include: { assignees: true },
+    });
     if (!task) {
       throw new NotFoundException('Task not found');
     }

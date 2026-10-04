@@ -42,6 +42,7 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/reports', label: 'Reports', end: false, glyph: 'reports', permissions: ['reports.read'] },
   { to: '/coach', label: 'Serenity', end: true, glyph: 'coach', permissions: ['coach.use'] },
   { to: '/messages', label: 'Messages', end: true, glyph: 'messages', permissions: ['messages.use'] },
+  { to: '/communications', label: 'Email', end: true, glyph: 'messages', permissions: ['communications.manage'] },
   { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual', permissions: ['dashboard.read'] },
   { to: '/settings', label: 'Settings', end: true, glyph: 'settings', permissions: ['settings.manage'] },
 ];

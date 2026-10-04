@@ -4,11 +4,14 @@ import { AdaptersModule } from './adapters/adapters.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { CoachModule } from './coach/coach.module';
+import { CommunicationsModule } from './communications/communications.module';
 import { CyclesModule } from './cycles/cycles.module';
 import { FacilitiesModule } from './facilities/facilities.module';
 import { HarvestsModule } from './harvests/harvests.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { MailModule } from './mail/mail.module';
 import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { OperationsModule } from './operations/operations.module';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
@@ -24,11 +27,13 @@ import { WorkflowsModule } from './workflows/workflows.module';
   imports: [
     PrismaModule,
     StorageModule,
+    MailModule,
     SerenityModule,
     AuthModule,
     AuditModule,
     AccessModule,
     CyclesModule,
+    NotificationsModule,
     FacilitiesModule,
     WorkflowsModule,
     SubmissionsModule,
@@ -37,6 +42,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     ReportsModule,
     CoachModule,
     MessagesModule,
+    CommunicationsModule,
     AdaptersModule,
     OperationsModule,
     RecordsModule,

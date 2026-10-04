@@ -15,8 +15,11 @@ import { GatewayPage } from './pages/GatewayPage';
 import { HarvestPage } from './pages/HarvestPage';
 import { HarvestsPage } from './pages/HarvestsPage';
 import { LicenseInventoryPage } from './pages/LicenseInventoryPage';
+import { CommunicationsPage } from './pages/CommunicationsPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { LoginPage } from './pages/LoginPage';
 import { MessagesPage } from './pages/MessagesPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { OperationsPage } from './pages/OperationsPage';
 import { PackagePage } from './pages/PackagePage';
 import { PlantPage } from './pages/PlantPage';
@@ -40,6 +43,8 @@ function gate(anyOf: string[], element: ReactNode) {
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   {
     path: '/',
     element: (
@@ -74,6 +79,7 @@ const router = createBrowserRouter([
       { path: 'reports', element: gate(['reports.read'], <ReportsPage />) },
       { path: 'coach', element: gate(['coach.use'], <SiteCoachPage />) },
       { path: 'messages', element: gate(['messages.use'], <MessagesPage />) },
+      { path: 'communications', element: gate(['communications.manage'], <CommunicationsPage />) },
       { path: 'user-manual', element: gate(['dashboard.read'], <UserManualPage />) },
       { path: 'sop', element: gate(['operations.read', 'workflows.manage'], <SopPage />) },
       { path: 'settings', element: gate(['settings.manage'], <SettingsPage />) },

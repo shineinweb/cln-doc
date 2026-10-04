@@ -51,6 +51,7 @@ const PERMISSIONS = [
   { key: 'reports.read', description: 'View reports and dashboard analytics' },
   { key: 'coach.use', description: 'Use Serenity, the cultivation AI' },
   { key: 'messages.use', description: 'Send and read internal messages' },
+  { key: 'communications.manage', description: 'Send organization email announcements and marketing broadcasts' },
   { key: 'settings.manage', description: 'Change organization settings and API credentials' },
   { key: 'workflows.manage', description: 'Manage workflow templates and teams' },
   { key: 'inventory.read', description: 'View plants and license inventory' },
