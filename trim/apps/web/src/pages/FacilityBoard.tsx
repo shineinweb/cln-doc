@@ -352,7 +352,7 @@ function kindColor(kind: FacilityBoardColumn['kind']): string {
   if (kind === 'defoliation' || kind === 'harvest') {
     return workbench.leaf;
   }
-  if (kind === 'trim') {
+  if (kind === 'transplant') {
     return workbench.sky;
   }
   if (kind === 'start') {
@@ -369,8 +369,8 @@ function columnTooltip(column: FacilityBoardColumn): string {
       return column.dayNumber != null ? `Defoliation day ${column.dayNumber}` : 'Defoliation';
     case 'harvest':
       return 'Harvest';
-    case 'trim':
-      return 'Trim';
+    case 'transplant':
+      return 'Transplant dates (room Settings)';
     case 'chore':
       return `${column.label} chore / duty`;
     default:

@@ -39,6 +39,12 @@ describe('facility board', () => {
         { roomId: fixture.roomAId, dayNumber: 35 },
       ],
     });
+    await prisma.roomTransplant.createMany({
+      data: [
+        { roomId: fixture.roomAId, dayNumber: 7 },
+        { roomId: fixture.roomAId, dayNumber: 21 },
+      ],
+    });
     await prisma.roomTask.create({
       data: {
         roomId: fixture.roomAId,
@@ -47,15 +53,6 @@ describe('facility board', () => {
         cadence: 'weekly',
         weekdays: 'tue,fri',
         status: 'open',
-      },
-    });
-    await prisma.recurringDuty.create({
-      data: {
-        siteId: fixture.siteAId,
-        title: 'Check drip lines',
-        cadence: 'weekly',
-        nextDueOn: new Date('2026-10-04T00:00:00.000Z'),
-        assigneeLabel: 'Floor',
       },
     });
     await prisma.room.create({
@@ -74,9 +71,9 @@ describe('facility board', () => {
   });
 
   afterAll(async () => {
-    await prisma.recurringDuty.deleteMany({ where: { siteId: fixture.siteAId } });
     await prisma.roomTask.deleteMany({ where: { roomId: fixture.roomAId } });
     await prisma.roomDefoliation.deleteMany({ where: { roomId: fixture.roomAId } });
+    await prisma.roomTransplant.deleteMany({ where: { roomId: fixture.roomAId } });
     await prisma.cropCycle.deleteMany({ where: { roomId: fixture.roomAId, name: 'Board crop' } });
     await prisma.room.deleteMany({ where: { siteId: fixture.siteAId, code: 'DRY-BOARD' } });
     await prisma.$disconnect();
@@ -85,7 +82,7 @@ describe('facility board', () => {
     }
   });
 
-  it('builds a rooms × milestones board with defoliation and harvest dates', async () => {
+  it('builds a rooms × milestones board with defoliation, transplant, and harvest dates', async () => {
     const denied = await request(app.getHttpServer())
       .get(`/sites/${fixture.siteAId}/board`)
       .set('Authorization', `Bearer ${tokenB}`);
@@ -104,11 +101,12 @@ describe('facility board', () => {
         'defoliation-21',
         'defoliation-35',
         'harvest',
-        'trim',
-        'dripper',
+        'transplant',
         'water_filters',
       ]),
     );
+    expect(board.body.columns.map((column: { key: string }) => column.key)).not.toContain('dripper');
+    expect(board.body.columns.map((column: { key: string }) => column.key)).not.toContain('trim');
 
     expect(board.body.rows.every((item: { roomType: string }) => item.roomType !== 'dry')).toBe(true);
     expect(board.body.rows.some((item: { roomName: string }) => item.roomName === 'Dry staging')).toBe(false);
@@ -123,10 +121,10 @@ describe('facility board', () => {
     expect(byKey['defoliation-21']).toMatchObject({ dates: ['2026-10-21'], source: 'defoliation' });
     expect(byKey['defoliation-35']).toMatchObject({ dates: ['2026-11-04'], source: 'defoliation' });
     expect(byKey.harvest).toMatchObject({ dates: ['2026-12-01'], source: 'harvest' });
-    expect(byKey.dripper).toMatchObject({
-      dates: ['2026-10-04'],
-      source: 'duty',
-      detail: 'Check drip lines',
+    expect(byKey.transplant).toMatchObject({
+      dates: ['2026-10-07', '2026-10-21'],
+      source: 'transplant',
+      detail: 'Day 7 · Day 21',
     });
     expect(byKey.water_filters).toMatchObject({
       source: 'room_task',
@@ -164,6 +162,7 @@ describe('facility board', () => {
       detail: 'Fans / ACs · every Friday',
     });
     expect(board.body.notes.some((note: string) => note.includes('Sulfur on crop day 14'))).toBe(true);
+    expect(board.body.notes.some((note: string) => note.includes('Transplant dates'))).toBe(true);
   });
 
   async function login(email: string, password: string): Promise<string> {

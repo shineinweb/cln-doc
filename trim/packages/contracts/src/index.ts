@@ -421,6 +421,17 @@ export const defoliationInputSchema = z.object({
   days: z.array(z.number().int().min(1).max(3650)).max(30),
 });
 
+/** Transplant day numbers counted from the current crop start (Facility board T). */
+export const transplantSchema = z.object({
+  id: z.string(),
+  dayNumber: z.number().int(),
+  date: z.string().nullable(),
+});
+
+export const transplantInputSchema = z.object({
+  days: z.array(z.number().int().min(1).max(3650)).max(30),
+});
+
 /** Twice-a-week IPM scout schedule for a room. Empty weekdays clears the schedule. */
 export const ipmScheduleSchema = z.object({
   weekdays: z.array(weekdaySchema).max(2),
@@ -445,6 +456,7 @@ export const roomDetailSchema = roomSchema.extend({
   lastMetrcSync: metrcSyncSchema.nullable(),
   archivedCycles: z.array(archivedCycleSchema),
   defoliations: z.array(defoliationSchema),
+  transplants: z.array(transplantSchema),
   ipmSchedule: ipmScheduleSchema,
 });
 
@@ -1452,7 +1464,7 @@ export const dashboardAnalyticsSchema = z.object({
 export const facilityBoardColumnSchema = z.object({
   key: z.string(),
   label: z.string(),
-  kind: z.enum(['start', 'defoliation', 'harvest', 'trim', 'chore']),
+  kind: z.enum(['start', 'defoliation', 'harvest', 'transplant', 'chore']),
   dayNumber: z.number().int().nullable(),
 });
 
@@ -1461,7 +1473,9 @@ export const facilityBoardCellSchema = z.object({
   dates: z.array(z.string()),
   status: z.enum(['empty', 'scheduled', 'due', 'done', 'overdue']),
   detail: z.string().nullable(),
-  source: z.enum(['cycle', 'defoliation', 'harvest', 'cycle_task', 'room_task', 'duty', 'schedule']).nullable(),
+  source: z
+    .enum(['cycle', 'defoliation', 'harvest', 'transplant', 'cycle_task', 'room_task', 'duty', 'schedule'])
+    .nullable(),
 });
 
 export const facilityBoardRowSchema = z.object({
@@ -1986,6 +2000,8 @@ export type Room = z.infer<typeof roomSchema>;
 export type RoomDetail = z.infer<typeof roomDetailSchema>;
 export type Defoliation = z.infer<typeof defoliationSchema>;
 export type DefoliationInput = z.infer<typeof defoliationInputSchema>;
+export type Transplant = z.infer<typeof transplantSchema>;
+export type TransplantInput = z.infer<typeof transplantInputSchema>;
 export type IpmSchedule = z.infer<typeof ipmScheduleSchema>;
 export type IpmScheduleInput = z.infer<typeof ipmScheduleInputSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;

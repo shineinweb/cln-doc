@@ -715,6 +715,7 @@ model Room {
   recurringDuties    RecurringDuty[]
   trolmasterConnection TrolmasterConnection?
   defoliations         RoomDefoliation[]
+  transplants          RoomTransplant[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -731,6 +732,18 @@ model RoomDefoliation {
 
   @@index([roomId, dayNumber])
   @@map("room_defoliations")
+}
+
+model RoomTransplant {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  dayNumber Int      @map("day_number")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, dayNumber])
+  @@map("room_transplants")
 }
 
 model Zone {

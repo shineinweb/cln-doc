@@ -9,6 +9,8 @@ import {
   managedTaskSchema,
   recordRemovedSchema,
   roomNoteInputSchema,
+  transplantInputSchema,
+  transplantSchema,
   zoneInputSchema,
   type Defoliation,
   type DefoliationInput,
@@ -19,6 +21,8 @@ import {
   type RoomDetail,
   type RoomNoteInput,
   type SessionUser,
+  type Transplant,
+  type TransplantInput,
   type Zone,
   type ZoneInput,
 } from '@trim/contracts';
@@ -102,6 +106,16 @@ export class RoomsController {
     @Body(new ZodValidationPipe(defoliationInputSchema)) body: DefoliationInput,
   ): Promise<Defoliation[]> {
     return z.array(defoliationSchema).parse(await this.facilities.saveDefoliations(user, roomId, body));
+  }
+
+  @Put(':roomId/transplants')
+  @RequirePermissions('rooms.write')
+  async saveTransplants(
+    @CurrentUser() user: SessionUser,
+    @Param('roomId') roomId: string,
+    @Body(new ZodValidationPipe(transplantInputSchema)) body: TransplantInput,
+  ): Promise<Transplant[]> {
+    return z.array(transplantSchema).parse(await this.facilities.saveTransplants(user, roomId, body));
   }
 
   @Put(':roomId/ipm-schedule')
