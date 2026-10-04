@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Tasks, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows the facility board, facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -204,6 +204,25 @@ This is the single place for work due today:
 - **Recurring duties** — Operations recurring duties whose next due date is today or earlier (open **Operations → Recurring tasks**).
 
 The room × milestone **Facility board** (start, defoliation, harvest, trim, and matching chores) stays on **Dashboard**. Tasks from another facility stay off the list. If nothing is due across those three lists, the page says nothing is due for you today.
+
+## Time clock
+
+**Time clock** sits in the left navigation after Tasks. The address is `/timeclock`.
+
+Every signed-in employee can:
+
+- **Clock in**, **Start lunch**, **End lunch**, and **Clock out** (only the next legal punch is enabled).
+- See today’s punches and worked/lunch minutes for the selected facility.
+- See **Who’s in** — people currently on the clock or on lunch.
+
+Organization admins also get **AI payroll & accounting**:
+
+- Choose a pay period (from/to).
+- Read the AI statement: regular hours, overtime (California-style over 8/day then over 40 regular hours/week at 1.5×), unpaid lunch, and gross pay from stored **labor rates**.
+- **Ask AI** about overtime, lunch, missing rates, or top earners.
+- **Save** hourly pay rates by employee name (matched to the signed-in user’s name).
+
+Trim calculates hours and gross pay from punches and rates. It does **not** file taxes, withholdings, or send bank payroll.
 
 An assignment card shows the facility and room, the task title, the due date, the assignee, and the crop. Chips appear only when the template requires them: Supervisor approval, Photo, Notes, Measurement, or Sign-off. The instructions are on the card. A dependency reads “Depends on …”. A linked SOP shows its title and summary.
 

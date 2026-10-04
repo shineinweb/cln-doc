@@ -1401,6 +1401,120 @@ export const facilityBoardSchema = z.object({
   notes: z.array(z.string()),
 });
 
+export const timePunchKindSchema = z.enum(['clock_in', 'lunch_start', 'lunch_end', 'clock_out']);
+
+export const timePunchSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  userName: z.string(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+  kind: timePunchKindSchema,
+  punchedAt: z.string(),
+  note: z.string().nullable(),
+});
+
+export const timePunchInputSchema = z.object({
+  kind: timePunchKindSchema,
+  siteId: z.string().optional().nullable(),
+  note: z.string().trim().max(500).optional().nullable(),
+});
+
+export const timeClockStatusSchema = z.object({
+  state: z.enum(['out', 'in', 'lunch']),
+  allowed: z.array(timePunchKindSchema),
+  openSince: z.string().nullable(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+  todayPunches: z.array(timePunchSchema),
+  workedMinutesToday: z.number().int(),
+  lunchMinutesToday: z.number().int(),
+});
+
+export const timePresenceSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  state: z.enum(['in', 'lunch']),
+  since: z.string(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+});
+
+export const timePresenceListSchema = z.object({
+  people: z.array(timePresenceSchema),
+});
+
+export const laborRateViewSchema = z.object({
+  id: z.string(),
+  personName: z.string(),
+  userId: z.string().nullable(),
+  hourlyCents: z.number().int(),
+});
+
+export const laborRateInputSchema = z.object({
+  personName: z.string().trim().min(1).max(120),
+  hourlyCents: z.number().int().min(0).max(1_000_000),
+});
+
+export const payrollDaySchema = z.object({
+  date: z.string(),
+  workedMinutes: z.number().int(),
+  lunchMinutes: z.number().int(),
+  regularMinutes: z.number().int(),
+  overtimeMinutes: z.number().int(),
+});
+
+export const payrollEmployeeSchema = z.object({
+  userId: z.string(),
+  userName: z.string(),
+  hourlyCents: z.number().int().nullable(),
+  workedMinutes: z.number().int(),
+  lunchMinutes: z.number().int(),
+  regularMinutes: z.number().int(),
+  overtimeMinutes: z.number().int(),
+  regularCents: z.number().int(),
+  overtimeCents: z.number().int(),
+  grossCents: z.number().int(),
+  days: z.array(payrollDaySchema),
+  openShift: z.boolean(),
+});
+
+export const payrollReportSchema = z.object({
+  organizationId: z.string(),
+  siteId: z.string().nullable(),
+  siteName: z.string().nullable(),
+  timezone: z.string(),
+  periodStart: z.string(),
+  periodEnd: z.string(),
+  statement: z.string(),
+  accountingNotes: z.array(z.string()),
+  totals: z.object({
+    employees: z.number().int(),
+    workedMinutes: z.number().int(),
+    lunchMinutes: z.number().int(),
+    regularMinutes: z.number().int(),
+    overtimeMinutes: z.number().int(),
+    regularCents: z.number().int(),
+    overtimeCents: z.number().int(),
+    grossCents: z.number().int(),
+    missingRates: z.number().int(),
+  }),
+  employees: z.array(payrollEmployeeSchema),
+  rates: z.array(laborRateViewSchema),
+});
+
+export const payrollAskSchema = z.object({
+  question: z.string().trim().min(1).max(500),
+  periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  siteId: z.string().optional().nullable(),
+});
+
+export const payrollAnswerSchema = z.object({
+  reply: z.string(),
+  report: payrollReportSchema,
+});
+
 export const coachGapSchema = z.object({
   kind: z.enum(['untagged_plants', 'discrepancies', 'pending_submissions', 'unqueued_packages', 'missing_waste']),
   count: z.number().int(),
@@ -1840,6 +1954,17 @@ export type FacilityBoard = z.infer<typeof facilityBoardSchema>;
 export type FacilityBoardColumn = z.infer<typeof facilityBoardColumnSchema>;
 export type FacilityBoardRow = z.infer<typeof facilityBoardRowSchema>;
 export type FacilityBoardCell = z.infer<typeof facilityBoardCellSchema>;
+export type TimePunchKind = z.infer<typeof timePunchKindSchema>;
+export type TimePunch = z.infer<typeof timePunchSchema>;
+export type TimePunchInput = z.infer<typeof timePunchInputSchema>;
+export type TimeClockStatus = z.infer<typeof timeClockStatusSchema>;
+export type TimePresenceList = z.infer<typeof timePresenceListSchema>;
+export type LaborRateView = z.infer<typeof laborRateViewSchema>;
+export type LaborRateInput = z.infer<typeof laborRateInputSchema>;
+export type PayrollReport = z.infer<typeof payrollReportSchema>;
+export type PayrollEmployee = z.infer<typeof payrollEmployeeSchema>;
+export type PayrollAsk = z.infer<typeof payrollAskSchema>;
+export type PayrollAnswer = z.infer<typeof payrollAnswerSchema>;
 export type SensorGateway = z.infer<typeof sensorGatewaySchema>;
 export type GatewayReading = z.infer<typeof gatewayReadingSchema>;
 export type GeneralSettings = z.infer<typeof generalSettingsSchema>;

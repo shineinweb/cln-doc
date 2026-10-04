@@ -7,6 +7,7 @@ export type GlyphName =
   | 'cycles'
   | 'workflows'
   | 'workspace'
+  | 'timeclock'
   | 'compliance'
   | 'harvests'
   | 'operations'
@@ -81,6 +82,14 @@ function GlyphPath({ name }: { name: GlyphName }) {
       <>
         <circle cx="12" cy="8" r="3" {...common} />
         <path d="M5 19.5c1.4-3 3.8-4.5 7-4.5s5.6 1.5 7 4.5" {...common} />
+      </>
+    );
+  }
+  if (name === 'timeclock') {
+    return (
+      <>
+        <circle cx="12" cy="12" r="8" {...common} />
+        <path d="M12 8v4.5l3 1.5" {...common} />
       </>
     );
   }

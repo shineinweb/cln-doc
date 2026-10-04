@@ -15,10 +15,29 @@ import { RecordsModule } from './records/records.module';
 import { ReportsModule } from './reports/reports.module';
 import { StorageModule } from './storage/storage.module';
 import { SubmissionsModule } from './submissions/submissions.module';
+import { TimeclockModule } from './timeclock/timeclock.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule, AccessModule, CyclesModule, FacilitiesModule, WorkflowsModule, SubmissionsModule, InventoryModule, HarvestsModule, ReportsModule, CoachModule, MessagesModule, AdaptersModule, OperationsModule, RecordsModule],
+  imports: [
+    PrismaModule,
+    StorageModule,
+    AuthModule,
+    AccessModule,
+    CyclesModule,
+    FacilitiesModule,
+    WorkflowsModule,
+    SubmissionsModule,
+    InventoryModule,
+    HarvestsModule,
+    ReportsModule,
+    CoachModule,
+    MessagesModule,
+    AdaptersModule,
+    OperationsModule,
+    RecordsModule,
+    TimeclockModule,
+  ],
   controllers: [HealthController],
 })
 export class AppModule {}

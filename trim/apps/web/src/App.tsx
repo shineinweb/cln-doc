@@ -28,6 +28,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { RoomsPage } from './pages/RoomsPage';
 import { SubmissionPage } from './pages/SubmissionPage';
 import { TaskPage } from './pages/TaskPage';
+import { TimeClockPage } from './pages/TimeClockPage';
 import { WorkflowsPage } from './pages/WorkflowsPage';
 import { WorkspacePage } from './pages/WorkspacePage';
 
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
       { path: 'crop-cycles', element: <Navigate to="/rooms" replace /> },
       { path: 'workflows', element: <WorkflowsPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
+      { path: 'timeclock', element: <TimeClockPage /> },
       { path: 'tasks/:taskId', element: <TaskPage /> },
       { path: 'compliance', element: <CompliancePage /> },
       { path: 'harvests', element: <HarvestsPage /> },

@@ -29,6 +29,7 @@ model Organization {
   metrcApiSetting   MetrcApiSetting?
   auditLogs         AuditLog[]
   messageThreads    MessageThread[]
+  timePunches       TimePunch[]
 
   @@map("organizations")
 }
@@ -77,6 +78,7 @@ model User {
   roomTaskAssignments  RoomTaskAssignee[]
   messageParticipations MessageParticipant[]
   authoredMessages      Message[]
+  timePunches           TimePunch[]
 
   @@index([organizationId])
   @@map("users")
@@ -206,10 +208,33 @@ model Site {
   recurringDuties    RecurringDuty[]
   trolmasterConnections TrolmasterConnection[]
   messageThreads        MessageThread[]
+  timePunches           TimePunch[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
   @@map("sites")
+}
+
+/// Employee clock punch: clock in, lunch start/end, or clock out.
+model TimePunch {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  siteId         String?  @map("site_id")
+  userId         String   @map("user_id")
+  kind           String
+  punchedAt      DateTime @map("punched_at")
+  note           String?  @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site         Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, punchedAt])
+  @@index([userId, punchedAt])
+  @@index([siteId, punchedAt])
+  @@map("time_punches")
 }
 
 /// Explicit grant to open one site. Organization admins do not need a row here.
