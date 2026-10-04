@@ -1202,14 +1202,20 @@ function buildMonthGrid(
     const key = `${monthKey}-${String(day).padStart(2, '0')}`;
     const dayStays = stays.filter((stay) => stay.startsOn <= key && stay.endsOn >= key);
     const stayRoomIds = new Set(dayStays.map((stay) => stay.roomId));
-    const dayCrops = occupancy.filter(
-      (crop) => crop.startsOn <= key && crop.endsOn >= key && !stayRoomIds.has(crop.roomId),
-    );
     const dayMilestones = milestones.filter((milestone) => milestone.date === key);
+    const roomsWithMilestone = new Set(dayMilestones.map((milestone) => milestone.roomId));
+    // On milestone days, the marker (H / D21 / Sul.) stands in for that room's crop bar.
+    const dayCrops = occupancy.filter(
+      (crop) =>
+        crop.startsOn <= key &&
+        crop.endsOn >= key &&
+        !stayRoomIds.has(crop.roomId) &&
+        !roomsWithMilestone.has(crop.roomId),
+    );
     const items: CalendarDayItem[] = [
       ...dayStays.map((stay) => ({ kind: 'stay' as const, stay })),
-      ...dayCrops.map((crop) => ({ kind: 'crop' as const, crop })),
       ...dayMilestones.map((milestone) => ({ kind: 'milestone' as const, milestone })),
+      ...dayCrops.map((crop) => ({ kind: 'crop' as const, crop })),
     ];
     cells.push({ key, day, items });
   }
