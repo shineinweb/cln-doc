@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import type { GeneralSettings, MetrcApiInput, SessionUser, SettingsView } from '@trim/contracts';
+import type { GeneralSettings, MetrcApiInput, OpenAiApiInput, SessionUser, SettingsView } from '@trim/contracts';
+import { loadEnv } from '../env';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -20,7 +21,7 @@ export class SettingsService {
         title: input.title || null,
         description: input.description || null,
       },
-      include: { metrcApiSetting: true },
+      include: { metrcApiSetting: true, openAiApiSetting: true },
     });
     return this.toView(organization);
   }
@@ -52,16 +53,49 @@ export class SettingsService {
     return this.get(user);
   }
 
-  private assertManager(user: SessionUser) {
-    if (!user.isOrgAdmin) {
-      throw new ForbiddenException('Only a manager can change settings.');
+  async saveOpenAi(user: SessionUser, input: OpenAiApiInput): Promise<SettingsView> {
+    this.assertManager(user);
+    const existing = await this.prisma.openAiApiSetting.findUnique({
+      where: { organizationId: user.organizationId },
+    });
+    const apiKey = input.apiKey || existing?.apiKey || '';
+    if (!apiKey && !loadEnv().OPENAI_API_KEY) {
+      throw new BadRequestException('Enter an OpenAI API key for Serenity, or set OPENAI_API_KEY on the server.');
     }
+    const model = (input.model || existing?.model || 'gpt-4o-mini').trim() || 'gpt-4o-mini';
+    if (apiKey) {
+      await this.prisma.openAiApiSetting.upsert({
+        where: { organizationId: user.organizationId },
+        create: {
+          organizationId: user.organizationId,
+          apiKey,
+          model,
+        },
+        update: {
+          apiKey,
+          model,
+        },
+      });
+    } else if (existing) {
+      await this.prisma.openAiApiSetting.update({
+        where: { organizationId: user.organizationId },
+        data: { model },
+      });
+    }
+    return this.get(user);
+  }
+
+  private assertManager(user: SessionUser) {
+    if (user.isOrgAdmin || user.permissions.includes('settings.manage')) {
+      return;
+    }
+    throw new ForbiddenException('You do not have permission for settings.manage.');
   }
 
   private async organization(user: SessionUser) {
     const organization = await this.prisma.organization.findUnique({
       where: { id: user.organizationId },
-      include: { metrcApiSetting: true },
+      include: { metrcApiSetting: true, openAiApiSetting: true },
     });
     if (!organization) {
       throw new NotFoundException('Organization not found');
@@ -74,8 +108,10 @@ export class SettingsService {
     title: string | null;
     description: string | null;
     metrcApiSetting: { integratorApiKey: string; userApiKey: string; licenseNumber: string } | null;
+    openAiApiSetting: { apiKey: string; model: string } | null;
   }): SettingsView {
     const metrc = organization.metrcApiSetting;
+    const openai = organization.openAiApiSetting;
     return {
       general: {
         companyName: organization.name,
@@ -86,6 +122,11 @@ export class SettingsService {
         integratorKeySaved: Boolean(metrc?.integratorApiKey),
         userKeySaved: Boolean(metrc?.userApiKey),
         licenseNumber: metrc?.licenseNumber ?? '',
+      },
+      openai: {
+        apiKeySaved: Boolean(openai?.apiKey),
+        model: openai?.model || loadEnv().OPENAI_MODEL || 'gpt-4o-mini',
+        envFallback: Boolean(loadEnv().OPENAI_API_KEY) && !openai?.apiKey,
       },
     };
   }

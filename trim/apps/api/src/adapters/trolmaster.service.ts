@@ -70,7 +70,7 @@ export class TrolmasterService {
       return blankChart(connection?.controllerId ?? null, false, false, 'Trolmaster is off.');
     }
     if (room.trolmasterTest) {
-      return blankChart(connection?.controllerId ?? 'Sample', true, true, 'Sample readings. Trim is not calling Trolmaster.');
+      return blankChart(connection?.controllerId ?? 'Sample', true, true, 'Sample readings. Serenity is not calling Trolmaster.');
     }
     if (!connection) {
       return blankChart(null, true, false, 'Save a Trolmaster controller on Trolmaster settings.');

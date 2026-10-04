@@ -3,6 +3,8 @@ import { organizationSummarySchema, recordRemovedSchema, siteSchema, type Site }
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { CanopyScene } from '../components/Graphics';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
@@ -10,7 +12,9 @@ import { DeleteRecord, SaveChanges } from '../records/RecordControls';
 import { workbench } from '../theme';
 
 export function FacilityPage() {
+  const { user } = useAuth();
   const { sites, loading, error, setSiteId } = useSites();
+  const canWrite = can(user, 'facilities.write');
   const organization = useQuery({
     queryKey: ['organization'],
     queryFn: () => apiGet('/organization', organizationSummarySchema),
@@ -25,12 +29,16 @@ export function FacilityPage() {
         lede="Facilities you can open are listed here. A site stays hidden until you have a membership, unless you are an organization admin."
       />
       {error ? <Alert severity="error">{error.message}</Alert> : null}
-      {loading || organization.isPending ? <Skeleton variant="rounded" height={140} /> : <AddFacilityForm />}
+      {loading || organization.isPending ? (
+        <Skeleton variant="rounded" height={140} />
+      ) : canWrite ? (
+        <AddFacilityForm />
+      ) : null}
       {!loading && sites.length === 0 ? <Alert severity="info">No facilities are assigned to this account.</Alert> : null}
       {sites.length > 0 ? (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
           {sites.map((site) => (
-            <FacilityCard key={site.id} site={site} onOpen={() => setSiteId(site.id)} />
+            <FacilityCard key={site.id} site={site} onOpen={() => setSiteId(site.id)} canWrite={canWrite} />
           ))}
         </Box>
       ) : null}
@@ -38,7 +46,7 @@ export function FacilityPage() {
   );
 }
 
-function FacilityCard({ site, onOpen }: { site: Site; onOpen: () => void }) {
+function FacilityCard({ site, onOpen, canWrite }: { site: Site; onOpen: () => void; canWrite: boolean }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,27 +97,29 @@ function FacilityCard({ site, onOpen }: { site: Site; onOpen: () => void }) {
           </Typography>
         </CardContent>
       </CardActionArea>
-      <CardContent sx={{ pt: 0 }}>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Button size="small" data-testid="edit-record" onClick={() => setEditing((open) => !open)}>
-            Edit
-          </Button>
-          <DeleteRecord keepsHistory={false} onConfirm={() => remove.mutate()} />
-        </Box>
-        {editing ? (
-          <FacilityFields
-            site={site}
-            pending={save.isPending}
-            submitLabel="save"
-            onSubmit={(body) => save.mutate(body)}
-          />
-        ) : null}
-        {error ? (
-          <Alert sx={{ mt: 1 }} severity="error">
-            {error}
-          </Alert>
-        ) : null}
-      </CardContent>
+      {canWrite ? (
+        <CardContent sx={{ pt: 0 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Button size="small" data-testid="edit-record" onClick={() => setEditing((open) => !open)}>
+              Edit
+            </Button>
+            <DeleteRecord keepsHistory={false} onConfirm={() => remove.mutate()} />
+          </Box>
+          {editing ? (
+            <FacilityFields
+              site={site}
+              pending={save.isPending}
+              submitLabel="save"
+              onSubmit={(body) => save.mutate(body)}
+            />
+          ) : null}
+          {error ? (
+            <Alert sx={{ mt: 1 }} severity="error">
+              {error}
+            </Alert>
+          ) : null}
+        </CardContent>
+      ) : null}
     </Card>
   );
 }

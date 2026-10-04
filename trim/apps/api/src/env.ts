@@ -17,6 +17,14 @@ const envSchema = z.object({
   // Present for a later submission phase. Inventory import does not read them.
   METRC_INTEGRATOR_KEY: z.string().default(''),
   METRC_USER_KEY: z.string().default(''),
+  /** Optional server-wide OpenAI key for Serenity. Organization Settings can override per company. */
+  OPENAI_API_KEY: z.string().default(''),
+  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+  /** console logs mail (default). sendgrid uses SENDGRID_API_KEY. */
+  MAIL_DRIVER: z.enum(['console', 'sendgrid']).default('console'),
+  SENDGRID_API_KEY: z.string().default(''),
+  EMAIL_FROM: z.string().default('noreply@serenity.local'),
+  EMAIL_FROM_NAME: z.string().default('Serenity Universal'),
 });
 
 export type Env = z.infer<typeof envSchema>;
