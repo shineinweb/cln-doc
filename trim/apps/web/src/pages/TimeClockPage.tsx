@@ -4,7 +4,9 @@ import {
   Button,
   Card,
   CardContent,
+  FormControlLabel,
   Skeleton,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -52,6 +54,8 @@ export function TimeClockPage() {
   const [aiReply, setAiReply] = useState<string | null>(null);
   const [rateName, setRateName] = useState(user?.name ?? '');
   const [rateDollars, setRateDollars] = useState('28.00');
+  const [limitToSite, setLimitToSite] = useState(false);
+  const payrollSiteId = limitToSite ? siteId : null;
 
   const status = useQuery({
     queryKey: ['timeclock-status', siteId],
@@ -67,10 +71,10 @@ export function TimeClockPage() {
     enabled: Boolean(user?.isOrgAdmin),
   });
   const payroll = useQuery({
-    queryKey: ['timeclock-payroll', periodStart, periodEnd, siteId],
+    queryKey: ['timeclock-payroll', periodStart, periodEnd, payrollSiteId],
     queryFn: () =>
       apiGet(
-        `/timeclock/payroll?from=${periodStart}&to=${periodEnd}${siteId ? `&siteId=${siteId}` : ''}`,
+        `/timeclock/payroll?from=${periodStart}&to=${periodEnd}${payrollSiteId ? `&siteId=${payrollSiteId}` : ''}`,
         payrollReportSchema,
       ),
     enabled: Boolean(user?.isOrgAdmin && periodStart && periodEnd),
@@ -114,13 +118,13 @@ export function TimeClockPage() {
           question,
           periodStart,
           periodEnd,
-          siteId: siteId ?? null,
+          siteId: payrollSiteId,
         }),
         'POST',
       ),
     onSuccess: (data) => {
       setAiReply(data.reply);
-      void queryClient.setQueryData(['timeclock-payroll', periodStart, periodEnd, siteId], data.report);
+      void queryClient.setQueryData(['timeclock-payroll', periodStart, periodEnd, payrollSiteId], data.report);
     },
   });
 
@@ -196,6 +200,16 @@ export function TimeClockPage() {
             <Button variant="outlined" onClick={() => void payroll.refetch()} disabled={payroll.isFetching}>
               Refresh payroll
             </Button>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={limitToSite}
+                  onChange={(_, checked) => setLimitToSite(checked)}
+                  inputProps={{ 'aria-label': 'Limit payroll to selected facility' }}
+                />
+              }
+              label={site ? `Only ${site.name}` : 'Only selected facility'}
+            />
           </Box>
 
           <Box
