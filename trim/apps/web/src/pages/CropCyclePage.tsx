@@ -73,23 +73,13 @@ export function CropCyclePage() {
         title={cycle.data.name}
         lede={`${cycle.data.cultivar} · ${cycle.data.plantCount} plants · ${roomTypeLabel(cycle.data.stage)} · ${cycleDayLabel(cycle.data.cycleDay)} · harvest ${formatCalendarDate(cycle.data.expectedHarvestDate)}`}
       />
-      <Typography data-testid="cycle-plant-count" sx={{ mb: 2 }}>
-        {cycle.data.plantCount} plants assigned to this cycle
-      </Typography>
       <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
         <Chip label={cycle.data.status} />
         <Chip label={cycleDayLabel(cycle.data.cycleDay)} data-testid="cycle-page-day" />
+        <Chip label={`${cycle.data.plantCount} plants`} data-testid="cycle-plant-count" />
         {cycle.data.workflow ? <Chip label={`${cycle.data.workflow.templateName} v${cycle.data.workflow.versionNumber}`} /> : null}
       </Box>
-      {cycle.data.plantCount > 0 ? (
-        <HarvestCropButton cycleId={cycle.data.id} />
-      ) : (
-        <Alert severity="info" sx={{ mb: 3 }} data-testid="harvest-needs-plants">
-          Harvest needs tagged plants on this crop. Reset room only sets the planned count. Add tags under Compliance → the
-          license, open a plant, and move it into this room so it joins the active cycle. Then Harvest this crop appears
-          here.
-        </Alert>
-      )}
+      <HarvestPanel cycle={cycle.data} />
       {cycle.data.status === 'active' ? <CycleEditPanel cycle={cycle.data} /> : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Generated tasks
@@ -213,23 +203,174 @@ function CycleEditPanel({ cycle }: { cycle: CropCycleDetail }) {
   );
 }
 
-function HarvestCropButton({ cycleId }: { cycleId: string }) {
+function HarvestPanel({ cycle }: { cycle: CropCycleDetail }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const canAddPlants = can(user, 'inventory.write', 'harvests.write');
+  const canHarvest = can(user, 'harvests.write');
+  const [licenseId, setLicenseId] = useState(cycle.licenses[0]?.id ?? '');
+  const [tagText, setTagText] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!licenseId && cycle.licenses[0]?.id) {
+      setLicenseId(cycle.licenses[0].id);
+    }
+  }, [cycle.licenses, licenseId]);
+
+  const addPlants = useMutation({
+    mutationFn: (body: { tags: string[]; licenseId?: string }) =>
+      apiSend(`/cycles/${cycle.id}/plants`, cropCycleDetailSchema, body),
+    onSuccess: async (updated) => {
+      setTagText('');
+      setMessage(`Added tags. ${updated.plantCount} plants on this crop.`);
+      await queryClient.invalidateQueries({ queryKey: ['cycle', cycle.id] });
+      await queryClient.invalidateQueries({ queryKey: ['room', cycle.roomId] });
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+
   const harvestCrop = useMutation({
-    mutationFn: () => apiSend('/harvests', harvestDetailSchema, { cycleId }),
+    mutationFn: () => apiSend('/harvests', harvestDetailSchema, { cycleId: cycle.id }),
     onSuccess: (harvest) => navigate(`/harvests/${harvest.id}`),
   });
+
+  const tags = tagText
+    .split(/[\n,]+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
   return (
-    <Box sx={{ mb: 3 }}>
-      <Button variant="outlined" data-testid="harvest-crop" disabled={harvestCrop.isPending} onClick={() => harvestCrop.mutate()}>
-        Harvest this crop
-      </Button>
-      {harvestCrop.error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {harvestCrop.error.message}
-        </Alert>
-      ) : null}
-    </Box>
+    <Card sx={{ mb: 3 }} data-testid="harvest-panel">
+      <CardContent sx={{ display: 'grid', gap: 2 }}>
+        <Typography variant="h2" sx={{ fontSize: 26, m: 0 }}>
+          Harvest
+        </Typography>
+        <Typography sx={{ color: 'text.secondary' }}>
+          Stay on this page: add plant tags to the crop, then harvest. Reset room only plans the room — it does not create
+          tags.
+        </Typography>
+
+        <Box>
+          <Typography sx={{ fontWeight: 700, mb: 0.5 }}>1. Plants on this crop</Typography>
+          {cycle.plants.length === 0 ? (
+            <Typography color="text.secondary" data-testid="harvest-needs-plants">
+              None yet.
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }} data-testid="cycle-plant-tags">
+              {cycle.plants.map((plant) => (
+                <Chip
+                  key={plant.id}
+                  component={RouterLink}
+                  to={`/plants/${plant.id}`}
+                  clickable
+                  label={plant.tag}
+                  size="small"
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+
+        {cycle.status === 'active' && canAddPlants ? (
+          <Box
+            component="form"
+            sx={{ display: 'grid', gap: 1, maxWidth: 520 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (tags.length === 0) {
+                setMessage('Enter at least one tag.');
+                return;
+              }
+              addPlants.mutate({
+                tags,
+                ...(cycle.licenses.length > 1 ? { licenseId } : {}),
+              });
+            }}
+          >
+            <Typography sx={{ fontWeight: 700 }}>2. Add tags</Typography>
+            {cycle.licenses.length === 0 ? (
+              <Alert severity="warning">
+                No license covers {cycle.siteName}. Add one under{' '}
+                <Button component={RouterLink} to="/compliance" size="small" sx={{ p: 0, minWidth: 0, verticalAlign: 'baseline' }}>
+                  Compliance
+                </Button>{' '}
+                first.
+              </Alert>
+            ) : (
+              <>
+                {cycle.licenses.length > 1 ? (
+                  <TextField
+                    select
+                    label="License"
+                    value={licenseId}
+                    onChange={(event) => setLicenseId(event.target.value)}
+                    required
+                    inputProps={{ 'data-testid': 'cycle-plant-license' }}
+                  >
+                    {cycle.licenses.map((license) => (
+                      <MenuItem key={license.id} value={license.id}>
+                        {license.licenseNumber}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ) : (
+                  <Typography sx={{ color: 'text.secondary' }}>
+                    License {cycle.licenses[0]?.licenseNumber}
+                  </Typography>
+                )}
+                <TextField
+                  label="Plant tags"
+                  name="tags"
+                  value={tagText}
+                  onChange={(event) => setTagText(event.target.value)}
+                  placeholder="One tag per line"
+                  multiline
+                  minRows={3}
+                  required
+                  inputProps={{ 'data-testid': 'cycle-plant-tags-input' }}
+                  helperText="Creates the tags on this crop. A batch is made from the cultivar when needed."
+                />
+                <Button
+                  type="submit"
+                  variant="outlined"
+                  disabled={addPlants.isPending || tags.length === 0}
+                  sx={{ justifySelf: 'start' }}
+                  data-testid="cycle-add-plants"
+                >
+                  Add tags to crop
+                </Button>
+              </>
+            )}
+          </Box>
+        ) : null}
+
+        <Box>
+          <Typography sx={{ fontWeight: 700, mb: 1 }}>3. Cut the crop</Typography>
+          {cycle.plantCount > 0 && canHarvest ? (
+            <Button
+              variant="contained"
+              data-testid="harvest-crop"
+              disabled={harvestCrop.isPending}
+              onClick={() => harvestCrop.mutate()}
+            >
+              Harvest this crop
+            </Button>
+          ) : (
+            <Alert severity="info">
+              {cycle.plantCount === 0
+                ? 'Add at least one tag above, then harvest.'
+                : 'You need harvest permission to cut this crop.'}
+            </Alert>
+          )}
+        </Box>
+
+        {message ? <Alert severity={addPlants.isError ? 'error' : 'success'}>{message}</Alert> : null}
+        {harvestCrop.error ? <Alert severity="error">{harvestCrop.error.message}</Alert> : null}
+      </CardContent>
+    </Card>
   );
 }
 

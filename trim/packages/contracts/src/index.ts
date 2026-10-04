@@ -480,6 +480,16 @@ export const cycleWorkflowSchema = z.object({
   startingEvent: z.string(),
 });
 
+export const cyclePlantSchema = z.object({
+  id: z.string(),
+  tag: z.string(),
+});
+
+export const cycleLicenseOptionSchema = z.object({
+  id: z.string(),
+  licenseNumber: z.string(),
+});
+
 export const cropCycleDetailSchema = cropCycleSummarySchema.extend({
   siteId: z.string(),
   siteName: z.string(),
@@ -488,6 +498,17 @@ export const cropCycleDetailSchema = cropCycleSummarySchema.extend({
   operatingHistory: operatingHistorySchema,
   workflow: cycleWorkflowSchema.nullable(),
   tasks: z.array(cycleTaskSummarySchema),
+  /** Tagged plants currently on this crop (what Harvest uses). */
+  plants: z.array(cyclePlantSchema),
+  /** Licenses that cover this facility — used when adding tags on the crop page. */
+  licenses: z.array(cycleLicenseOptionSchema),
+});
+
+/** Add tagged plants directly onto a crop so harvest can run from one page. */
+export const assignCyclePlantsSchema = z.object({
+  tags: z.array(z.string().trim().min(1).max(191)).min(1).max(500),
+  /** Required when more than one license covers the facility. */
+  licenseId: z.string().min(1).optional(),
 });
 
 export const assigneeTypeSchema = z.enum(['team', 'role', 'employee']);
@@ -2005,6 +2026,9 @@ export type TransplantInput = z.infer<typeof transplantInputSchema>;
 export type IpmSchedule = z.infer<typeof ipmScheduleSchema>;
 export type IpmScheduleInput = z.infer<typeof ipmScheduleInputSchema>;
 export type CropCycleDetail = z.infer<typeof cropCycleDetailSchema>;
+export type CyclePlant = z.infer<typeof cyclePlantSchema>;
+export type CycleLicenseOption = z.infer<typeof cycleLicenseOptionSchema>;
+export type AssignCyclePlants = z.infer<typeof assignCyclePlantsSchema>;
 export type CycleTaskSummary = z.infer<typeof cycleTaskSummarySchema>;
 export type WorkflowTaskInput = z.infer<typeof workflowTaskInputSchema>;
 export type WorkflowVersionInput = z.infer<typeof workflowVersionInputSchema>;
