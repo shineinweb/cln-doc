@@ -81,7 +81,15 @@ export function CropCyclePage() {
         <Chip label={cycleDayLabel(cycle.data.cycleDay)} data-testid="cycle-page-day" />
         {cycle.data.workflow ? <Chip label={`${cycle.data.workflow.templateName} v${cycle.data.workflow.versionNumber}`} /> : null}
       </Box>
-      {cycle.data.plantCount > 0 ? <HarvestCropButton cycleId={cycle.data.id} /> : null}
+      {cycle.data.plantCount > 0 ? (
+        <HarvestCropButton cycleId={cycle.data.id} />
+      ) : (
+        <Alert severity="info" sx={{ mb: 3 }} data-testid="harvest-needs-plants">
+          Harvest needs tagged plants on this crop. Reset room only sets the planned count. Add tags under Compliance → the
+          license, open a plant, and move it into this room so it joins the active cycle. Then Harvest this crop appears
+          here.
+        </Alert>
+      )}
       {cycle.data.status === 'active' ? <CycleEditPanel cycle={cycle.data} /> : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Generated tasks

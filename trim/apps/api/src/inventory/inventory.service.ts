@@ -92,13 +92,25 @@ export class InventoryService {
 
   async move(user: SessionUser, plantId: string, input: MovePlant): Promise<PlantDetail> {
     const plant = await this.loadPlant(user, plantId);
+    if (plant.voidedAt || plant.status !== 'active') {
+      throw new BadRequestException('Only active plants can be moved.');
+    }
     const room = await this.prisma.room.findUnique({ where: { id: input.roomId }, include: { site: true } });
     const allowedSiteIds = new Set(plant.license.sites.map((link) => link.siteId));
     if (!room || room.site.organizationId !== user.organizationId || !allowedSiteIds.has(room.siteId)) {
       throw new BadRequestException('That room is not on a facility covered by this license');
     }
+    // Harvest needs plants on the room's active crop. Moving into a room assigns that cycle.
+    const activeCycle = await this.prisma.cropCycle.findFirst({
+      where: { roomId: room.id, status: 'active' },
+      orderBy: { startDate: 'desc' },
+      select: { id: true },
+    });
     await this.prisma.$transaction([
-      this.prisma.plant.update({ where: { id: plant.id }, data: { roomId: room.id } }),
+      this.prisma.plant.update({
+        where: { id: plant.id },
+        data: { roomId: room.id, cycleId: activeCycle?.id ?? null },
+      }),
       this.prisma.plantEvent.create({
         data: {
           plantId: plant.id,
@@ -108,6 +120,7 @@ export class InventoryService {
           occurredAt: new Date(),
           fromRoomId: plant.roomId,
           toRoomId: room.id,
+          note: activeCycle ? 'Assigned to the active crop in that room.' : 'Moved to a room with no active crop.',
         },
       }),
     ]);
