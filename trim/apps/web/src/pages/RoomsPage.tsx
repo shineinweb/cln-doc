@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { ApiError, apiSend } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { useSites } from '../layout/SiteProvider';
@@ -45,6 +47,8 @@ function roomsLede(site: Site): string {
 }
 
 function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'rooms.write');
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const save = useMutation({
@@ -68,16 +72,29 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
       <CardContent>
         <RecordActions
           summary={
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0 }}>
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0, flexWrap: 'wrap' }}>
               <RoomGlyph color={roomTypeColor(room.roomType)} />
-              <Box sx={{ minWidth: 0 }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="h3" sx={{ fontSize: { xs: 22, sm: 24 } }} data-testid="room-row-name">
                   <RouterLink to={`/rooms/${room.id}`}>{room.name}</RouterLink>
                 </Typography>
                 <Typography sx={{ color: 'text.secondary' }}>
-                  {room.currentCycle ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants` : 'No active crop'}
+                  {room.currentCycle
+                    ? `${room.currentCycle.name} · ${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants · Day ${room.currentCycle.cycleDay}`
+                    : 'No active crop'}
                 </Typography>
               </Box>
+              {room.currentCycle ? (
+                <Button
+                  component={RouterLink}
+                  to={`/rooms/${room.id}/cycles/${room.currentCycle.id}`}
+                  data-testid="open-room-cycle"
+                  size="small"
+                  variant="outlined"
+                >
+                  Open cycle
+                </Button>
+              ) : null}
             </Box>
           }
           detail={
@@ -122,6 +139,8 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
             </Box>
           }
           onDelete={() => remove.mutate()}
+          allowEdit={canWrite}
+          allowDelete={canWrite}
         />
         {error ? <Alert severity="error">{error}</Alert> : null}
       </CardContent>
@@ -130,6 +149,8 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
 }
 
 function AddRoomForm({ siteId }: { siteId: string }) {
+  const { user } = useAuth();
+  const canWrite = can(user, 'rooms.write');
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -149,6 +170,10 @@ function AddRoomForm({ siteId }: { siteId: string }) {
       setFormError(caught instanceof ApiError ? caught.message : 'The room could not be saved.');
     },
   });
+
+  if (!canWrite) {
+    return null;
+  }
 
   return (
     <Box>

@@ -3,7 +3,6 @@ import {
   BottomNavigation,
   BottomNavigationAction,
   Box,
-  Button,
   Drawer,
   FormControl,
   IconButton,
@@ -20,36 +19,39 @@ import {
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { NavGlyph, type GlyphName } from '../components/Graphics';
-import { Mark } from '../components/Mark';
-import { displayFont, workbench } from '../theme';
+import { workbench } from '../theme';
+import { FloatingSerenityChat } from './FloatingSerenityChat';
 import { useSites } from './SiteProvider';
+import { TopBarClock } from './TopBarClock';
+import { UserMenu } from './UserMenu';
 
 const DRAWER_WIDTH = 248;
 
-const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: GlyphName }[] = [
-  { to: '/', label: 'Dashboard', end: true, glyph: 'dashboard' },
-  { to: '/access', label: 'Users', end: true, glyph: 'access' },
-  { to: '/facilities', label: 'Facility', end: true, glyph: 'facility' },
-  { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms' },
-  { to: '/crop-cycles', label: 'Crop cycles', end: true, glyph: 'cycles' },
-  { to: '/workflows', label: 'Workflows', end: true, glyph: 'workflows' },
-  { to: '/workspace', label: 'Workspace', end: true, glyph: 'workspace' },
-  { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance' },
-  { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests' },
-  { to: '/operations', label: 'Operations', end: false, glyph: 'operations' },
-  { to: '/reports', label: 'Reports', end: false, glyph: 'reports' },
-  { to: '/coach', label: 'Site coach', end: true, glyph: 'coach' },
-  { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual' },
-  { to: '/sop', label: 'SOP', end: true, glyph: 'sop' },
-  { to: '/settings', label: 'Settings', end: true, glyph: 'settings' },
+const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: GlyphName; permissions: string[] }[] = [
+  { to: '/', label: 'Dashboard', end: true, glyph: 'dashboard', permissions: ['dashboard.read'] },
+  { to: '/access', label: 'Users', end: true, glyph: 'access', permissions: ['access.manage'] },
+  { to: '/facilities', label: 'Facility', end: true, glyph: 'facility', permissions: ['facilities.read', 'sites.read'] },
+  { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms', permissions: ['rooms.read'] },
+  { to: '/workspace', label: 'Tasks', end: true, glyph: 'workspace', permissions: ['tasks.read'] },
+  { to: '/timeclock', label: 'Time clock', end: true, glyph: 'timeclock', permissions: ['timeclock.punch'] },
+  { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance', permissions: ['compliance.read'] },
+  { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests', permissions: ['harvests.read'] },
+  { to: '/operations', label: 'Operations', end: false, glyph: 'operations', permissions: ['operations.read'] },
+  { to: '/reports', label: 'Reports', end: false, glyph: 'reports', permissions: ['reports.read'] },
+  { to: '/coach', label: 'Serenity', end: true, glyph: 'coach', permissions: ['coach.use'] },
+  { to: '/messages', label: 'Messages', end: true, glyph: 'messages', permissions: ['messages.use'] },
+  { to: '/communications', label: 'Email', end: true, glyph: 'messages', permissions: ['communications.manage'] },
+  { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual', permissions: ['dashboard.read'] },
+  { to: '/settings', label: 'Settings', end: true, glyph: 'settings', permissions: ['settings.manage'] },
 ];
 
 const PHONE_NAV = [
-  { to: '/', label: 'Dashboard', glyph: 'dashboard' as const, match: (path: string) => path === '/' },
-  { to: '/rooms', label: 'Rooms', glyph: 'rooms' as const, match: (path: string) => path.startsWith('/rooms') },
-  { to: '/workspace', label: 'Workspace', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace') },
-  { to: '/harvests', label: 'Harvests', glyph: 'harvests' as const, match: (path: string) => path.startsWith('/harvests') },
+  { to: '/', label: 'Dashboard', glyph: 'dashboard' as const, match: (path: string) => path === '/', permissions: ['dashboard.read'] },
+  { to: '/rooms', label: 'Rooms', glyph: 'rooms' as const, match: (path: string) => path.startsWith('/rooms'), permissions: ['rooms.read'] },
+  { to: '/workspace', label: 'Tasks', glyph: 'workspace' as const, match: (path: string) => path.startsWith('/workspace'), permissions: ['tasks.read'] },
+  { to: '/harvests', label: 'Harvests', glyph: 'harvests' as const, match: (path: string) => path.startsWith('/harvests'), permissions: ['harvests.read'] },
 ];
 
 export function AppShell() {
@@ -58,7 +60,9 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const phoneValue = PHONE_NAV.find((item) => item.match(location.pathname))?.to ?? 'more';
+  const navItems = NAV.filter((item) => can(user, ...item.permissions));
+  const phoneItems = PHONE_NAV.filter((item) => can(user, ...item.permissions));
+  const phoneValue = phoneItems.find((item) => item.match(location.pathname))?.to ?? 'more';
 
   const drawer = (
     <Box
@@ -71,16 +75,16 @@ export function AppShell() {
       }}
     >
       <Box sx={{ px: 2.25, pt: 2.5, pb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <Mark />
-          <Typography sx={{ fontFamily: displayFont, fontSize: 28, lineHeight: 1, fontWeight: 700 }}>
-            Trim
-          </Typography>
-        </Box>
+        <Box
+          component="img"
+          src="/brand/serenity-wordmark-sm.png"
+          alt="Serenity Universal"
+          sx={{ display: 'block', width: '100%', maxWidth: 196, height: 'auto' }}
+        />
         <Typography sx={{ mt: 1.5, color: '#D7C6F5', fontSize: 13 }}>{user?.organizationName}</Typography>
       </Box>
       <List sx={{ px: 1, flex: 1, overflowY: 'auto' }}>
-        {NAV.map((item) => (
+        {navItems.map((item) => (
           <ListItemButton
             key={item.to}
             component={NavLink}
@@ -113,7 +117,7 @@ export function AppShell() {
         ))}
       </List>
       <Typography sx={{ px: 2.25, pb: 2, color: '#C9B6E8', fontSize: 12 }}>
-        Room dashboards are the daily center of Trim.
+        Room dashboards are the daily center of Serenity.
       </Typography>
     </Box>
   );
@@ -123,6 +127,10 @@ export function AppShell() {
       sx={{
         display: 'flex',
         minHeight: '100vh',
+        maxWidth: '100%',
+        overflowX: 'hidden',
+        overscrollBehaviorX: 'none',
+        width: '100%',
         background: `radial-gradient(720px 320px at 0% -8%, rgba(255, 79, 139, 0.32), transparent 55%), radial-gradient(640px 280px at 100% 0%, rgba(61, 220, 255, 0.18), transparent 50%), radial-gradient(520px 320px at 80% 100%, rgba(124, 92, 255, 0.28), transparent 55%), ${workbench.canvas}`,
       }}
     >
@@ -166,10 +174,8 @@ export function AppShell() {
             </Select>
           </FormControl>
           <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
-          <Typography sx={{ display: { xs: 'none', md: 'block' }, color: 'text.secondary' }}>{user?.name}</Typography>
-          <Button color="secondary" variant="outlined" onClick={logout} sx={{ flexShrink: 0, px: { xs: 1.25, sm: 2 } }}>
-            Sign out
-          </Button>
+          {can(user, 'timeclock.punch') ? <TopBarClock siteId={siteId} /> : null}
+          {user ? <UserMenu userId={user.id} name={user.name} photoUrl={user.photoUrl} onLogout={logout} /> : null}
         </Toolbar>
       </AppBar>
       <Box component="nav" sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: 0 }}>
@@ -198,12 +204,14 @@ export function AppShell() {
         sx={{
           flex: 1,
           minWidth: 0,
+          maxWidth: '100%',
+          overflowX: 'hidden',
           px: { xs: 1.5, sm: 2.5, lg: 4 },
           pb: { xs: 12, sm: 6 },
           pt: { xs: 10, sm: 12 },
         }}
       >
-        <Box sx={{ maxWidth: 1180, mx: 'auto' }}>
+        <Box sx={{ maxWidth: 1180, width: '100%', mx: 'auto', minWidth: 0 }}>
           <Outlet />
         </Box>
       </Box>
@@ -223,7 +231,7 @@ export function AppShell() {
           pb: 'env(safe-area-inset-bottom)',
         }}
       >
-        {PHONE_NAV.map((item) => (
+        {phoneItems.map((item) => (
           <BottomNavigationAction
             key={item.to}
             label={item.label}
@@ -239,6 +247,7 @@ export function AppShell() {
           onClick={() => setMobileOpen(true)}
         />
       </BottomNavigation>
+      <FloatingSerenityChat />
     </Box>
   );
 }

@@ -5,6 +5,11 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { createAccessFixture, type AccessFixture } from './fixture';
 
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
 const TEST_DATABASE_URL = 'mysql://trim:trim@127.0.0.1:3306/trim_test';
 
 describe('user, role, and permission management', () => {
@@ -42,7 +47,7 @@ describe('user, role, and permission management', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ name: 'Denied', email: `denied-${stamp}@trim.test`, password, roleId: 'missing', siteIds: [] });
     expect(denied.status).toBe(403);
-    expect(denied.body.message).toBe('Only a manager can change users, roles, and permissions.');
+    expect(denied.body.message).toBe('You do not have permission for access.manage.');
 
     const directory = await request(app.getHttpServer()).get('/access').set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
     const operator = directory.body.roles.find((role: { name: string }) => role.name === 'Site operator');
@@ -70,13 +75,52 @@ describe('user, role, and permission management', () => {
         password,
         roleId: operator.id,
         siteIds: [fixture.siteAId],
+        phone: '555-0100',
+        addressLine1: '12 Harbor Lane',
+        city: 'Oakland',
+        region: 'CA',
+        postalCode: '94607',
       });
     expect(created.status).toBe(201);
     expect(created.body.name).toBe('Dana Ruiz');
     expect(created.body.email).toBe(`dana-${stamp}@trim.test`);
     expect(created.body.roleName).toBe('Site operator');
     expect(created.body.siteIds).toEqual([fixture.siteAId]);
+    expect(created.body.phone).toBe('555-0100');
+    expect(created.body.addressLine1).toBe('12 Harbor Lane');
+    expect(created.body.city).toBe('Oakland');
+    expect(created.body.region).toBe('CA');
+    expect(created.body.postalCode).toBe('94607');
+    expect(created.body.photoUrl).toBeNull();
     expect(JSON.stringify(created.body)).not.toContain(password);
+
+    const photoDenied = await request(app.getHttpServer())
+      .post(`/access/users/${created.body.id}/photo`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .attach('file', PNG, 'face.png');
+    expect(photoDenied.status).toBe(403);
+
+    const photo = await request(app.getHttpServer())
+      .post(`/access/users/${created.body.id}/photo`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .attach('file', PNG, 'face.png')
+      .expect(201);
+    expect(photo.body.photoUrl).toBe(`/access/users/${created.body.id}/photo`);
+    const downloaded = await request(app.getHttpServer())
+      .get(`/access/users/${created.body.id}/photo`)
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+    expect(downloaded.body.equals(PNG)).toBe(true);
+
+    const me = await request(app.getHttpServer()).get('/auth/me').set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
+    expect(me.body.photoUrl === null || typeof me.body.photoUrl === 'string').toBe(true);
+    const own = await request(app.getHttpServer())
+      .patch('/auth/profile')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ phone: '555-0111', addressLine1: '1 Admin St', city: 'Oakland', region: 'CA', postalCode: '94612' })
+      .expect(200);
+    expect(own.body.phone).toBe('555-0111');
+    expect(own.body.addressLine1).toBe('1 Admin St');
 
     const stored = await prisma.credential.findUniqueOrThrow({ where: { userId: created.body.id } });
     expect(stored.passwordHash).not.toBe(password);
@@ -90,9 +134,16 @@ describe('user, role, and permission management', () => {
         password: '',
         roleId: operator.id,
         siteIds: [fixture.siteAId],
+        phone: '555-0199',
+        addressLine1: '12 Harbor Lane',
+        city: 'Oakland',
+        region: 'CA',
+        postalCode: '94607',
       })
       .expect(200);
     expect(edited.body.name).toBe('Dana Ruiz East');
+    expect(edited.body.phone).toBe('555-0199');
+    expect(edited.body.photoUrl).toBe(`/access/users/${created.body.id}/photo`);
 
     const self = directory.body.users.find((person: { email: string }) => person.email === fixture.adminUser.email);
     const selfDelete = await request(app.getHttpServer())

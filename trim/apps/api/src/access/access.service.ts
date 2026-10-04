@@ -12,7 +12,11 @@ import type {
 } from '@trim/contracts';
 import { Prisma } from '@trim/database';
 import bcrypt from 'bcryptjs';
+import { hasPermission } from '../auth/permissions';
 import { PrismaService } from '../prisma/prisma.service';
+import { AttachmentsService } from '../storage/attachments.service';
+
+const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 const userInclude = {
   userRoles: { include: { role: true }, orderBy: { createdAt: 'asc' as const } },
@@ -31,7 +35,10 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Injectable()
 export class AccessService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly attachments: AttachmentsService,
+  ) {}
 
   async directory(user: SessionUser): Promise<AccessDirectory> {
     const [users, roles, permissions, audit, sites] = await Promise.all([
@@ -49,7 +56,7 @@ export class AccessService {
       this.prisma.auditLog.findMany({
         where: { organizationId: user.organizationId },
         orderBy: { createdAt: 'desc' },
-        take: 100,
+        take: 300,
       }),
       this.prisma.site.findMany({
         where: { organizationId: user.organizationId },
@@ -89,6 +96,7 @@ export class AccessService {
           organizationId: actor.organizationId,
           name: input.name,
           email,
+          ...profileFields(input),
           credential: { create: { passwordHash } },
           userRoles: { create: { roleId: role.id } },
           memberships: siteIds.length ? { create: siteIds.map((siteId) => ({ siteId })) } : undefined,
@@ -116,7 +124,7 @@ export class AccessService {
     const passwordHash = password ? await bcrypt.hash(password, 10) : null;
     try {
       const updated = await this.prisma.$transaction(async (tx) => {
-        await tx.user.update({ where: { id: existing.id }, data: { name: input.name, email } });
+        await tx.user.update({ where: { id: existing.id }, data: { name: input.name, email, ...profileFields(input) } });
         if (passwordHash) {
           await tx.credential.update({ where: { userId: existing.id }, data: { passwordHash } });
         }
@@ -163,8 +171,67 @@ export class AccessService {
       }
       throw error;
     }
+    if (existing.photoObjectKey) {
+      await this.attachments.delete(existing.photoObjectKey).catch(() => undefined);
+    }
     await this.record(actor, 'Deleted user', 'user', existing.id, `Deleted user ${existing.name}.`);
     return { id: existing.id, removed: true, voided: false };
+  }
+
+  async setPhoto(
+    actor: SessionUser,
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ): Promise<AccessUser> {
+    this.assertManager(actor);
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('Choose a photo to upload.');
+    }
+    if (!PHOTO_TYPES.has(file.mimetype)) {
+      throw new BadRequestException('Photo must be a JPEG, PNG, WebP, or GIF.');
+    }
+    const existing = await this.requireUser(actor, userId);
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80) || 'photo';
+    const objectKey = `orgs/${actor.organizationId}/users/${existing.id}/photo-${Date.now()}-${safeName}`;
+    await this.attachments.put(objectKey, file.buffer, file.mimetype);
+    await this.prisma.user.update({ where: { id: existing.id }, data: { photoObjectKey: objectKey } });
+    if (existing.photoObjectKey && existing.photoObjectKey !== objectKey) {
+      await this.attachments.delete(existing.photoObjectKey).catch(() => undefined);
+    }
+    await this.record(actor, 'Updated user photo', 'user', existing.id, `Updated photo for ${existing.name}.`);
+    return toUser(await this.requireUser(actor, userId));
+  }
+
+  async clearPhoto(actor: SessionUser, userId: string): Promise<AccessUser> {
+    this.assertManager(actor);
+    const existing = await this.requireUser(actor, userId);
+    if (existing.photoObjectKey) {
+      await this.attachments.delete(existing.photoObjectKey).catch(() => undefined);
+      await this.prisma.user.update({ where: { id: existing.id }, data: { photoObjectKey: null } });
+    }
+    return toUser(await this.requireUser(actor, userId));
+  }
+
+  async readPhoto(actor: SessionUser, userId: string): Promise<{ body: Buffer; contentType: string; fileName: string }> {
+    const existing = await this.prisma.user.findFirst({
+      where: { id: userId, organizationId: actor.organizationId },
+    });
+    if (!existing) {
+      throw new NotFoundException('User not found');
+    }
+    const allowed = actor.id === existing.id || actor.isOrgAdmin || hasPermission(actor, 'access.manage');
+    if (!allowed) {
+      throw new ForbiddenException('You do not have permission for this action.');
+    }
+    if (!existing.photoObjectKey) {
+      throw new NotFoundException('No photo is stored for this user.');
+    }
+    const body = await this.attachments.get(existing.photoObjectKey);
+    return {
+      body,
+      contentType: contentTypeForKey(existing.photoObjectKey),
+      fileName: existing.photoObjectKey.split('/').pop() ?? 'photo',
+    };
   }
 
   async createRole(actor: SessionUser, input: AccessRoleInput): Promise<AccessRole> {
@@ -291,9 +358,10 @@ export class AccessService {
   }
 
   private assertManager(user: SessionUser) {
-    if (!user.isOrgAdmin) {
-      throw new ForbiddenException('Only a manager can change users, roles, and permissions.');
+    if (user.isOrgAdmin || user.permissions.includes('access.manage')) {
+      return;
     }
+    throw new ForbiddenException('You do not have permission for access.manage.');
   }
 
   private email(value: string): string {
@@ -437,7 +505,36 @@ function toUser(user: UserRow): AccessUser {
     opensEveryFacility: Boolean(role?.isOrgWide),
     siteIds: user.memberships.map((membership) => membership.siteId),
     siteNames: user.memberships.map((membership) => membership.site.name),
+    phone: user.phone,
+    addressLine1: user.addressLine1,
+    city: user.city,
+    region: user.region,
+    postalCode: user.postalCode,
+    photoUrl: user.photoObjectKey ? `/access/users/${user.id}/photo` : null,
   };
+}
+
+function profileFields(input: AccessUserInput) {
+  return {
+    phone: blank(input.phone),
+    addressLine1: blank(input.addressLine1),
+    city: blank(input.city),
+    region: blank(input.region),
+    postalCode: blank(input.postalCode),
+  };
+}
+
+function blank(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed ? trimmed : null;
+}
+
+function contentTypeForKey(objectKey: string): string {
+  const lower = objectKey.toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
 }
 
 function toRole(role: RoleRow): AccessRole {

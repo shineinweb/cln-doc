@@ -1,6 +1,6 @@
 # Authentication
 
-Trim Phase 1 uses signed JSON Web Tokens. There is no server session.
+Serenity Phase 1 uses signed JSON Web Tokens. There is no server session.
 
 ## Flow
 
@@ -26,8 +26,21 @@ A signed-in user belongs to one organization.
 - A site in the caller's organization without membership returns `403`.
 - Missing or invalid tokens return `401`.
 
-Permission keys (`sites.read`, `rooms.read`, and so on) are stored so later modules can check capabilities. Phase 1 site routes enforce the organization boundary and site membership, not individual permission keys.
+Permission keys (`dashboard.read`, `sites.read`, `rooms.write`, `access.manage`, and the rest of the module catalog) are enforced on API controllers through `PermissionsGuard` + `@RequirePermissions(...)`. Organization admins (`isOrgWide`) bypass key checks and receive the full catalog on `/auth/me` for UI gating. Site operators receive the day-to-day key set (not `access.manage`, `settings.manage`, `workflows.manage`, `facilities.write`, or `timeclock.manage`). Site membership still limits which facilities open after a permission check passes.
+
+Every authenticated API call (except health, login, `/auth/me`, and time-clock status polls) is written to `audit_logs`. Successful calls are recorded by the global audit interceptor; failures (including permission denials from `PermissionsGuard`, which run before interceptors) are recorded by the global audit exception filter with a `→ <status>` suffix. Sign-ins and access-directory mutations also keep their richer summaries.
 
 ## Passwords
 
 Hashes are bcrypt. Login failures use the same response for an unknown email and a wrong password.
+
+## Password reset
+
+1. `POST /auth/forgot-password` accepts an email and always returns a generic success message (no email enumeration).
+2. When the email matches a user with credentials, Serenity stores a hashed one-hour reset token and emails a link to `{WEB_ORIGIN}/reset-password?token=…` through `MailService` (`MAIL_DRIVER=console` locally, or SendGrid when configured).
+3. `POST /auth/reset-password` accepts `{ token, password }`, updates `credentials.password_hash`, and marks the token used.
+
+## Email notifications and marketing
+
+- Assigning people on a room task sends a transactional email when `users.email_notifications_enabled` is true.
+- Org admins with `communications.manage` can send one-off announcement/marketing broadcasts from **Email** (`POST /communications/broadcasts`).

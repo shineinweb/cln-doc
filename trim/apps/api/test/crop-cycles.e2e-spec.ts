@@ -328,6 +328,47 @@ describe('crop cycles', () => {
       .expect(404);
   });
 
+  it('adds plant tags on the crop page without a separate inventory move', async () => {
+    await prisma.license.create({
+      data: {
+        organizationId: fixture.organizationId,
+        licenseNumber: `OR-ASSIGN-${cycleBId.slice(-8)}`,
+        licenseType: 'producer',
+        jurisdiction: 'US-OR',
+        sites: { create: { siteId: fixture.siteBId } },
+      },
+    });
+    const tag1 = `ASSIGN-${cycleBId.slice(-4)}-1`;
+    const tag2 = `ASSIGN-${cycleBId.slice(-4)}-2`;
+    const denied = await request(app.getHttpServer())
+      .post(`/cycles/${cycleBId}/plants`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({ tags: [tag1] });
+    expect(denied.status).toBe(403);
+
+    const added = await request(app.getHttpServer())
+      .post(`/cycles/${cycleBId}/plants`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .send({ tags: [tag1, tag2, tag1] })
+      .expect(201);
+    expect(added.body.plantCount).toBe(2);
+    expect(added.body.plants.map((plant: { tag: string }) => plant.tag).sort()).toEqual([tag1, tag2].sort());
+    expect(added.body.licenses.length).toBeGreaterThanOrEqual(1);
+
+    const stored = await prisma.plant.findMany({
+      where: { cycleId: cycleBId, tag: { in: [tag1, tag2] } },
+      orderBy: { tag: 'asc' },
+    });
+    expect(stored).toHaveLength(2);
+    expect(stored.every((plant) => plant.roomId === fixture.roomBId)).toBe(true);
+
+    const clash = await request(app.getHttpServer())
+      .post(`/cycles/${cycleBId}/plants`)
+      .set('Authorization', `Bearer ${tokenB}`)
+      .send({ tags: [tag1] });
+    expect(clash.status).toBe(400);
+  });
+
   async function login(email: string, password: string): Promise<string> {
     const response = await request(app.getHttpServer()).post('/auth/login').send({ email, password }).expect(200);
     return response.body.accessToken as string;

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
+import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { PagedList, Pager, RecordActions, SaveChanges } from '../records/RecordControls';
 
@@ -37,6 +38,7 @@ export function LicenseInventoryPage() {
   const pageCount = Math.max(1, Math.ceil(license.total / license.pageSize));
   return (
     <Box data-testid="license-inventory">
+      <BackLink to="/compliance" label="Compliance" />
       <PageHeader
         kicker={license.siteNames.join(', ')}
         title={license.licenseNumber}

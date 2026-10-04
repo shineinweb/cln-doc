@@ -1,22 +1,22 @@
-# Trim user manual
+# Serenity Universal user manual
 
-Trim is the cultivation workspace for Harbor & Hill Cultivation. The room dashboard is the daily center. A license is not the same thing as a facility: plants and packages belong to a license, and rooms belong to a facility.
+Serenity is the cultivation workspace for Harbor & Hill Cultivation. The room dashboard is the daily center. A license is not the same thing as a facility: plants and packages belong to a license, and rooms belong to a facility.
 
-Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
+Open Serenity at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, Site coach, User manual, SOP, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, User manual, SOP, and Settings open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation shows only the modules your role’s permissions allow. Typical organization-admin items start with **Dashboard**, then **Users**, Facility, Rooms, Tasks, Time clock, Compliance, Harvests, Operations, Reports, Serenity, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks due for you today. The **Facility board** lives on **Tasks**. A site operator does not see **Users** or **Settings** unless those permissions are granted. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Serenity.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar when those modules are allowed, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
-The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
+The top bar has a **Facility** switcher, **Clock in** / **Lunch** / **End lunch** / **Clock out** for the selected facility (status shows Out, In, or Lunch), your name on a wider screen, and **Sign out**. The status dot opens **Time clock** for payroll and the full punch history.
 
 ## Who can open what
 
 | Person | Email | Password | What opens |
 | --- | --- | --- | --- |
-| Avery Chen | `avery.chen@harborhill.example` | `HarborHill-admin` | Organization admin. Both facilities, both licenses, template editing, reschedule, and submission review. |
-| Blake Ortiz | `blake.ortiz@harborhill.example` | `HarborHouse-only` | Harbor House only. Hill Works stays hidden, and a Hill Works address says he does not have access. |
-| Casey Nguyen | `casey.nguyen@harborhill.example` | `HillWorks-only` | Hill Works only. Harbor House stays hidden. |
+| Avery Chen | `avery.chen@harborhill.example` | `HarborHill-admin` | Organization admin. Full permission catalog, both facilities, both licenses, Users, Settings, payroll, template editing, reschedule, and submission review. |
+| Blake Ortiz | `blake.ortiz@harborhill.example` | `HarborHouse-only` | Site operator for Harbor House. Day-to-day modules only (no Users, Settings, workflow manage, or payroll manage). Hill Works stays hidden. |
+| Casey Nguyen | `casey.nguyen@harborhill.example` | `HillWorks-only` | Site operator for Hill Works. Same day-to-day module set as Blake. Harbor House stays hidden. |
 
 These are the seeded accounts for this workspace.
 
@@ -39,7 +39,7 @@ Opening a room, crop cycle, harvest, package, plant, reading, or facility report
 
 A Harbor House gateway cannot post a reading into a Hill Works room. The message is “This gateway cannot write that room.” That is true even for Avery.
 
-Workspace says “Tasks from another facility stay off this list.” Times on a room use that facility’s timezone, `America/Los_Angeles`. A timestamp you type without a timezone is read as local time at the facility.
+**Tasks** says tasks from another facility stay off the list. Times on a room use that facility’s timezone, `America/Los_Angeles`. A timestamp you type without a timezone is read as local time at the facility.
 
 ## Changing a record
 
@@ -53,11 +53,28 @@ Reports stay calculated. A report total has no **Delete**.
 
 Add forms that were already on a page keep their buttons: **Add room**, **Save record**, **Save purchase**, **Save training**, **Save stay**, **Save recurring task**, **Save template**, **Save SOP**, **Save reading**, **Save alert rule**, and **Mark done**. New add buttons are **Add facility**, **Add zone**, **Start cycle**, **Add task**, **Add batch**, and **Add plant**.
 
+## Dashboard
+
+**Dashboard** is the first item in the left navigation. It follows the facility in the top bar.
+
+Under the counts, the page shows facility charts built from stored rows.
+
+Charts on Dashboard:
+
+- **Estimated Yield Graph** — dry grams by week and cultivar. Harvested cycles use stored dry weight. Open cycles use plant count times this facility’s average grams per plant when that average exists.
+- **COGS Breakdown** — labor, cannabis inputs, and non-cannabis inputs from stored labor rates and input costs.
+- **Top Performing Strains** — harvest count and packaged grams by strain.
+- **Plant Forecast** — active crop plant counts across the next four days.
+- **Packaged (MTD)** and **Average g per plant** — month-to-date packaged weight and the dry-weight average.
+- **Packages by Item** — package labels and weights.
+
+Serenity does not store sales dollars on these charts. Below the charts are the facility’s rooms and your tasks due today. Open **Tasks** for the room × milestone **Facility board**.
+
 ## Facility
 
 **Facility** opens on “Harbor & Hill Cultivation.” Each card shows the facility name, code, city, and how many rooms it has. Select a card to work in that facility. The top bar also has a **Facility** switcher that chooses the same site and opens Rooms.
 
-**Add facility** opens the form. The form asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. **Cancel** closes the form without saving. The code is taken from the name. **Edit** opens the stored name and address. **Save changes** writes them, and the code stays the same. **Delete** asks “Delete this record?” and then removes the facility and its rooms. You can edit or delete a facility you can open. Avery Chen can add a facility and can edit or delete Harbor House or Hill Works. Blake Ortiz can add a facility, and it appears on his list. He can edit Harbor House. He cannot edit or delete Hill Works.
+**Add facility** opens when you hold `facilities.write`. The form asks for a name, street, city, region, and postal code. **Add facility** saves the facility on this organization and shows the card. **Cancel** closes the form without saving. The code is taken from the name. **Edit** opens the stored name and address. **Save changes** writes them, and the code stays the same. **Delete** asks “Delete this record?” and then removes the facility and its rooms. Avery Chen can add, edit, or delete Harbor House or Hill Works. Blake Ortiz and Casey Nguyen can open their assigned facilities but do not get **Add facility**, **Edit**, or **Delete** on the Facility page.
 
 If an account has no membership, the page says “No facilities are assigned to this account.”
 
@@ -65,7 +82,7 @@ If an account has no membership, the page says “No facilities are assigned to 
 
 **Rooms** is titled Rooms. The kicker is the facility code, HARBOR or HILL. The line under the title names the facility and its address, then says “Open a room to see its zones, readings, and operating history.” Harbor House is 180 Cannery Road, Astoria, OR 97103. Hill Works is 42 Ridge Lane, Hood River, OR 97031. Choosing a facility in the top bar opens this page.
 
-Each row shows the room name, cultivar and plant count or “No active crop.” **View** shows the room type and **Open room**. Choose the room name to open the dashboard.
+Each row shows the room name, the active crop name, cultivar, plant count, and day, or “No active crop.” **View** shows the room type, **Open room**, and **Open cycle** when a crop is active. Choose the room name to open the dashboard. The dashboard has a **Current crop** card with the same cycle link.
 
 Seeded rooms:
 
@@ -84,11 +101,11 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 **Zones** lists the room’s zones. **Add zone** adds a zone. **View**, **Edit**, **Save changes**, and **Delete** sit on each zone.
 
-**Settings** on the room holds alert rules, **Defoliation schedule**, readings, the gateway, the controller sample, and **Last successful Metrc sync**. **Defoliation schedule** takes a day number for each pass. Day 1 is the current crop’s start date, so day 10 is the tenth day of that crop. **Add defoliation** adds another day. **Save schedule** stores them and shows each date. **Remove** drops a day. A room with no crop still stores the day numbers, and the dates stay blank until a crop starts. A dry room does not show **Defoliation schedule**.
+**Settings** on the room holds alert rules, **Defoliation schedule**, **Transplant dates**, **IPM schedule**, readings, the gateway, the controller sample, and **Last successful Metrc sync**. **Defoliation schedule** takes a day number for each pass. Day 1 is the current crop’s start date, so day 10 is the tenth day of that crop. **Add defoliation** adds another day. **Save schedule** stores them and shows each date. **Remove** drops a day. A room with no crop still stores the day numbers, and the dates stay blank until a crop starts. A dry room does not show **Defoliation schedule** or **Transplant dates**. **Transplant dates** uses a calendar date picker once a crop is running; Serenity stores each pick as a day number from that crop’s start and fills the Facility board **T** column. Without an active crop, the picker stays off until a crop starts. **IPM schedule** is a twice-a-week scout cadence: choose exactly two weekdays (Tuesday and Friday are suggested), then **Save schedule**. **Clear schedule** turns it off. Log what you find under **Operations → IPM**.
 
 **Reset room** sits in the top right of the room page for an organization admin. It opens a form: Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. The start date is day 1, and the form shows the calculated end date for the next crop. Saving closes the current crop, lists it under **Archived crops**, and starts the next crop from the strain. The harvest date, when entered, is stored on the crop being closed. Zones stay on **Zones**. Readings and alert rules stay on **Settings**. An employee does not see **Reset room**.
 
-**Last successful Metrc sync** sits on the room **Settings** tab. With nothing recorded, it says “No successful Metrc sync is recorded.” Trim does not call live Metrc.
+**Last successful Metrc sync** sits on the room **Settings** tab. With nothing recorded, it says “No successful Metrc sync is recorded.” Serenity does not call live Metrc.
 
 **Tasks** has **Add task**. The form asks for a title, an optional **Description**, **One time** or **Recurring**, and optional **Employees**. You can assign more than one employee to the same task from the **Employees** list. Leave that list on Unassigned when nobody is assigned. A one-time task asks for a **Due date**. A recurring task repeats **Daily** or **Weekly** and does not ask for a due date. A weekly task asks for **Days**, and you can choose more than one, such as Tuesday and Friday. **Edit** and **Delete** are on each added task. A description shows under the task title. **Tasks due today** still lists the crop’s tasks. Empty rooms say “No tasks are due today.”
 
@@ -98,25 +115,27 @@ The room opens on **Dashboard**. Beside it are **Tasks**, **Notes**, **Zones**, 
 
 ## Settings
 
-**Settings** sits after SOP. It opens for every signed-in user. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
+**Settings** sits after SOP when you hold `settings.manage`. Two tabs sit under the title: **General** and **API's**. The page opens on **General**.
 
-**General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. An employee sees the fields and “Only a manager can change settings.”
+**General** asks for **Company name**, **Title**, and **Description**. **Save changes** writes them. The company name is the organization name in the drawer. Without `settings.manage`, Settings stays out of the navigation and the API refuses the page.
 
-**API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Trim does not call Metrc.
+**API's** holds **Metrc API's**. The form asks for **Integrator API key**, **User API key**, and **Facility license number**. Metrc uses the integrator key as the username and the user API key as the password. The user API key belongs to the Metrc user, not the facility. **Save** stores the keys. The page says “Metrc API keys saved.” The keys are not shown again. A saved key can be left blank on the next save so the stored key stays. Serenity does not call Metrc.
 
 ## Users
 
-**Users** sits directly under **Dashboard** in the left navigation. It opens for every signed-in user. Three tabs sit under the title: **Users**, **Roles**, and **Permissions**. The page opens on **Users**.
+**Users** sits directly under **Dashboard** when you hold `access.manage`. Three tabs sit under the title: **Users**, **Roles**, and **Permissions**. The page opens on **Users**. Without that permission, Users stays out of the navigation and the API refuses the page.
 
-**Users** lists every person in a table: name, email, role, and facilities. **Add user** opens a form for name, email, password, role, and facilities. **Edit** changes that person. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
+**Activity** sits at the top of the Users tab. It counts people, sign-ins, access changes, and active people from the audit log for the last 14 days, draws a daily activity chart, and lists the most active people.
 
-**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for changes to users, roles, and permissions.
+**Users** lists every person in a table: name, email, phone, role, and facilities. Use **Search users** to filter the list, and click a column header to sort. **Add user** opens a form for name, email, password, phone, address (street, city, region, postal code), photo, role, and facilities. **Edit** changes that person, including phone, address, and photo. **Delete** asks “Delete this record?” and removes a person who has not recorded work. You cannot delete your own account. An organization admin’s facilities column says “Every facility.”
 
-**Roles** lists each role with its description and permissions. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
+**Audit logs** sits under the user table. It lists when, who, the action, and a summary for sign-ins and for every signed-in action across Serenity modules (opens, creates, changes, deletes). High-frequency status polls such as `/auth/me` and time-clock status are skipped so the log stays readable. Use **Search activity** to filter the log, and click a column header to sort. The list opens with newest activity first.
 
-**Permissions** lists each key and description. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
+**Roles** lists each role with its description and permissions. Use **Search roles** to filter the list, and click a column header to sort. **Add role** asks for a name, a description, **Opens every facility**, and the permissions to grant. **Edit** and **Delete** change or remove a role that no user still holds.
 
-An employee sees the tables and “Only a manager can change users, roles, and permissions.”
+**Permissions** lists each module key and description (`dashboard.read`, `rooms.write`, `timeclock.punch`, and the rest of the catalog). Use **Search permissions** to filter the list, and click a column header to sort. **Add permission** asks for a key, such as notes.read, and a description. **Edit** and **Delete** change or remove that permission.
+
+A person without `access.manage` does not open **Users**. A custom role can receive individual module keys without organization-admin rights.
 
 Readings and alert rules are on the room **Settings** tab.
 
@@ -140,9 +159,9 @@ The crop cycle page still lists Observations inside operating history.
 
 ## Crop cycles
 
-**Crop cycles** lists active cycles for the facility in the switcher. Each card shows the crop, room, cultivar, plant count, expected harvest, stage, and cycle day. Open one for the timeline, movements, observations, and labor. This list does not start a cycle. **Edit** on a listed cycle opens the crop cycle form: name, cultivar, stage, start, and cycle duration in days. The start date is day 1, and the form shows the calculated end date. **Save changes** writes that crop. **Cancel** closes the form.
+Active crops live on **Rooms** and on each room dashboard. The Rooms list shows the crop name, cultivar, plant count, and day. **Open cycle** opens the cycle page. The room dashboard has a **Current crop** card with the same link. There is no separate Crop cycles page in the navigation. `/crop-cycles` redirects to Rooms.
 
-The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned. **Harvest this crop** appears on that page only while the crop still has plants.
+The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned. **Crop details** lets you edit or delete an active crop. **Harvest this crop** appears on that page only while the crop still has plants.
 
 **Generated tasks** lists each task with its assignee and due date. If none exist, the page says “This cycle has no workflow assignments yet.”
 
@@ -150,9 +169,11 @@ The cycle page has **Back to** the room, the plant count assigned to the cycle, 
 
 Organization admins also see **Reschedule**. Employees do not.
 
-## Workflows
+## Workflow templates
 
-**Workflows** says “A template is applied when a cycle starts. Editing it creates a new version and leaves existing cycles on the version they already have.”
+**Workflow templates** are not in the left navigation. Open them from **Settings** (General) or go to `/workflows`. They are blueprints only: a template is copied into crop-cycle tasks when a cycle starts. Daily work is under **Tasks**.
+
+The page says a template is applied when a cycle starts, and that editing it creates a new version and leaves existing cycles on the version they already have.
 
 Each template card shows “Version N of M,” the duration in days, the starting event, and tasks as “Day … · title · assignee.” The seeded template is **Canopy week**, version 1 of 1, 28 days, starting at `cycle_start`. Its tasks are:
 
@@ -164,15 +185,42 @@ Employees see “Managers create templates. You can still work the assignments t
 
 Avery can save three things on this page:
 
-- **SOP record**, with Title, Summary, and **Save SOP**. The seeded note is Canopy scout: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.”
+- **SOP record**, with Title, Summary, and **Save SOP**. Browse and edit existing procedures under Operations → SOP library. The seeded note is Canopy scout: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.”
 - **Team**, with Team name, Member, and **Save team**. The seeded team is Canopy crew.
 - **New template**, then **Save template**. Fields are Template name, Cultivar, Medium, Duration in days, Starting event, Task key, Task title, Days after the starting event, Instructions, Assign to (Role, Team, or Employee), and Linked SOP. The starting-event hint says “Use cycle_start, or the title of a timeline event.” Saving a name that already exists reports “A workflow template with that name already exists.” This form creates a new template. It does not edit Canopy week in place, and the page has no Start cycle button. A crop is started with **Reset room** in the top right of the room page.
 
 **Cultivar** and **Medium** are optional. Leave them blank when the template is not for one cultivar or one medium. A filled card adds “Cultivar …” and “Medium …”. The seeded templates are **Cedar Nights coco week** (Cultivar Cedar Nights, Medium coco, task Check runoff, linked to Irrigation pass) and **Glass Orchard soil week** (Cultivar Glass Orchard, Medium soil, task Scout the benches, linked to IPM scout). Canopy week has neither, so it stays a general template.
 
-## Workspace
+## Tasks
 
-**Workspace** is titled Employee workspace. The introduction names the date and says tasks from another facility stay off the list. If nothing is due, it says “Nothing is assigned to you today.”
+**Tasks** sits in the left navigation after Rooms. The address stays `/workspace`. The title is “All tasks due today.” The line under the title names the date and says crop-cycle work, room chores, and Operations recurring duties are listed, with training under **Operations → Training**.
+
+This is the single place for work due today:
+
+- **Crop cycle tasks** — workflow assignments with evidence (open `/tasks/` plus the id).
+- **Room tasks** — room chores, AI-generated tasks, and alert follow-ups (open the room).
+- **Recurring duties** — Operations recurring duties whose next due date is today or earlier (open **Operations → Recurring tasks**).
+
+The room × milestone **Facility board** sits at the top of **Tasks**. It is a rooms × milestones grid for the selected facility (dry rooms are left off): crop start (**1st**), each stored defoliation day (**D10**, **D21**, and so on), harvest (**H**), transplant dates (**T** from room Settings), and chores. Built-in schedules fill cells when no matching task exists: **Sul.** on crop day 14; **Side Net** and **Filters AC** on crop day 35; **LS** 11 days before expected harvest; **Garden Clean** every 30 days from crop start; **Water Filters** every Tuesday and Friday; **Fans / AC** every Friday. Title-matched crop tasks, room chores, or Operations recurring duties still override those defaults for chore columns. Status chips and cell tints mark done (green), due (gold), overdue (copper), and scheduled (sky) work. Scroll sideways for every column. **Full screen** expands the board over the whole window; **Exit full screen** or Escape returns to Tasks. Tasks from another facility stay off the assignment lists. If nothing is due across those three lists, the page says nothing is due for you today.
+
+## Time clock
+
+**Time clock** sits in the left navigation after Tasks. The address is `/timeclock`. The same punches also sit in the top bar next to the Facility switcher.
+
+Every signed-in employee can:
+
+- **Clock in**, **Start lunch** / **Lunch**, **End lunch**, and **Clock out** from the top bar or the Time clock page (only the next legal punch is enabled).
+- See today’s punches and worked/lunch minutes for the selected facility.
+- See **Who’s in** — people currently on the clock or on lunch.
+
+Organization admins also get **AI payroll & accounting**:
+
+- Choose a pay period (from/to).
+- Read the AI statement: regular hours, overtime (California-style over 8/day then over 40 regular hours/week at 1.5×), unpaid lunch, and gross pay from stored **labor rates**.
+- **Ask AI** about overtime, lunch, missing rates, or top earners.
+- **Save** hourly pay rates by employee name (matched to the signed-in user’s name).
+
+Serenity calculates hours and gross pay from punches and rates. It does **not** file taxes, withholdings, or send bank payroll.
 
 An assignment card shows the facility and room, the task title, the due date, the assignee, and the crop. Chips appear only when the template requires them: Supervisor approval, Photo, Notes, Measurement, or Sign-off. The instructions are on the card. A dependency reads “Depends on …”. A linked SOP shows its title and summary.
 
@@ -187,15 +235,15 @@ On October 3, 2026, the seeded dates put Lower-leaf pass on Flower 1 and Scout t
 Each license card shows the license number, the facility names, the plant count, and **Open inventory**. The seeded licenses are:
 
 - `OR-CULT-44821` at Harbor House, 144 tagged plants. The compared file matches. The card says “No discrepancies.”
-- `OR-CULT-55218` at Hill Works, 86 tagged plants. The compared file has one extra tag, `1A4HW000000000000099999`, labeled “In the file, not in Trim.”
+- `OR-CULT-55218` at Hill Works, 86 tagged plants. The compared file has one extra tag, `1A4HW000000000000099999`, labeled “In the file, not in Serenity.”
 
-A clean comparison shows a chip with the matched count and “0 discrepancies.” A difference is either “In the file, not in Trim” or “In Trim, not in the file.” If nothing has been compared, the card says “No inventory file has been compared for this license.” Compliance does not show a file-upload button. It shows the comparison that is already stored.
+A clean comparison shows a chip with the matched count and “0 discrepancies.” A difference is either “In the file, not in Serenity” or “In Serenity, not in the file.” If nothing has been compared, the card says “No inventory file has been compared for this license.” Compliance does not show a file-upload button. It shows the comparison that is already stored.
 
 **Open inventory** lists tags for that license. The page says plant totals come from tagged plants on the license, and “Showing N of M tags.” Each tag links to the plant. The plant page shows the tag, strain, stage, room or “No room,” cycle or “No cycle,” and the event history. A move reads as who moved the plant from one room to another. A stage change reads as who changed the stage. An observation reads as who noted the text. There is no form on the plant page to move a plant or change its stage.
 
 **Submissions** on the license card are the reviewed sandbox queue. Nothing is sent until a manager approves it. Status words are Pending review, Queued, Succeeded, Failed, Uncertain, Rejected, and Reconciled. Pending review says “Waiting for a manager. Nothing has been sent.”
 
-Avery, and only an organization admin, can set the sandbox result to Success, Definite failure, or Uncertain, then **Approve** or **Reject**. Reject says “Rejected. Nothing was sent.” Approve says “Approved. The outbox will deliver it.” The worker then delivers that row to the local sandbox. Trim does not call production Metrc.
+Avery, and only an organization admin, can set the sandbox result to Success, Definite failure, or Uncertain, then **Approve** or **Reject**. Reject says “Rejected. Nothing was sent.” Approve says “Approved. The outbox will deliver it.” The worker then delivers that row to the local sandbox. Serenity does not call production Metrc.
 
 - Success ends as Succeeded.
 - Definite failure ends as Failed and says “Definite failure. Retry only by queueing a new reviewed submission.” **Queue again** creates a new submission that is waiting for review and has not been sent.
@@ -257,25 +305,33 @@ Each crop card has Yield, Cycle duration, Labor, Input costs, and Total cost.
 
 The card also says “Sample environmental readings are excluded. This report does not use their values.” Controller samples and scale samples are not part of these totals. When a crop has no labor entries, the card says “Labor is absent. No labor entries are stored.” When it has no input costs, it says “Input cost is absent. No input costs are stored.”
 
-## Site coach
+## Serenity
 
-**Site coach** sits in the left navigation after Reports. It follows the facility in the top bar.
+**Serenity** sits in the left navigation after Reports. She is Serenity’s cultivation AI and always introduces herself as Serenity. The address stays `/coach`.
 
-**Statistics** uses the same harvest, labor, and cost figures as Reports, and prints the formula under each number. A crop with no harvest says yield is absent. A crop with no labor entries says labor is absent. A crop with no input costs says input cost is absent.
+**Serenity** opens with a chat box. **Generate tasks** creates open room tasks from stored procedures and assigns them to the people who can open the facility. **Train workers** assigns training records from a stored procedure; open **Operations → Training** to mark them complete. Typing a question about a procedure quotes the matching stored procedure title and summary. Say **Remember that…** to teach Serenity a note she can reuse later. With an OpenAI API key under **Settings → API's → Serenity · OpenAI**, she can answer in fuller language using those notes and procedures. Without a key she still runs on Serenity’s stored actions.
 
-**Room notices** lists each active room alert. Opening the coach creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. The coach does not invent a task that no procedure describes. The same notice appears on **Workspace**.
+Yield, labor, and cost figures stay on **Reports**. Serenity does not repeat those charts. On **Time clock**, admins can **Ask Serenity** about payroll; she still introduces herself as Serenity.
 
-**Ask about a stored procedure** searches the organization’s stored procedure titles and summaries and quotes the match. If nothing matches, it says “No stored procedure matches that question.”
+**Room notices** lists each active room alert. Opening Serenity creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. Serenity does not invent a task that no procedure describes. The same notice appears on **Tasks**, and the room task itself is listed under Room tasks.
 
-**Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Trim does not call live Metrc, and it does not send email or SMS.
+**Readiness** is headed “Readiness for” plus the license jurisdiction, for example “Readiness for US-OR.” It lists plants without tags, inventory discrepancies, submissions waiting for review, packages that have not been queued, and harvests that have a dry weight and no waste row. The page says “This is a readiness check of stored rows. It is not a state certification.” The same checklist is used for every jurisdiction. Serenity does not call live Metrc, and it does not send email or SMS.
 
-A person who cannot open the facility does not see that facility’s coach.
+A person who cannot open the facility does not see that facility’s Serenity chat.
+
+## Messages
+
+**Messages** sits in the left navigation after Serenity. The address is `/messages`. It opens for every signed-in user and lists people in the same organization.
+
+**Message a person** opens a direct conversation with someone else in the organization. Both people see the same thread. Messages stay inside Serenity; Serenity does not send email or SMS.
+
+**Chat with Serenity** opens a saved Serenity thread for your account. She uses the facility in the top bar the same way the Serenity page does: quote stored procedures, generate room tasks, assign worker training, and learn notes. Reopening **Chat with Serenity** returns the same saved conversation.
 
 ## Operations
 
 **Operations** is in the left navigation after Harvests. The page opens on the facility in the switcher. Blake sees Harbor House rows. Casey sees Hill Works rows. Avery can switch facilities and open both. A facility you cannot open says you do not have access.
 
-The buttons under the title are Irrigation and feed, IPM, Maintenance, Purchasing, Sanitation, Training, Room calendar, Recurring tasks, and SOP library. SOP library is the list of stored procedures. The **SOP** item in the left navigation is this operating document, not that list.
+The buttons under the title are Irrigation and feed, IPM, Maintenance, Purchasing, Sanitation, Training, Room calendar, Recurring tasks, and SOP library. SOP library is the list of stored procedures to browse and edit. Workflows can still add a new SOP record when a template needs one. The operating procedures document is at `/sop` and is linked from the User manual.
 
 **Irrigation and feed** lists the date, room, Irrigation or Feed, method, volume in liters, nutrient, EC, pH, and the person who saved it. Harbor House Flower 1 has a Feed row: Drip, 12 L, Flower nutrients, EC 1.8, pH 5.9, Blake Ortiz, on 2026-10-02. **Save record** stores a new row.
 

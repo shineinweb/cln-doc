@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
+  AssignCyclePlants,
   CropCycleDetail,
   CropCycleSummary,
   MetrcSync,
@@ -169,12 +170,118 @@ export class CyclesService {
   }
 
   async getCycle(user: SessionUser, cycleId: string): Promise<CropCycleDetail> {
+    const cycle = await this.loadCycleRecord(user, cycleId);
+    return this.toCycleDetail(cycle);
+  }
+
+  /**
+   * Add tagged plants onto this crop in one step (batch is created from the cultivar when needed).
+   * Keeps harvest prep on the crop page instead of bouncing through Compliance → move.
+   */
+  async assignPlants(user: SessionUser, cycleId: string, input: AssignCyclePlants): Promise<CropCycleDetail> {
+    const cycle = await this.loadCycleRecord(user, cycleId);
+    if (cycle.status !== 'active') {
+      throw new BadRequestException('Only an active crop can take new plants.');
+    }
+    const tags = uniqueTags(input.tags);
+    if (tags.length === 0) {
+      throw new BadRequestException('Enter at least one plant tag.');
+    }
+    const licenses = await this.licensesForSite(user.organizationId, cycle.room.siteId);
+    if (licenses.length === 0) {
+      throw new BadRequestException('No license covers this facility. Add a license under Compliance first.');
+    }
+    const license =
+      input.licenseId != null
+        ? licenses.find((row) => row.id === input.licenseId)
+        : licenses.length === 1
+          ? licenses[0]
+          : null;
+    if (!license) {
+      throw new BadRequestException(
+        input.licenseId
+          ? 'That license does not cover this facility.'
+          : 'This facility has more than one license. Choose which license these tags belong to.',
+      );
+    }
+
+    const cultivar = cycle.cultivar.trim() || cycle.name.trim() || 'Crop';
+    let strain = await this.prisma.strain.findFirst({
+      where: { organizationId: user.organizationId, name: cultivar },
+    });
+    if (!strain) {
+      strain = await this.prisma.strain.create({
+        data: { organizationId: user.organizationId, name: cultivar },
+      });
+    }
+    const batchName = `${cycle.name} plants`;
+    let batch = await this.prisma.plantBatch.findFirst({
+      where: { licenseId: license.id, name: batchName },
+    });
+    if (!batch) {
+      batch = await this.prisma.plantBatch.create({
+        data: { licenseId: license.id, strainId: strain.id, name: batchName },
+      });
+    } else if (batch.strainId !== strain.id) {
+      throw new BadRequestException(`Batch "${batchName}" already exists on another strain.`);
+    }
+
+    const existing = await this.prisma.plant.findMany({
+      where: { licenseId: license.id, tag: { in: tags } },
+      select: { tag: true, voidedAt: true, status: true, cycleId: true },
+    });
+    if (existing.length > 0) {
+      const clash = existing.map((plant) => plant.tag).sort().join(', ');
+      throw new BadRequestException(`These tags are already on this license: ${clash}.`);
+    }
+
+    const occurredAt = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      for (const tag of tags) {
+        const plant = await tx.plant.create({
+          data: {
+            licenseId: license.id,
+            batchId: batch.id,
+            strainId: strain.id,
+            cycleId: cycle.id,
+            roomId: cycle.roomId,
+            tag,
+            stage: cycle.stage,
+            status: 'active',
+          },
+        });
+        await tx.plantEvent.create({
+          data: {
+            plantId: plant.id,
+            licenseId: license.id,
+            eventType: 'planted',
+            actorUserId: user.id,
+            occurredAt,
+            toRoomId: cycle.roomId,
+            toStage: cycle.stage,
+            note: `Added on crop ${cycle.name}.`,
+          },
+        });
+      }
+      const plantCount = await tx.plant.count({ where: { cycleId: cycle.id, voidedAt: null } });
+      await tx.cropCycle.update({ where: { id: cycle.id }, data: { plantCount } });
+    });
+
+    return this.getCycle(user, cycle.id);
+  }
+
+  private async loadCycleRecord(user: SessionUser, cycleId: string) {
     const cycle = await this.prisma.cropCycle.findUnique({
       where: { id: cycleId },
       include: {
         ...historyInclude,
         room: { include: { site: true } },
         cycleTasks: { orderBy: [{ dueOn: 'asc' as const }, { title: 'asc' as const }] },
+        plants: {
+          where: { voidedAt: null },
+          orderBy: { tag: 'asc' as const },
+          select: { id: true, tag: true },
+        },
         workflowVersion: {
           include: {
             template: { include: { versions: { orderBy: { versionNumber: 'desc' as const }, take: 1 } } },
@@ -187,7 +294,14 @@ export class CyclesService {
       throw new NotFoundException('Crop cycle not found');
     }
     assertSiteAccess(user, cycle.room.site);
+    return cycle;
+  }
+
+  private async toCycleDetail(
+    cycle: Awaited<ReturnType<CyclesService['loadCycleRecord']>>,
+  ): Promise<CropCycleDetail> {
     const latest = cycle.workflowVersion?.template.versions[0];
+    const licenses = await this.licensesForSite(cycle.room.site.organizationId, cycle.room.siteId);
     return {
       ...this.summary(cycle, cycle.room.site.timezone),
       siteId: cycle.room.site.id,
@@ -215,7 +329,20 @@ export class CyclesService {
         assigneeLabel: task.assigneeLabel,
         offsetDays: task.offsetDays,
       })),
+      plants: cycle.plants.map((plant) => ({ id: plant.id, tag: plant.tag })),
+      licenses,
     };
+  }
+
+  private async licensesForSite(organizationId: string, siteId: string) {
+    return this.prisma.license.findMany({
+      where: {
+        organizationId,
+        sites: { some: { siteId } },
+      },
+      select: { id: true, licenseNumber: true },
+      orderBy: { licenseNumber: 'asc' },
+    });
   }
 
   async addRoomNote(user: SessionUser, roomId: string, input: RoomNoteInput) {
@@ -263,6 +390,20 @@ export class CyclesService {
       body: created.body,
     };
   }
+}
+
+function uniqueTags(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of tags) {
+    const tag = raw.trim();
+    if (!tag || seen.has(tag)) {
+      continue;
+    }
+    seen.add(tag);
+    out.push(tag);
+  }
+  return out;
 }
 
 export const activeCycleInclude = {
