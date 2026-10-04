@@ -53,6 +53,22 @@ export const emailBroadcastListSchema = z.object({
   broadcasts: z.array(emailBroadcastSchema),
 });
 
+export const emailTemplateKindSchema = z.enum(['password_reset', 'task_assigned', 'marketing']);
+
+export const emailTemplatePreviewInputSchema = z.object({
+  template: emailTemplateKindSchema,
+  subject: z.string().trim().max(200).optional(),
+  body: z.string().trim().max(20000).optional(),
+  recipientName: z.string().trim().max(120).optional(),
+});
+
+export const emailTemplatePreviewSchema = z.object({
+  template: emailTemplateKindSchema,
+  subject: z.string(),
+  html: z.string().min(1),
+  text: z.string().min(1),
+});
+
 export const zoneSchema = z.object({
   id: z.string(),
   roomId: z.string(),
@@ -2104,4 +2120,7 @@ export type ResetPasswordResponse = z.infer<typeof resetPasswordResponseSchema>;
 export type EmailBroadcastInput = z.infer<typeof emailBroadcastInputSchema>;
 export type EmailBroadcast = z.infer<typeof emailBroadcastSchema>;
 export type EmailBroadcastList = z.infer<typeof emailBroadcastListSchema>;
+export type EmailTemplateKind = z.infer<typeof emailTemplateKindSchema>;
+export type EmailTemplatePreviewInput = z.infer<typeof emailTemplatePreviewInputSchema>;
+export type EmailTemplatePreview = z.infer<typeof emailTemplatePreviewSchema>;
 

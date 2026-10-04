@@ -13,6 +13,7 @@ import { createHash, randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { recordSignIn } from '../access/access.service';
 import { loadEnv } from '../env';
+import { passwordResetEmail } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { toSessionUser, userAccessInclude } from './session-user';
@@ -90,20 +91,12 @@ export class AuthService {
 
     const env = loadEnv();
     const link = `${env.WEB_ORIGIN.replace(/\/$/, '')}/reset-password?token=${token}`;
+    const rendered = passwordResetEmail({ name: user.name, resetUrl: link });
     await this.mail.send({
       to: user.email,
-      subject: 'Reset your Serenity password',
-      text: [
-        `Hi ${user.name},`,
-        '',
-        'Use this link to choose a new Serenity password. It expires in one hour.',
-        link,
-        '',
-        'If you did not ask for a reset, you can ignore this email.',
-        '',
-        '— Serenity Universal',
-      ].join('\n'),
-      html: `<p>Hi ${escapeHtml(user.name)},</p><p>Use this link to choose a new Serenity password. It expires in one hour.</p><p><a href="${link}">Reset password</a></p><p>If you did not ask for a reset, you can ignore this email.</p><p>— Serenity Universal</p>`,
+      subject: rendered.subject,
+      text: rendered.text,
+      html: rendered.html,
     });
     return message;
   }
@@ -171,12 +164,4 @@ export class AuthService {
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }

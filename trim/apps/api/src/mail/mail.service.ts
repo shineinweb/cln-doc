@@ -28,7 +28,8 @@ export class MailService {
 
     const driver = env.MAIL_DRIVER;
     if (driver === 'console' || (driver === 'sendgrid' && !env.SENDGRID_API_KEY)) {
-      this.logger.log(`Mail to ${message.to}: ${message.subject}\n${message.text}`);
+      const htmlNote = message.html ? `\n[html ${message.html.length} chars, branded template]` : '';
+      this.logger.log(`Mail to ${message.to}: ${message.subject}\n${message.text}${htmlNote}`);
       return;
     }
 
@@ -59,3 +60,4 @@ export class MailService {
     this.logger.log(`Mail to ${message.to}: ${message.subject}`);
   }
 }
+

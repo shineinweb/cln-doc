@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { loadEnv } from '../env';
+import { taskAssignedEmail } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -41,32 +43,24 @@ export class NotificationsService {
       },
       select: { id: true, email: true, name: true },
     });
-    const due = input.dueOn ? ` Due ${input.dueOn}.` : '';
+    const tasksUrl = `${loadEnv().WEB_ORIGIN.replace(/\/$/, '')}/workspace`;
     await Promise.all(
-      people.map((person) =>
-        this.mail.send({
+      people.map((person) => {
+        const rendered = taskAssignedEmail({
+          name: person.name,
+          title: input.title,
+          roomName: input.roomName,
+          siteName: input.siteName,
+          dueOn: input.dueOn,
+          tasksUrl,
+        });
+        return this.mail.send({
           to: person.email,
-          subject: `Task assigned: ${input.title}`,
-          text: [
-            `Hi ${person.name},`,
-            '',
-            `You were assigned “${input.title}” in ${input.roomName} at ${input.siteName}.${due}`,
-            '',
-            'Open Serenity → Tasks to review it.',
-            '',
-            '— Serenity Universal',
-          ].join('\n'),
-          html: `<p>Hi ${escapeHtml(person.name)},</p><p>You were assigned <strong>${escapeHtml(input.title)}</strong> in ${escapeHtml(input.roomName)} at ${escapeHtml(input.siteName)}.${due ? ` ${escapeHtml(due.trim())}` : ''}</p><p>Open Serenity → Tasks to review it.</p><p>— Serenity Universal</p>`,
-        }),
-      ),
+          subject: rendered.subject,
+          text: rendered.text,
+          html: rendered.html,
+        });
+      }),
     );
   }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }

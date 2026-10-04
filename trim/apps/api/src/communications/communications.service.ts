@@ -1,5 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import type { EmailBroadcast, EmailBroadcastInput, EmailBroadcastList, SessionUser } from '@trim/contracts';
+import type {
+  EmailBroadcast,
+  EmailBroadcastInput,
+  EmailBroadcastList,
+  EmailTemplatePreview,
+  EmailTemplatePreviewInput,
+  SessionUser,
+} from '@trim/contracts';
+import { marketingBroadcastEmail, previewEmailTemplate } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -30,6 +38,21 @@ export class CommunicationsService {
     };
   }
 
+  previewTemplate(user: SessionUser, input: EmailTemplatePreviewInput): EmailTemplatePreview {
+    const rendered = previewEmailTemplate(input.template, {
+      subject: input.subject,
+      body: input.body,
+      recipientName: input.recipientName,
+      organizationName: user.organizationName,
+    });
+    return {
+      template: input.template,
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+    };
+  }
+
   async sendBroadcast(user: SessionUser, input: EmailBroadcastInput): Promise<EmailBroadcast> {
     const recipients = await this.recipients(user.organizationId, input.siteIds);
     const broadcast = await this.prisma.emailBroadcast.create({
@@ -51,13 +74,28 @@ export class CommunicationsService {
       include: { createdBy: { select: { name: true } }, recipients: true },
     });
 
+    const recipientNames = new Map(
+      (
+        await this.prisma.user.findMany({
+          where: { id: { in: broadcast.recipients.map((row) => row.userId) } },
+          select: { id: true, name: true },
+        })
+      ).map((row) => [row.id, row.name] as const),
+    );
+
     for (const recipient of broadcast.recipients) {
       try {
+        const rendered = marketingBroadcastEmail({
+          subject: input.subject,
+          body: input.body,
+          organizationName: user.organizationName,
+          recipientName: recipientNames.get(recipient.userId),
+        });
         await this.mail.send({
           to: recipient.email,
-          subject: input.subject,
-          text: `${input.body}\n\n— ${user.organizationName} via Serenity Universal\nYou received this because you are on the organization roster. Contact your admin to stop marketing email.`,
-          html: `<div style="white-space:pre-wrap;font-family:sans-serif">${escapeHtml(input.body)}</div><p style="color:#666;font-size:12px">— ${escapeHtml(user.organizationName)} via Serenity Universal<br/>You received this because you are on the organization roster. Contact your admin to stop marketing email.</p>`,
+          subject: rendered.subject,
+          text: rendered.text,
+          html: rendered.html,
         });
         await this.prisma.emailBroadcastRecipient.update({
           where: { id: recipient.id },
@@ -115,12 +153,4 @@ export class CommunicationsService {
       orderBy: { name: 'asc' },
     });
   }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }

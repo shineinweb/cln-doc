@@ -3,6 +3,8 @@ import {
   emailBroadcastInputSchema,
   emailBroadcastListSchema,
   emailBroadcastSchema,
+  emailTemplatePreviewInputSchema,
+  emailTemplatePreviewSchema,
   type SessionUser,
 } from '@trim/contracts';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -21,6 +23,16 @@ export class CommunicationsController {
   @RequirePermissions('communications.manage')
   async list(@CurrentUser() user: SessionUser) {
     return emailBroadcastListSchema.parse(await this.communications.list(user));
+  }
+
+  @Post('preview')
+  @RequirePermissions('communications.manage')
+  preview(
+    @CurrentUser() user: SessionUser,
+    @Body(new ZodValidationPipe(emailTemplatePreviewInputSchema))
+    body: ReturnType<typeof emailTemplatePreviewInputSchema.parse>,
+  ) {
+    return emailTemplatePreviewSchema.parse(this.communications.previewTemplate(user, body));
   }
 
   @Post('broadcasts')

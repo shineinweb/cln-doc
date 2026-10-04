@@ -57,9 +57,13 @@ describe('auth password reset and email broadcasts', () => {
     const outbound = mail.peekOutbox();
     expect(outbound).toHaveLength(1);
     expect(outbound[0]!.to).toBe(fixture.siteAUser.email);
+    expect(outbound[0]!.html).toContain('Reset password');
+    expect(outbound[0]!.html).toContain('Password reset');
+    expect(outbound[0]!.html).toContain('Serenity');
     const match = outbound[0]!.text.match(/token=([a-f0-9]+)/);
     expect(match?.[1]).toBeTruthy();
     const token = match![1]!;
+    expect(outbound[0]!.html).toContain(token);
 
     siteAPassword = 'New-access-pass';
     await request(app.getHttpServer())
@@ -93,6 +97,14 @@ describe('auth password reset and email broadcasts', () => {
 
     expect(denied.body.message).toBeTruthy();
 
+    const preview = await request(app.getHttpServer())
+      .post('/communications/preview')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ template: 'marketing', subject: 'Preview harvest', body: 'Coverage check.' })
+      .expect(201);
+    expect(preview.body.html).toContain('Announcement');
+    expect(preview.body.html).toContain('Coverage check.');
+
     const sent = await request(app.getHttpServer())
       .post('/communications/broadcasts')
       .set('Authorization', `Bearer ${tokenAdmin}`)
@@ -100,7 +112,10 @@ describe('auth password reset and email broadcasts', () => {
       .expect(201);
     expect(sent.body.subject).toBe('Harvest week');
     expect(sent.body.recipientCount).toBeGreaterThanOrEqual(2);
-    expect(mail.peekOutbox().some((item) => item.subject === 'Harvest week')).toBe(true);
+    const harvestMail = mail.peekOutbox().find((item) => item.subject === 'Harvest week');
+    expect(harvestMail?.html).toContain('Announcement');
+    expect(harvestMail?.html).toContain('Please confirm lunch coverage.');
+    expect(harvestMail?.html).toContain('Serenity');
 
     const list = await request(app.getHttpServer())
       .get('/communications/broadcasts')
