@@ -29,6 +29,7 @@ import { SiteCoachPage } from './pages/SiteCoachPage';
 import { SiteReportPage } from './pages/SiteReportPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RoomDashboardPage } from './pages/RoomDashboardPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RoomsPage } from './pages/RoomsPage';
 import { SubmissionPage } from './pages/SubmissionPage';
@@ -83,6 +84,7 @@ const router = createBrowserRouter([
       { path: 'user-manual', element: gate(['dashboard.read'], <UserManualPage />) },
       { path: 'sop', element: gate(['operations.read', 'workflows.manage'], <SopPage />) },
       { path: 'settings', element: gate(['settings.manage'], <SettingsPage />) },
+      { path: 'profile', element: <ProfilePage /> },
       { path: 'access', element: gate(['access.manage'], <AccessPage />) },
       { path: 'reports/sites/:siteId', element: gate(['reports.read'], <SiteReportPage />) },
       { path: 'submissions/:submissionId', element: gate(['compliance.read'], <SubmissionPage />) },

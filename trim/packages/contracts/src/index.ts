@@ -821,6 +821,27 @@ export const sessionUserSchema = z.object({
   siteIds: z.array(z.string()),
   /** Permission keys granted by the user’s roles. Org admins still receive the full catalog for UI checks. */
   permissions: z.array(z.string()),
+  photoUrl: z.string().nullable(),
+});
+
+export const selfProfileSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  phone: z.string().nullable(),
+  addressLine1: z.string().nullable(),
+  city: z.string().nullable(),
+  region: z.string().nullable(),
+  postalCode: z.string().nullable(),
+  photoUrl: z.string().nullable(),
+});
+
+export const selfProfileInputSchema = z.object({
+  phone: z.string().trim().max(40).optional().nullable(),
+  addressLine1: z.string().trim().max(191).optional().nullable(),
+  city: z.string().trim().max(120).optional().nullable(),
+  region: z.string().trim().max(120).optional().nullable(),
+  postalCode: z.string().trim().max(32).optional().nullable(),
 });
 
 export const loginResponseSchema = z.object({
@@ -2094,6 +2115,8 @@ export type AlertRule = z.infer<typeof alertRuleSchema>;
 export type MetrcSync = z.infer<typeof metrcSyncSchema>;
 export type Site = z.infer<typeof siteSchema>;
 export type SessionUser = z.infer<typeof sessionUserSchema>;
+export type SelfProfile = z.infer<typeof selfProfileSchema>;
+export type SelfProfileInput = z.infer<typeof selfProfileInputSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 export type OrganizationSummary = z.infer<typeof organizationSummarySchema>;
 export type MetrcInventoryPayload = z.infer<typeof metrcInventoryPayloadSchema>;

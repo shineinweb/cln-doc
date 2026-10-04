@@ -112,6 +112,16 @@ describe('user, role, and permission management', () => {
       .expect(200);
     expect(downloaded.body.equals(PNG)).toBe(true);
 
+    const me = await request(app.getHttpServer()).get('/auth/me').set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
+    expect(me.body.photoUrl === null || typeof me.body.photoUrl === 'string').toBe(true);
+    const own = await request(app.getHttpServer())
+      .patch('/auth/profile')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .send({ phone: '555-0111', addressLine1: '1 Admin St', city: 'Oakland', region: 'CA', postalCode: '94612' })
+      .expect(200);
+    expect(own.body.phone).toBe('555-0111');
+    expect(own.body.addressLine1).toBe('1 Admin St');
+
     const stored = await prisma.credential.findUniqueOrThrow({ where: { userId: created.body.id } });
     expect(stored.passwordHash).not.toBe(password);
 

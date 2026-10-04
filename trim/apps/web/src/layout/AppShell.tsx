@@ -3,7 +3,6 @@ import {
   BottomNavigation,
   BottomNavigationAction,
   Box,
-  Button,
   Drawer,
   FormControl,
   IconButton,
@@ -26,6 +25,7 @@ import { workbench } from '../theme';
 import { FloatingSerenityChat } from './FloatingSerenityChat';
 import { useSites } from './SiteProvider';
 import { TopBarClock } from './TopBarClock';
+import { UserMenu } from './UserMenu';
 
 const DRAWER_WIDTH = 248;
 
@@ -175,12 +175,7 @@ export function AppShell() {
           </FormControl>
           <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
           {can(user, 'timeclock.punch') ? <TopBarClock siteId={siteId} /> : null}
-          <Typography sx={{ display: { xs: 'none', lg: 'block' }, color: 'text.secondary', ml: 0.5 }}>
-            {user?.name}
-          </Typography>
-          <Button color="secondary" variant="outlined" onClick={logout} sx={{ flexShrink: 0, px: { xs: 1.25, sm: 2 } }}>
-            Sign out
-          </Button>
+          {user ? <UserMenu userId={user.id} name={user.name} photoUrl={user.photoUrl} onLogout={logout} /> : null}
         </Toolbar>
       </AppBar>
       <Box component="nav" sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: 0 }}>

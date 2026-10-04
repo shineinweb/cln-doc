@@ -40,5 +40,6 @@ export function toSessionUser(user: UserWithAccess): SessionUser {
     isOrgAdmin,
     siteIds: user.memberships.map((membership) => membership.siteId),
     permissions: isOrgAdmin ? MODULE_PERMISSIONS.map((permission) => permission.key) : fromRoles,
+    photoUrl: user.photoObjectKey ? `/access/users/${user.id}/photo` : null,
   };
 }

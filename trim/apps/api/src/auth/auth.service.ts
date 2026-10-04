@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
@@ -6,6 +6,8 @@ import type {
   LoginResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
+  SelfProfile,
+  SelfProfileInput,
   SessionUser,
 } from '@trim/contracts';
 import bcrypt from 'bcryptjs';
@@ -16,9 +18,11 @@ import { loadEnv } from '../env';
 import { passwordResetEmail } from '../mail/email-templates';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AttachmentsService } from '../storage/attachments.service';
 import { toSessionUser, userAccessInclude } from './session-user';
 
 const RESET_TTL_MS = 60 * 60 * 1000;
+const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 @Injectable()
 export class AuthService {
@@ -27,6 +31,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly attachments: AttachmentsService,
   ) {}
 
   async login(input: LoginRequest): Promise<LoginResponse> {
@@ -156,10 +161,93 @@ export class AuthService {
     return toSessionUser(user);
   }
 
+  async profile(actor: SessionUser): Promise<SelfProfile> {
+    const user = await this.ownUser(actor);
+    return toSelfProfile(user);
+  }
+
+  async updateProfile(actor: SessionUser, input: SelfProfileInput): Promise<SelfProfile> {
+    const user = await this.ownUser(actor);
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        phone: blank(input.phone),
+        addressLine1: blank(input.addressLine1),
+        city: blank(input.city),
+        region: blank(input.region),
+        postalCode: blank(input.postalCode),
+      },
+    });
+    return toSelfProfile(updated);
+  }
+
+  async setProfilePhoto(
+    actor: SessionUser,
+    file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ): Promise<SelfProfile> {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('Choose a photo to upload.');
+    }
+    if (!PHOTO_TYPES.has(file.mimetype)) {
+      throw new BadRequestException('Photo must be a JPEG, PNG, WebP, or GIF.');
+    }
+    const user = await this.ownUser(actor);
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80) || 'photo';
+    const objectKey = `orgs/${user.organizationId}/users/${user.id}/photo-${Date.now()}-${safeName}`;
+    await this.attachments.put(objectKey, file.buffer, file.mimetype);
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { photoObjectKey: objectKey },
+    });
+    if (user.photoObjectKey && user.photoObjectKey !== objectKey) {
+      await this.attachments.delete(user.photoObjectKey).catch(() => undefined);
+    }
+    return toSelfProfile(updated);
+  }
+
+  private async ownUser(actor: SessionUser) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: actor.id, organizationId: actor.organizationId },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
   private dummyHash(): Promise<string> {
     this.dummyHashPromise ??= bcrypt.hash('trim-invalid-user', 10);
     return this.dummyHashPromise;
   }
+}
+
+function toSelfProfile(user: {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  addressLine1: string | null;
+  city: string | null;
+  region: string | null;
+  postalCode: string | null;
+  photoObjectKey: string | null;
+}): SelfProfile {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    addressLine1: user.addressLine1,
+    city: user.city,
+    region: user.region,
+    postalCode: user.postalCode,
+    photoUrl: user.photoObjectKey ? `/access/users/${user.id}/photo` : null,
+  };
+}
+
+function blank(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed ? trimmed : null;
 }
 
 function hashToken(token: string): string {
