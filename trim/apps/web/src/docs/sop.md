@@ -23,7 +23,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 9. On **Settings**, read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
 10. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Notes**, and “No tasks are due today” on **Tasks**. The room list row says “No active crop.”
 
-**Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on **Crop cycles**. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
+**Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on the room’s **Current crop** card. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
 
 ## Completing today’s assignment
 
@@ -55,10 +55,10 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 
 1. Open **Workflows**. The page says “A template is applied when a cycle starts.”
 2. Read **Canopy week**. The card says “Version 1 of 1 · 28 days · starts at cycle_start.” The tasks are Day 1 Count plants onto the bench, Day 14 Scout the canopy, and Day 22 Lower-leaf pass.
-3. Open **Crop cycles**, choose the facility, and open the cycle.
+3. Open **Rooms**, open the room, and choose **Open cycle** on **Current crop**.
 4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
 
-Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Crop cycles**, on **Workflows**, or on the cycle page. **Edit** on a listed cycle opens the crop cycle form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
+Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Workflows**, or on the cycle page. **Crop details** on the cycle page opens the crop form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
 
 **Reset room** sits in the top right of the room page, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones stay on **Zones**. Readings and alert rules stay on **Settings**. The other tabs are **Tasks**, **Notes**, **Zones**, and, on a flower room, **Trolmaster settings**.
 
@@ -172,7 +172,7 @@ A package uses the same sandbox. On the package page, choose Success, Definite f
 
 **Steps.**
 
-1. Open **Crop cycles** and open the cycle. Choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
+1. Open **Rooms**, open the room, then **Open cycle**. Choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
 2. Enter **Wet weight (g)** and choose **Record wet weight**.
 3. Choose **Start drying**.
 4. Enter **Dry weight (g)** and choose **Record dry weight**.
@@ -239,11 +239,11 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 1. Open **AI helper**. It follows the facility in the top bar. The address is `/coach`.
 2. Use the chat box. Choose **Generate tasks** to create room tasks from stored procedures, or **Train workers** to assign training. Type a procedure question to get a quote.
-3. Read **Statistics**. The formulas match **Reports**. A missing harvest, labor row, or input cost says that figure is absent.
-4. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Workspace**.
-5. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
+3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Workspace**.
+4. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
+5. Open **Reports** when you need yield, labor, and cost figures.
 
-**Done.** You can name the jurisdiction, whether a figure is absent, whether tasks or training were created, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
+**Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
 
 ## Recording irrigation and feed
 
@@ -327,7 +327,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 2. Read the procedure title and summary.
 3. Read the template line or the facility, room, cycle, and task line under it.
 
-**Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The **SOP** item in the left navigation remains the operating document.
+**Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The operating document stays at `/sop` and is linked from the User manual.
 
 ## Adding a user
 

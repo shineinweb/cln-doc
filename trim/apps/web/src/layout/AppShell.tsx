@@ -32,7 +32,6 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/access', label: 'Users', end: true, glyph: 'access' },
   { to: '/facilities', label: 'Facility', end: true, glyph: 'facility' },
   { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms' },
-  { to: '/crop-cycles', label: 'Crop cycles', end: true, glyph: 'cycles' },
   { to: '/workflows', label: 'Workflows', end: true, glyph: 'workflows' },
   { to: '/workspace', label: 'Workspace', end: true, glyph: 'workspace' },
   { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance' },
@@ -41,7 +40,6 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/reports', label: 'Reports', end: false, glyph: 'reports' },
   { to: '/coach', label: 'AI helper', end: true, glyph: 'coach' },
   { to: '/user-manual', label: 'User manual', end: true, glyph: 'manual' },
-  { to: '/sop', label: 'SOP', end: true, glyph: 'sop' },
   { to: '/settings', label: 'Settings', end: true, glyph: 'settings' },
 ];
 

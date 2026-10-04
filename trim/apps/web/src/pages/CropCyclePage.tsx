@@ -1,16 +1,25 @@
-import { Alert, Box, Button, Card, CardContent, Chip, Skeleton, TextField, Typography } from '@mui/material';
-import { cropCycleDetailSchema, harvestDetailSchema, recordRemovedSchema, reschedulePreviewSchema, rescheduleResultSchema, startedCycleSchema, type ReschedulePreview } from '@trim/contracts';
+import { Alert, Box, Button, Card, CardContent, Chip, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
+import {
+  cropCycleDetailSchema,
+  harvestDetailSchema,
+  recordRemovedSchema,
+  reschedulePreviewSchema,
+  rescheduleResultSchema,
+  startedCycleSchema,
+  type CropCycleDetail,
+  type ReschedulePreview,
+} from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
-import { cycleDayLabel, formatCalendarDate } from '../crops/format';
+import { addCalendarDays, cycleDayLabel, formatCalendarDate, inclusiveDayCount } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
-import { roomTypeLabel } from '../theme';
+import { ROOM_TYPE_LABELS, roomTypeLabel } from '../theme';
 
 export function CropCyclePage() {
   const { roomId = '', cycleId = '' } = useParams();
@@ -72,6 +81,7 @@ export function CropCyclePage() {
         {cycle.data.workflow ? <Chip label={`${cycle.data.workflow.templateName} v${cycle.data.workflow.versionNumber}`} /> : null}
       </Box>
       {cycle.data.plantCount > 0 ? <HarvestCropButton cycleId={cycle.data.id} /> : null}
+      {cycle.data.status === 'active' ? <CycleEditPanel cycle={cycle.data} /> : null}
       <Typography variant="h2" sx={{ fontSize: 28, mb: 2 }}>
         Generated tasks
       </Typography>
@@ -82,6 +92,113 @@ export function CropCyclePage() {
       </Typography>
       <OperatingHistoryView history={cycle.data.operatingHistory} timeZone={cycle.data.siteTimezone} />
     </Box>
+  );
+}
+
+function CycleEditPanel({ cycle }: { cycle: CropCycleDetail }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState(cycle.startDate);
+  const [durationDays, setDurationDays] = useState(
+    String(Math.max(1, inclusiveDayCount(cycle.startDate, cycle.expectedHarvestDate))),
+  );
+  const endDate = useMemo(() => {
+    const days = Number(durationDays);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !Number.isInteger(days) || days < 1) {
+      return null;
+    }
+    return addCalendarDays(startDate, days - 1);
+  }, [durationDays, startDate]);
+  const save = useMutation({
+    mutationFn: (body: { name: string; cultivar: string; stage: string; startDate: string; expectedHarvestDate: string }) =>
+      apiSend(`/cycles/${cycle.id}`, recordRemovedSchema, body, 'PATCH'),
+    onSuccess: async () => {
+      setMessage('Crop cycle saved.');
+      await queryClient.invalidateQueries({ queryKey: ['cycle', cycle.id] });
+      await queryClient.invalidateQueries({ queryKey: ['sites'] });
+      await queryClient.invalidateQueries({ queryKey: ['room', cycle.roomId] });
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+  const remove = useMutation({
+    mutationFn: () => apiSend(`/cycles/${cycle.id}`, recordRemovedSchema, undefined, 'DELETE'),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sites'] });
+      await queryClient.invalidateQueries({ queryKey: ['room', cycle.roomId] });
+      navigate(`/rooms/${cycle.roomId}`);
+    },
+    onError: (error: Error) => setMessage(error.message),
+  });
+  return (
+    <Card sx={{ mb: 3 }} data-testid="cycle-edit">
+      <CardContent>
+        <RecordActions
+          summary={<Typography sx={{ fontWeight: 700 }}>Crop details</Typography>}
+          detail={
+            <Typography sx={{ color: 'text.secondary' }}>
+              Edit the name, cultivar, stage, start, and duration, or delete this active crop.
+            </Typography>
+          }
+          editor={
+            <Box
+              component="form"
+              sx={{ display: 'grid', gap: 1, maxWidth: 420 }}
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!endDate) {
+                  return;
+                }
+                const form = new FormData(event.currentTarget);
+                save.mutate({
+                  name: String(form.get('name') ?? ''),
+                  cultivar: String(form.get('cultivar') ?? ''),
+                  stage: String(form.get('stage') ?? ''),
+                  startDate,
+                  expectedHarvestDate: endDate,
+                });
+              }}
+            >
+              <TextField label="Name" name="name" defaultValue={cycle.name} required />
+              <TextField label="Cultivar" name="cultivar" defaultValue={cycle.cultivar} required />
+              <TextField select label="Stage" name="stage" defaultValue={cycle.stage in ROOM_TYPE_LABELS ? cycle.stage : 'flower'}>
+                {Object.entries(ROOM_TYPE_LABELS).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Start"
+                name="startDate"
+                type="date"
+                required
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Cycle duration in days"
+                name="durationDays"
+                type="number"
+                required
+                value={durationDays}
+                onChange={(event) => setDurationDays(event.target.value)}
+                inputProps={{ min: 1, step: 1 }}
+              />
+              <Typography sx={{ color: endDate ? 'text.primary' : 'text.secondary' }}>
+                {endDate
+                  ? `End of cycle ${formatCalendarDate(endDate)}.`
+                  : 'End of cycle is calculated from the start date and the duration. The start date is day 1.'}
+              </Typography>
+              <SaveChanges pending={save.isPending || !endDate} />
+            </Box>
+          }
+          onDelete={() => remove.mutate()}
+        />
+        {message ? <Alert sx={{ mt: 1 }}>{message}</Alert> : null}
+      </CardContent>
+    </Card>
   );
 }
 

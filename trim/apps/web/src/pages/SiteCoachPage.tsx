@@ -5,7 +5,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import { apiGet } from '../api/client';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
-import { CycleReportView } from '../reports/CycleReportView';
 import { AiHelperPanel } from './AiHelperPanel';
 
 export function SiteCoachPage() {
@@ -21,7 +20,7 @@ export function SiteCoachPage() {
       <PageHeader
         kicker={site ? site.name : 'Facility'}
         title="AI helper"
-        lede="Chat to generate tasks, train workers, and quote stored procedures. Figures come from stored harvest, labor, and cost rows. A room alert opens one task for the people who can open this facility. The readiness list is not a state certification."
+        lede="Chat to generate tasks, train workers, and quote stored procedures. A room alert opens one task for the people who can open this facility. Yield and cost figures stay on Reports. The readiness list is not a state certification."
       />
       {!siteId ? <Alert severity="info">Choose a facility to open the AI helper.</Alert> : null}
       {coach.isPending && siteId ? <Skeleton variant="rounded" height={240} /> : null}
@@ -31,17 +30,10 @@ export function SiteCoachPage() {
           <AiHelperPanel siteId={coach.data.siteId} helper={coach.data.helper} />
           <Box>
             <Typography variant="h2" sx={{ fontSize: 28, mb: 1 }}>
-              Statistics
-            </Typography>
-            {coach.data.cycles.length === 0 ? (
-              <Alert severity="info">No crop cycles are stored for this facility, so yield, duration, labor, and cost are absent.</Alert>
-            ) : (
-              coach.data.cycles.map((cycle) => <CycleReportView key={cycle.cycleId} report={cycle} />)
-            )}
-          </Box>
-          <Box>
-            <Typography variant="h2" sx={{ fontSize: 28, mb: 1 }}>
               Room notices
+            </Typography>
+            <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
+              Active alerts for this facility. The same notices appear on Workspace.
             </Typography>
             {coach.data.notices.length === 0 ? (
               <Alert severity="info">No active room alert is stored.</Alert>

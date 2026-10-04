@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Crop cycles, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, User manual, SOP, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, User manual, SOP, and Settings open for every signed-in user and do not follow the Facility switcher. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Workspace, Compliance, Harvests, Operations, Reports, AI helper, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and lists that facility’s rooms plus the tasks assigned to you today. **Users**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Workspace, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -65,7 +65,7 @@ If an account has no membership, the page says “No facilities are assigned to 
 
 **Rooms** is titled Rooms. The kicker is the facility code, HARBOR or HILL. The line under the title names the facility and its address, then says “Open a room to see its zones, readings, and operating history.” Harbor House is 180 Cannery Road, Astoria, OR 97103. Hill Works is 42 Ridge Lane, Hood River, OR 97031. Choosing a facility in the top bar opens this page.
 
-Each row shows the room name, cultivar and plant count or “No active crop.” **View** shows the room type and **Open room**. Choose the room name to open the dashboard.
+Each row shows the room name, the active crop name, cultivar, plant count, and day, or “No active crop.” **View** shows the room type, **Open room**, and **Open cycle** when a crop is active. Choose the room name to open the dashboard. The dashboard has a **Current crop** card with the same cycle link.
 
 Seeded rooms:
 
@@ -142,9 +142,9 @@ The crop cycle page still lists Observations inside operating history.
 
 ## Crop cycles
 
-**Crop cycles** lists active cycles for the facility in the switcher. Each card shows the crop, room, cultivar, plant count, expected harvest, stage, and cycle day. Open one for the timeline, movements, observations, and labor. This list does not start a cycle. **Edit** on a listed cycle opens the crop cycle form: name, cultivar, stage, start, and cycle duration in days. The start date is day 1, and the form shows the calculated end date. **Save changes** writes that crop. **Cancel** closes the form.
+Active crops live on **Rooms** and on each room dashboard. The Rooms list shows the crop name, cultivar, plant count, and day. **Open cycle** opens the cycle page. The room dashboard has a **Current crop** card with the same link. There is no separate Crop cycles page in the navigation. `/crop-cycles` redirects to Rooms.
 
-The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned. **Harvest this crop** appears on that page only while the crop still has plants.
+The cycle page has **Back to** the room, the plant count assigned to the cycle, a status chip, a day chip, and a workflow chip such as “Canopy week v1” when a template is assigned. **Crop details** lets you edit or delete an active crop. **Harvest this crop** appears on that page only while the crop still has plants.
 
 **Generated tasks** lists each task with its assignee and due date. If none exist, the page says “This cycle has no workflow assignments yet.”
 
@@ -166,7 +166,7 @@ Employees see “Managers create templates. You can still work the assignments t
 
 Avery can save three things on this page:
 
-- **SOP record**, with Title, Summary, and **Save SOP**. The seeded note is Canopy scout: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.”
+- **SOP record**, with Title, Summary, and **Save SOP**. Browse and edit existing procedures under Operations → SOP library. The seeded note is Canopy scout: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.”
 - **Team**, with Team name, Member, and **Save team**. The seeded team is Canopy crew.
 - **New template**, then **Save template**. Fields are Template name, Cultivar, Medium, Duration in days, Starting event, Task key, Task title, Days after the starting event, Instructions, Assign to (Role, Team, or Employee), and Linked SOP. The starting-event hint says “Use cycle_start, or the title of a timeline event.” Saving a name that already exists reports “A workflow template with that name already exists.” This form creates a new template. It does not edit Canopy week in place, and the page has no Start cycle button. A crop is started with **Reset room** in the top right of the room page.
 
@@ -265,7 +265,7 @@ The card also says “Sample environmental readings are excluded. This report do
 
 **AI helper** opens with a chat box. **Generate tasks** creates open room tasks from stored procedures and assigns them to the people who can open the facility. **Train workers** assigns training records from a stored procedure; open **Operations → Training** to mark them complete. Typing a question about a procedure quotes the matching stored procedure title and summary. If nothing matches, it says “No stored procedure matches that question.”
 
-**Statistics** uses the same harvest, labor, and cost figures as Reports, and prints the formula under each number. A crop with no harvest says yield is absent. A crop with no labor entries says labor is absent. A crop with no input costs says input cost is absent.
+Yield, labor, and cost figures stay on **Reports**. The AI helper does not repeat those charts.
 
 **Room notices** lists each active room alert. Opening the AI helper creates one open room task for that alert and assigns it to the people who can open the facility. When a stored procedure title matches the metric, the task quotes that procedure. The helper does not invent a task that no procedure describes. The same notice appears on **Workspace**.
 
@@ -277,7 +277,7 @@ A person who cannot open the facility does not see that facility’s AI helper.
 
 **Operations** is in the left navigation after Harvests. The page opens on the facility in the switcher. Blake sees Harbor House rows. Casey sees Hill Works rows. Avery can switch facilities and open both. A facility you cannot open says you do not have access.
 
-The buttons under the title are Irrigation and feed, IPM, Maintenance, Purchasing, Sanitation, Training, Room calendar, Recurring tasks, and SOP library. SOP library is the list of stored procedures. The **SOP** item in the left navigation is this operating document, not that list.
+The buttons under the title are Irrigation and feed, IPM, Maintenance, Purchasing, Sanitation, Training, Room calendar, Recurring tasks, and SOP library. SOP library is the list of stored procedures to browse and edit. Workflows can still add a new SOP record when a template needs one. The operating procedures document is at `/sop` and is linked from the User manual.
 
 **Irrigation and feed** lists the date, room, Irrigation or Feed, method, volume in liters, nutrient, EC, pH, and the person who saved it. Harbor House Flower 1 has a Feed row: Drip, 12 L, Flower nutrients, EC 1.8, pH 5.9, Blake Ortiz, on 2026-10-02. **Save record** stores a new row.
 

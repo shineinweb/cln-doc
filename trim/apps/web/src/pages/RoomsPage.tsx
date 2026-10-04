@@ -75,7 +75,9 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
                   <RouterLink to={`/rooms/${room.id}`}>{room.name}</RouterLink>
                 </Typography>
                 <Typography sx={{ color: 'text.secondary' }}>
-                  {room.currentCycle ? `${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants` : 'No active crop'}
+                  {room.currentCycle
+                    ? `${room.currentCycle.name} · ${room.currentCycle.cultivar} · ${room.currentCycle.plantCount} plants · Day ${room.currentCycle.cycleDay}`
+                    : 'No active crop'}
                 </Typography>
               </Box>
             </Box>
@@ -93,6 +95,16 @@ function RoomRow({ siteId, room }: { siteId: string; room: Room }) {
               <Button component={RouterLink} to={`/rooms/${room.id}`} data-testid="open-room">
                 Open room
               </Button>
+              {room.currentCycle ? (
+                <Button
+                  component={RouterLink}
+                  to={`/rooms/${room.id}/cycles/${room.currentCycle.id}`}
+                  data-testid="open-room-cycle"
+                  sx={{ ml: 1 }}
+                >
+                  Open cycle
+                </Button>
+              ) : null}
               {room.zones.length > 0 ? (
                 <Typography sx={{ mt: 1 }}>{room.zones.map((zone) => zone.name).join(', ')}</Typography>
               ) : (

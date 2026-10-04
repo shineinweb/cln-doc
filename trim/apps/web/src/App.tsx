@@ -8,7 +8,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { FacilityPage } from './pages/FacilityPage';
 import { CompliancePage } from './pages/CompliancePage';
 import { CropCyclePage } from './pages/CropCyclePage';
-import { CropCyclesPage } from './pages/CropCyclesPage';
 import { SopPage, UserManualPage } from './pages/GuidePages';
 import { GatewayPage } from './pages/GatewayPage';
 import { HarvestPage } from './pages/HarvestPage';
@@ -50,7 +49,7 @@ const router = createBrowserRouter([
       { path: 'rooms/:roomId', element: <RoomDashboardPage /> },
       { path: 'gateways/:gatewayId', element: <GatewayPage /> },
       { path: 'rooms/:roomId/cycles/:cycleId', element: <CropCyclePage /> },
-      { path: 'crop-cycles', element: <CropCyclesPage /> },
+      { path: 'crop-cycles', element: <Navigate to="/rooms" replace /> },
       { path: 'workflows', element: <WorkflowsPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
       { path: 'tasks/:taskId', element: <TaskPage /> },

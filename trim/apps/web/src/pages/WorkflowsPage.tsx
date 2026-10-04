@@ -10,7 +10,6 @@ import {
   workflowDirectorySchema,
   workflowTemplateViewSchema,
   type CreateWorkflowTemplate,
-  type SopEdit,
   type WorkflowTemplateView,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -100,18 +99,12 @@ export function WorkflowsPage() {
         testId="workflow-templates"
         render={(template) => <TemplateRow key={template.id} template={template} />}
       />
-      <Typography variant="h2" sx={{ fontSize: 28, mt: 3, mb: 1 }}>
-        SOP records
-      </Typography>
-      <PagedList
-        items={data.sops}
-        empty="No SOP records yet."
-        testId="sop-records"
-        render={(sop) => <SopRow key={sop.id} sop={sop} />}
-      />
       {user?.isOrgAdmin ? (
         <Box sx={{ display: 'grid', gap: 2, mt: 3 }}>
           <SopForm />
+          <Typography sx={{ color: 'text.secondary' }}>
+            Browse and edit stored procedures under Operations → SOP library. Add a new one here when a template needs it.
+          </Typography>
           <TeamForm employees={data.employees} />
           <Card>
             <CardContent>
@@ -252,41 +245,6 @@ function TemplateRow({ template }: { template: WorkflowTemplateView }) {
         />
       </CardContent>
     </Card>
-  );
-}
-
-function SopRow({ sop }: { sop: SopEdit & { id: string } }) {
-  const queryClient = useQueryClient();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['workflow-directory'] });
-  const save = useMutation({
-    mutationFn: (body: SopEdit) => apiSend(`/workflows/sops/${sop.id}`, recordRemovedSchema, body, 'PATCH'),
-    onSuccess: refresh,
-  });
-  const remove = useMutation({
-    mutationFn: () => apiSend(`/workflows/sops/${sop.id}`, recordRemovedSchema, undefined, 'DELETE'),
-    onSuccess: refresh,
-  });
-  return (
-    <RecordActions
-      summary={<Typography data-testid="sop-record">{sop.title}</Typography>}
-      detail={<Typography>{sop.summary}</Typography>}
-      editor={
-        <Box
-          component="form"
-          sx={{ display: 'grid', gap: 1, maxWidth: 480 }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            save.mutate({ title: String(form.get('title') ?? ''), summary: String(form.get('summary') ?? '') });
-          }}
-        >
-          <TextField label="Title" name="title" defaultValue={sop.title} required />
-          <TextField label="Summary" name="summary" defaultValue={sop.summary} required multiline minRows={2} />
-          <SaveChanges pending={save.isPending} />
-        </Box>
-      }
-      onDelete={() => remove.mutate()}
-    />
   );
 }
 
