@@ -1,6 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import type { SessionUser } from '@trim/contracts';
-import { Observable, tap } from 'rxjs';
+import { Observable, from, of, switchMap, map } from 'rxjs';
 import type { AuthenticatedRequest } from '../auth/jwt-auth.guard';
 import { AuditService } from './audit.service';
 
@@ -23,18 +23,18 @@ export class AuditInterceptor implements NestInterceptor {
       !(method === 'GET' && SKIP_GET.has(path));
 
     return next.handle().pipe(
-      tap({
-        next: () => {
-          if (!shouldLog || !user) {
-            return;
-          }
-          void this.audit.record(user, {
+      switchMap((value) => {
+        if (!shouldLog || !user) {
+          return of(value);
+        }
+        return from(
+          this.audit.record(user, {
             action: actionLabel(method),
             entityType: entityTypeFromPath(path),
             entityId: entityIdFromPath(path),
             summary: `${user.name} ${method} ${path}`,
-          });
-        },
+          }),
+        ).pipe(map(() => value));
       }),
     );
   }
