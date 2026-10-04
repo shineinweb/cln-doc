@@ -8,7 +8,7 @@ import {
   type SopLibrary,
 } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link as RouterLink, Navigate, useParams } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
@@ -16,6 +16,7 @@ import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
+import { workbench } from '../theme';
 
 const AREAS = [
   ['irrigation', 'Irrigation and feed'],
@@ -656,7 +657,11 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
   const canWriteOps = useOpsWrite();
   const refresh = useRefresh(overview.siteId);
   const rows = useOpsChange(overview.siteId, 'stays');
+  const { site } = useSites();
+  const timeZone = site?.timezone ?? 'America/Los_Angeles';
   const [message, setMessage] = useState<string | null>(null);
+  const [monthKey, setMonthKey] = useState(() => calendarMonthKey(new Date(), timeZone));
+  const todayKey = calendarDateKey(new Date(), timeZone);
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) => apiSend(`/operations/sites/${overview.siteId}/stays`, operationsOverviewSchema, body),
     onSuccess: async () => {
@@ -665,14 +670,186 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
     },
     onError: (error: Error) => setMessage(error.message),
   });
-  const month = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit' }).format(new Date());
-  const [year, monthNumber] = month.split('-').map(Number);
-  const days = new Date(Date.UTC(year ?? 2026, monthNumber ?? 1, 0)).getUTCDate();
+  const grid = useMemo(() => buildMonthGrid(monthKey, overview.stays), [monthKey, overview.stays]);
+  const monthLabel = useMemo(() => {
+    const [year, month] = monthKey.split('-').map(Number);
+    return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(Date.UTC(year ?? 2026, (month ?? 1) - 1, 1)),
+    );
+  }, [monthKey]);
+
   return (
     <Box>
-      <Typography sx={{ mb: 1 }} data-testid="calendar-month">
-        {month}
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          flexWrap: 'wrap',
+          mb: 1.5,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button size="small" variant="text" onClick={() => setMonthKey(shiftMonthKey(monthKey, -1))} data-testid="calendar-prev-month">
+            Previous
+          </Button>
+          <Typography
+            component="h2"
+            sx={{ fontFamily: 'inherit', fontWeight: 700, fontSize: { xs: 20, md: 24 }, letterSpacing: '-0.02em', m: 0 }}
+            data-testid="calendar-month"
+            data-month={monthKey}
+          >
+            {monthLabel}
+          </Typography>
+          <Button size="small" variant="text" onClick={() => setMonthKey(shiftMonthKey(monthKey, 1))} data-testid="calendar-next-month">
+            Next
+          </Button>
+        </Box>
+        <Button size="small" variant="outlined" onClick={() => setMonthKey(calendarMonthKey(new Date(), timeZone))} data-testid="calendar-today">
+          Today
+        </Button>
+      </Box>
+
+      <Box
+        data-testid="room-calendar"
+        sx={{
+          mb: 3,
+          border: `1px solid ${workbench.line}`,
+          borderRadius: 2,
+          overflow: 'hidden',
+          bgcolor: workbench.paper,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+            borderBottom: `1px solid ${workbench.line}`,
+            bgcolor: workbench.mist,
+          }}
+        >
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label) => (
+            <Typography
+              key={label}
+              sx={{
+                px: 1,
+                py: 0.85,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'text.secondary',
+                textAlign: 'center',
+                borderRight: `1px solid ${workbench.line}`,
+                '&:last-of-type': { borderRight: 0 },
+              }}
+            >
+              {label}
+            </Typography>
+          ))}
+        </Box>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
+          {grid.map((cell, index) => {
+            if (!cell) {
+              return (
+                <Box
+                  key={`pad-${monthKey}-${index}`}
+                  sx={{
+                    minHeight: { xs: 64, md: 92 },
+                    bgcolor: workbench.canvas,
+                    borderRight: `1px solid ${workbench.line}`,
+                    borderBottom: `1px solid ${workbench.line}`,
+                    opacity: 0.55,
+                  }}
+                />
+              );
+            }
+            const occupied = cell.stays;
+            const isToday = cell.key === todayKey;
+            const col = index % 7;
+            return (
+              <Box
+                key={cell.key}
+                data-testid="calendar-day"
+                data-date={cell.key}
+                sx={{
+                  minHeight: { xs: 64, md: 92 },
+                  p: 0.75,
+                  borderRight: col === 6 ? 0 : `1px solid ${workbench.line}`,
+                  borderBottom: `1px solid ${workbench.line}`,
+                  bgcolor: occupied.length > 0 ? 'rgba(255, 79, 139, 0.08)' : workbench.paper,
+                  boxShadow: isToday ? `inset 0 0 0 2px ${workbench.leaf}` : 'none',
+                  display: 'grid',
+                  alignContent: 'start',
+                  gap: 0.4,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: 13,
+                    lineHeight: 1.2,
+                    width: 24,
+                    height: 24,
+                    display: 'grid',
+                    placeItems: 'center',
+                    borderRadius: '999px',
+                    bgcolor: isToday ? 'primary.main' : 'transparent',
+                    color: isToday ? 'primary.contrastText' : 'text.primary',
+                  }}
+                >
+                  {cell.day}
+                </Typography>
+                {occupied.slice(0, 3).map((stay) => (
+                  <Box
+                    key={stay.id}
+                    title={`${stay.roomName} · ${stay.cultivar} · ${stay.medium}`}
+                    sx={{
+                      px: 0.6,
+                      py: 0.2,
+                      borderRadius: 0.75,
+                      bgcolor: workbench.mist,
+                      borderLeft: `2px solid ${workbench.sky}`,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 10, md: 11 },
+                        fontWeight: 700,
+                        lineHeight: 1.25,
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {stay.roomName}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        display: { xs: 'none', sm: 'block' },
+                        fontSize: 10,
+                        color: 'text.secondary',
+                        lineHeight: 1.2,
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {stay.cultivar}
+                    </Typography>
+                  </Box>
+                ))}
+                {occupied.length > 3 ? (
+                  <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>+{occupied.length - 3} more</Typography>
+                ) : null}
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+
       <RecordList testId="stay-list" empty="No room stays are recorded for this facility.">
         {overview.stays.map((row) => (
           <RecordActions
@@ -704,19 +881,6 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
           />
         ))}
       </RecordList>
-      <Box data-testid="room-calendar" sx={{ display: 'grid', gap: 1, mb: 2 }}>
-        {Array.from({ length: days }, (_, index) => {
-          const day = String(index + 1).padStart(2, '0');
-          const key = `${month}-${day}`;
-          const occupied = overview.stays.filter((stay) => stay.startsOn <= key && stay.endsOn >= key);
-          return (
-            <Typography key={key} data-testid="calendar-day">
-              {key}
-              {occupied.length === 0 ? ' · open' : occupied.map((stay) => ` · ${stay.roomName} ${stay.cultivar} ${stay.medium}`).join('')}
-            </Typography>
-          );
-        })}
-      </Box>
       <Card>
         <CardContent>
           <Box
@@ -750,6 +914,50 @@ function CalendarPanel({ overview }: { overview: OperationsOverview }) {
       </Card>
     </Box>
   );
+}
+
+function calendarMonthKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit' }).format(date);
+}
+
+function calendarDateKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function shiftMonthKey(monthKey: string, delta: number): string {
+  const [year, month] = monthKey.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year ?? 2026, (month ?? 1) - 1 + delta, 1));
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function buildMonthGrid(
+  monthKey: string,
+  stays: OperationsOverview['stays'],
+): Array<{ key: string; day: number; stays: OperationsOverview['stays'] } | null> {
+  const [year, month] = monthKey.split('-').map(Number);
+  const daysInMonth = new Date(Date.UTC(year ?? 2026, month ?? 1, 0)).getUTCDate();
+  const firstWeekday = new Date(Date.UTC(year ?? 2026, (month ?? 1) - 1, 1)).getUTCDay();
+  const cells: Array<{ key: string; day: number; stays: OperationsOverview['stays'] } | null> = [];
+  for (let i = 0; i < firstWeekday; i += 1) {
+    cells.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const key = `${monthKey}-${String(day).padStart(2, '0')}`;
+    cells.push({
+      key,
+      day,
+      stays: stays.filter((stay) => stay.startsOn <= key && stay.endsOn >= key),
+    });
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push(null);
+  }
+  return cells;
 }
 
 function RecurringPanel({ overview }: { overview: OperationsOverview }) {
