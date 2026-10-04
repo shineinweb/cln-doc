@@ -125,7 +125,7 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
               size="small"
               stickyHeader
               sx={{
-                minWidth: Math.max(880, 112 + data.columns.length * 92),
+                minWidth: Math.max(960, 120 + data.columns.length * 108),
                 width: 'max-content',
                 tableLayout: 'fixed',
                 borderCollapse: 'separate',
@@ -142,9 +142,9 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
                       position: 'sticky',
                       left: 0,
                       zIndex: 4,
-                      width: 112,
-                      minWidth: 112,
-                      maxWidth: 112,
+                      width: 120,
+                      minWidth: 120,
+                      maxWidth: 120,
                       boxShadow: `4px 0 12px rgba(8, 4, 24, 0.35)`,
                       borderBottom: `1px solid ${workbench.line}`,
                     }}
@@ -160,18 +160,21 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
                         fontWeight: 700,
                         bgcolor: workbench.mist,
                         color: kindColor(column.kind),
-                        whiteSpace: 'nowrap',
-                        width: 92,
-                        minWidth: 92,
-                        maxWidth: 92,
+                        width: 108,
+                        minWidth: 108,
+                        maxWidth: 108,
                         px: 0.75,
+                        py: 1,
                         fontSize: 12,
+                        lineHeight: 1.25,
                         letterSpacing: column.label.length <= 2 ? '0.04em' : 0,
                         borderBottom: `1px solid ${workbench.line}`,
+                        whiteSpace: 'normal',
+                        verticalAlign: 'bottom',
                       }}
                     >
                       <Tooltip title={columnTooltip(column)} arrow placement="top">
-                        <Box component="span" sx={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Box component="span" sx={{ display: 'inline-block', width: '100%' }}>
                           {column.label}
                         </Box>
                       </Tooltip>
@@ -204,9 +207,9 @@ export function FacilityBoard({ siteId }: { siteId: string }) {
                           borderLeft: `4px solid ${roomTypeColor(row.roomType)}`,
                           fontWeight: 700,
                           whiteSpace: 'nowrap',
-                          width: 112,
-                          minWidth: 112,
-                          maxWidth: 112,
+                          width: 120,
+                          minWidth: 120,
+                          maxWidth: 120,
                           boxShadow: `4px 0 12px rgba(8, 4, 24, 0.28)`,
                           verticalAlign: 'middle',
                           py: 1.1,
@@ -273,9 +276,9 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
         sx={{
           color: 'rgba(196, 182, 228, 0.35)',
           fontSize: 13,
-          width: 92,
-          minWidth: 92,
-          maxWidth: 92,
+          width: 108,
+          minWidth: 108,
+          maxWidth: 108,
           px: 0.5,
         }}
       >
@@ -285,8 +288,19 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
   }
 
   const style = STATUS_STYLE[cell.status];
-  const label = cell.dates.length > 0 ? cell.dates.map(formatBoardDate).join(' · ') : cell.detail ?? '•';
-  const tip = [style.label, cell.detail, cell.dates.join(', ')].filter(Boolean).join(' · ');
+  const label =
+    cell.dates.length > 0
+      ? cell.dates.map(formatBoardDate).join(' · ')
+      : cell.status === 'done'
+        ? 'Done'
+        : cell.status === 'due'
+          ? 'Due'
+          : cell.status === 'overdue'
+            ? 'Late'
+            : 'Open';
+  const tip = [style.label, cell.detail, cell.dates.length ? cell.dates.join(', ') : null]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <TableCell
@@ -294,9 +308,9 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
       title={tip}
       data-status={cell.status}
       sx={{
-        width: 92,
-        minWidth: 92,
-        maxWidth: 92,
+        width: 108,
+        minWidth: 108,
+        maxWidth: 108,
         px: 0.5,
         py: 0.85,
         verticalAlign: 'middle',
@@ -309,10 +323,10 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: 52,
-            maxWidth: 84,
-            px: 0.85,
-            py: 0.4,
+            minWidth: 56,
+            maxWidth: 96,
+            px: 0.9,
+            py: 0.45,
             borderRadius: 1.25,
             bgcolor: style.bg,
             color: style.color,
@@ -320,7 +334,7 @@ function BoardCell({ cell }: { cell: FacilityBoardCell }) {
             fontWeight: cell.status === 'due' || cell.status === 'overdue' ? 800 : 600,
             fontSize: 12,
             lineHeight: 1.2,
-            textDecoration: cell.status === 'done' ? 'line-through' : 'none',
+            textDecoration: cell.status === 'done' && cell.dates.length > 0 ? 'line-through' : 'none',
             textDecorationThickness: 1.5,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
