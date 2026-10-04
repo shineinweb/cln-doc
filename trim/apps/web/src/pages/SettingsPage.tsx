@@ -2,6 +2,7 @@ import { Alert, Box, Button, Tab, Tabs, TextField, Typography } from '@mui/mater
 import { settingsViewSchema, type SettingsView } from '@trim/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { PageHeader } from '../components/PageHeader';
@@ -96,6 +97,13 @@ function GeneralTab({ settings, canSave }: { settings: SettingsView; canSave: bo
         <Alert severity="info">Only a manager can change settings.</Alert>
       )}
       {message ? <Alert severity={message === 'Settings saved.' ? 'success' : 'error'}>{message}</Alert> : null}
+      <Alert severity="info" sx={{ mt: 1 }} data-testid="settings-workflows-link">
+        Crop-cycle task blueprints (Canopy week and the rest) are managed under{' '}
+        <Button component={RouterLink} to="/workflows" size="small" sx={{ px: 0.5, minWidth: 0, verticalAlign: 'baseline' }}>
+          Workflow templates
+        </Button>
+        . Daily work stays on Tasks.
+      </Alert>
     </Box>
   );
 }

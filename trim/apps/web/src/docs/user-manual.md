@@ -6,7 +6,7 @@ Open Trim at https://available-kelly-labor-faculty.trycloudflare.com
 
 The sign-in page says “Your cultivation workspace” and “Use the account issued by your organization.” Enter **Email** and **Password**, then **Sign in**. The page also says “Know which rooms are yours before the day starts” and “Access follows the site,” beside a greenhouse graphic. On a wide screen that welcome sits on the left. On a phone it sits above the form.
 
-After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Workflows, Tasks, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
+After sign-in, the page opens on **Dashboard**. The left navigation starts with **Dashboard**, then **Users**. After those are Facility, Rooms, Tasks, Compliance, Harvests, Operations, Reports, AI helper, Messages, User manual, and Settings. Each item has a small graphic. Rooms is marked Center. **Dashboard** follows the Facility switcher and shows facility charts, that facility’s rooms, and the tasks due for you today. **Users**, **Messages**, User manual, and Settings open for every signed-in user and do not follow the Facility switcher. Workflow templates stay at `/workflows` and are linked from Settings; they are blueprints for crop-cycle tasks, not the daily Tasks list. The operating procedures document stays at `/sop` and is linked from this manual. The drawer ends with “Room dashboards are the daily center of Trim.” On a phone, Dashboard, Rooms, Tasks, and Harvests sit on the bottom bar, and **More** or **Open navigation** opens the full list. On a tablet and a desktop the list stays on the left.
 
 The top bar has a **Facility** switcher, your name on a wider screen, and **Sign out**.
 
@@ -167,9 +167,11 @@ The cycle page has **Back to** the room, the plant count assigned to the cycle, 
 
 Organization admins also see **Reschedule**. Employees do not.
 
-## Workflows
+## Workflow templates
 
-**Workflows** says “A template is applied when a cycle starts. Editing it creates a new version and leaves existing cycles on the version they already have.”
+**Workflow templates** are not in the left navigation. Open them from **Settings** (General) or go to `/workflows`. They are blueprints only: a template is copied into crop-cycle tasks when a cycle starts. Daily work is under **Tasks**.
+
+The page says a template is applied when a cycle starts, and that editing it creates a new version and leaves existing cycles on the version they already have.
 
 Each template card shows “Version N of M,” the duration in days, the starting event, and tasks as “Day … · title · assignee.” The seeded template is **Canopy week**, version 1 of 1, 28 days, starting at `cycle_start`. Its tasks are:
 
@@ -189,7 +191,7 @@ Avery can save three things on this page:
 
 ## Tasks
 
-**Tasks** sits in the left navigation after Workflows. The address stays `/workspace`. The title is “All tasks due today.”
+**Tasks** sits in the left navigation after Rooms. The address stays `/workspace`. The title is “All tasks due today.”
 
 This is the single place for work due today:
 

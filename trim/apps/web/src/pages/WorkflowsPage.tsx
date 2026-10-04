@@ -90,8 +90,8 @@ export function WorkflowsPage() {
     <Box>
       <PageHeader
         kicker="Templates"
-        title="Workflows"
-        lede="A template is applied when a cycle starts. Editing it creates a new version and leaves existing cycles on the version they already have."
+        title="Workflow templates"
+        lede="These are blueprints only. A template is copied into crop-cycle tasks when a cycle starts. Daily work lives under Tasks. Editing a template creates a new version and leaves existing cycles on the version they already have."
       />
       <PagedList
         items={data.templates}

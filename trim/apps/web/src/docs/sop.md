@@ -53,12 +53,12 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 
 **Steps.**
 
-1. Open **Workflows**. The page says “A template is applied when a cycle starts.”
+1. Open **Workflow templates** from Settings, or go to `/workflows`. The page says templates are blueprints and that a template is applied when a cycle starts.
 2. Read **Canopy week**. The card says “Version 1 of 1 · 28 days · starts at cycle_start.” The tasks are Day 1 Count plants onto the bench, Day 14 Scout the canopy, and Day 22 Lower-leaf pass.
 3. Open **Rooms**, open the room, and choose **Open cycle** on **Current crop**.
 4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
 
-Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Workflows**, or on the cycle page. **Crop details** on the cycle page opens the crop form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
+Workflow templates has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Workflow templates**, or on the cycle page. **Crop details** on the cycle page opens the crop form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
 
 **Reset room** sits in the top right of the room page, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones stay on **Zones**. Readings and alert rules stay on **Settings**. The other tabs are **Tasks**, **Notes**, **Zones**, and, on a flower room, **Trolmaster settings**.
 
@@ -89,7 +89,7 @@ Workflows has a **New template** form and **Save template**. That form creates a
 
 **Steps.**
 
-1. Open **Workflows**. Each card says “Version N of M.” Canopy week is version 1 of 1. The introduction says editing a template creates a new version and leaves existing cycles on the version they already have.
+1. Open **Workflow templates** from Settings, or go to `/workflows`. Each card says “Version N of M.” Canopy week is version 1 of 1. The introduction says editing a template creates a new version and leaves existing cycles on the version they already have.
 2. **New template** and **Save template** create version 1 of a new name. Saving the name Canopy week again says “A workflow template with that name already exists.” That form does not edit the existing template.
 3. Open the crop cycle. The chip shows the version that cycle already has, such as **Canopy week v1**.
 4. **Apply version N** appears only when a newer version of that template is already stored. It is not on Canopy week while the template is still version 1 of 1.
@@ -325,7 +325,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Steps.**
 
-1. Open **Workflows**.
+1. Open **Workflow templates** from Settings, or go to `/workflows`.
 2. Read the card. **Cedar Nights coco week** says Cultivar Cedar Nights and Medium coco. **Glass Orchard soil week** says Cultivar Glass Orchard and Medium soil. Canopy week has no cultivar or medium.
 3. To add one, use **New template**. Fill **Cultivar**, **Medium**, or leave either blank, then **Save template**.
 

@@ -32,7 +32,6 @@ const NAV: { to: string; label: string; end: boolean; hint?: string; glyph: Glyp
   { to: '/access', label: 'Users', end: true, glyph: 'access' },
   { to: '/facilities', label: 'Facility', end: true, glyph: 'facility' },
   { to: '/rooms', label: 'Rooms', end: false, hint: 'Center', glyph: 'rooms' },
-  { to: '/workflows', label: 'Workflows', end: true, glyph: 'workflows' },
   { to: '/workspace', label: 'Tasks', end: true, glyph: 'workspace' },
   { to: '/compliance', label: 'Compliance', end: true, glyph: 'compliance' },
   { to: '/harvests', label: 'Harvests', end: false, glyph: 'harvests' },
