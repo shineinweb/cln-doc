@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
 import {
   laborRateInputSchema,
   laborRateViewSchema,
@@ -45,6 +45,7 @@ export class TimeclockController {
   }
 
   @Post('punch')
+  @HttpCode(200)
   async punch(
     @CurrentUser() user: SessionUser,
     @Body(new ZodValidationPipe(timePunchInputSchema)) body: TimePunchInput,
@@ -84,6 +85,7 @@ export class TimeclockController {
   }
 
   @Post('rates')
+  @HttpCode(200)
   async saveRate(
     @CurrentUser() user: SessionUser,
     @Body(new ZodValidationPipe(laborRateInputSchema)) body: LaborRateInput,
@@ -107,6 +109,7 @@ export class TimeclockController {
   }
 
   @Post('payroll/ask')
+  @HttpCode(200)
   async ask(
     @CurrentUser() user: SessionUser,
     @Body(new ZodValidationPipe(payrollAskSchema)) body: PayrollAsk,

@@ -49,7 +49,7 @@ describe('time clock and AI payroll', () => {
       .post('/timeclock/punch')
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ kind: 'clock_in', siteId: fixture.siteAId })
-      .expect(201);
+      .expect(200);
     expect(clockIn.body.state).toBe('in');
     expect(clockIn.body.allowed).toEqual(expect.arrayContaining(['lunch_start', 'clock_out']));
 
@@ -93,7 +93,7 @@ describe('time clock and AI payroll', () => {
       .post('/timeclock/rates')
       .set('Authorization', `Bearer ${tokenAdmin}`)
       .send({ personName: siteAUser.name, hourlyCents: 2800 })
-      .expect(201);
+      .expect(200);
 
     const operatorDenied = await request(app.getHttpServer())
       .get(`/timeclock/payroll?from=${day}&to=${day}&siteId=${fixture.siteAId}`)
@@ -119,7 +119,7 @@ describe('time clock and AI payroll', () => {
       .post('/timeclock/payroll/ask')
       .set('Authorization', `Bearer ${tokenAdmin}`)
       .send({ question: 'What is the total gross pay?', periodStart: day, periodEnd: day, siteId: fixture.siteAId })
-      .expect(201);
+      .expect(200);
     expect(ask.body.reply).toContain('$224.00');
   });
 

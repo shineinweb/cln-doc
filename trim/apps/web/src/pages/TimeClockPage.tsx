@@ -83,8 +83,8 @@ export function TimeClockPage() {
   const punch = useMutation({
     mutationFn: (kind: TimePunchKind) =>
       apiSend('/timeclock/punch', timeClockStatusSchema, { kind, siteId: siteId ?? null }, 'POST'),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['timeclock-status'] });
+    onSuccess: (next) => {
+      queryClient.setQueryData(['timeclock-status', siteId], next);
       void queryClient.invalidateQueries({ queryKey: ['timeclock-presence'] });
       void queryClient.invalidateQueries({ queryKey: ['timeclock-payroll'] });
     },
@@ -310,7 +310,12 @@ function PunchPanel({
   return (
     <Card data-testid="timeclock-punch-panel" sx={{ mb: 2, bgcolor: workbench.mist }}>
       <CardContent>
-        <Typography sx={{ fontFamily: displayFont, fontSize: 28, fontWeight: 700, mb: 0.5 }}>{stateLabel}</Typography>
+        <Typography
+          data-testid="timeclock-state"
+          sx={{ fontFamily: displayFont, fontSize: 28, fontWeight: 700, mb: 0.5 }}
+        >
+          {stateLabel}
+        </Typography>
         <Typography sx={{ color: 'text.secondary', mb: 2 }}>
           Today: {formatHours(status.workedMinutesToday)} worked
           {status.lunchMinutesToday > 0 ? ` · ${formatHours(status.lunchMinutesToday)} lunch` : ''}
