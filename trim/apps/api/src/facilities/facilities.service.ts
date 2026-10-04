@@ -558,7 +558,7 @@ const BOARD_CHORE_MATCHERS: Record<string, RegExp> = {
   ls: /\bls\b|light\s*sched|late\s*stage|flip\s*to\s*flower/i,
   trim: /\btrim\b/i,
   garden_clean: /garden\s*clean|room\s*sanit|clean\s*(the\s*)?room|wipe\s*tables/i,
-  water_filters: /water\s*filt/i,
+  water_filters: /water\s*fil+t/i,
   fans_ac: /\bfans?\b|odor|dehu|check\s*ac/i,
 };
 
