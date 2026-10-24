@@ -1,0 +1,634 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  EDITOR
+  SUPPORT
+}
+
+enum StaffRole {
+  SUPER_ADMIN
+  SUPPORT
+}
+
+enum SessionKind {
+  CUSTOMER
+  STAFF
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+}
+
+enum PostStatus {
+  DRAFT
+  PENDING_APPROVAL
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  CANCELED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique @db.VarChar(191)
+  passwordHash String   @db.Text
+  name         String
+  disabled     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships    Membership[]
+  sessions       Session[]
+  passwordResets PasswordReset[]
+  invitations    Invitation[]
+
+  @@map("users")
+}
+
+model Session {
+  id          String      @id @default(cuid())
+  tokenHash   String      @unique @db.VarChar(191)
+  kind        SessionKind
+  userId      String?
+  staffUserId String?
+  csrfSecret  String      @db.VarChar(191)
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id])
+  staffUser StaffUser? @relation(fields: [staffUserId], references: [id])
+
+  @@index([userId])
+  @@index([staffUserId])
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique @db.VarChar(191)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_resets")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique @db.VarChar(191)
+  suspended Boolean  @default(false)
+  timezone  String   @default("UTC")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships       Membership[]
+  invitations       Invitation[]
+  subscription      Subscription?
+  instagramAccounts InstagramAccount[]
+  oauthCredentials  OauthCredential[]
+  oauthStates       OauthState[]
+  brandProfile      BrandProfile?
+  aiProfile         AiProfile?
+  aiKnowledge       AiKnowledge[]
+  aiUsage           AiUsage[]
+  draftFeedback     DraftFeedback[]
+  contentCategories ContentCategory[]
+  generationJobs    GenerationJob[]
+  mediaAssets       MediaAsset[]
+  posts             Post[]
+  conversations     Conversation[]
+  messages          Message[]
+  savedResponses    SavedResponse[]
+  comments          Comment[]
+  automationRules   AutomationRule[]
+  webhookEvents     WebhookEvent[]
+  metricSnapshots   MetricSnapshot[]
+  auditLogs         AuditLog[]
+
+  @@map("organizations")
+}
+
+model Membership {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrgRole
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+model Invitation {
+  id             String    @id @default(cuid())
+  organizationId String
+  email          String    @db.VarChar(191)
+  role           OrgRole
+  tokenHash      String    @unique @db.VarChar(191)
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  invitedBy    User         @relation(fields: [invitedById], references: [id])
+
+  @@index([organizationId])
+  @@map("invitations")
+}
+
+model StaffUser {
+  id           String    @id @default(cuid())
+  email        String    @unique @db.VarChar(191)
+  passwordHash String    @db.Text
+  name         String
+  role         StaffRole
+  createdAt    DateTime  @default(now())
+
+  sessions Session[]
+
+  @@map("staff_users")
+}
+
+model Package {
+  id                      String  @id @db.VarChar(32)
+  name                    String
+  description             String  @db.Text
+  priceMinor              Int
+  currency                String  @db.VarChar(3)
+  instagramAccounts       Int
+  seats                   Int
+  monthlyAiGenerations    Int
+  monthlyImageGenerations Int
+  monthlyVideoGenerations Int
+  scheduling              Boolean @default(false)
+  commentInbox            Boolean @default(false)
+  dmInbox                 Boolean @default(false)
+  automation              Boolean @default(false)
+  customAi                Boolean @default(false)
+  videoGeneration         Boolean @default(false)
+  sortOrder               Int     @default(0)
+
+  subscriptions Subscription[]
+
+  @@map("packages")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  organizationId         String             @unique
+  packageId              String             @db.VarChar(32)
+  status                 SubscriptionStatus
+  seatsOverride          Int?
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  provider               String?
+  providerCustomerId     String?
+  providerSubscriptionId String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id])
+  package      Package             @relation(fields: [packageId], references: [id])
+  events       SubscriptionEvent[]
+
+  @@index([providerSubscriptionId])
+  @@map("subscriptions")
+}
+
+model SubscriptionEvent {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  type           String
+  payload        Json
+  createdAt      DateTime @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId])
+  @@map("subscription_events")
+}
+
+model SiteSetting {
+  key       String   @id @db.VarChar(191)
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model PublicPage {
+  id            String  @id @default(cuid())
+  path          String  @unique @db.VarChar(191)
+  title         String
+  description   String  @db.Text
+  ogTitle       String
+  ogDescription String  @db.Text
+  ogImage       String  @db.Text
+  indexed       Boolean @default(true)
+  inSitemap     Boolean @default(true)
+
+  @@map("public_pages")
+}
+
+model SeoRedirect {
+  id         String @id @default(cuid())
+  fromPath   String @unique @db.VarChar(191)
+  toPath     String
+  statusCode Int    @default(301)
+
+  @@map("seo_redirects")
+}
+
+model SeoSet {
+  id        String @id @default(cuid())
+  name      String
+  category  String
+  keywords  Json
+  hashtags  Json
+  createdAt DateTime @default(now())
+
+  @@map("seo_sets")
+}
+
+model InstagramAccount {
+  id             String    @id @default(cuid())
+  organizationId String
+  igUserId       String    @db.VarChar(64)
+  username       String
+  accountType    String
+  status         String
+  lastError      String?   @db.Text
+  tokenExpiresAt DateTime?
+  timezone       String    @default("UTC")
+  scopes         String    @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id])
+  credential   OauthCredential?
+
+  @@unique([organizationId, igUserId])
+  @@index([igUserId])
+  @@map("instagram_accounts")
+}
+
+model OauthCredential {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  instagramAccountId String    @unique
+  accessTokenEnc     String    @db.Text
+  refreshTokenEnc    String?   @db.Text
+  expiresAt          DateTime?
+
+  organization     Organization     @relation(fields: [organizationId], references: [id])
+  instagramAccount InstagramAccount @relation(fields: [instagramAccountId], references: [id])
+
+  @@index([organizationId])
+  @@map("oauth_credentials")
+}
+
+model OauthState {
+  state          String   @id @db.VarChar(191)
+  organizationId String
+  userId         String
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("oauth_states")
+}
+
+model BrandProfile {
+  id                   String @id @default(cuid())
+  organizationId       String @unique
+  brandName            String
+  businessDescription  String @db.Text
+  targetAudience       String @db.Text
+  voiceAndTone         String @db.Text
+  productsAndServices  String @db.Text
+  approvedFacts        Json
+  topicsToAvoid        String @db.Text
+  preferredLanguage    String @default("en")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("brand_profiles")
+}
+
+model AiProfile {
+  id                 String @id @default(cuid())
+  organizationId     String @unique
+  extraInstructions  String @db.Text
+  modelId            String @default("platform-default")
+  providerKeyEnc     String? @db.Text
+  tone               String?
+  language           String?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("ai_profiles")
+}
+
+model AiKnowledge {
+  id             String  @id @default(cuid())
+  organizationId String
+  title          String
+  body           String  @db.Text
+  approved       Boolean @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("ai_knowledge")
+}
+
+model AiUsage {
+  id             String   @id @default(cuid())
+  organizationId String
+  kind           String
+  tokens         Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, kind, createdAt])
+  @@map("ai_usage")
+}
+
+model DraftFeedback {
+  id             String   @id @default(cuid())
+  organizationId String
+  postId         String?
+  kind           String
+  original       Json
+  accepted       Json
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("draft_feedback")
+}
+
+model ContentCategory {
+  id             String @id @default(cuid())
+  organizationId String
+  name           String
+  styleNotes     String @db.Text
+  defaultFormat  String
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("content_categories")
+}
+
+model GenerationJob {
+  id             String   @id @default(cuid())
+  organizationId String
+  postId         String?
+  kind           String
+  status         String
+  error          String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([postId])
+  @@map("generation_jobs")
+}
+
+model MediaAsset {
+  id             String   @id @default(cuid())
+  organizationId String
+  kind           String
+  storageKey     String   @unique @db.VarChar(191)
+  mimeType       String
+  filename       String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  postMedia    PostMedia[]
+
+  @@index([organizationId])
+  @@map("media_assets")
+}
+
+model Post {
+  id                  String     @id @default(cuid())
+  organizationId      String
+  instagramAccountId  String?
+  status              PostStatus @default(DRAFT)
+  format              String
+  categoryId          String?
+  description         String     @db.Text
+  caption             String     @db.Text
+  generatedCaption    String     @db.Text
+  keywords            Json
+  hashtags            Json
+  creativeBrief       String?    @db.Text
+  callToAction        String?    @db.Text
+  alternativeCaptions Json
+  factualClaims       Json
+  scheduledAt         DateTime?
+  publishedAt         DateTime?
+  igMediaId           String?
+  igContainerId       String?
+  publishError        String?    @db.Text
+  approvedById        String?
+  approvedAt          DateTime?
+  publishAttempts     Int        @default(0)
+  referenceAssetId    String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  media        PostMedia[]
+
+  @@index([organizationId])
+  @@index([status, scheduledAt])
+  @@map("posts")
+}
+
+model PostMedia {
+  id           String @id @default(cuid())
+  postId       String
+  mediaAssetId String
+  position     Int
+
+  post  Post       @relation(fields: [postId], references: [id])
+  asset MediaAsset @relation(fields: [mediaAssetId], references: [id])
+
+  @@unique([postId, position])
+  @@index([mediaAssetId])
+  @@map("post_media")
+}
+
+model Conversation {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  instagramAccountId   String
+  participantId        String    @db.VarChar(64)
+  participantUsername  String?
+  automationEnabled    Boolean   @default(true)
+  assignedToId         String?
+  lastUserMessageAt    DateTime?
+  privateReplySentAt   DateTime?
+  recipientRespondedAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  messages     Message[]
+
+  @@unique([organizationId, instagramAccountId, participantId])
+  @@index([organizationId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  organizationId String
+  conversationId String
+  direction      String
+  body           String   @db.Text
+  igMessageId    String?
+  isPrivateReply Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId])
+  @@index([organizationId])
+  @@map("messages")
+}
+
+model SavedResponse {
+  id             String @id @default(cuid())
+  organizationId String
+  title          String
+  body           String @db.Text
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("saved_responses")
+}
+
+model Comment {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  instagramAccountId String
+  igCommentId        String    @db.VarChar(191)
+  igMediaId          String?
+  postId             String?
+  text               String    @db.Text
+  authorId           String?
+  authorUsername     String?
+  hidden             Boolean   @default(false)
+  deleted            Boolean   @default(false)
+  assignedToId       String?
+  replied            Boolean   @default(false)
+  replyText          String?   @db.Text
+  repliedAt          DateTime?
+  createdAt          DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([instagramAccountId, igCommentId])
+  @@index([organizationId])
+  @@map("comments")
+}
+
+model AutomationRule {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  kind           String
+  enabled        Boolean @default(true)
+  matchText      String? @db.Text
+  approvedAnswer String? @db.Text
+  config         Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("automation_rules")
+}
+
+model WebhookEvent {
+  id             String   @id @default(cuid())
+  organizationId String?
+  provider       String
+  externalId     String   @db.VarChar(191)
+  payload        Json
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@unique([provider, externalId])
+  @@index([organizationId])
+  @@map("webhook_events")
+}
+
+model MetricSnapshot {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  instagramAccountId String?
+  metric             String
+  value              Float
+  dimensions         Json?
+  capturedAt         DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("metric_snapshots")
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String?
+  actorType      String
+  actorId        String?
+  action         String
+  targetType     String?
+  targetId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([action])
+  @@map("audit_logs")
+}

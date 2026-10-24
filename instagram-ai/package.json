@@ -1,0 +1,21 @@
+{
+  "name": "instagram-ai",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.33.4",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:api": "pnpm --filter @instagram-ai/api dev",
+    "dev:worker": "pnpm --filter @instagram-ai/api worker",
+    "dev:web": "pnpm --filter @instagram-ai/web dev",
+    "dev:admin": "pnpm --filter @instagram-ai/admin dev",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "db:push": "pnpm --filter @instagram-ai/api db:push",
+    "db:seed": "pnpm --filter @instagram-ai/api db:seed",
+    "build": "pnpm -r build"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
