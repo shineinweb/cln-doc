@@ -1,5 +1,13 @@
 import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
-import { loginRequestSchema, type LoginResponse, type SessionUser } from '@trim/contracts';
+import {
+  forgotPasswordRequestSchema,
+  loginRequestSchema,
+  resetPasswordRequestSchema,
+  type ForgotPasswordResponse,
+  type LoginResponse,
+  type ResetPasswordResponse,
+  type SessionUser,
+} from '@trim/contracts';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
@@ -15,6 +23,22 @@ export class AuthController {
     @Body(new ZodValidationPipe(loginRequestSchema)) body: ReturnType<typeof loginRequestSchema.parse>,
   ): Promise<LoginResponse> {
     return this.auth.login(body);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(200)
+  forgotPassword(
+    @Body(new ZodValidationPipe(forgotPasswordRequestSchema)) body: ReturnType<typeof forgotPasswordRequestSchema.parse>,
+  ): Promise<ForgotPasswordResponse> {
+    return this.auth.forgotPassword(body);
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  resetPassword(
+    @Body(new ZodValidationPipe(resetPasswordRequestSchema)) body: ReturnType<typeof resetPasswordRequestSchema.parse>,
+  ): Promise<ResetPasswordResponse> {
+    return this.auth.resetPassword(body);
   }
 
   @Get('me')

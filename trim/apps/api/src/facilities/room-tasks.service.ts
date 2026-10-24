@@ -1,13 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { ManagedTask, ManagedTaskInput, RecordRemoved, SessionUser, Weekday } from '@trim/contracts';
+import type { ManagedTask, ManagedTaskInput, RecordRemoved, SessionUser } from '@trim/contracts';
 import { dateKeyFromDbDate, dbDateFromKey } from '../cycles/cycle-day';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { assigneesForSite } from './assignee';
 import { assertSiteAccess } from './site-access';
+import { normalizeWeekdays, parseWeekdays } from './weekdays';
 
 @Injectable()
 export class RoomTasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async list(roomId: string): Promise<ManagedTask[]> {
     const rows = await this.prisma.roomTask.findMany({
@@ -36,6 +41,13 @@ export class RoomTasksService {
       },
       include: assigneeInclude,
     });
+    this.notifications.notifyRoomTaskAssigned({
+      assigneeIds: assignees.map((person) => person.id),
+      title: created.title,
+      roomName: room.name,
+      siteName: room.site.name,
+      dueOn: created.dueOn ? dateKeyFromDbDate(created.dueOn) : null,
+    });
     return toManagedTask(created);
   }
 
@@ -60,6 +72,15 @@ export class RoomTasksService {
       },
       include: assigneeInclude,
     });
+    const previous = new Set(existing.assignees.map((row) => row.userId));
+    const newlyAssigned = assignees.map((person) => person.id).filter((id) => !previous.has(id));
+    this.notifications.notifyRoomTaskAssigned({
+      assigneeIds: newlyAssigned,
+      title: updated.title,
+      roomName: room.name,
+      siteName: room.site.name,
+      dueOn: updated.dueOn ? dateKeyFromDbDate(updated.dueOn) : null,
+    });
     return toManagedTask(updated);
   }
 
@@ -68,6 +89,20 @@ export class RoomTasksService {
     const existing = await this.owned(room.id, taskId);
     await this.prisma.roomTask.delete({ where: { id: existing.id } });
     return { id: existing.id, removed: true, voided: false };
+  }
+
+  async complete(user: SessionUser, roomId: string, taskId: string): Promise<ManagedTask> {
+    const room = await this.room(user, roomId);
+    const existing = await this.owned(room.id, taskId);
+    if (existing.kind === 'recurring') {
+      throw new BadRequestException('Recurring room tasks stay on the schedule. Delete the task if it should stop.');
+    }
+    const updated = await this.prisma.roomTask.update({
+      where: { id: existing.id },
+      data: { status: 'done' },
+      include: assigneeInclude,
+    });
+    return toManagedTask(updated);
   }
 
   private schedule(input: ManagedTaskInput): { kind: 'one_time' | 'recurring'; cadence: 'daily' | 'weekly' | null; weekdays: string | null; dueOn: Date | null } {
@@ -100,7 +135,10 @@ export class RoomTasksService {
   }
 
   private async owned(roomId: string, taskId: string) {
-    const task = await this.prisma.roomTask.findFirst({ where: { id: taskId, roomId } });
+    const task = await this.prisma.roomTask.findFirst({
+      where: { id: taskId, roomId },
+      include: { assignees: true },
+    });
     if (!task) {
       throw new NotFoundException('Task not found');
     }
@@ -135,18 +173,6 @@ function toManagedTask(row: {
 }
 
 const assigneeInclude = { assignees: { include: { user: true } } } as const;
-
-const WEEKDAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
-
-function normalizeWeekdays(days: Weekday[] | null | undefined): Weekday[] {
-  const chosen = new Set(days ?? []);
-  return WEEKDAY_ORDER.filter((day) => chosen.has(day));
-}
-
-function parseWeekdays(value: string | null): Weekday[] {
-  const chosen = new Set((value ?? '').split(','));
-  return WEEKDAY_ORDER.filter((day) => chosen.has(day));
-}
 
 function blankDescription(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? '';

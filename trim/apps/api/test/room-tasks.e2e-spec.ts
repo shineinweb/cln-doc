@@ -219,6 +219,103 @@ describe('room tasks', () => {
     expect(await prisma.roomTask.count({ where: { roomId: fixture.roomAId } })).toBe(0);
   });
 
+  it('lists room chores on the unified Tasks workspace with crop-cycle work', async () => {
+    const site = await prisma.site.findUniqueOrThrow({ where: { id: fixture.siteAId } });
+    const todayKey = new Intl.DateTimeFormat('en-CA', {
+      timeZone: site.timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const created = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/tasks`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({
+        title: 'Unified workspace chore',
+        description: 'Shows on Tasks',
+        kind: 'one_time',
+        dueOn: todayKey,
+        assigneeIds: [siteAUserId],
+      })
+      .expect(201);
+
+    const cycle = await prisma.cropCycle.create({
+      data: {
+        roomId: fixture.roomAId,
+        name: 'Unified cycle',
+        cultivar: 'Test',
+        plantCount: 1,
+        stage: 'flower',
+        startDate: new Date(`${todayKey}T00:00:00.000Z`),
+        expectedHarvestDate: new Date(`${todayKey}T00:00:00.000Z`),
+        status: 'active',
+      },
+    });
+    const cycleTask = await prisma.cycleTask.create({
+      data: {
+        cycleId: cycle.id,
+        roomId: fixture.roomAId,
+        taskKey: 'unified',
+        title: 'Unified cycle task',
+        instructions: 'Count',
+        offsetDays: 0,
+        dueOn: new Date(`${todayKey}T00:00:00.000Z`),
+        assigneeType: 'employee',
+        assigneeLabel: 'Site A Operator',
+        userId: siteAUserId,
+      },
+    });
+    await prisma.recurringDuty.create({
+      data: {
+        siteId: fixture.siteAId,
+        roomId: fixture.roomAId,
+        title: 'Unified duty',
+        cadence: 'daily',
+        nextDueOn: new Date(`${todayKey}T00:00:00.000Z`),
+        assigneeLabel: 'Site A Operator',
+      },
+    });
+
+    const workspace = await request(app.getHttpServer())
+      .get('/workspace/today')
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(200);
+    expect(workspace.body.statement).toContain('crop cycles');
+    expect(workspace.body.tasks.some((task: { id: string }) => task.id === cycleTask.id)).toBe(true);
+    expect(workspace.body.roomTasks.some((task: { id: string; title: string }) => task.id === created.body.id && task.title === 'Unified workspace chore')).toBe(
+      true,
+    );
+    expect(workspace.body.duties.some((duty: { title: string }) => duty.title === 'Unified duty')).toBe(true);
+
+    const finishedRoom = await request(app.getHttpServer())
+      .post(`/rooms/${fixture.roomAId}/tasks/${created.body.id}/complete`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({})
+      .expect(201);
+    expect(finishedRoom.body.id).toBe(created.body.id);
+    expect(
+      await prisma.roomTask.findUniqueOrThrow({ where: { id: created.body.id }, select: { status: true } }),
+    ).toEqual({ status: 'done' });
+
+    const finishedCycle = await request(app.getHttpServer())
+      .post(`/tasks/${cycleTask.id}/complete`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .send({})
+      .expect(201);
+    expect(finishedCycle.body).toMatchObject({ id: cycleTask.id, status: 'done' });
+
+    const afterFinish = await request(app.getHttpServer())
+      .get('/workspace/today')
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(200);
+    expect(afterFinish.body.tasks.some((task: { id: string }) => task.id === cycleTask.id)).toBe(false);
+    expect(afterFinish.body.roomTasks.some((task: { id: string }) => task.id === created.body.id)).toBe(false);
+
+    await prisma.roomTask.delete({ where: { id: created.body.id } });
+    await prisma.cropCycle.delete({ where: { id: cycle.id } });
+    await prisma.recurringDuty.deleteMany({ where: { siteId: fixture.siteAId, title: 'Unified duty' } });
+  });
+
   it('assigns an employee on a crop task without clearing a role assignment when the employee is omitted', async () => {
     const cycle = await prisma.cropCycle.create({
       data: {

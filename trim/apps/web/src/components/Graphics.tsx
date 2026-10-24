@@ -7,11 +7,13 @@ export type GlyphName =
   | 'cycles'
   | 'workflows'
   | 'workspace'
+  | 'timeclock'
   | 'compliance'
   | 'harvests'
   | 'operations'
   | 'reports'
   | 'coach'
+  | 'messages'
   | 'manual'
   | 'sop'
   | 'settings'
@@ -83,6 +85,14 @@ function GlyphPath({ name }: { name: GlyphName }) {
       </>
     );
   }
+  if (name === 'timeclock') {
+    return (
+      <>
+        <circle cx="12" cy="12" r="8" {...common} />
+        <path d="M12 8v4.5l3 1.5" {...common} />
+      </>
+    );
+  }
   if (name === 'compliance') {
     return <path d="M12 3.5 19 6.5v5.2c0 4.2-2.8 7.2-7 8.8-4.2-1.6-7-4.6-7-8.8V6.5L12 3.5Z" {...common} />;
   }
@@ -117,6 +127,14 @@ function GlyphPath({ name }: { name: GlyphName }) {
         <path d="M5 7.5h10.5a3 3 0 0 1 3 3V17a2 2 0 0 1-2 2H7.5" {...common} />
         <path d="M5 7.5V17a2 2 0 0 0 2 2h1.5" {...common} />
         <path d="M8.5 11h6M8.5 14.5h4" {...common} />
+      </>
+    );
+  }
+  if (name === 'messages') {
+    return (
+      <>
+        <path d="M4.5 6.5h15a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9.5L5 20.5V8.5a2 2 0 0 1 2-2Z" {...common} />
+        <path d="M8.5 10.5h9M8.5 13.5h6" {...common} />
       </>
     );
   }

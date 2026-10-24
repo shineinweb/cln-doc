@@ -9,10 +9,11 @@ import { PageHeader } from '../components/PageHeader';
 import { formatCalendarDate } from '../crops/format';
 import { useSites } from '../layout/SiteProvider';
 import { displayFont, roomTypeColor, roomTypeLabel, workbench } from '../theme';
+import { DashboardCharts } from './DashboardCharts';
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const { sites, site, loading, error } = useSites();
+  const { sites, site, siteId, loading, error } = useSites();
   const workspace = useQuery({
     queryKey: ['workspace'],
     queryFn: () => apiGet('/workspace/today', workspaceTodaySchema),
@@ -27,7 +28,7 @@ export function DashboardPage() {
         title="Dashboard"
         lede={
           site
-            ? `${site.name} is selected. The counts and rooms below follow that facility. Tasks due today are the ones assigned to you.`
+            ? `${site.name} is selected. Yield charts, rooms, and tasks due today use this facility. Open Tasks for the facility board.`
             : 'Choose a facility in the top bar to see its rooms.'
         }
       />
@@ -45,9 +46,17 @@ export function DashboardPage() {
           <Stat label="Facilities" value={String(sites.length)} />
           <Stat label="Rooms" value={String(rooms.length)} />
           <Stat label="Active crops" value={String(activeCrops)} />
-          <Stat label="Tasks due" value={workspace.data ? String(workspace.data.tasks.length) : '—'} />
+          <Stat
+            label="Tasks due"
+            value={
+              workspace.data
+                ? String(workspace.data.tasks.length + workspace.data.roomTasks.length + workspace.data.duties.length)
+                : '—'
+            }
+          />
         </Box>
       ) : null}
+      {siteId ? <DashboardCharts siteId={siteId} /> : null}
       <Typography variant="h2" sx={{ fontSize: 26, mb: 1.5 }}>
         Rooms
       </Typography>
@@ -75,20 +84,45 @@ export function DashboardPage() {
       <Typography variant="h2" sx={{ fontSize: 26, mb: 1.5 }}>
         Tasks due today
       </Typography>
+      <Typography sx={{ color: 'text.secondary', mb: 1.5 }}>
+        Crop cycles, room chores, and recurring duties. Open{' '}
+        <RouterLink to="/workspace">Tasks</RouterLink> for the full list.
+      </Typography>
       {workspace.isPending ? <Skeleton variant="rounded" height={80} /> : null}
       {workspace.error ? <Alert severity="error">{workspace.error.message}</Alert> : null}
-      {workspace.data && workspace.data.tasks.length === 0 ? (
-        <Alert severity="info">Nothing is assigned to you today.</Alert>
+      {workspace.data &&
+      workspace.data.tasks.length + workspace.data.roomTasks.length + workspace.data.duties.length === 0 ? (
+        <Alert severity="info">Nothing is due for you today.</Alert>
       ) : null}
-      {workspace.data && workspace.data.tasks.length > 0 ? (
-        <Box sx={{ display: 'grid', gap: 1 }}>
+      {workspace.data ? (
+        <Box sx={{ display: 'grid', gap: 1 }} data-testid="dashboard-tasks">
           <Typography sx={{ color: 'text.secondary' }}>{formatCalendarDate(workspace.data.date)}</Typography>
           {workspace.data.tasks.map((task) => (
-            <Card key={task.id}>
+            <Card key={`cycle-${task.id}`}>
               <CardContent>
                 <Typography>
-                  <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
+                  Cycle · <RouterLink to={`/tasks/${task.id}`}>{task.title}</RouterLink>
                   {` · ${task.roomName} · ${formatCalendarDate(task.dueOn)}`}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+          {workspace.data.roomTasks.map((task) => (
+            <Card key={`room-${task.id}`}>
+              <CardContent>
+                <Typography>
+                  Room · <RouterLink to={`/rooms/${task.roomId}`}>{task.title}</RouterLink>
+                  {` · ${task.roomName}`}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+          {workspace.data.duties.map((duty) => (
+            <Card key={`duty-${duty.id}`}>
+              <CardContent>
+                <Typography>
+                  Duty · <RouterLink to="/operations/recurring">{duty.title}</RouterLink>
+                  {` · ${duty.siteName} · next ${formatCalendarDate(duty.nextDueOn)}`}
                 </Typography>
               </CardContent>
             </Card>

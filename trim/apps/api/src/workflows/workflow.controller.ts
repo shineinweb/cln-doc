@@ -20,32 +20,38 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { WorkflowService } from './workflow.service';
 
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class WorkflowController {
   constructor(private readonly workflows: WorkflowService) {}
 
   @Get('workflows/directory')
+  @RequirePermissions('workflows.manage', 'tasks.read')
   directory(@CurrentUser() user: SessionUser) {
     return this.workflows.directory(user);
   }
 
   @Post('workflows/sops')
+  @RequirePermissions('workflows.manage')
   async createSop(@CurrentUser() user: SessionUser, @Body(new ZodValidationPipe(createSopSchema)) body: CreateSop) {
     const sop = await this.workflows.createSop(user, body);
     return { id: sop.id, title: sop.title, summary: sop.summary };
   }
 
   @Post('workflows/teams')
+  @RequirePermissions('workflows.manage')
   async createTeam(@CurrentUser() user: SessionUser, @Body(new ZodValidationPipe(createTeamSchema)) body: CreateTeam) {
     const team = await this.workflows.createTeam(user, body);
     return { id: team.id, name: team.name };
   }
 
   @Post('workflows/templates')
+  @RequirePermissions('workflows.manage')
   createTemplate(
     @CurrentUser() user: SessionUser,
     @Body(new ZodValidationPipe(createWorkflowTemplateSchema)) body: CreateWorkflowTemplate,
@@ -54,6 +60,7 @@ export class WorkflowController {
   }
 
   @Post('workflows/templates/:templateId/versions')
+  @RequirePermissions('workflows.manage')
   addVersion(
     @CurrentUser() user: SessionUser,
     @Param('templateId') templateId: string,
@@ -63,11 +70,13 @@ export class WorkflowController {
   }
 
   @Post('cycles')
+  @RequirePermissions('tasks.write', 'workflows.manage')
   startCycle(@CurrentUser() user: SessionUser, @Body(new ZodValidationPipe(startCycleSchema)) body: StartCycle) {
     return this.workflows.startCycle(user, body);
   }
 
   @Post('rooms/:roomId/reset')
+  @RequirePermissions('workflows.manage', 'rooms.write')
   resetRoom(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,
@@ -77,6 +86,7 @@ export class WorkflowController {
   }
 
   @Post('cycles/:cycleId/workflow')
+  @RequirePermissions('workflows.manage')
   apply(
     @CurrentUser() user: SessionUser,
     @Param('cycleId') cycleId: string,
@@ -86,6 +96,7 @@ export class WorkflowController {
   }
 
   @Post('cycles/:cycleId/reschedule/preview')
+  @RequirePermissions('workflows.manage')
   preview(
     @CurrentUser() user: SessionUser,
     @Param('cycleId') cycleId: string,
@@ -95,6 +106,7 @@ export class WorkflowController {
   }
 
   @Post('cycles/:cycleId/reschedule')
+  @RequirePermissions('workflows.manage')
   confirm(
     @CurrentUser() user: SessionUser,
     @Param('cycleId') cycleId: string,

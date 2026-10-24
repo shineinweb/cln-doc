@@ -3,15 +3,16 @@ import { trolmasterChartSchema, trolmasterModeSchema, type TrolmasterChart, type
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { apiGet, apiSend } from '../api/client';
+import { workbench } from '../theme';
 
 const METRIC_COLOR: Record<string, string> = {
-  temp: '#e15b78',
-  humid: '#5b9dff',
-  co2: '#e6d36a',
-  vpd: '#3dceb4',
-  light: '#e0a84a',
-  ec: '#e6b84a',
-  vwc: '#7eb6f0',
+  temp: '#FF4F8B',
+  humid: '#3DDCFF',
+  co2: '#FFD166',
+  vpd: '#2EE6A6',
+  light: '#FF8A3D',
+  ec: '#FFD166',
+  vwc: '#7C5CFF',
 };
 const WIDTH = 960;
 const HEIGHT = 420;
@@ -19,6 +20,7 @@ const PAD_X = 36;
 const PAD_BOTTOM = 52;
 const PAD_TOP = 18;
 type ChartRange = 'day' | 'week' | 'month';
+type PlotPoint = { x: number; y: number; value: number };
 
 export function TrolmasterSwitches({ roomId }: { roomId: string }) {
   const mode = useTrolmasterMode(roomId);
@@ -68,10 +70,20 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
   const plot = live.enabled && visible.length > 0;
 
   return (
-    <Box data-testid="trolmaster-chart-card" sx={{ bgcolor: '#141416', color: '#f2f2f2', borderRadius: 2, p: 2 }}>
+    <Box
+      data-testid="trolmaster-chart-card"
+      sx={{
+        color: workbench.ink,
+        borderRadius: 2,
+        p: 2,
+        border: `1px solid ${workbench.line}`,
+        background: `linear-gradient(165deg, rgba(58, 24, 104, 0.55) 0%, ${workbench.paper} 42%, #12182A 100%)`,
+        boxShadow: '0 18px 40px rgba(8, 6, 20, 0.45)',
+      }}
+    >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 1.5 }}>
         <TrolmasterSwitches roomId={roomId} />
-        <Box sx={{ display: 'flex', bgcolor: '#2a2a2e', borderRadius: 999, p: 0.25 }}>
+        <Box sx={{ display: 'flex', bgcolor: 'rgba(16, 14, 28, 0.72)', border: `1px solid ${workbench.line}`, borderRadius: 999, p: 0.25 }}>
           {(['day', 'week', 'month'] as const).map((item) => (
             <Box
               key={item}
@@ -85,8 +97,9 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
                 borderRadius: 999,
                 px: 1.5,
                 py: 0.5,
-                color: range === item ? '#111' : '#f2f2f2',
-                bgcolor: range === item ? '#f2f2f2' : 'transparent',
+                color: range === item ? '#140E28' : workbench.ink,
+                bgcolor: range === item ? workbench.sky : 'transparent',
+                fontWeight: 700,
               }}
             >
               {item === 'day' ? '24 Hour' : item === 'week' ? 'Week' : 'Month'}
@@ -100,18 +113,24 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
         </Typography>
         {plot ? (
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Box data-testid="trolmaster-chart-day" sx={{ bgcolor: '#2a2a2e', borderRadius: 999, px: 1.5, py: 0.5 }}>
+            <Box
+              data-testid="trolmaster-chart-day"
+              sx={{ bgcolor: 'rgba(16, 14, 28, 0.72)', border: `1px solid ${workbench.line}`, borderRadius: 999, px: 1.5, py: 0.5 }}
+            >
               {formatDay(new Date(hoverAt ?? new Date(domain.max).toISOString()).getTime(), timeZone)}
             </Box>
-            <Box data-testid="trolmaster-chart-time" sx={{ bgcolor: '#2a2a2e', borderRadius: 999, px: 1.5, py: 0.5 }}>
+            <Box
+              data-testid="trolmaster-chart-time"
+              sx={{ bgcolor: 'rgba(16, 14, 28, 0.72)', border: `1px solid ${workbench.line}`, borderRadius: 999, px: 1.5, py: 0.5 }}
+            >
               {formatClock(new Date(hoverAt ?? new Date(domain.max).toISOString()).getTime(), timeZone)}
             </Box>
           </Box>
         ) : null}
       </Box>
       {showingSample ? (
-        <Typography data-testid="trolmaster-sample-note" sx={{ color: '#e6d36a', fontSize: 14, mb: 1 }}>
-          Sample readings. Trim is not calling Trolmaster.
+        <Typography data-testid="trolmaster-sample-note" sx={{ color: workbench.gold, fontSize: 14, mb: 1 }}>
+          Sample readings. Serenity is not calling Trolmaster.
         </Typography>
       ) : null}
       {plot ? (
@@ -132,16 +151,16 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
                     alignItems: 'center',
                     gap: 0.75,
                     border: '1px solid',
-                    borderColor: off ? '#3a3a3e' : color,
-                    color: off ? '#8a8a8e' : '#f2f2f2',
-                    bgcolor: 'transparent',
+                    borderColor: off ? workbench.line : color,
+                    color: off ? '#8B7FB0' : workbench.ink,
+                    bgcolor: off ? 'transparent' : 'rgba(16, 14, 28, 0.35)',
                     borderRadius: 999,
                     px: 1.25,
                     py: 0.4,
                     cursor: 'pointer',
                   }}
                 >
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, opacity: off ? 0.35 : 1 }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, opacity: off ? 0.35 : 1, boxShadow: off ? 'none' : `0 0 8px ${color}` }} />
                   {seriesLabel(series.metric, series.name)}
                 </Box>
               );
@@ -155,11 +174,22 @@ export function TrolmasterChart({ roomId, timeZone }: { roomId: string; timeZone
               const min = Math.min(...values);
               return (
                 <Box key={series.id} data-testid={`trolmaster-legend-${series.metric}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, border: '1px solid #3a3a3e', borderRadius: 999, px: 1, py: 0.4 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      border: `1px solid ${workbench.line}`,
+                      borderRadius: 999,
+                      px: 1,
+                      py: 0.4,
+                      bgcolor: 'rgba(16, 14, 28, 0.35)',
+                    }}
+                  >
                     <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: colorFor(series.metric) }} />
                     {seriesLabel(series.metric, series.name)}
                   </Box>
-                  <Typography sx={{ fontSize: 14, color: '#c8c8cc' }}>
+                  <Typography sx={{ fontSize: 14, color: '#C4B6E4' }}>
                     Max {formatReading(max)} {series.unit}
                     <br />
                     Min {formatReading(min)} {series.unit}
@@ -246,7 +276,14 @@ function ChartPlot({
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
         aria-label="Trolmaster chart"
-        sx={{ width: '100%', height: 'auto', display: 'block', bgcolor: '#101012', borderRadius: 1 }}
+        sx={{
+          width: '100%',
+          height: 'auto',
+          display: 'block',
+          borderRadius: 1.5,
+          border: `1px solid ${workbench.line}`,
+          overflow: 'hidden',
+        }}
         onMouseMove={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           const viewX = ((event.clientX - rect.left) / rect.width) * WIDTH;
@@ -255,17 +292,41 @@ function ChartPlot({
         onMouseLeave={() => onHover(null)}
       >
         <defs>
+          <linearGradient id="trolmaster-plot-bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#24183F" />
+            <stop offset="46%" stopColor="#151B2E" />
+            <stop offset="100%" stopColor="#0B1220" />
+          </linearGradient>
+          <radialGradient id="trolmaster-plot-glow" cx="78%" cy="18%" r="55%">
+            <stop offset="0%" stopColor="rgba(61, 220, 255, 0.18)" />
+            <stop offset="55%" stopColor="rgba(124, 92, 255, 0.12)" />
+            <stop offset="100%" stopColor="rgba(16, 14, 28, 0)" />
+          </radialGradient>
+          <filter id="trolmaster-line-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           {data.series.map((series) => (
             <linearGradient key={series.id} id={`fill-${series.id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={colorFor(series.metric)} stopOpacity="0.45" />
-              <stop offset="100%" stopColor={colorFor(series.metric)} stopOpacity="0.02" />
+              <stop offset="0%" stopColor={colorFor(series.metric)} stopOpacity="0.42" />
+              <stop offset="55%" stopColor={colorFor(series.metric)} stopOpacity="0.12" />
+              <stop offset="100%" stopColor={colorFor(series.metric)} stopOpacity="0" />
             </linearGradient>
           ))}
         </defs>
-        <line x1={PAD_X} y1={PAD_TOP} x2={WIDTH - PAD_X} y2={PAD_TOP} stroke="rgba(255,255,255,0.28)" strokeDasharray="4 6" />
-        <line x1={PAD_X} y1={bottom} x2={WIDTH - PAD_X} y2={bottom} stroke="rgba(255,255,255,0.28)" strokeDasharray="4 6" />
+        <rect x="0" y="0" width={WIDTH} height={HEIGHT} fill="url(#trolmaster-plot-bg)" />
+        <rect x="0" y="0" width={WIDTH} height={HEIGHT} fill="url(#trolmaster-plot-glow)" />
+        {[0.2, 0.4, 0.6, 0.8].map((fraction) => {
+          const y = PAD_TOP + fraction * (bottom - PAD_TOP);
+          return <line key={fraction} x1={PAD_X} y1={y} x2={WIDTH - PAD_X} y2={y} stroke="rgba(196, 182, 228, 0.1)" />;
+        })}
+        <line x1={PAD_X} y1={PAD_TOP} x2={WIDTH - PAD_X} y2={PAD_TOP} stroke="rgba(196, 182, 228, 0.22)" />
+        <line x1={PAD_X} y1={bottom} x2={WIDTH - PAD_X} y2={bottom} stroke="rgba(196, 182, 228, 0.28)" />
         {ticks.map((tick) => (
-          <line key={tick} x1={xFor(tick, domain)} y1={PAD_TOP} x2={xFor(tick, domain)} y2={bottom} stroke="rgba(255,255,255,0.12)" />
+          <line key={tick} x1={xFor(tick, domain)} y1={PAD_TOP} x2={xFor(tick, domain)} y2={bottom} stroke="rgba(196, 182, 228, 0.1)" />
         ))}
         {data.series.map((series) => {
           const scale = scales.get(series.metric);
@@ -280,28 +341,51 @@ function ChartPlot({
           if (coords.length === 0) {
             return null;
           }
-          const line = coords.map((point) => `${point.x},${point.y}`).join(' ');
-          const area = `${coords[0].x},${bottom} ${line} ${coords[coords.length - 1].x},${bottom}`;
+          const linePath = smoothLinePath(coords);
+          const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${bottom} L ${coords[0].x} ${bottom} Z`;
           const hoverPoint = hoverAt ? nearestCoord(coords, xFor(new Date(hoverAt).getTime(), domain)) : null;
+          const color = colorFor(series.metric);
           return (
             <g key={series.id}>
-              <polygon points={area} fill={`url(#fill-${series.id})`} />
-              <polyline fill="none" stroke={colorFor(series.metric)} strokeWidth="1.7" points={line} />
+              <path d={areaPath} fill={`url(#fill-${series.id})`} />
+              <path
+                d={linePath}
+                fill="none"
+                stroke={color}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#trolmaster-line-glow)"
+              />
+              <path d={linePath} fill="none" stroke={color} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
               {hoverPoint ? (
-                <text x={hoverPoint.x + 6} y={Math.max(PAD_TOP + 12, hoverPoint.y - 6)} fill={colorFor(series.metric)} fontSize="13">
-                  {formatReading(hoverPoint.value)} {series.unit}
-                </text>
+                <g>
+                  <circle cx={hoverPoint.x} cy={hoverPoint.y} r="7" fill={color} fillOpacity="0.22" />
+                  <circle cx={hoverPoint.x} cy={hoverPoint.y} r="3.4" fill={color} stroke="#140E28" strokeWidth="1.2" />
+                  <text
+                    x={hoverPoint.x + 8}
+                    y={Math.max(PAD_TOP + 14, hoverPoint.y - 8)}
+                    fill={color}
+                    fontSize="13"
+                    fontWeight="700"
+                    style={{ paintOrder: 'stroke', stroke: 'rgba(16,14,28,0.85)', strokeWidth: 3 }}
+                  >
+                    {formatReading(hoverPoint.value)} {series.unit}
+                  </text>
+                </g>
               ) : null}
             </g>
           );
         })}
-        {hoverX != null ? <line x1={hoverX} y1={PAD_TOP} x2={hoverX} y2={bottom} stroke="rgba(255,255,255,0.55)" /> : null}
+        {hoverX != null ? (
+          <line x1={hoverX} y1={PAD_TOP} x2={hoverX} y2={bottom} stroke="rgba(246, 243, 255, 0.45)" strokeDasharray="3 5" />
+        ) : null}
         {ticks.map((tick) => (
           <g key={`label-${tick}`}>
-            <text x={xFor(tick, domain)} y={HEIGHT - 28} fill="#bdbdc2" fontSize="12" textAnchor="middle">
+            <text x={xFor(tick, domain)} y={HEIGHT - 28} fill="#D7C6F5" fontSize="12" textAnchor="middle">
               {formatClock(tick, timeZone)}
             </text>
-            <text x={xFor(tick, domain)} y={HEIGHT - 12} fill="#8d8d93" fontSize="12" textAnchor="middle">
+            <text x={xFor(tick, domain)} y={HEIGHT - 12} fill="#8B7FB0" fontSize="12" textAnchor="middle">
               {formatDay(tick, timeZone)}
             </text>
           </g>
@@ -309,6 +393,32 @@ function ChartPlot({
       </Box>
     </Box>
   );
+}
+
+/** Smooth cubic path through points (Catmull-Rom → Bezier). */
+function smoothLinePath(points: PlotPoint[]): string {
+  if (points.length === 0) {
+    return '';
+  }
+  if (points.length === 1) {
+    return `M ${points[0].x} ${points[0].y}`;
+  }
+  if (points.length === 2) {
+    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  }
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const p0 = points[index - 1] ?? points[index];
+    const p1 = points[index];
+    const p2 = points[index + 1];
+    const p3 = points[index + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return path;
 }
 
 function emptyChart(message: string): TrolmasterChart {
@@ -342,7 +452,7 @@ function sampleChart(range: ChartRange, now = Date.now()): TrolmasterChart {
     connected: false,
     enabled: true,
     testMode: true,
-    message: 'Sample readings. Trim is not calling Trolmaster.',
+    message: 'Sample readings. Serenity is not calling Trolmaster.',
     latest: [
       { metric: 'temp', label: 'Temp', value: 80.1, unit: '°F' },
       { metric: 'humid', label: 'Humid', value: 61.2, unit: '%' },

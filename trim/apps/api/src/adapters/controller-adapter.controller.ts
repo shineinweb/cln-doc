@@ -9,22 +9,26 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ControllerAdapterService } from './controller-adapter.service';
 
 const controllerListSchema = z.array(controllerReadingSchema);
 
 @Controller('adapters/controllers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ControllerAdapterController {
   constructor(private readonly controllers: ControllerAdapterService) {}
 
   @Get('rooms/:roomId/samples')
+  @RequirePermissions('rooms.read')
   async list(@CurrentUser() user: SessionUser, @Param('roomId') roomId: string): Promise<ControllerReading[]> {
     return controllerListSchema.parse(await this.controllers.list(user, roomId));
   }
 
   @Post('rooms/:roomId/samples')
+  @RequirePermissions('rooms.write')
   async postSample(
     @CurrentUser() user: SessionUser,
     @Param('roomId') roomId: string,

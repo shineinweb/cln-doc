@@ -27,7 +27,12 @@ model Organization {
   strains           Strain[]
   laborRates        LaborRate[]
   metrcApiSetting   MetrcApiSetting?
+  openAiApiSetting  OpenAiApiSetting?
+  serenityLessons   SerenityLesson[]
   auditLogs         AuditLog[]
+  messageThreads    MessageThread[]
+  timePunches       TimePunch[]
+  emailBroadcasts   EmailBroadcast[]
 
   @@map("organizations")
 }
@@ -47,11 +52,43 @@ model MetrcApiSetting {
   @@map("metrc_api_settings")
 }
 
+/// OpenAI key used to help Serenity answer and learn from facility training notes.
+model OpenAiApiSetting {
+  id             String   @id @default(cuid())
+  organizationId String   @unique @map("organization_id")
+  apiKey         String   @map("api_key") @db.Text
+  model          String   @default("gpt-4o-mini") @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("openai_api_settings")
+}
+
+/// Notes staff teach Serenity so later answers can reuse them.
+model SerenityLesson {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  content        String   @db.VarChar(2000)
+  actorId        String?  @map("actor_id")
+  actorName      String   @map("actor_name") @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("serenity_lessons")
+}
+
 model User {
   id             String   @id @default(cuid())
   organizationId String   @map("organization_id")
   email          String   @unique
   name           String
+  emailNotificationsEnabled Boolean @default(true) @map("email_notifications_enabled")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -74,6 +111,13 @@ model User {
   metrcReconciles      MetrcAttempt[]    @relation("AttemptReconciler")
   auditLogs            AuditLog[]
   roomTaskAssignments  RoomTaskAssignee[]
+  messageParticipations MessageParticipant[]
+  authoredMessages      Message[]
+  timePunches           TimePunch[]
+  serenityLessons       SerenityLesson[]
+  passwordResetTokens   PasswordResetToken[]
+  emailBroadcastsCreated EmailBroadcast[] @relation("EmailBroadcastAuthor")
+  emailBroadcastReceipts EmailBroadcastRecipient[]
 
   @@index([organizationId])
   @@map("users")
@@ -202,10 +246,34 @@ model Site {
   roomStays          RoomStay[]
   recurringDuties    RecurringDuty[]
   trolmasterConnections TrolmasterConnection[]
+  messageThreads        MessageThread[]
+  timePunches           TimePunch[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
   @@map("sites")
+}
+
+/// Employee clock punch: clock in, lunch start/end, or clock out.
+model TimePunch {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  siteId         String?  @map("site_id")
+  userId         String   @map("user_id")
+  kind           String
+  punchedAt      DateTime @map("punched_at")
+  note           String?  @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site         Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, punchedAt])
+  @@index([userId, punchedAt])
+  @@index([siteId, punchedAt])
+  @@map("time_punches")
 }
 
 /// Explicit grant to open one site. Organization admins do not need a row here.
@@ -622,6 +690,8 @@ model Room {
   staleAfterMinutes Int      @default(60) @map("stale_after_minutes")
   trolmasterEnabled Boolean  @default(true) @map("trolmaster_enabled")
   trolmasterTest    Boolean  @default(false) @map("trolmaster_test")
+  /// Twice-weekly IPM scout days as sorted CSV, e.g. "tue,fri". Null = unset.
+  ipmWeekdays       String?  @map("ipm_weekdays") @db.VarChar(64)
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -645,6 +715,7 @@ model Room {
   recurringDuties    RecurringDuty[]
   trolmasterConnection TrolmasterConnection?
   defoliations         RoomDefoliation[]
+  transplants          RoomTransplant[]
 
   @@unique([siteId, code])
   @@index([siteId])
@@ -661,6 +732,18 @@ model RoomDefoliation {
 
   @@index([roomId, dayNumber])
   @@map("room_defoliations")
+}
+
+model RoomTransplant {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  dayNumber Int      @map("day_number")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, dayNumber])
+  @@map("room_transplants")
 }
 
 model Zone {
@@ -1419,4 +1502,110 @@ model MetrcSync {
 
   @@index([siteId, succeededAt])
   @@map("metrc_syncs")
+}
+
+/// Direct messages between people, or a persisted AI assistant thread.
+model MessageThread {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  kind           String
+  /// Sorted pair key: `direct:userA:userB` or `ai:userId`.
+  pairKey        String   @map("pair_key")
+  siteId         String?  @map("site_id")
+  title          String   @db.VarChar(191)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  site         Site?                @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  participants MessageParticipant[]
+  messages     Message[]
+
+  @@unique([organizationId, pairKey])
+  @@index([organizationId, updatedAt])
+  @@map("message_threads")
+}
+
+model MessageParticipant {
+  id         String    @id @default(cuid())
+  threadId   String    @map("thread_id")
+  userId     String    @map("user_id")
+  lastReadAt DateTime? @map("last_read_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, userId])
+  @@index([userId])
+  @@map("message_participants")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  threadId   String   @map("thread_id")
+  authorId   String?  @map("author_id")
+  authorName String   @map("author_name") @db.VarChar(191)
+  body       String   @db.Text
+  kind       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([threadId, createdAt])
+  @@map("messages")
+}
+
+
+/// One-time password reset token. Only the hash is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+/// Admin one-off email to organization members (marketing / announcement foundation).
+model EmailBroadcast {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  subject        String    @db.VarChar(200)
+  body           String    @db.Text
+  createdById    String    @map("created_by_id")
+  recipientCount Int       @default(0) @map("recipient_count")
+  sentAt         DateTime? @map("sent_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("EmailBroadcastAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  recipients   EmailBroadcastRecipient[]
+
+  @@index([organizationId, createdAt])
+  @@map("email_broadcasts")
+}
+
+model EmailBroadcastRecipient {
+  id          String   @id @default(cuid())
+  broadcastId String   @map("broadcast_id")
+  userId      String   @map("user_id")
+  email       String   @db.VarChar(191)
+  status      String   @db.VarChar(32)
+  error       String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  broadcast EmailBroadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([broadcastId])
+  @@index([userId])
+  @@map("email_broadcast_recipients")
 }

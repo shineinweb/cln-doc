@@ -44,12 +44,27 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          overflowX: 'hidden',
+          maxWidth: '100%',
+          overscrollBehaviorX: 'none',
+        },
         body: {
           backgroundColor: workbench.canvas,
           color: workbench.ink,
           fontFamily: bodyFont,
+          overflowX: 'hidden',
+          maxWidth: '100%',
+          overscrollBehaviorX: 'none',
+          // Keep page gestures vertical; wide tables scroll inside their own containers.
+          touchAction: 'pan-y',
         },
-        '#root': { minHeight: '100vh' },
+        '#root': {
+          minHeight: '100vh',
+          maxWidth: '100%',
+          overflowX: 'hidden',
+          overscrollBehaviorX: 'none',
+        },
         a: { color: workbench.sky },
       },
     },
@@ -94,6 +109,53 @@ export const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: { backgroundImage: 'none' },
+      },
+    },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          maxWidth: '100%',
+          overflowX: 'auto',
+          overscrollBehaviorX: 'contain',
+          backgroundColor: 'transparent',
+        },
+      },
+    },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'rgba(38, 31, 66, 0.92)',
+          '& .MuiTableCell-root': {
+            color: '#C4B6E4',
+            fontWeight: 700,
+            fontSize: 13,
+            borderBottom: `1px solid ${workbench.line}`,
+            whiteSpace: 'nowrap',
+          },
+        },
+      },
+    },
+    MuiTableBody: {
+      styleOverrides: {
+        root: {
+          '& .MuiTableRow-root:nth-of-type(even)': {
+            backgroundColor: 'rgba(38, 31, 66, 0.35)',
+          },
+          '& .MuiTableRow-root:hover': {
+            backgroundColor: 'rgba(124, 92, 255, 0.12)',
+          },
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: `1px solid ${workbench.line}`,
+          color: workbench.ink,
+          fontSize: 14,
+          paddingTop: 12,
+          paddingBottom: 12,
+        },
       },
     },
   },

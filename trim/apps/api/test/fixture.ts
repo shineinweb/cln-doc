@@ -1,5 +1,6 @@
 import { PrismaClient } from '@trim/database';
 import bcrypt from 'bcryptjs';
+import { MODULE_PERMISSIONS, OPERATOR_PERMISSION_KEYS } from '../src/auth/permissions';
 
 export interface AccessFixture {
   organizationId: string;
@@ -45,6 +46,30 @@ export async function createAccessFixture(prisma: PrismaClient): Promise<AccessF
       isOrgWide: false,
     },
   });
+
+  const permissionRows = [];
+  for (const permission of MODULE_PERMISSIONS) {
+    const row = await prisma.permission.upsert({
+      where: { key: permission.key },
+      create: { key: permission.key, description: permission.description },
+      update: { description: permission.description },
+    });
+    permissionRows.push(row);
+  }
+  for (const permission of permissionRows) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: adminRole.id, permissionId: permission.id } },
+      create: { roleId: adminRole.id, permissionId: permission.id },
+      update: {},
+    });
+    if (OPERATOR_PERMISSION_KEYS.includes(permission.key as (typeof OPERATOR_PERMISSION_KEYS)[number])) {
+      await prisma.rolePermission.upsert({
+        where: { roleId_permissionId: { roleId: operatorRole.id, permissionId: permission.id } },
+        create: { roleId: operatorRole.id, permissionId: permission.id },
+        update: {},
+      });
+    }
+  }
 
   const siteA = await prisma.site.create({
     data: {

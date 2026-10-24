@@ -9,22 +9,26 @@ import {
 } from '@trim/contracts';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermissions } from '../auth/require-permissions.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ScaleAdapterService } from './scale-adapter.service';
 
 const scaleListSchema = z.array(scaleSampleViewSchema);
 
 @Controller('adapters/scales')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ScaleAdapterController {
   constructor(private readonly scales: ScaleAdapterService) {}
 
   @Get('harvests/:harvestId/samples')
+  @RequirePermissions('harvests.read')
   async list(@CurrentUser() user: SessionUser, @Param('harvestId') harvestId: string): Promise<ScaleSampleView[]> {
     return scaleListSchema.parse(await this.scales.list(user, harvestId));
   }
 
   @Post('harvests/:harvestId/samples')
+  @RequirePermissions('harvests.write')
   async postSample(
     @CurrentUser() user: SessionUser,
     @Param('harvestId') harvestId: string,

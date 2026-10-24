@@ -12,8 +12,9 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError, apiGet, apiSend } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
+import { can } from '../auth/permissions';
 import { PageHeader } from '../components/PageHeader';
-import { addCalendarDays, formatCalendarDate, formatTimestamp } from '../crops/format';
+import { addCalendarDays, cycleDayLabel, formatCalendarDate, formatTimestamp } from '../crops/format';
 import { OperatingHistoryView } from '../crops/OperatingHistoryView';
 import { RoomAdapters } from '../adapters/RoomAdapters';
 import { TrolmasterChart } from '../adapters/TrolmasterChart';
@@ -22,6 +23,8 @@ import { RoomAlertRules, RoomEnvironment } from '../environment/RoomEnvironment'
 import { useSites } from '../layout/SiteProvider';
 import { PagedList, RecordActions, SaveChanges } from '../records/RecordControls';
 import { DefoliationSchedule } from '../rooms/DefoliationSchedule';
+import { TransplantSchedule } from '../rooms/TransplantSchedule';
+import { IpmSchedule } from '../rooms/IpmSchedule';
 import { RoomNotesPanel } from '../rooms/RoomNotesPanel';
 import { RoomTasksPanel } from '../rooms/RoomTasksPanel';
 import { ROOM_TYPE_LABELS, roomTypeLabel, workbench } from '../theme';
@@ -67,7 +70,7 @@ export function RoomDashboardPage() {
   const cycle = room.data.currentCycle;
 
   return (
-    <ResetRoom roomId={room.data.id} roomType={room.data.roomType} enabled={Boolean(user?.isOrgAdmin)}>
+    <ResetRoom roomId={room.data.id} roomType={room.data.roomType} enabled={can(user, 'workflows.manage', 'rooms.write')}>
       {({ button, panel }) => (
     <Box>
       <PageHeader
@@ -87,6 +90,7 @@ export function RoomDashboardPage() {
       </Tabs>
       {tab === 'room' ? (
         <Box sx={{ display: 'grid', gap: 3 }}>
+          <CurrentCropCard roomId={room.data.id} cycle={cycle} />
           <TrolmasterChart roomId={room.data.id} timeZone={room.data.siteTimezone} />
           <Box data-testid="room-operating-history">
             {room.data.operatingHistory ? (
@@ -121,6 +125,8 @@ export function RoomDashboardPage() {
         <Box data-testid="room-settings" sx={{ display: 'grid', gap: 3 }}>
           <RoomAlertRules room={room.data} />
           {room.data.roomType === 'dry' ? null : <DefoliationSchedule room={room.data} />}
+          {room.data.roomType === 'dry' ? null : <TransplantSchedule room={room.data} />}
+          <IpmSchedule room={room.data} />
           {room.data.archivedCycles.length > 0 ? (
             <ArchivedCrops roomId={room.data.id} cycles={room.data.archivedCycles} />
           ) : null}
@@ -264,6 +270,44 @@ function ResetRoom({
   ) : null;
 
   return children({ button, panel });
+}
+
+function CurrentCropCard({
+  roomId,
+  cycle,
+}: {
+  roomId: string;
+  cycle: RoomDetail['currentCycle'];
+}) {
+  return (
+    <Card data-testid="current-crop" sx={{ backgroundImage: 'none', bgcolor: workbench.paper }}>
+      <CardContent sx={{ display: 'grid', gap: 1, '&:last-child': { pb: 2 } }}>
+        <Typography variant="h2" sx={{ fontSize: 26, m: 0 }}>
+          Current crop
+        </Typography>
+        {cycle ? (
+          <>
+            <Typography sx={{ fontWeight: 700 }}>
+              <RouterLink to={`/rooms/${roomId}/cycles/${cycle.id}`} data-testid="open-current-cycle">
+                {cycle.name}
+              </RouterLink>
+            </Typography>
+            <Typography sx={{ color: 'text.secondary' }}>
+              {cycle.cultivar} · {cycle.plantCount} plants · {roomTypeLabel(cycle.stage)} · {cycleDayLabel(cycle.cycleDay)} ·
+              harvest {formatCalendarDate(cycle.expectedHarvestDate)}
+            </Typography>
+            <Box>
+              <Button component={RouterLink} to={`/rooms/${roomId}/cycles/${cycle.id}`} variant="contained" data-testid="open-cycle">
+                Open cycle
+              </Button>
+            </Box>
+          </>
+        ) : (
+          <Alert severity="info">No active crop is in this room. Use Reset room to open the next crop.</Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function ArchivedCrops({ roomId, cycles }: { roomId: string; cycles: RoomDetail['archivedCycles'] }) {

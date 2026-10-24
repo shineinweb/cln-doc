@@ -1,6 +1,6 @@
-# Trim operating procedures
+# Serenity Universal operating procedures
 
-These procedures are the ones a manager and an employee follow in Trim. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
+These procedures are the ones a manager and an employee follow in Serenity. Avery Chen is the manager: organization admin, both facilities. Blake Ortiz works Harbor House. Casey Nguyen works Hill Works. Sign in with the accounts in the user manual, then use the facility you can open.
 
 A page for the other facility says you do not have access. Do not keep going on that page.
 
@@ -23,17 +23,17 @@ A page for the other facility says you do not have access. Do not keep going on 
 9. On **Settings**, read **Controller sample** if a row is listed. Flower 1 shows `hh-flower-1-controller`, setpoint 72 °F, labeled Sample data. That row does not clear or create a range alert.
 10. A room with no crop, such as Dry Room or Mother Room, says “This room has no active crop cycle” on **Notes**, and “No tasks are due today” on **Tasks**. The room list row says “No active crop.”
 
-**Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on **Crop cycles**. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
+**Done.** You can name the task due today and whether a reading or alert needs attention. The crop name and plant count are on the Rooms list and on the room’s **Current crop** card. Flower 1’s listed crop shows 0 plants because that crop is already harvested. Veg 1’s listed crop is Glass Orchard veg, with 86 plants still in the room.
 
 ## Completing today’s assignment
 
 **Who.** The person the card names. Blake completes Harbor House assignments. Casey completes Hill Works assignments. Avery sees both lists. A task from the other facility stays off the list.
 
-**When.** On the due date shown on **Workspace**. On October 3, 2026, Count plants onto the bench and Lower-leaf pass are due on Flower 1, and Scout the canopy is due on Veg 1.
+**When.** On the due date shown on **Tasks**. On October 3, 2026, Count plants onto the bench and Lower-leaf pass are due on Flower 1, and Scout the canopy is due on Veg 1.
 
 **Steps.**
 
-1. Open **Workspace**. The title is Employee workspace. The introduction names the date.
+1. Open **Tasks**. The title is All tasks due today. The introduction names the date and the three task lists.
 2. Open the assignment card. It shows the facility, room, task title, due date, assignee, and crop.
 3. Read the instructions. Scout the canopy also shows the Canopy scout note: “Walk the canopy slowly. Note pests, stretch, and irrigation dry-back. Do not spray during this pass.” Lower-leaf pass shows the chip Supervisor approval and the line “Depends on Scout the canopy.”
 4. Check the boxes on the card. Scout the canopy uses “Check the first half of the room” and “Check the second half of the room.” Lower-leaf pass uses “Clear the aisle” and “Bag the leaves.”
@@ -43,7 +43,7 @@ A page for the other facility says you do not have access. Do not keep going on 
 
 Chips for Measurement or Sign-off can appear on a card. The card has no separate measurement field and no sign-off field.
 
-**Done.** The boxes you checked stay checked. Saved notes, the photo file name, and your comment are on the card. If nothing is due, Workspace says “Nothing is assigned to you today.”
+**Done.** The boxes you checked stay checked. Saved notes, the photo file name, and your comment are on the card. If nothing is due across crop cycles, room chores, and recurring duties, Tasks says nothing is due for you today.
 
 ## Starting a cycle from a template
 
@@ -53,12 +53,12 @@ Chips for Measurement or Sign-off can appear on a card. The card has no separate
 
 **Steps.**
 
-1. Open **Workflows**. The page says “A template is applied when a cycle starts.”
+1. Open **Workflow templates** from Settings, or go to `/workflows`. The page says templates are blueprints and that a template is applied when a cycle starts.
 2. Read **Canopy week**. The card says “Version 1 of 1 · 28 days · starts at cycle_start.” The tasks are Day 1 Count plants onto the bench, Day 14 Scout the canopy, and Day 22 Lower-leaf pass.
-3. Open **Crop cycles**, choose the facility, and open the cycle.
+3. Open **Rooms**, open the room, and choose **Open cycle** on **Current crop**.
 4. Read the workflow chip and **Generated tasks**. Cedar Nights flower and Glass Orchard veg show **Canopy week v1**, with each task, its assignee, and its due date.
 
-Workflows has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Crop cycles**, on **Workflows**, or on the cycle page. **Edit** on a listed cycle opens the crop cycle form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
+Workflow templates has a **New template** form and **Save template**. That form creates a new template. It does not start a cycle, and it does not change Canopy week. There is no **Start cycle** button on the room, on **Workflow templates**, or on the cycle page. **Crop details** on the cycle page opens the crop form. **Cycle duration in days** uses the start date as day 1. A duration of 22 days from September 12, 2026 ends October 3, 2026. **Save changes** writes the crop. **Cancel** closes the form without saving.
 
 **Reset room** sits in the top right of the room page, and only Avery sees it. The form asks for Strain, Plant count, Stage, Start date, Cycle duration in days, and an optional Harvest date. Saving closes the crop that is in the room, keeps it under **Archived crops**, and opens the next crop. The harvest date is stored on the closed crop. Zones stay on **Zones**. Readings and alert rules stay on **Settings**. The other tabs are **Tasks**, **Notes**, **Zones**, and, on a flower room, **Trolmaster settings**.
 
@@ -89,7 +89,7 @@ Workflows has a **New template** form and **Save template**. That form creates a
 
 **Steps.**
 
-1. Open **Workflows**. Each card says “Version N of M.” Canopy week is version 1 of 1. The introduction says editing a template creates a new version and leaves existing cycles on the version they already have.
+1. Open **Workflow templates** from Settings, or go to `/workflows`. Each card says “Version N of M.” Canopy week is version 1 of 1. The introduction says editing a template creates a new version and leaves existing cycles on the version they already have.
 2. **New template** and **Save template** create version 1 of a new name. Saving the name Canopy week again says “A workflow template with that name already exists.” That form does not edit the existing template.
 3. Open the crop cycle. The chip shows the version that cycle already has, such as **Canopy week v1**.
 4. **Apply version N** appears only when a newer version of that template is already stored. It is not on Canopy week while the template is still version 1 of 1.
@@ -108,12 +108,12 @@ Workflows has a **New template** form and **Save template**. That form creates a
 1. Open **Compliance**. The page says “Imports stay on the license.”
 2. Read the license card. It shows the license number, the facility, and the plant count.
 3. Harbor House, 144 tagged plants, says “No discrepancies.”
-4. Hill Works, 86 tagged plants, lists `1A4HW000000000000099999` as “In the file, not in Trim.”
+4. Hill Works, 86 tagged plants, lists `1A4HW000000000000099999` as “In the file, not in Serenity.”
 5. Choose **Open inventory**. The page says plant totals come from tagged plants on this license, and “Showing N of M tags.” Open a tag to read the plant: tag, strain, stage, room or “No room,” and cycle or “No cycle.”
 
 Compliance has no file-upload control. The card shows the comparison already stored. A license with no comparison says “No inventory file has been compared for this license.” The plant page has no form to add, move, or remove a tag.
 
-**Done.** You can say the Harbor file matches, and you can name the Hill tag that is in the file and not in Trim. The inventory list matches the count on the license card.
+**Done.** You can say the Harbor file matches, and you can name the Hill tag that is in the file and not in Serenity. The inventory list matches the count on the license card.
 
 ## Reviewed sandbox submissions
 
@@ -172,7 +172,7 @@ A package uses the same sandbox. On the package page, choose Success, Definite f
 
 **Steps.**
 
-1. Open **Crop cycles** and open the cycle. Choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
+1. Open **Rooms**, open the room, then **Open cycle**. Choose **Harvest this crop**. The harvest page opens. It shows the license, the name, the plant count, and “plant tags stay on this harvest.”
 2. Enter **Wet weight (g)** and choose **Record wet weight**.
 3. Choose **Start drying**.
 4. Enter **Dry weight (g)** and choose **Record dry weight**.
@@ -229,21 +229,37 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Done.** You can read grams per plant, the ledger identity, completed duration or its absence, each labor and input line, and the total. Controller samples, the 510 g scale sample, and the sample tag are not in these totals. Hill Works prior lot is not a Glass Orchard yield. A crop with no labor entries says “Labor is absent. No labor entries are stored.” A crop with no input costs says “Input cost is absent. No input costs are stored.”
 
-## Site coach
+## Serenity
 
 **Who.** Anyone who can open the facility. Blake sees Harbor House. Casey sees Hill Works. Avery can switch facilities.
 
-**When.** You want the stored figures, a procedure quote, a room alert task, or a readiness list for the license jurisdiction.
+**When.** You want to generate tasks, train workers, quote a procedure, teach Serenity a note, read stored figures, or check readiness for the license jurisdiction.
 
 **Steps.**
 
-1. Open **Site coach**. It follows the facility in the top bar.
-2. Read **Statistics**. The formulas match **Reports**. A missing harvest, labor row, or input cost says that figure is absent.
-3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Workspace**.
-4. Type a question in **Ask about a stored procedure** and choose **Ask**. The answer quotes a stored procedure, or it says “No stored procedure matches that question.”
-5. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
+1. Open **Serenity**. She introduces herself as Serenity. It follows the facility in the top bar. The address is `/coach`.
+2. Use the chat box. Choose **Generate tasks** to create room tasks from stored procedures, or **Train workers** to assign training. Type a procedure question to get a quote. Say **Remember that…** to teach her.
+3. Read **Room notices**. An active alert has one open room task for the people who can open the facility. A matching procedure title is quoted on the task. The same notice is on **Tasks**.
+4. Read **Readiness**. The heading is “Readiness for” plus the license jurisdiction. The page says “This is a readiness check of stored rows. It is not a state certification.”
+5. Open **Reports** when you need yield, labor, and cost figures.
+6. Open **Messages** when you need a saved Serenity chat or a direct message with someone in the organization. The address is `/messages`.
 
-**Done.** You can name the jurisdiction, whether a figure is absent, and whether a procedure was quoted. Trim does not call live Metrc and does not send email or SMS.
+**Done.** You can name the jurisdiction, whether tasks or training were created, and whether a procedure was quoted. Serenity does not call live Metrc and does not send email or SMS.
+
+## Internal messages
+
+**Who.** Anyone signed in. Avery, Blake, and Casey can message people in Harbor & Hill Cultivation.
+
+**When.** You need a direct message inside Serenity, or a saved Serenity thread that remembers earlier questions.
+
+**Steps.**
+
+1. Open **Messages**. The address is `/messages`.
+2. Choose **Message a person**, then pick a name from the organization directory.
+3. Write the message and choose **Send**. The other person sees the same conversation.
+4. Choose **Chat with Serenity** for a saved Serenity thread. Ask about procedures, generate tasks, assign training, or teach her with **Remember that…**. She uses the facility in the top bar.
+
+**Done.** You can name who received the message and whether Serenity replied. Serenity does not send email or SMS.
 
 ## Recording irrigation and feed
 
@@ -309,7 +325,7 @@ The comparison page has no link to a single-facility report. That page is **Faci
 
 **Steps.**
 
-1. Open **Workflows**.
+1. Open **Workflow templates** from Settings, or go to `/workflows`.
 2. Read the card. **Cedar Nights coco week** says Cultivar Cedar Nights and Medium coco. **Glass Orchard soil week** says Cultivar Glass Orchard and Medium soil. Canopy week has no cultivar or medium.
 3. To add one, use **New template**. Fill **Cultivar**, **Medium**, or leave either blank, then **Save template**.
 
@@ -327,20 +343,20 @@ The comparison page has no link to a single-facility report. That page is **Faci
 2. Read the procedure title and summary.
 3. Read the template line or the facility, room, cycle, and task line under it.
 
-**Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The **SOP** item in the left navigation remains the operating document.
+**Done.** You can see which task cites the procedure. Irrigation pass cites Check runoff on Cedar Nights coco week. The operating document stays at `/sop` and is linked from the User manual.
 
 ## Adding a user
 
-**Who.** Avery, the organization admin. An employee sees **Users** and cannot save.
+**Who.** Avery, or anyone with `access.manage`. A site operator does not see **Users** in the navigation.
 
 **When.** A new person needs a sign-in.
 
 **Steps.**
 
-1. Open **Users**, directly under **Dashboard**. The page opens on **Users**.
+1. Open **Users**, directly under **Dashboard**. The page opens on **Users**. **Activity** shows the last 14 days of sign-ins and access changes.
 2. Choose **Add user**. Enter the name, email, and a password of at least 8 characters.
 3. Choose a role. For a site operator, check the facility they can open. An organization admin opens every facility.
-4. Choose **Add user**. The person appears in the table. **Audit logs** records the change.
+4. Choose **Add user**. The person appears in the table. Use **Search users** or a column header when the list is long. **Audit logs** records the change and can be searched the same way.
 5. **Edit** changes the person. **Delete** removes a person who has not recorded work. Do not delete your own account.
 
 **Done.** The new person is in the Users table, and the audit log names who added them.

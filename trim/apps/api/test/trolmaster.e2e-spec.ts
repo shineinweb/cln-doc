@@ -42,7 +42,7 @@ describe('TrolMaster credentials', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ roomId: fixture.roomBId, controllerId: 'other-controller', apiCredential: secret });
     expect(denied.status).toBe(403);
-    expect(denied.body.message).toBe('You do not have access to this site');
+    expect(denied.body.message).toBe('You do not have permission for settings.manage.');
 
     const wrongRoom = await request(app.getHttpServer())
       .post(`/sites/${fixture.siteAId}/trolmaster`)
@@ -153,7 +153,7 @@ describe('TrolMaster credentials', () => {
       expect(chart.body.enabled).toBe(true);
       expect(chart.body.testMode).toBe(true);
       expect(chart.body.series).toEqual([]);
-      expect(chart.body.message).toBe('Sample readings. Trim is not calling Trolmaster.');
+      expect(chart.body.message).toBe('Sample readings. Serenity is not calling Trolmaster.');
       expect(standIn.requests).toEqual([]);
 
       const off = await request(app.getHttpServer())

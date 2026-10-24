@@ -49,7 +49,7 @@ export class AccessService {
       this.prisma.auditLog.findMany({
         where: { organizationId: user.organizationId },
         orderBy: { createdAt: 'desc' },
-        take: 100,
+        take: 300,
       }),
       this.prisma.site.findMany({
         where: { organizationId: user.organizationId },
@@ -291,9 +291,10 @@ export class AccessService {
   }
 
   private assertManager(user: SessionUser) {
-    if (!user.isOrgAdmin) {
-      throw new ForbiddenException('Only a manager can change users, roles, and permissions.');
+    if (user.isOrgAdmin || user.permissions.includes('access.manage')) {
+      return;
     }
+    throw new ForbiddenException('You do not have permission for access.manage.');
   }
 
   private email(value: string): string {

@@ -52,6 +52,19 @@ export function AssignmentCard({ task }: { task: CycleTaskDetail }) {
     onError: (reason: Error) => setError(reason.message),
   });
 
+  const finish = useMutation({
+    mutationFn: () => apiSend(`/tasks/${task.id}/complete`, cycleTaskDetailSchema, {}),
+    onSuccess: async () => {
+      setError(null);
+      await refresh();
+      await queryClient.invalidateQueries({ queryKey: ['room'] });
+      await queryClient.invalidateQueries({ queryKey: ['cycle'] });
+    },
+    onError: (reason: Error) => setError(reason.message),
+  });
+
+  const open = task.status === 'open';
+
   return (
     <Card data-testid="assignment-card" sx={{ mb: 2 }}>
       <CardContent>
@@ -65,12 +78,25 @@ export function AssignmentCard({ task }: { task: CycleTaskDetail }) {
           {formatCalendarDate(task.dueOn)} · {task.assigneeLabel} · {task.cycleName}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+          {open ? null : <Chip size="small" color="success" label="Finished" data-testid="task-finished-chip" />}
           {task.requiresApproval ? <Chip size="small" label="Supervisor approval" /> : null}
           {task.requiresPhoto ? <Chip size="small" label="Photo" /> : null}
           {task.requiresNotes ? <Chip size="small" label="Notes" /> : null}
           {task.requiresMeasurement ? <Chip size="small" label="Measurement" /> : null}
           {task.requiresSignOff ? <Chip size="small" label="Sign-off" /> : null}
         </Box>
+        {open ? (
+          <Button
+            variant="contained"
+            color="primary"
+            data-testid="finish-task"
+            sx={{ mb: 2 }}
+            disabled={finish.isPending}
+            onClick={() => finish.mutate()}
+          >
+            {finish.isPending ? 'Finishing…' : 'Finished'}
+          </Button>
+        ) : null}
         <Typography sx={{ mb: 2 }}>{task.instructions}</Typography>
         {task.dependsOnTitle ? (
           <Typography sx={{ mb: 2, color: 'text.secondary' }}>Depends on {task.dependsOnTitle}.</Typography>

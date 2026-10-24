@@ -241,6 +241,71 @@ describe('analytics and costs', () => {
     expect(cedar.labor.formula).toContain('3000');
   });
 
+  it('builds facility dashboard charts from stored harvest, labor, and plant rows', async () => {
+    await prisma.cycleInputCost.createMany({
+      data: [
+        {
+          cycleId: (
+            await prisma.cropCycle.findFirstOrThrow({
+              where: { roomId: fixture.roomAId, cultivar: 'Cedar Nights' },
+            })
+          ).id,
+          description: 'Flower nutrients',
+          quantity: 2,
+          unit: 'bag',
+          unitCostCents: 1500,
+        },
+        {
+          cycleId: (
+            await prisma.cropCycle.findFirstOrThrow({
+              where: { roomId: fixture.roomAId, cultivar: 'Cedar Nights' },
+            })
+          ).id,
+          description: 'Veg media',
+          quantity: 1,
+          unit: 'bag',
+          unitCostCents: 4200,
+        },
+      ],
+    });
+
+    const denied = await request(app.getHttpServer())
+      .get(`/reports/sites/${fixture.siteAId}/dashboard`)
+      .set('Authorization', `Bearer ${tokenB}`);
+    expect(denied.status).toBe(403);
+
+    const dashboard = await request(app.getHttpServer())
+      .get(`/reports/sites/${fixture.siteAId}/dashboard`)
+      .set('Authorization', `Bearer ${tokenA}`)
+      .expect(200);
+
+    expect(dashboard.body.siteId).toBe(fixture.siteAId);
+    expect(dashboard.body.statement).toContain('does not store sales dollars');
+    expect(dashboard.body.yieldGraph.cultivars).toContain('Cedar Nights');
+    expect(dashboard.body.yieldGraph.series.some((row: { cultivar: string; points: Array<{ grams: number }> }) =>
+      row.cultivar === 'Cedar Nights' && row.points.some((point) => point.grams === 4120),
+    )).toBe(true);
+    expect(dashboard.body.cogs.laborCents).toBe(3000);
+    expect(dashboard.body.cogs.cannabisCents).toBe(3000);
+    expect(dashboard.body.cogs.nonCannabisCents).toBe(4200);
+    expect(dashboard.body.cogs.totalCents).toBe(10200);
+    expect(dashboard.body.topStrains[0]).toMatchObject({
+      strainName: 'Cedar Nights',
+      harvestCount: 1,
+      packagedGrams: 3600,
+    });
+    expect(dashboard.body.kpis.packagedMtdGrams).toBe(3600);
+    expect(dashboard.body.kpis.averageGramsPerPlant).toBeCloseTo(4120 / 144, 5);
+    expect(dashboard.body.packagesByItem[0]).toMatchObject({
+      label: '1A4PKGTEST000000000001',
+      weightGrams: 3600,
+    });
+    expect(dashboard.body.plantForecast.dates).toHaveLength(4);
+    expect(dashboard.body.plantForecast.rows.some((row: { cultivar: string }) => row.cultivar === 'Cedar Nights')).toBe(
+      true,
+    );
+  });
+
   it('denies a report for another site', async () => {
     await request(app.getHttpServer())
       .get(`/reports/sites/${fixture.siteAId}`)

@@ -42,7 +42,7 @@ describe('user, role, and permission management', () => {
       .set('Authorization', `Bearer ${tokenA}`)
       .send({ name: 'Denied', email: `denied-${stamp}@trim.test`, password, roleId: 'missing', siteIds: [] });
     expect(denied.status).toBe(403);
-    expect(denied.body.message).toBe('Only a manager can change users, roles, and permissions.');
+    expect(denied.body.message).toBe('You do not have permission for access.manage.');
 
     const directory = await request(app.getHttpServer()).get('/access').set('Authorization', `Bearer ${tokenAdmin}`).expect(200);
     const operator = directory.body.roles.find((role: { name: string }) => role.name === 'Site operator');

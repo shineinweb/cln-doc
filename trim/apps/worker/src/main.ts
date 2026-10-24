@@ -31,7 +31,7 @@ async function main(): Promise<void> {
     });
   }, 1000);
   console.log(
-    `Trim worker connected. Queue "${INFRASTRUCTURE_QUEUE}" is ready. Pending Metrc outbox rows are delivered to the sandbox.`,
+    `Serenity worker connected. Queue "${INFRASTRUCTURE_QUEUE}" is ready. Pending Metrc outbox rows are delivered to the sandbox.`,
   );
 
   let closing = false;
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
       return;
     }
     closing = true;
-    console.log(`Trim worker received ${signal}. Closing the queue connection.`);
+    console.log(`Serenity worker received ${signal}. Closing the queue connection.`);
     clearInterval(timer);
     await queue.close();
     await prisma.$disconnect();

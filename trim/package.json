@@ -2,7 +2,7 @@
   "name": "trim",
   "private": true,
   "version": "0.1.0",
-  "description": "Trim — multi-site cannabis cultivation operations.",
+  "description": "Serenity Universal — multi-site cannabis cultivation operations.",
   "packageManager": "pnpm@10.33.3",
   "engines": {
     "node": ">=22"
