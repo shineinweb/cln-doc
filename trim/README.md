@@ -16,24 +16,28 @@ From `trim/`:
 
 ```bash
 cp .env.example .env
-docker compose up -d
-./infra/wait-for-mysql.sh
+./infra/start-servers.sh
+```
+
+That script starts MySQL, Redis, and file storage on the named volumes `trim_mysql_data`, `trim_redis_data`, and `trim_s3_data`. Those volumes survive container restarts. It also writes `trim.sql.gz` to the persistent agent store when that store is mounted. If the MySQL volume is empty and that backup exists, the script restores it. It seeds only when there is no backup and the database has no users. Run `./infra/start-servers.sh restart` to restart the containers and app processes without removing the volumes.
+
+`docker compose down -v` deletes the named volumes. Do not use it. If the volume is gone, the next `./infra/start-servers.sh` restores `trim.sql.gz` instead of seeding.
+
+`pnpm db:seed` also refuses to run when any user already exists. The old seed rewrote crop rows for the demo organization, which is how a restart looked like a wiped database.
+
+To start the processes yourself after the databases are up:
+
+```bash
 pnpm install
 pnpm db:generate
 pnpm db:migrate
-pnpm db:seed
 pnpm dev:prepare
-```
-
-Then start the three processes, each in its own terminal (still inside `trim/`):
-
-```bash
 pnpm dev:api
 pnpm dev:worker
 pnpm dev:web
 ```
 
-`pnpm dev` prepares packages and starts all three together if you prefer one command.
+`pnpm dev` prepares packages and starts all three together if you prefer one command. Skip `pnpm db:seed` unless you just created an empty database and want the demo logins.
 
 ### URLs
 
