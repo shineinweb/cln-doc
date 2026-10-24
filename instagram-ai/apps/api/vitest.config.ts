@@ -1,0 +1,38 @@
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    fileParallelism: false,
+    globalSetup: ['./test/global-setup.ts'],
+    setupFiles: ['./test/setup.ts'],
+    hookTimeout: 120000,
+    testTimeout: 30000,
+    env: {
+      NODE_ENV: 'test',
+      PORT: '4000',
+      DATABASE_URL: 'mysql://instagram:instagram@127.0.0.1:3306/instagram_ai_test',
+      REDIS_URL: 'redis://127.0.0.1:6379',
+      SESSION_SECRET: 'test-session-secret-value',
+      TOKEN_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      WEB_ORIGIN: 'http://localhost:5173',
+      ADMIN_ORIGIN: 'http://localhost:5174',
+      META_APP_ID: '',
+      META_APP_SECRET: 'test-meta-secret',
+      META_REDIRECT_URI: 'http://localhost:4000/api/integrations/instagram/callback',
+      META_VERIFY_TOKEN: 'test-verify-token',
+      STRIPE_SECRET_KEY: '',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test',
+      BILLING_DEV_ASSIGN: 'true',
+      TEXT_PROVIDER_KEY: 'platform-test-key',
+      MEDIA_PROVIDER_KEY: '',
+      MEDIA_PUBLIC_BASE_URL: 'http://localhost:4000',
+      STORAGE_DIR: '/tmp/instagram-ai-test-media',
+      STAFF_SEED_EMAIL: 'staff@example.com',
+      STAFF_SEED_PASSWORD: 'change-me-now',
+      EXPOSE_DEV_TOKENS: 'true',
+      LOGIN_RATE_LIMIT: '8',
+      LOGIN_RATE_WINDOW_MS: '600000',
+    },
+  },
+})

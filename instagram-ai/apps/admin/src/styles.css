@@ -1,0 +1,47 @@
+:root {
+  color: #24181c;
+  background: #f6f3f4;
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2 { font-family: "Iowan Old Style", Palatino, Georgia, serif; }
+a { color: #7c3048; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button {
+  background: #7c3048;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+button.secondary { background: transparent; color: #24181c; border: 1px solid #d7cdd1; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+input, select, textarea { width: 100%; border: 1px solid #d7cdd1; border-radius: 8px; padding: 0.45rem 0.6rem; background: #fff; }
+label { display: grid; gap: 0.25rem; }
+.shell { min-height: 100vh; display: grid; grid-template-columns: 230px 1fr; }
+.sidebar { background: #2a1c22; color: #f6f3f4; padding: 1rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.sidebar a { color: #f6f3f4; text-decoration: none; padding: 0.4rem 0.55rem; border-radius: 8px; }
+.sidebar a.active { background: #7c3048; }
+.topbar, .panel, .login { padding: 1rem; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.stack { display: grid; gap: 0.75rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.7rem; }
+.card { background: #fff; border: 1px solid #eadfe3; border-radius: 12px; padding: 0.8rem; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid #eadfe3; white-space: nowrap; }
+.error { background: #f6d5d0; padding: 0.5rem 0.7rem; border-radius: 8px; }
+.search-preview { max-width: 520px; background: #fff; border: 1px solid #eadfe3; border-radius: 12px; padding: 0.8rem; }
+.search-title { color: #1a0dab; font-size: 1.15rem; }
+.search-url { color: #0b7a43; font-size: 0.85rem; }
+.menu-button { display: none; }
+.login { max-width: 420px; margin: 8vh auto; }
+@media (max-width: 799px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .sidebar.open { display: flex; position: fixed; inset: 0 auto 0 0; width: min(260px, 86vw); z-index: 2; }
+  .menu-button { display: inline-flex; }
+}
