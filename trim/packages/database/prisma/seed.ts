@@ -88,6 +88,14 @@ async function main(): Promise<void> {
     throw new Error('Refusing to seed while NODE_ENV=production.');
   }
 
+  const existingUsers = await prisma.user.count();
+  if (existingUsers > 0) {
+    console.log(
+      `Database already has ${existingUsers} user(s). Skipping seed so stored rows stay in place.`,
+    );
+    return;
+  }
+
   const organization = await prisma.organization.upsert({
     where: { slug: 'harbor-hill' },
     create: { name: 'Harbor & Hill Cultivation', slug: 'harbor-hill' },
