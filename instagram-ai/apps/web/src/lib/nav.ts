@@ -14,10 +14,23 @@ export function customerNav(role: string, entitlements: NavEntitlements): NavIte
     ]
   }
   const items: NavItem[] = [
-    { to: '/app', label: 'Dashboard' },
+    { to: '/app', label: 'Home' },
     { to: '/app/create', label: 'Create' },
+    { to: '/app/templates', label: 'Templates' },
+    { to: '/app/ideas', label: 'Ideas' },
   ]
-  if (entitlements.scheduling) items.push({ to: '/app/calendar', label: 'Calendar' })
+  if (entitlements.scheduling) {
+    items.push({ to: '/app/calendar', label: 'Planner' }, { to: '/app/planner', label: 'AI Schedule' })
+  }
+  items.push(
+    { to: '/app/auto-posting', label: 'Auto Posting' },
+    { to: '/app/library', label: 'Content Library' },
+    { to: '/app/campaigns', label: 'Campaigns' },
+    { to: '/app/models', label: 'Model Studio' },
+    { to: '/app/reports', label: 'Reports' },
+    { to: '/app/links', label: 'Smart Links' },
+    { to: '/app/ads', label: 'Ads' },
+  )
   if (entitlements.commentInbox) items.push({ to: '/app/comments', label: 'Comments' })
   if (entitlements.dmInbox) items.push({ to: '/app/messages', label: 'Messages' })
   items.push({ to: '/app/insights', label: 'Insights' }, { to: '/app/settings', label: 'Settings' })

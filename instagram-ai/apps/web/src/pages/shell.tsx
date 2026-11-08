@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { isNoIndexPath } from '@instagram-ai/shared'
 import { api, setClientSession } from '../lib/api'
+import { fetchAll } from '../lib/form'
 import { customerNav, navMatches } from '../lib/nav'
 import { applyPageSeo } from '../lib/seo'
 import type { AccountInfo, PackageInfo } from '../lib/types'
@@ -44,7 +45,7 @@ export function Shell() {
       subscription: { status: string }
       maintenanceMessage: string
     }>('/api/org')
-    const accounts = await api<{ accounts: AccountInfo[] }>('/api/instagram/accounts')
+    const accounts = { accounts: await fetchAll<AccountInfo>('/api/instagram/accounts', 'accounts') }
     setSession({
       user: me.user,
       organization: org.organization,

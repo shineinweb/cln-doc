@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { resolveRedirect } from '@instagram-ai/shared'
 import { api, setClientSession } from '../lib/api'
+import { Hint, Pager } from '../lib/form'
 import { applyPageSeo, applyRecordSeo } from '../lib/seo'
 import type { PackageInfo, PublicConfig, PublicPage } from '../lib/types'
 
@@ -31,6 +32,42 @@ export function usePublicPage(path: string): { page: PublicPage | null; config: 
   return { page, config }
 }
 
+function SiteHeader({ config }: { config: PublicConfig | null }) {
+  return (
+    <header className="site-header">
+      <Link to="/" className="wordmark">{config?.productName || 'Instagram AI'}</Link>
+      <nav className="site-nav">
+        <Link to="/pricing">Pricing</Link>
+        <Link to="/privacy">Privacy</Link>
+        <Link to="/terms">Terms</Link>
+        <Link to="/data-deletion">Data deletion</Link>
+        <Link to="/login">Log in</Link>
+        <Link className="button" to="/register">Create an account</Link>
+      </nav>
+    </header>
+  )
+}
+
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <strong>Instagram AI</strong>
+        <p>Drafts stay drafts until a person approves them. Publishing uses Meta’s official API.</p>
+        <nav>
+          <Link to="/pricing">Pricing</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/data-deletion">Data deletion</Link>
+          <Link to="/login">Log in</Link>
+          <Link to="/register">Create an account</Link>
+          <Link to="/reset-password">Reset password</Link>
+        </nav>
+      </div>
+    </footer>
+  )
+}
+
 export function PublicLayout({ missing = false }: { missing?: boolean }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -45,59 +82,127 @@ export function PublicLayout({ missing = false }: { missing?: boolean }) {
       .catch(() => undefined)
   }, [location.pathname, navigate])
   return (
-    <>
-      <header className="public-header">
-        <Link to="/"><strong>{config?.productName || 'Instagram AI'}</strong></Link>
-        <nav className="public-nav">
-          <Link to="/pricing">Pricing</Link>
-          <Link to="/privacy">Privacy</Link>
-          <Link to="/terms">Terms</Link>
-          <Link to="/data-deletion">Data deletion</Link>
-          <Link to="/login">Log in</Link>
-        </nav>
-      </header>
+    <div className="site">
+      <SiteHeader config={config} />
       {config?.maintenanceMessage ? <div className="banner">{config.maintenanceMessage}</div> : null}
-      <main className="public-main">{missing ? <h1>That page is not on this site</h1> : <Outlet />}</main>
-    </>
+      <main className="site-main">{missing ? <h1>That page is not on this site</h1> : <Outlet />}</main>
+      <SiteFooter />
+    </div>
+  )
+}
+
+function PackageCards({ packages }: { packages: PackageInfo[] }) {
+  return (
+    <div className="package-grid">
+      {packages.map((pkg) => (
+        <article className="package-card" key={pkg.id}>
+          <h2>{pkg.name}</h2>
+          <div className="price">{money(pkg.priceMinor, pkg.currency)}</div>
+          <p>{pkg.description}</p>
+          <p>{pkg.instagramAccounts} Instagram accounts · {pkg.seats} seats</p>
+          <p>{pkg.monthlyAiGenerations} text · {pkg.monthlyImageGenerations} photos · {pkg.monthlyVideoGenerations} videos</p>
+          <Link className="button" to="/register">Start with {pkg.name}</Link>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function PagedPackages() {
+  const [packages, setPackages] = useState<PackageInfo[]>([])
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  useEffect(() => {
+    api<{ packages: PackageInfo[]; total: number; page: number }>(`/api/public/pricing?page=${page}`)
+      .then((body) => { setPackages(body.packages); setTotal(body.total); setPage(body.page) })
+      .catch(() => undefined)
+  }, [page])
+  if (!packages.length) return null
+  return (
+    <div className="stack">
+      <PackageCards packages={packages} />
+      <Pager page={page} total={total} onPage={setPage} label="Packages" />
+    </div>
   )
 }
 
 export function HomePage() {
-  const { page } = usePublicPage('/')
+  usePublicPage('/')
   return (
-    <section className="stack">
-      <h1>{page?.title || 'Instagram AI'}</h1>
-      <p>{page?.description}</p>
-      <p>Write a post, preview the photo or Reel, and approve it before anything is published. Likes, follows, and unfollows are not part of this product.</p>
-      <div className="row">
-        <Link className="button" to="/register">Start a trial</Link>
-        <Link className="button secondary" to="/pricing">See packages</Link>
-      </div>
-    </section>
+    <div className="marketing">
+      <section className="hero">
+        <h1>Draft, preview, and approve each post.</h1>
+        <p>Write the caption, look at the photo, carousel, Reel, or video, and send it only when someone on your team says yes.</p>
+        <div className="row center">
+          <Link className="button" to="/register">Start a trial</Link>
+          <Link className="button secondary" to="/pricing">See packages</Link>
+        </div>
+        <div className="draft-preview" aria-hidden="true">
+          <div className="draft-art">Morning light</div>
+          <div className="draft-copy">
+            <strong>Draft</strong>
+            <p>The first pour of the day. Approve it before it goes live.</p>
+            <span>Photo · waiting for approval</span>
+          </div>
+        </div>
+      </section>
+      <section className="site-section">
+        <div className="format-grid">
+          <article className="format-card photo"><h2>Photo</h2><p>A single still, from a reference photo or a generated frame.</p></article>
+          <article className="format-card carousel"><h2>Carousel</h2><p>A short sequence for a story people swipe through.</p></article>
+          <article className="format-card reel"><h2>Reel</h2><p>A vertical clip at 4, 8, or 12 seconds.</p></article>
+          <article className="format-card video"><h2>Video</h2><p>A wide clip at 8, 15, or 30 seconds.</p></article>
+        </div>
+      </section>
+      <section className="promise">
+        <div className="promise-grid">
+          <article><h2>Approve before publish</h2><p>Nothing is sent until a person on the account approves the draft.</p></article>
+          <article><h2>Meta’s official API only</h2><p>Publishing, comments, and messages go through Instagram’s official API.</p></article>
+          <article><h2>No follow or like automation</h2><p>This product does not follow, like, or unfollow accounts.</p></article>
+        </div>
+      </section>
+      <section className="site-section inbox-block">
+        <div>
+          <h2>Comments and messages in one inbox</h2>
+          <p>See the comment, draft a reply, and send it when you are ready. Messages stay inside the window Instagram already allows. A person can pause automation on any thread.</p>
+        </div>
+        <ol className="inbox-list">
+          <li>A comment arrives on a post you published.</li>
+          <li>The inbox keeps the draft next to the original words.</li>
+          <li>You reply, hide, or leave it for someone else.</li>
+        </ol>
+      </section>
+      <section className="site-section">
+        <h2>How a post gets out</h2>
+        <ol className="steps">
+          <li><span>1</span><div><strong>Describe it</strong><p>Pick Photo, Carousel, Reel, or Video, and add the instructions the draft should follow.</p></div></li>
+          <li><span>2</span><div><strong>Preview it</strong><p>Look at the image or the clip, including a reference photo when you have one.</p></div></li>
+          <li><span>3</span><div><strong>Approve it</strong><p>Edit the caption and hashtags. Approval is a separate step from publishing.</p></div></li>
+          <li><span>4</span><div><strong>Publish it</strong><p>Send it through Meta’s official API, or put it on the calendar.</p></div></li>
+        </ol>
+      </section>
+      <section className="site-section">
+        <h2>Packages</h2>
+        <PagedPackages />
+      </section>
+      <section className="site-section">
+        <div className="trial-band">
+          <h2>Start a Starter trial</h2>
+          <p>Draft and preview a post before you connect an Instagram account.</p>
+          <Link className="button" to="/register">Create an account</Link>
+        </div>
+      </section>
+    </div>
   )
 }
 
 export function PricingPage() {
   const { page } = usePublicPage('/pricing')
-  const [packages, setPackages] = useState<PackageInfo[]>([])
-  useEffect(() => {
-    api<{ packages: PackageInfo[] }>('/api/public/pricing').then((body) => setPackages(body.packages)).catch(() => undefined)
-  }, [])
   return (
-    <section className="stack">
+    <section className="site-section stack">
       <h1>{page?.title || 'Pricing'}</h1>
       <p>{page?.description}</p>
-      <div className="cards">
-        {packages.map((pkg) => (
-          <article className="card" key={pkg.id}>
-            <h2>{pkg.name}</h2>
-            <div className="price">{money(pkg.priceMinor, pkg.currency)}</div>
-            <p>{pkg.description}</p>
-            <p>{pkg.instagramAccounts} Instagram accounts · {pkg.seats} seats</p>
-            <p>{pkg.monthlyAiGenerations} text · {pkg.monthlyImageGenerations} photos · {pkg.monthlyVideoGenerations} videos</p>
-          </article>
-        ))}
-      </div>
+      <PagedPackages />
     </section>
   )
 }
@@ -105,11 +210,21 @@ export function PricingPage() {
 export function LegalPage({ path }: { path: string }) {
   const { page } = usePublicPage(path)
   return (
-    <article className="stack">
+    <article className="site-section narrow stack">
       <h1>{page?.title}</h1>
       <p>{page?.description}</p>
       <p>{page?.body}</p>
     </article>
+  )
+}
+
+function GoogleButton() {
+  const [params] = useSearchParams()
+  return (
+    <div className="stack">
+      {params.get('google') === 'missing' ? <p className="error">Add the Google client id and secret in admin settings before using Continue with Google.</p> : null}
+      <a className="button secondary" href="/api/auth/google/start">Continue with Google</a>
+    </div>
   )
 }
 
@@ -132,12 +247,13 @@ export function LoginPage() {
     }
   }
   return (
-    <form className="stack card" onSubmit={onSubmit}>
+    <form className="stack card narrow auth-card" onSubmit={onSubmit}>
       <h1>{page?.title || 'Log in'}</h1>
       {error ? <p className="error">{error}</p> : null}
-      <label>Email<input name="email" type="email" required /></label>
-      <label>Password<input name="password" type="password" required minLength={8} /></label>
+      <label>Email<Hint>The email on your account.</Hint><input name="email" type="email" required /></label>
+      <label>Password<Hint>At least 8 characters.</Hint><input name="password" type="password" required minLength={8} /></label>
       <button type="submit">Log in</button>
+      <GoogleButton />
       <Link to="/register">Create an account</Link>
       <Link to="/reset-password">Forgot password</Link>
     </form>
@@ -170,14 +286,15 @@ export function RegisterPage() {
     }
   }
   return (
-    <form className="stack card" onSubmit={onSubmit}>
+    <form className="stack card narrow auth-card" onSubmit={onSubmit}>
       <h1>Create an account</h1>
       {error ? <p className="error">{error}</p> : null}
-      <label>Your name<input name="name" required /></label>
-      <label>Organization<input name="organizationName" required /></label>
-      <label>Email<input name="email" type="email" required /></label>
-      <label>Password<input name="password" type="password" required minLength={8} /></label>
+      <label>Your name<Hint>The name teammates see.</Hint><input name="name" required /></label>
+      <label>Organization<Hint>The workspace name for this account.</Hint><input name="organizationName" required /></label>
+      <label>Email<Hint>You will sign in with this email.</Hint><input name="email" type="email" required /></label>
+      <label>Password<Hint>At least 8 characters.</Hint><input name="password" type="password" required minLength={8} /></label>
       <button type="submit">Start the trial</button>
+      <GoogleButton />
     </form>
   )
 }
@@ -212,17 +329,17 @@ export function ResetPage() {
     }
   }
   return (
-    <div className="stack">
+    <div className="site-section narrow stack">
       <h1>Reset password</h1>
       {message ? <p className="notice">{message}</p> : null}
       {error ? <p className="error">{error}</p> : null}
       <form className="stack card" onSubmit={requestLink}>
-        <label>Email<input name="email" type="email" required /></label>
+        <label>Email<Hint>The email on the account that needs a reset.</Hint><input name="email" type="email" required /></label>
         <button type="submit">Send reset</button>
       </form>
       <form className="stack card" onSubmit={reset}>
-        <label>Reset token<input name="token" defaultValue={params.get('token') ?? ''} required /></label>
-        <label>New password<input name="password" type="password" minLength={8} required /></label>
+        <label>Reset token<Hint>The token from the reset message.</Hint><input name="token" defaultValue={params.get('token') ?? ''} required /></label>
+        <label>New password<Hint>At least 8 characters. This replaces the old password.</Hint><input name="password" type="password" minLength={8} required /></label>
         <button type="submit">Update password</button>
       </form>
     </div>

@@ -49,7 +49,9 @@ describe('customer site boundaries', () => {
 
   it('hides calendar and inboxes on Starter and limits Support to comments and messages', () => {
     const starter = customerNav('OWNER', { scheduling: false, commentInbox: false, dmInbox: false }).map((item) => item.label)
-    expect(starter).toEqual(['Dashboard', 'Create', 'Insights', 'Settings'])
+    expect(starter).toEqual(['Home', 'Create', 'Templates', 'Ideas', 'Auto Posting', 'Content Library', 'Campaigns', 'Model Studio', 'Reports', 'Smart Links', 'Ads', 'Insights', 'Settings'])
+    const growth = customerNav('OWNER', { scheduling: true, commentInbox: true, dmInbox: true }).map((item) => item.label)
+    expect(growth).toEqual(['Home', 'Create', 'Templates', 'Ideas', 'Planner', 'AI Schedule', 'Auto Posting', 'Content Library', 'Campaigns', 'Model Studio', 'Reports', 'Smart Links', 'Ads', 'Comments', 'Messages', 'Insights', 'Settings'])
     const support = customerNav('SUPPORT', { scheduling: true, commentInbox: true, dmInbox: true }).map((item) => item.label)
     expect(support).toEqual(['Comments', 'Messages'])
     expect(navMatches('/app', '/app')).toBe(true)
