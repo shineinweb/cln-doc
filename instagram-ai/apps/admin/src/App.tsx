@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { TemplatesPage } from './templates'
 import { AuditPage, DashboardPage, LoginPage, OrganizationDetail, OrganizationsPage, PackagesPage, SeoPage, SettingsPage, Shell, StaffPage, SubscriptionsPage, UsagePage, UsersPage } from './pages'
 
 export function App() {
@@ -14,6 +15,7 @@ export function App() {
           <Route path="/packages" element={<PackagesPage />} />
           <Route path="/subscriptions" element={<SubscriptionsPage />} />
           <Route path="/usage" element={<UsagePage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/seo" element={<SeoPage />} />
           <Route path="/audit" element={<AuditPage />} />

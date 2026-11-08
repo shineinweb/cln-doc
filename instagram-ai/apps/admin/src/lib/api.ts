@@ -16,7 +16,7 @@ export function setCsrf(token: string): void {
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!csrfToken) csrfToken = sessionStorage.getItem('ia_staff_csrf') ?? ''
   const headers = new Headers(init.headers)
-  if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json')
+  if (init.body && !(init.body instanceof FormData) && !headers.has('content-type')) headers.set('content-type', 'application/json')
   if (csrfToken) headers.set('x-csrf-token', csrfToken)
   const response = await fetch(path, { ...init, headers, credentials: 'include' })
   const text = await response.text()
