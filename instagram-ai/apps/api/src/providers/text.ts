@@ -13,7 +13,7 @@ export type BrandContext = {
 }
 
 export type TextRequest = {
-  kind: 'post_copy' | 'carousel_outline' | 'reel_script' | 'calendar_ideas' | 'comment_reply' | 'dm_reply' | 'proposal'
+  kind: 'post_copy' | 'content_plan' | 'carousel_outline' | 'reel_script' | 'calendar_ideas' | 'comment_reply' | 'dm_reply' | 'proposal'
   system: string
   brand: BrandContext
   instructions: string
@@ -24,6 +24,16 @@ export type TextRequest = {
     description?: string
     mediaDescription?: string
     untrustedText?: string
+    language?: string
+    tone?: string
+    aiInstructions?: string
+    plan?: {
+      goal: string
+      topics: string[]
+      promotions: string
+      slots: Array<{ index: number; date: string; weekday: string; time: string; format: string }>
+      avoidTopics?: string[]
+    }
   }
   model: string
   apiKey?: string
@@ -52,6 +62,25 @@ export function deterministicCopy(request: TextRequest): unknown {
     if (intents.includes('follow')) return { type: 'reply_comment', text: hint }
     return { type: request.proposalHint?.startsWith('dm:') ? 'send_dm' : 'reply_comment', text: hint.replace(/^dm:/, '') }
   }
+  if (request.kind === 'content_plan') {
+    const plan = request.content.plan
+    const seeds = [...(plan?.topics ?? []), plan?.goal || request.brand.productsAndServices || 'A new post'].filter((item) => item.trim())
+    const avoid = new Set((plan?.avoidTopics ?? []).map((item) => item.toLowerCase()))
+    const fresh = seeds.filter((item) => !avoid.has(item.toLowerCase()))
+    const pool = fresh.length ? fresh : seeds
+    return {
+      slots: (plan?.slots ?? []).map((slot, position) => {
+        const topic = pool[position % pool.length]
+        const words = topic.split(/\s+/).filter((word) => word.length > 3).slice(0, 3)
+        return {
+          index: slot.index,
+          topic,
+          caption: `${request.brand.brandName ? `${request.brand.brandName}: ` : ''}${topic}`.trim(),
+          hashtags: normalizeHashtags(words).map((chip) => chip.tag),
+        }
+      }),
+    }
+  }
   if (request.kind === 'comment_reply' || request.kind === 'dm_reply') {
     const question = (request.content.untrustedText ?? '').toLowerCase()
     const fact = request.brand.approvedFacts.find((item) => item.trim())
@@ -76,9 +105,14 @@ export function deterministicCopy(request: TextRequest): unknown {
 }
 
 export class OpenAiTextProvider implements TextProvider {
-  constructor(private platformKey: string, private fetchImpl: typeof fetch = fetch) {}
+  constructor(
+    private platformKey: string,
+    private fetchImpl: typeof fetch = fetch,
+    private platformEnabled: () => Promise<boolean> = async () => true,
+  ) {}
 
   async complete(request: TextRequest): Promise<unknown> {
+    if (!request.apiKey && !(await this.platformEnabled())) return deterministicCopy(request)
     const key = request.apiKey || this.platformKey
     const response = await this.fetchImpl('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -98,7 +132,7 @@ export class OpenAiTextProvider implements TextProvider {
   }
 }
 
-export function createTextProvider(env: Env): TextProvider {
-  if (env.TEXT_PROVIDER_KEY) return new OpenAiTextProvider(env.TEXT_PROVIDER_KEY)
+export function createTextProvider(env: Env, platformEnabled?: () => Promise<boolean>): TextProvider {
+  if (env.TEXT_PROVIDER_KEY) return new OpenAiTextProvider(env.TEXT_PROVIDER_KEY, fetch, platformEnabled)
   return new FakeTextProvider()
 }

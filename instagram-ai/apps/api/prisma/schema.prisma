@@ -44,8 +44,9 @@ enum PostStatus {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique @db.VarChar(191)
-  passwordHash String   @db.Text
+  passwordHash String?  @db.Text
   name         String
+  googleSub    String?  @unique @db.VarChar(191)
   disabled     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -94,14 +95,19 @@ model Organization {
   name      String
   slug      String   @unique @db.VarChar(191)
   suspended Boolean  @default(false)
-  timezone  String   @default("UTC")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  timezone          String   @default("UTC")
+  brandLogoAssetId  String?  @db.VarChar(191)
+  brandPrimaryColor String?  @db.VarChar(16)
+  brandHashtags     Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   memberships       Membership[]
   invitations       Invitation[]
   subscription      Subscription?
   instagramAccounts InstagramAccount[]
+  socialAccounts    SocialAccount[]
+  socialCredentials SocialCredential[]
   oauthCredentials  OauthCredential[]
   oauthStates       OauthState[]
   brandProfile      BrandProfile?
@@ -113,6 +119,7 @@ model Organization {
   generationJobs    GenerationJob[]
   mediaAssets       MediaAsset[]
   posts             Post[]
+  ideas             Idea[]
   conversations     Conversation[]
   messages          Message[]
   savedResponses    SavedResponse[]
@@ -120,7 +127,12 @@ model Organization {
   automationRules   AutomationRule[]
   webhookEvents     WebhookEvent[]
   metricSnapshots   MetricSnapshot[]
+  campaigns         Campaign[]
+  contentPlans      ContentPlan[]
   auditLogs         AuditLog[]
+  templates         Template[]
+  templateAssets    TemplateAsset[]
+  faceConsents      FaceConsent[]
 
   @@map("organizations")
 }
@@ -286,8 +298,9 @@ model InstagramAccount {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization Organization    @relation(fields: [organizationId], references: [id])
+  organization Organization     @relation(fields: [organizationId], references: [id])
   credential   OauthCredential?
+  socialAccount SocialAccount?
 
   @@unique([organizationId, igUserId])
   @@index([igUserId])
@@ -313,6 +326,7 @@ model OauthState {
   state          String   @id @db.VarChar(191)
   organizationId String
   userId         String
+  network        String   @default("instagram") @db.VarChar(32)
   expiresAt      DateTime
   createdAt      DateTime @default(now())
 
@@ -320,6 +334,55 @@ model OauthState {
 
   @@index([organizationId])
   @@map("oauth_states")
+}
+
+model LoginState {
+  state     String   @id @db.VarChar(191)
+  kind      String   @db.VarChar(32)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("login_states")
+}
+
+model SocialAccount {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  network            String    @db.VarChar(32)
+  externalId         String    @db.VarChar(191)
+  displayName        String
+  username           String    @default("")
+  status             String
+  lastError          String?   @db.Text
+  tokenExpiresAt     DateTime?
+  scopes             String    @default("") @db.Text
+  instagramAccountId String?   @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  instagramAccount InstagramAccount? @relation(fields: [instagramAccountId], references: [id])
+  credential       SocialCredential?
+  targets          PostTarget[]
+
+  @@unique([organizationId, network, externalId])
+  @@index([organizationId])
+  @@map("social_accounts")
+}
+
+model SocialCredential {
+  id              String    @id @default(cuid())
+  organizationId  String
+  socialAccountId String    @unique
+  accessTokenEnc  String    @db.Text
+  refreshTokenEnc String?   @db.Text
+  expiresAt       DateTime?
+
+  organization  Organization  @relation(fields: [organizationId], references: [id])
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id])
+
+  @@index([organizationId])
+  @@map("social_credentials")
 }
 
 model BrandProfile {
@@ -345,8 +408,8 @@ model AiProfile {
   extraInstructions  String @db.Text
   modelId            String @default("platform-default")
   providerKeyEnc     String? @db.Text
-  tone               String?
-  language           String?
+  tone               String? @db.VarChar(500)
+  language           String? @db.VarChar(500)
 
   organization Organization @relation(fields: [organizationId], references: [id])
 
@@ -466,15 +529,81 @@ model Post {
   approvedAt          DateTime?
   publishAttempts     Int        @default(0)
   referenceAssetId    String?
+  durationSeconds     Int?
+  aiInstructions      String     @default("") @db.Text
+  generateCaption     Boolean    @default(true)
+  aiLanguage          String     @default("") @db.VarChar(500)
+  aiTone              String     @default("") @db.VarChar(500)
+  commentKeyword      String     @default("") @db.VarChar(80)
+  firstComment        String     @default("") @db.Text
+  firstCommentError   String?    @db.Text
+  firstCommentIgId    String?    @db.VarChar(191)
+  smartLinkUrl        String?    @db.VarChar(2000)
+  smartLinkCode       String?    @unique @db.VarChar(32)
+  smartLinkClicks     Int        @default(0)
+  adNetworks          Json?
+  planId              String?
+  templateId          String?
+  templateValues      Json?      @map("template_values")
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
+  plan         ContentPlan? @relation(fields: [planId], references: [id])
+  template     Template?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
   media        PostMedia[]
+  targets      PostTarget[]
+  campaigns    CampaignPost[]
+  metrics      MetricSnapshot[]
 
   @@index([organizationId])
+  @@index([planId])
+  @@index([templateId])
   @@index([status, scheduledAt])
   @@map("posts")
+}
+
+model ContentPlan {
+  id             String   @id @default(cuid())
+  organizationId String
+  createdById    String?
+  range          String   @db.VarChar(16)
+  startsAt       DateTime
+  endsAt         DateTime
+  inputs         Json
+  status         String   @default("proposed") @db.VarChar(16)
+  campaignId     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  posts        Post[]
+
+  @@index([organizationId, createdAt])
+  @@map("content_plans")
+}
+
+model PostTarget {
+  id                   String     @id @default(cuid())
+  postId               String
+  socialAccountId      String
+  status               PostStatus @default(DRAFT)
+  remoteId             String?    @db.VarChar(191)
+  containerId          String?    @db.VarChar(191)
+  error                String?    @db.Text
+  publishedAt          DateTime?
+  firstCommentRemoteId String?    @db.VarChar(191)
+  firstCommentError    String?    @db.Text
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  post    Post          @relation(fields: [postId], references: [id])
+  account SocialAccount @relation(fields: [socialAccountId], references: [id])
+
+  @@unique([postId, socialAccountId])
+  @@index([postId])
+  @@index([status])
+  @@map("post_targets")
 }
 
 model PostMedia {
@@ -491,6 +620,19 @@ model PostMedia {
   @@map("post_media")
 }
 
+model Idea {
+  id             String   @id @default(cuid())
+  organizationId String
+  text           String   @db.VarChar(280)
+  postId         String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("ideas")
+}
+
 model Conversation {
   id                   String    @id @default(cuid())
   organizationId       String
@@ -498,6 +640,7 @@ model Conversation {
   participantId        String    @db.VarChar(64)
   participantUsername  String?
   automationEnabled    Boolean   @default(true)
+  done                 Boolean   @default(false)
   assignedToId         String?
   lastUserMessageAt    DateTime?
   privateReplySentAt   DateTime?
@@ -558,6 +701,8 @@ model Comment {
   assignedToId       String?
   replied            Boolean   @default(false)
   replyText          String?   @db.Text
+  draftReply         String?   @db.Text
+  done               Boolean   @default(false)
   repliedAt          DateTime?
   createdAt          DateTime  @default(now())
 
@@ -604,15 +749,50 @@ model MetricSnapshot {
   id                 String   @id @default(cuid())
   organizationId     String
   instagramAccountId String?
+  postId             String?
+  network            String?  @db.VarChar(32)
   metric             String
   value              Float
   dimensions         Json?
   capturedAt         DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
+  post         Post?        @relation(fields: [postId], references: [id])
 
   @@index([organizationId])
+  @@index([postId])
+  @@index([metric, capturedAt])
   @@map("metric_snapshots")
+}
+
+model Campaign {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  startsAt       DateTime
+  endsAt         DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  posts        CampaignPost[]
+
+  @@index([organizationId])
+  @@map("campaigns")
+}
+
+model CampaignPost {
+  id         String @id @default(cuid())
+  campaignId String
+  postId     String
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, postId])
+  @@index([postId])
+  @@map("campaign_posts")
 }
 
 model AuditLog {
@@ -631,4 +811,67 @@ model AuditLog {
   @@index([organizationId])
   @@index([action])
   @@map("audit_logs")
+}
+
+model Template {
+  id               String   @id @default(cuid())
+  organizationId   String?
+  seedKey          String?  @unique @db.VarChar(64)
+  title            String   @db.VarChar(120)
+  kind             String   @db.VarChar(16)
+  category         String   @default("") @db.VarChar(60)
+  tags             Json
+  searchText       String   @db.Text
+  sourceAssetId    String?  @db.VarChar(191)
+  thumbnailAssetId String?  @db.VarChar(191)
+  thumbnailCustom  Boolean  @default(false)
+  orientation      String   @default("square") @db.VarChar(16)
+  durationSeconds  Int?
+  accentColor      String?  @db.VarChar(16)
+  textSlots        Json
+  hasFaceSlot      Boolean  @default(true)
+  motionPrompt     String   @default("") @db.Text
+  status           String   @default("draft") @db.VarChar(16)
+  useCount         Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  posts        Post[]
+
+  @@index([organizationId, status])
+  @@index([useCount])
+  @@map("templates")
+}
+
+model TemplateAsset {
+  id             String   @id @default(cuid())
+  organizationId String?
+  kind           String   @db.VarChar(16)
+  storageKey     String   @unique @db.VarChar(191)
+  mimeType       String
+  filename       String
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("template_assets")
+}
+
+model FaceConsent {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String    @db.VarChar(191)
+  mediaAssetId   String    @db.VarChar(191)
+  acceptedAt     DateTime  @default(now())
+  deleteAfter    DateTime?
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@index([mediaAssetId])
+  @@index([deleteAfter])
+  @@map("face_consents")
 }

@@ -24,6 +24,8 @@ async function addJob(deps: Deps, queueName: string, name: string, data: object,
   try {
     await connection.connect()
     const queue = new Queue(queueName, { connection })
+    const existing = await queue.getJob(options.jobId)
+    if (existing) await existing.remove()
     await queue.add(name, data, { ...options, removeOnComplete: true, removeOnFail: 20 })
     await queue.close()
   } catch (error) {
@@ -45,6 +47,7 @@ export async function startWorkers(deps: Deps): Promise<() => Promise<void>> {
   const { Worker } = await import('bullmq')
   const { publishPost, sweepDuePosts } = await import('./services/content')
   const { processGenerationJob } = await import('./services/content')
+  const { sweepFacePhotos } = await import('./services/faces')
   const connection = new IORedis(deps.env.REDIS_URL, { maxRetriesPerRequest: null })
   const publishWorker = new Worker('publish', async (job) => publishPost(deps, String(job.data.postId)), { connection })
   const videoWorker = new Worker('video', async (job) => {
@@ -53,8 +56,12 @@ export async function startWorkers(deps: Deps): Promise<() => Promise<void>> {
   const timer = setInterval(() => {
     sweepDuePosts(deps).catch((error) => deps.logger.error({ err: error }, 'sweep failed'))
   }, 60_000)
+  const faceTimer = setInterval(() => {
+    sweepFacePhotos(deps).catch((error) => deps.logger.error({ err: error }, 'face photo sweep failed'))
+  }, 60 * 60 * 1000)
   return async () => {
     clearInterval(timer)
+    clearInterval(faceTimer)
     await publishWorker.close()
     await videoWorker.close()
     await connection.quit()

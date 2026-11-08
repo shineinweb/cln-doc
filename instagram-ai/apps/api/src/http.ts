@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express'
+import type { Env } from './env'
 
 export function asyncRoute(fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>): RequestHandler {
   return (req, res, next) => {
@@ -25,6 +26,13 @@ export function sessionCookie(name: string, value: string, maxAgeSec: number, se
   ]
   if (secure) bits.push('Secure')
   return bits.join('; ')
+}
+
+export function browserOrigin(req: Request, env: Pick<Env, 'PORT'>): string | undefined {
+  const host = (req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim()
+  if (!host || host.endsWith(`:${env.PORT}`)) return undefined
+  const proto = (req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim()
+  return `${proto}://${host}`
 }
 
 export function clientIp(req: Request): string {

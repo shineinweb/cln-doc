@@ -18,7 +18,7 @@ export type TokenResult = {
 export type ContainerInput = {
   igUserId: string
   accessToken: string
-  format: 'photo' | 'carousel' | 'reel'
+  format: 'photo' | 'carousel' | 'reel' | 'video' | 'story'
   caption: string
   mediaUrls: string[]
 }
@@ -36,6 +36,7 @@ export type InsightResult = {
   followersAvailable: boolean
   followers: Array<{ date: string; value: number }>
   media: InsightMedia[]
+  audienceOnline: Array<{ hour: number; value: number }>
 }
 
 export type MetaCall = { method: string; [key: string]: unknown }
@@ -50,6 +51,7 @@ export interface MetaClient {
   publishContainer(accessToken: string, igUserId: string, containerId: string): Promise<string>
   findMediaByContainer(accessToken: string, containerId: string): Promise<string | null>
   replyToComment(accessToken: string, commentId: string, message: string): Promise<{ id: string }>
+  commentOnMedia(accessToken: string, igMediaId: string, message: string): Promise<{ id: string }>
   hideComment(accessToken: string, commentId: string, hide: boolean): Promise<void>
   deleteComment(accessToken: string, commentId: string): Promise<void>
   sendMessage(accessToken: string, igUserId: string, recipientId: string, text: string): Promise<{ id: string }>
@@ -63,6 +65,7 @@ const GRAPH = 'https://graph.instagram.com/v21.0'
 export class FakeMetaClient implements MetaClient {
   calls: MetaCall[] = []
   refreshFails = false
+  commentOnMediaError: string | null = null
   insights: InsightResult = {
     followersAvailable: true,
     followers: [
@@ -73,6 +76,7 @@ export class FakeMetaClient implements MetaClient {
       { id: 'm1', format: 'carousel', likes: 10, comments: 2, saves: 12, reach: 200 },
       { id: 'm2', format: 'photo', likes: 4, comments: 1, saves: 5, reach: 90 },
     ],
+    audienceOnline: [],
   }
   private containers = new Map<string, { caption: string; urls: string[] }>()
   private published = new Map<string, string>()
@@ -145,6 +149,13 @@ export class FakeMetaClient implements MetaClient {
   async replyToComment(_accessToken: string, commentId: string, message: string): Promise<{ id: string }> {
     const id = `reply_${this.seq++}`
     this.calls.push({ method: 'replyToComment', commentId, message, id })
+    return { id }
+  }
+
+  async commentOnMedia(_accessToken: string, igMediaId: string, message: string): Promise<{ id: string }> {
+    if (this.commentOnMediaError) throw new Error(this.commentOnMediaError)
+    const id = `media_comment_${this.seq++}`
+    this.calls.push({ method: 'commentOnMedia', igMediaId, message, id })
     return { id }
   }
 
@@ -261,10 +272,18 @@ export class RealMetaClient implements MetaClient {
       })
       return parent.id
     }
+    const storyUrl = input.mediaUrls[0] ?? ''
+    const storyVideo = /\.(mp4|mov)(\?|$)/i.test(storyUrl)
     const fields: Record<string, string> =
-      input.format === 'reel'
-        ? { media_type: 'REELS', video_url: input.mediaUrls[0] ?? '', caption: input.caption, access_token: input.accessToken }
-        : { image_url: input.mediaUrls[0] ?? '', caption: input.caption, access_token: input.accessToken }
+      input.format === 'story'
+        ? storyVideo
+          ? { media_type: 'STORIES', video_url: storyUrl, access_token: input.accessToken }
+          : { media_type: 'STORIES', image_url: storyUrl, access_token: input.accessToken }
+        : input.format === 'reel'
+          ? { media_type: 'REELS', video_url: input.mediaUrls[0] ?? '', caption: input.caption, access_token: input.accessToken }
+          : input.format === 'video'
+            ? { media_type: 'VIDEO', video_url: input.mediaUrls[0] ?? '', caption: input.caption, access_token: input.accessToken }
+            : { image_url: input.mediaUrls[0] ?? '', caption: input.caption, access_token: input.accessToken }
     const created = await this.form<{ id: string }>(`${GRAPH}/${input.igUserId}/media`, fields)
     return created.id
   }
@@ -296,6 +315,10 @@ export class RealMetaClient implements MetaClient {
 
   async replyToComment(accessToken: string, commentId: string, message: string): Promise<{ id: string }> {
     return this.form(`${GRAPH}/${commentId}/replies`, { message, access_token: accessToken })
+  }
+
+  async commentOnMedia(accessToken: string, igMediaId: string, message: string): Promise<{ id: string }> {
+    return this.form(`${GRAPH}/${igMediaId}/comments`, { message, access_token: accessToken })
   }
 
   async hideComment(accessToken: string, commentId: string, hide: boolean): Promise<void> {
@@ -348,9 +371,34 @@ export class RealMetaClient implements MetaClient {
           saves: 0,
           reach: 0,
         })),
+        audienceOnline: await this.audienceOnline(accessToken, igUserId),
       }
     } catch {
-      return { followersAvailable: false, followers: [], media: [] }
+      return { followersAvailable: false, followers: [], media: [], audienceOnline: [] }
+    }
+  }
+
+  private async audienceOnline(accessToken: string, igUserId: string): Promise<Array<{ hour: number; value: number }>> {
+    try {
+      const online = await this.json<{ data?: Array<{ values?: Array<{ value?: Record<string, number> }> }> }>(
+        `${GRAPH}/${igUserId}/insights?${new URLSearchParams({
+          metric: 'online_followers',
+          period: 'lifetime',
+          access_token: accessToken,
+        })}`,
+      )
+      const value = online.data?.[0]?.values?.[0]?.value
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return []
+      const hours: Array<{ hour: number; value: number }> = []
+      for (const [key, count] of Object.entries(value)) {
+        const hour = Number(key)
+        const onlineCount = Number(count)
+        if (!Number.isInteger(hour) || hour < 0 || hour > 23 || !Number.isFinite(onlineCount)) continue
+        hours.push({ hour, value: onlineCount })
+      }
+      return hours
+    } catch {
+      return []
     }
   }
 
