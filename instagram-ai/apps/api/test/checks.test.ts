@@ -299,7 +299,7 @@ describe('copy, media, quotas, and custom AI', () => {
     expect(published.status).toBe(200)
   })
 
-  it('stops video for every package when the switch is off, and still stops Starter when it is on', async () => {
+  it('stops every video when the switch is off, and lets Starter render a local ad', async () => {
     const { app, media } = testApp()
     const staff = await staffLogin(app)
     await staff.api.put('/api/admin/settings', { features: { videoGeneration: false } })
@@ -312,17 +312,19 @@ describe('copy, media, quotas, and custom AI', () => {
     expect(media.videoCalls).toBe(0)
     await staff.api.put('/api/admin/settings', { features: { videoGeneration: true } })
     const starter = await register(app, 'Starter Co')
-    const starterReel = await createPost(starter, { format: 'reel' })
-    const starterBlocked = await starter.api.post(`/api/posts/${starterReel.id}/generate`, {})
-    expect(starterBlocked.status).toBe(403)
-    expect(starterBlocked.body.error.code).toBe('entitlement')
+    const starterReel = await createPost(starter, { format: 'reel', description: 'A starter reel about the counter.' })
+    const starterAd = await starter.api.post(`/api/posts/${starterReel.id}/generate`, {})
+    expect(starterAd.status).toBe(202)
+    expect(starterAd.body.post.media[0].mimeType).toBe('video/mp4')
+    expect(await prisma.aiUsage.count({ where: { organizationId: starter.orgId, kind: 'video' } })).toBe(0)
     expect(media.videoCalls).toBe(0)
     const allowed = await pro.api.post(`/api/posts/${reel.id}/generate`, {})
     expect(allowed.status).toBe(202)
-    expect(media.videoCalls).toBe(1)
+    expect(media.videoCalls).toBe(0)
     expect(allowed.body.post.caption.length).toBeGreaterThan(0)
     expect(allowed.body.post.hashtags.length).toBeLessThanOrEqual(10)
     expect(media.imageCalls).toBe(0)
+    expect(await prisma.aiUsage.count({ where: { organizationId: pro.orgId, kind: 'video' } })).toBe(0)
   })
 
   it('rejects another organization reference photo and does not call the vendor at the quota', async () => {
