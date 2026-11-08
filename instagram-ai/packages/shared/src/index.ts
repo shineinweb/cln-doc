@@ -65,6 +65,92 @@ export const POST_STATUSES = [
 
 export type PostStatus = (typeof POST_STATUSES)[number]
 
+export const POST_FORMATS = ['photo', 'carousel', 'reel', 'video', 'story'] as const
+export type PostFormat = (typeof POST_FORMATS)[number]
+
+export const SOCIAL_NETWORKS = ['instagram', 'facebook', 'tiktok', 'youtube'] as const
+export type SocialNetwork = (typeof SOCIAL_NETWORKS)[number]
+
+export const NETWORK_LABEL: Record<SocialNetwork, string> = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+}
+
+const ACCEPTED_FORMATS: Record<SocialNetwork, readonly PostFormat[]> = {
+  instagram: ['photo', 'carousel', 'reel', 'video', 'story'],
+  facebook: ['photo', 'reel', 'video', 'story'],
+  tiktok: ['reel', 'video'],
+  youtube: ['reel', 'video'],
+}
+
+export function isSocialNetwork(value: string): value is SocialNetwork {
+  return (SOCIAL_NETWORKS as readonly string[]).includes(value)
+}
+
+export function formatRejection(network: string, format: string): string | null {
+  if (!isSocialNetwork(network)) return 'That network is not available'
+  if ((ACCEPTED_FORMATS[network] as readonly string[]).includes(format)) return null
+  if (format === 'story') return `${NETWORK_LABEL[network]} cannot publish a story`
+  return `${NETWORK_LABEL[network]} does not accept a ${format}`
+}
+
+export function normalizeSmartLink(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  let url: URL
+  try {
+    url = new URL(trimmed)
+  } catch {
+    return null
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+  if (url.username || url.password) return null
+  return url.toString()
+}
+
+export function parseAdNetworks(value: unknown): SocialNetwork[] | null {
+  if (!Array.isArray(value)) return null
+  const out: SocialNetwork[] = []
+  for (const item of value) {
+    if (typeof item !== 'string' || !isSocialNetwork(item)) return null
+    if (!out.includes(item)) out.push(item)
+  }
+  return out
+}
+
+export function readAdNetworks(value: unknown): SocialNetwork[] {
+  return parseAdNetworks(value) ?? []
+}
+
+export function firstCommentAvailable(network: string): boolean {
+  return network === 'instagram' || network === 'facebook'
+}
+
+export function firstCommentUnavailableReason(network: string): string | null {
+  if (firstCommentAvailable(network)) return null
+  if (network === 'tiktok') return 'A first comment is not available on TikTok'
+  if (network === 'youtube') return 'A first comment is not available on YouTube'
+  return 'A first comment is not available on this network'
+}
+
+export const REEL_LENGTHS = [4, 8, 12] as const
+export const VIDEO_LENGTHS = [8, 15, 30] as const
+
+export function defaultDuration(format: string): number | null {
+  if (format === 'reel') return 8
+  if (format === 'video') return 15
+  return null
+}
+
+export function durationAllowed(format: string, seconds: number): boolean {
+  if (format === 'reel') return (REEL_LENGTHS as readonly number[]).includes(seconds)
+  if (format === 'video') return (VIDEO_LENGTHS as readonly number[]).includes(seconds)
+  return false
+}
+
 export const SUBSCRIPTION_STATUSES = ['trialing', 'active', 'past_due', 'canceled'] as const
 export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number]
 
@@ -86,6 +172,7 @@ export const META_CLIENT_METHODS = [
   'publishContainer',
   'findMediaByContainer',
   'replyToComment',
+  'commentOnMedia',
   'hideComment',
   'deleteComment',
   'sendMessage',
@@ -149,6 +236,42 @@ export function composePublishCaption(caption: string, chips: HashtagChip[]): st
   if (!tags.length) return body
   if (!body) return tags.join(' ')
   return `${body}\n\n${tags.join(' ')}`
+}
+
+export function normalizeHexColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const match = value.trim().match(/^#?([0-9a-fA-F]{6})$/)
+  return match ? `#${match[1].toLowerCase()}` : null
+}
+
+export type AudienceHour = { hour: number; value: number }
+
+export function storedAudienceHours(dimensions: unknown): AudienceHour[] {
+  if (!dimensions || typeof dimensions !== 'object') return []
+  const raw = (dimensions as { hours?: unknown }).hours
+  if (!Array.isArray(raw) || raw.length === 0) return []
+  const out: AudienceHour[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const hour = (item as { hour?: unknown }).hour
+    const value = (item as { value?: unknown }).value
+    if (typeof hour !== 'number' || !Number.isInteger(hour) || hour < 0 || hour > 23) continue
+    if (typeof value !== 'number' || !Number.isFinite(value)) continue
+    if (out.some((row) => row.hour === hour)) continue
+    out.push({ hour, value })
+  }
+  return out.sort((a, b) => b.value - a.value || a.hour - b.hour)
+}
+
+export function draftFromApprovedFacts(facts: string[]): string {
+  for (const fact of facts) {
+    const clean = fact.replace(/\s+/g, ' ').trim()
+    if (!clean) continue
+    if (findForbiddenIntents(clean).length) continue
+    if (/\bfollow\b/i.test(clean)) continue
+    return clean
+  }
+  return 'Thanks for your comment.'
 }
 
 export function normalizeKeywords(input: string[], max = KEYWORD_LIMIT): string[] {
@@ -234,12 +357,107 @@ export const CUSTOMER_ROUTES = [
   '/reset-password',
   '/app',
   '/app/create',
+  '/app/templates',
+  '/app/ideas',
   '/app/calendar',
+  '/app/planner',
+  '/app/auto-posting',
+  '/app/library',
+  '/app/models',
+  '/app/campaigns',
+  '/app/reports',
+  '/app/links',
+  '/app/ads',
   '/app/comments',
   '/app/messages',
   '/app/insights',
   '/app/settings',
 ] as const
+
+export const OFFICIAL_CAMPAIGN_METRICS = ['impressions', 'reach', 'engagement'] as const
+export type OfficialCampaignMetric = (typeof OFFICIAL_CAMPAIGN_METRICS)[number]
+
+export function isOfficialCampaignMetric(value: string): value is OfficialCampaignMetric {
+  return (OFFICIAL_CAMPAIGN_METRICS as readonly string[]).includes(value)
+}
+
+export type MetricPoint = { date: string; value: number }
+export type NamedValue = { name: string; value: number }
+
+export type StoredMetricRow = {
+  metric: string
+  value: number
+  capturedAt: string | Date
+  network?: string | null
+  postId?: string | null
+}
+
+/** Build a date series from stored rows only. Missing days stay out; invents nothing. */
+export function metricSeries(rows: StoredMetricRow[], metric: string): MetricPoint[] {
+  const byDay = new Map<string, number>()
+  for (const row of rows) {
+    if (row.metric !== metric) continue
+    if (typeof row.value !== 'number' || !Number.isFinite(row.value)) continue
+    const day = typeof row.capturedAt === 'string'
+      ? row.capturedAt.slice(0, 10)
+      : row.capturedAt.toISOString().slice(0, 10)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue
+    byDay.set(day, (byDay.get(day) ?? 0) + row.value)
+  }
+  return [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, value]) => ({ date, value }))
+}
+
+/** Sum official campaign metrics from stored rows only. Empty stays empty (null). */
+export function campaignMetricTotals(rows: StoredMetricRow[]): {
+  impressions: number | null
+  reach: number | null
+  engagement: number | null
+} {
+  const totals: Record<OfficialCampaignMetric, number | null> = {
+    impressions: null,
+    reach: null,
+    engagement: null,
+  }
+  for (const row of rows) {
+    if (!isOfficialCampaignMetric(row.metric)) continue
+    if (typeof row.value !== 'number' || !Number.isFinite(row.value)) continue
+    totals[row.metric] = (totals[row.metric] ?? 0) + row.value
+  }
+  return totals
+}
+
+export function metricsByNetwork(rows: StoredMetricRow[], metric: string): NamedValue[] {
+  const byNetwork = new Map<string, number>()
+  for (const row of rows) {
+    if (row.metric !== metric) continue
+    if (typeof row.value !== 'number' || !Number.isFinite(row.value)) continue
+    const network = typeof row.network === 'string' && row.network.trim() ? row.network.trim() : 'unknown'
+    byNetwork.set(network, (byNetwork.get(network) ?? 0) + row.value)
+  }
+  return [...byNetwork.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, value]) => ({ name, value }))
+}
+
+export function formatMixCounts(formats: string[]): NamedValue[] {
+  const counts = new Map<string, number>()
+  for (const format of formats) {
+    if (typeof format !== 'string' || !format.trim()) continue
+    const key = format.trim()
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, value]) => ({ name, value }))
+}
+
+/** Empty chart input stays empty — never invents placeholder series. */
+export function chartSeriesOrEmpty(points: MetricPoint[] | NamedValue[] | null | undefined): MetricPoint[] | NamedValue[] {
+  if (!points || points.length === 0) return []
+  return points
+}
 
 export function hasAdminRoute(routes: readonly string[]): boolean {
   return routes.some((route) => route === '/admin' || route.startsWith('/admin/'))
@@ -423,3 +641,14 @@ export function withinBusinessHours(
   const end = endHour * 60 + endMinute
   return current >= start && current < end
 }
+
+export function nextSevenDayWindow(now = new Date()): { from: Date; to: Date } {
+  const from = new Date(now)
+  from.setHours(0, 0, 0, 0)
+  const to = new Date(from)
+  to.setDate(to.getDate() + 7)
+  to.setMilliseconds(to.getMilliseconds() - 1)
+  return { from, to }
+}
+
+export * from './planner'

@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest'
 import {
   HASHTAG_LIMIT,
   buildRecommendation,
+  campaignMetricTotals,
+  chartSeriesOrEmpty,
   claimsBlockPublish,
   composePublishCaption,
   evaluateMessageSend,
   findForbiddenIntents,
+  formatMixCounts,
   hasAdminRoute,
+  metricSeries,
   normalizeHashtags,
   reviewClaims,
   robotsContent,
@@ -164,6 +168,29 @@ describe('recommendations', () => {
     expect(result.text).toContain('5')
     expect(result.text).toContain('carousel')
     expect(result.evidence.topSaves).toBe(12)
+  })
+})
+
+describe('campaign charts', () => {
+  it('invents nothing for an empty metric set', () => {
+    expect(metricSeries([], 'reach')).toEqual([])
+    expect(campaignMetricTotals([])).toEqual({ impressions: null, reach: null, engagement: null })
+    expect(chartSeriesOrEmpty([])).toEqual([])
+    expect(chartSeriesOrEmpty(null)).toEqual([])
+    expect(formatMixCounts([])).toEqual([])
+  })
+
+  it('sums only stored official metrics', () => {
+    const rows = [
+      { metric: 'reach', value: 10, capturedAt: '2026-03-01T00:00:00.000Z', network: 'instagram' },
+      { metric: 'reach', value: 5, capturedAt: '2026-03-02T00:00:00.000Z', network: 'tiktok' },
+      { metric: 'saves', value: 100, capturedAt: '2026-03-01T00:00:00.000Z', network: 'instagram' },
+    ]
+    expect(campaignMetricTotals(rows)).toEqual({ impressions: null, reach: 15, engagement: null })
+    expect(metricSeries(rows, 'reach')).toEqual([
+      { date: '2026-03-01', value: 10 },
+      { date: '2026-03-02', value: 5 },
+    ])
   })
 })
 
