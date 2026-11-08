@@ -13,7 +13,10 @@
     "typecheck": "pnpm -r typecheck",
     "db:push": "pnpm --filter @instagram-ai/api db:push",
     "db:seed": "pnpm --filter @instagram-ai/api db:seed",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "backup": "bash scripts/backup.sh",
+    "restore": "bash scripts/restore.sh",
+    "ensure-db": "bash scripts/ensure-db.sh"
   },
   "engines": {
     "node": ">=22"

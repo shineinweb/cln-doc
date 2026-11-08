@@ -61,3 +61,18 @@ pnpm build
 - A person approves a preview before publish.
 - Staff cannot read decrypted tokens or publish and reply as a customer.
 - Comment text and custom instructions are data. They cannot authorize a follow, a like, or an unsolicited message.
+
+## Backups and recovery
+
+Everything stateful lives in two places: the MariaDB database `instagram_ai` and the asset storage directory (`STORAGE_DIR`, default `apps/api/data/media`: generated media, template art, face uploads). Redis only holds BullMQ queue state (scheduled publish jobs, rebuilt from the database as needed), so it is not backed up.
+
+```bash
+pnpm backup                              # dump + uploads archive -> ./backups and the durable store
+pnpm restore                             # restore the newest dump (asks first); or: pnpm restore <dump.sql.gz> [--uploads <archive>|none] [--yes]
+pnpm ensure-db                           # startup safeguard, see below
+bash scripts/backup-loop.sh              # every 30 min (INTERVAL=1800), keeps the last 24; run it in tmux session `instagram-backup`
+```
+
+- `scripts/backup.sh` runs `mysqldump --single-transaction --routines --triggers --events`, gzips it, tars the storage directory, validates both, and copies them to `STORE_DIR` (default `/cursor/stores/self/backups/instagram-ai`). Credentials come from `DATABASE_URL` in `.env`. The uploads archive is skipped when no file changed since the last one. Override `BACKUP_DIR`, `STORE_DIR`, `KEEP` through the environment.
+- `scripts/ensure-db.sh` checks MariaDB is reachable and that `instagram_ai` has tables. If the database or app user is missing it creates them (using `sudo mariadb`), and if it is empty it restores the newest dump (and uploads, when the storage dir is empty), then runs `prisma db push`. Run it before the API: `pnpm ensure-db && pnpm dev:api`.
+- Dumps, uploads, `.env`, keys and `backups/` are git-ignored. Code lives on the `instagram-ai-work` branch.
