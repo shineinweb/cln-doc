@@ -4,8 +4,10 @@ import { ZodError } from 'zod'
 import type { Deps } from './deps'
 import { ApiError } from './errors'
 import { adminRoutes } from './routes/admin'
+import { adminTemplateRoutes } from './routes/admin-templates'
 import { authRoutes } from './routes/auth'
 import { customerRoutes } from './routes/customer'
+import { templateRoutes } from './routes/templates'
 import { publicRoutes } from './routes/public'
 import { webhookRoutes } from './routes/webhooks'
 
@@ -37,7 +39,9 @@ export function createApp(deps: Deps): express.Express {
   app.use(webhookRoutes(deps))
   app.use(authRoutes(deps))
   app.use(customerRoutes(deps))
+  app.use(templateRoutes(deps))
   app.use(adminRoutes(deps))
+  app.use(adminTemplateRoutes(deps))
   app.use((_req, res) => {
     res.status(404).json({ error: { code: 'not_found', message: 'Not found' } })
   })

@@ -1,4 +1,10 @@
-import { buildRecommendation, type FormatStats } from '@instagram-ai/shared'
+import {
+  buildRecommendation,
+  formatMixCounts,
+  metricSeries,
+  storedAudienceHours,
+  type FormatStats,
+} from '@instagram-ai/shared'
 import type { Prisma } from '@prisma/client'
 import type { Deps } from '../deps'
 import { audit } from '../audit'
@@ -50,6 +56,18 @@ export async function insightsFor(deps: Deps, ctx: CustomerContext, accountId?: 
           dimensions: { followers, byFormat } as Prisma.InputJsonValue,
         },
       })
+      const audienceOnline = storedAudienceHours({ hours: insights.audienceOnline })
+      if (audienceOnline.length) {
+        await deps.prisma.metricSnapshot.create({
+          data: {
+            organizationId: ctx.organization.id,
+            instagramAccountId: account.id,
+            metric: 'audience_online',
+            value: audienceOnline.length,
+            dimensions: { hours: audienceOnline } as Prisma.InputJsonValue,
+          },
+        })
+      }
     } catch {
       followersAvailable = false
     }
@@ -77,6 +95,7 @@ export async function insightsFor(deps: Deps, ctx: CustomerContext, accountId?: 
     image: { used: quotaUsed.image, limit: ctx.subscription.package.monthlyImageGenerations },
     video: { used: quotaUsed.video, limit: ctx.subscription.package.monthlyVideoGenerations },
   }
+  const charts = await storedInsightCharts(deps, ctx.organization.id)
   return {
     followers: { available: followersAvailable, series: followers },
     engagementByFormat: byFormat,
@@ -88,6 +107,65 @@ export async function insightsFor(deps: Deps, ctx: CustomerContext, accountId?: 
     publishingFailures,
     quota,
     recommendation: buildRecommendation(byFormat, publishingFailures, quota),
+    charts,
+  }
+}
+
+export async function storedReport(deps: Deps, organizationId: string, from: Date, to: Date) {
+  const rows = await deps.prisma.metricSnapshot.findMany({
+    where: { organizationId, capturedAt: { gte: from, lte: to } },
+    orderBy: { capturedAt: 'asc' },
+  })
+  const stored = rows.map((row) => ({
+    metric: row.metric,
+    value: row.value,
+    capturedAt: row.capturedAt,
+    network: row.network,
+    postId: row.postId,
+  }))
+  const formats = await deps.prisma.post.findMany({
+    where: { organizationId, createdAt: { gte: from, lte: to } },
+    select: { format: true },
+  })
+  return {
+    from: from.toISOString(),
+    to: to.toISOString(),
+    rows: rows.map((row) => ({
+      id: row.id,
+      metric: row.metric,
+      value: row.value,
+      capturedAt: row.capturedAt,
+      instagramAccountId: row.instagramAccountId,
+      postId: row.postId,
+      network: row.network,
+      dimensions: row.dimensions ?? null,
+    })),
+    charts: {
+      reach: metricSeries(stored, 'reach'),
+      engagement: metricSeries(stored, 'engagement'),
+      formatMix: formatMixCounts(formats.map((post) => post.format)),
+    },
+  }
+}
+
+export async function storedInsightCharts(deps: Deps, organizationId: string) {
+  const rows = await deps.prisma.metricSnapshot.findMany({
+    where: {
+      organizationId,
+      metric: { in: ['reach', 'engagement'] },
+    },
+    orderBy: { capturedAt: 'asc' },
+  })
+  const stored = rows.map((row) => ({
+    metric: row.metric,
+    value: row.value,
+    capturedAt: row.capturedAt,
+    network: row.network,
+    postId: row.postId,
+  }))
+  return {
+    reach: metricSeries(stored, 'reach'),
+    engagement: metricSeries(stored, 'engagement'),
   }
 }
 
@@ -134,8 +212,9 @@ export async function applyBillingUpdate(deps: Deps, update: BillingUpdate): Pro
   })
 }
 
-export async function deleteOrganization(deps: Deps, organizationId: string, actorId: string): Promise<void> {
+export async function deleteOrganization(deps: Deps, organizationId: string, actorId: string, actorType: 'user' | 'staff' = 'user'): Promise<void> {
   const assets = await deps.prisma.mediaAsset.findMany({ where: { organizationId } })
+  const templateAssets = await deps.prisma.templateAsset.findMany({ where: { organizationId } })
   const [tokens, posts, comments, messages] = await Promise.all([
     deps.prisma.oauthCredential.count({ where: { organizationId } }),
     deps.prisma.post.count({ where: { organizationId } }),
@@ -144,20 +223,30 @@ export async function deleteOrganization(deps: Deps, organizationId: string, act
   ])
   await deps.prisma.$transaction(async (tx) => {
     const postIds = (await tx.post.findMany({ where: { organizationId }, select: { id: true } })).map((post) => post.id)
+    const campaignIds = (await tx.campaign.findMany({ where: { organizationId }, select: { id: true } })).map((row) => row.id)
+    await tx.idea.deleteMany({ where: { organizationId } })
+    await tx.campaignPost.deleteMany({ where: { campaignId: { in: campaignIds } } })
+    await tx.campaign.deleteMany({ where: { organizationId } })
+    await tx.postTarget.deleteMany({ where: { postId: { in: postIds } } })
     await tx.postMedia.deleteMany({ where: { postId: { in: postIds } } })
     await tx.message.deleteMany({ where: { organizationId } })
     await tx.conversation.deleteMany({ where: { organizationId } })
     await tx.comment.deleteMany({ where: { organizationId } })
     await tx.draftFeedback.deleteMany({ where: { organizationId } })
     await tx.generationJob.deleteMany({ where: { organizationId } })
+    await tx.metricSnapshot.deleteMany({ where: { organizationId } })
     await tx.post.deleteMany({ where: { organizationId } })
+    await tx.template.deleteMany({ where: { organizationId } })
+    await tx.templateAsset.deleteMany({ where: { organizationId } })
+    await tx.faceConsent.deleteMany({ where: { organizationId } })
     await tx.mediaAsset.deleteMany({ where: { organizationId } })
+    await tx.socialCredential.deleteMany({ where: { organizationId } })
+    await tx.socialAccount.deleteMany({ where: { organizationId } })
     await tx.oauthCredential.deleteMany({ where: { organizationId } })
     await tx.instagramAccount.deleteMany({ where: { organizationId } })
     await tx.automationRule.deleteMany({ where: { organizationId } })
     await tx.savedResponse.deleteMany({ where: { organizationId } })
     await tx.webhookEvent.deleteMany({ where: { organizationId } })
-    await tx.metricSnapshot.deleteMany({ where: { organizationId } })
     await tx.aiKnowledge.deleteMany({ where: { organizationId } })
     await tx.aiUsage.deleteMany({ where: { organizationId } })
     await tx.aiProfile.deleteMany({ where: { organizationId } })
@@ -173,9 +262,10 @@ export async function deleteOrganization(deps: Deps, organizationId: string, act
     await tx.organization.delete({ where: { id: organizationId } })
   })
   for (const asset of assets) await deps.storage.remove(asset.storageKey)
+  for (const asset of templateAssets) await deps.storage.remove(asset.storageKey)
   await audit(deps.prisma, {
     organizationId: null,
-    actorType: 'user',
+    actorType,
     actorId,
     action: 'organization.deleted',
     targetType: 'organization',

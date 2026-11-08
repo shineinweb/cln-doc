@@ -1,9 +1,10 @@
-import { sitemapXml, type PublicPageRecord } from '@instagram-ai/shared'
+import { normalizeSmartLink, sitemapXml, type PublicPageRecord } from '@instagram-ai/shared'
 import { Router } from 'express'
 import type { Deps } from '../deps'
 import { asyncRoute } from '../http'
 import { loadSettings, registrationOpen } from '../settings'
 import { PACKAGE_SEED } from '../seed'
+import { readPage, slicePage } from '../paging'
 
 export function publicRoutes(deps: Deps): Router {
   const router = Router()
@@ -36,28 +37,28 @@ export function publicRoutes(deps: Deps): Router {
     })
   }))
 
-  router.get('/api/public/pricing', asyncRoute(async (_req, res) => {
+  router.get('/api/public/pricing', asyncRoute(async (req, res) => {
     const packages = await deps.prisma.package.findMany({ orderBy: { sortOrder: 'asc' } })
-    res.json({
-      packages: (packages.length ? packages : PACKAGE_SEED).map((pkg) => ({
-        id: pkg.id,
-        name: pkg.name,
-        description: pkg.description,
-        priceMinor: pkg.priceMinor,
-        currency: pkg.currency,
-        instagramAccounts: pkg.instagramAccounts,
-        seats: pkg.seats,
-        monthlyAiGenerations: pkg.monthlyAiGenerations,
-        monthlyImageGenerations: pkg.monthlyImageGenerations,
-        monthlyVideoGenerations: pkg.monthlyVideoGenerations,
-        scheduling: pkg.scheduling,
-        commentInbox: pkg.commentInbox,
-        dmInbox: pkg.dmInbox,
-        automation: pkg.automation,
-        customAi: pkg.customAi,
-        videoGeneration: pkg.videoGeneration,
-      })),
-    })
+    const mapped = (packages.length ? packages : PACKAGE_SEED).map((pkg) => ({
+      id: pkg.id,
+      name: pkg.name,
+      description: pkg.description,
+      priceMinor: pkg.priceMinor,
+      currency: pkg.currency,
+      instagramAccounts: pkg.instagramAccounts,
+      seats: pkg.seats,
+      monthlyAiGenerations: pkg.monthlyAiGenerations,
+      monthlyImageGenerations: pkg.monthlyImageGenerations,
+      monthlyVideoGenerations: pkg.monthlyVideoGenerations,
+      scheduling: pkg.scheduling,
+      commentInbox: pkg.commentInbox,
+      dmInbox: pkg.dmInbox,
+      automation: pkg.automation,
+      customAi: pkg.customAi,
+      videoGeneration: pkg.videoGeneration,
+    }))
+    const paged = slicePage(mapped, readPage(req.query))
+    res.json({ packages: paged.items, page: paged.page, pageSize: paged.pageSize, total: paged.total })
   }))
 
   router.get('/api/public/pages', asyncRoute(async (req, res) => {
@@ -97,6 +98,21 @@ export function publicRoutes(deps: Deps): Router {
       inSitemap: page.inSitemap,
     }))
     res.type('application/xml').send(sitemapXml(settings.seo.canonicalHost, records))
+  }))
+
+  router.get('/api/l/:code', asyncRoute(async (req, res) => {
+    const post = await deps.prisma.post.findUnique({ where: { smartLinkCode: req.params.code } })
+    const destination = normalizeSmartLink(post?.smartLinkUrl)
+    if (!post || !destination) {
+      res.status(404).json({ error: { code: 'not_found', message: 'Link not found' } })
+      return
+    }
+    await deps.prisma.post.update({
+      where: { id: post.id },
+      data: { smartLinkClicks: { increment: 1 } },
+    })
+    res.setHeader('cache-control', 'no-store')
+    res.redirect(302, destination)
   }))
 
   router.get('/media/:key', asyncRoute(async (req, res) => {

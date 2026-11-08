@@ -6,6 +6,8 @@ import { createApp } from '../src/app'
 import { createDeps, type Deps } from '../src/deps'
 import { loadEnv, type Env } from '../src/env'
 import { FakeMediaProvider } from '../src/providers/media'
+import { FakeGoogleAuth } from '../src/providers/google'
+import { FakeNetworkGateway } from '../src/providers/networks'
 import { FakeMetaClient } from '../src/providers/meta'
 import { FakeTextProvider } from '../src/providers/text'
 import { sweepDuePosts } from '../src/services/content'
@@ -15,8 +17,10 @@ export function testApp() {
   const meta = new FakeMetaClient(env.META_APP_SECRET || 'test-meta-secret')
   const text = new FakeTextProvider()
   const media = new FakeMediaProvider()
-  const deps = createDeps(env, { meta, text, media, inlineJobs: true })
-  return { app: createApp(deps), deps, meta, text, media, env }
+  const networks = new FakeNetworkGateway()
+  const google = new FakeGoogleAuth()
+  const deps = createDeps(env, { meta, text, media, inlineJobs: true, networks, google })
+  return { app: createApp(deps), deps, meta, text, media, networks, google, env }
 }
 
 export type Session = {
@@ -73,7 +77,7 @@ export async function upgrade(session: Session, packageId: 'starter' | 'growth' 
 export async function connectInstagram(session: Session, code = 'one') {
   const start = await session.api.get('/api/integrations/instagram/connect')
   if (start.status !== 200) throw new Error(`connect failed ${start.status} ${JSON.stringify(start.body)}`)
-  const state = new URL(start.body.authorizeUrl).searchParams.get('state')
+  const state = new URL(start.body.authorizeUrl, 'http://127.0.0.1').searchParams.get('state')
   const callback = await session.agent.get('/api/integrations/instagram/callback').query({ code, state })
   return { start, callback, state }
 }

@@ -1,5 +1,6 @@
 import {
   SYSTEM_PROMPT,
+  draftFromApprovedFacts,
   evaluateMessageSend,
   findForbiddenIntents,
   validateProposal,
@@ -199,6 +200,7 @@ export async function handleInboundContent(
         metadata: { source: 'comment', commentId: comment.id },
       })
     }
+    await draftKeywordReply(deps, ctx, comment.id)
     await runCommentAutomation(deps, ctx, comment.id, input.text)
     return
   }
@@ -253,6 +255,40 @@ async function propose(deps: Deps, ctx: CustomerContext, untrustedText: string, 
   })
   if (raw && typeof raw === 'object' && 'type' in raw) return raw as Proposal
   return { type: 'reply_comment', text: hint }
+}
+
+export function postForKeyword(
+  posts: Array<{ id: string; commentKeyword: string; igMediaId: string | null }>,
+  comment: { text: string; igMediaId: string | null },
+) {
+  const text = comment.text.toLowerCase()
+  const hits = posts.filter((post) => {
+    const keyword = post.commentKeyword.trim().toLowerCase()
+    if (!keyword || !text.includes(keyword)) return false
+    if (post.igMediaId && comment.igMediaId && post.igMediaId !== comment.igMediaId) return false
+    return true
+  })
+  if (comment.igMediaId) {
+    return hits.find((post) => post.igMediaId === comment.igMediaId) ?? hits.find((post) => !post.igMediaId) ?? null
+  }
+  return hits[0] ?? null
+}
+
+async function draftKeywordReply(deps: Deps, ctx: CustomerContext, commentId: string): Promise<void> {
+  const comment = await deps.prisma.comment.findUnique({ where: { id: commentId } })
+  if (!comment || comment.replied || comment.draftReply) return
+  const posts = await deps.prisma.post.findMany({
+    where: { organizationId: ctx.organization.id, commentKeyword: { not: '' } },
+    select: { id: true, commentKeyword: true, igMediaId: true },
+  })
+  const match = postForKeyword(posts, { text: comment.text, igMediaId: comment.igMediaId })
+  if (!match) return
+  const brand = await loadBrand(deps, ctx.organization.id, ctx.organization.name)
+  const draftReply = draftFromApprovedFacts(brand.approvedFacts)
+  await deps.prisma.comment.update({
+    where: { id: comment.id },
+    data: { draftReply, postId: match.id },
+  })
 }
 
 async function runCommentAutomation(deps: Deps, ctx: CustomerContext, commentId: string, text: string): Promise<void> {

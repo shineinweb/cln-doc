@@ -3,6 +3,7 @@ import type { Deps } from '../deps'
 import { ApiError } from '../errors'
 import { decryptString, encryptString, newSecret } from '../crypto'
 import type { CustomerContext } from './context'
+import { readOauthApp } from '../settings'
 
 export function presentAccount(account: {
   id: string
@@ -34,7 +35,7 @@ export async function connectedCount(deps: Deps, organizationId: string): Promis
   })
 }
 
-export async function startInstagramConnect(deps: Deps, ctx: CustomerContext, reconnectId?: string): Promise<string> {
+export async function startInstagramConnect(deps: Deps, ctx: CustomerContext, reconnectId?: string, origin?: string): Promise<string> {
   if (reconnectId) {
     const existing = await deps.prisma.instagramAccount.findFirst({
       where: { id: reconnectId, organizationId: ctx.organization.id },
@@ -49,9 +50,23 @@ export async function startInstagramConnect(deps: Deps, ctx: CustomerContext, re
       state,
       organizationId: ctx.organization.id,
       userId: ctx.user.id,
+      network: 'instagram',
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     },
   })
+  const app = await readOauthApp(deps.prisma, deps.env.TOKEN_ENCRYPTION_KEY, 'instagram')
+  if (app) {
+    return deps.networks.buildAuthorizeUrl({
+      network: 'instagram',
+      app,
+      redirectUri: deps.env.META_REDIRECT_URI,
+      state,
+    })
+  }
+  if (!deps.env.META_APP_ID) {
+    const path = `/api/integrations/instagram/callback?${new URLSearchParams({ code: 'demo', state }).toString()}`
+    return origin ? new URL(path, origin).toString() : path
+  }
   return deps.meta.buildAuthorizeUrl(state)
 }
 
@@ -59,7 +74,22 @@ export async function finishInstagramConnect(deps: Deps, code: string, state: st
   const saved = await deps.prisma.oauthState.findUnique({ where: { state } })
   if (!saved || saved.expiresAt.getTime() < Date.now()) throw new ApiError(400, 'validation', 'The Instagram login state is invalid')
   await deps.prisma.oauthState.delete({ where: { state } })
-  const token = await deps.meta.exchangeCode(code)
+  const app = await readOauthApp(deps.prisma, deps.env.TOKEN_ENCRYPTION_KEY, 'instagram')
+  const exchanged = app
+    ? await deps.networks.exchangeCode({ network: 'instagram', app, redirectUri: deps.env.META_REDIRECT_URI, code })
+    : null
+  const token = exchanged
+    ? {
+        accessToken: exchanged.accessToken,
+        expiresInSec: exchanged.expiresInSec,
+        profile: {
+          igUserId: exchanged.externalId,
+          username: exchanged.username,
+          accountType: exchanged.accountType || 'BUSINESS',
+          scopes: exchanged.scopes,
+        },
+      }
+    : await deps.meta.exchangeCode(code)
   const existing = await deps.prisma.instagramAccount.findUnique({
     where: { organizationId_igUserId: { organizationId: saved.organizationId, igUserId: token.profile.igUserId } },
   })
@@ -104,6 +134,8 @@ export async function finishInstagramConnect(deps: Deps, code: string, state: st
     create: { organizationId: saved.organizationId, instagramAccountId: account.id, accessTokenEnc, expiresAt },
     update: { accessTokenEnc, expiresAt },
   })
+  const { mirrorInstagramAccounts } = await import('./social')
+  await mirrorInstagramAccounts(deps, saved.organizationId)
   return { organizationId: saved.organizationId }
 }
 
@@ -115,6 +147,14 @@ export async function disconnectInstagram(deps: Deps, organizationId: string, ac
     where: { id: account.id },
     data: { status: 'disconnected', lastError: null },
   })
+  const social = await deps.prisma.socialAccount.findUnique({ where: { instagramAccountId: account.id } })
+  if (social) {
+    await deps.prisma.socialCredential.deleteMany({ where: { socialAccountId: social.id } })
+    await deps.prisma.socialAccount.update({
+      where: { id: social.id },
+      data: { status: 'disconnected', lastError: null },
+    })
+  }
 }
 
 export async function usableToken(
@@ -144,6 +184,17 @@ export async function usableToken(
         where: { id: account.id },
         data: { status: 'connected', tokenExpiresAt: expiresAt, lastError: null },
       })
+      const social = await deps.prisma.socialAccount.findUnique({ where: { instagramAccountId: account.id } })
+      if (social) {
+        await deps.prisma.socialCredential.updateMany({
+          where: { socialAccountId: social.id },
+          data: { accessTokenEnc: encryptString(token, deps.env.TOKEN_ENCRYPTION_KEY), expiresAt },
+        })
+        await deps.prisma.socialAccount.update({
+          where: { id: social.id },
+          data: { status: 'connected', tokenExpiresAt: expiresAt, lastError: null },
+        })
+      }
     } catch {
       await deps.prisma.instagramAccount.update({
         where: { id: account.id },

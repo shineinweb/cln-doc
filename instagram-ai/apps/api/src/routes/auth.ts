@@ -7,7 +7,7 @@ import { hashPassword, newSecret, sha256, verifyPassword } from '../crypto'
 import { asyncRoute, clientIp, sessionCookie } from '../http'
 import { hitLimit } from '../rate-limit'
 import { audit } from '../audit'
-import { registrationOpen } from '../settings'
+import { readOauthApp, registrationOpen } from '../settings'
 import { loadSettings } from '../settings'
 import { requireCustomer, requireStaff } from '../services/context'
 
@@ -30,6 +30,64 @@ async function openSession(deps: Deps, kind: 'CUSTOMER' | 'STAFF', ids: { userId
     },
   })
   return { raw, csrfSecret }
+}
+
+async function findOrCreateGoogleUser(
+  deps: Deps,
+  profile: { sub: string; email: string; name: string },
+) {
+  const email = profile.email.toLowerCase()
+  const existing = await deps.prisma.user.findUnique({ where: { email } })
+  if (existing) {
+    if (existing.disabled) throw new ApiError(403, 'forbidden', 'This account is disabled')
+    if (!existing.googleSub) {
+      await deps.prisma.user.update({ where: { id: existing.id }, data: { googleSub: profile.sub } })
+    }
+    return existing
+  }
+  const bySub = await deps.prisma.user.findUnique({ where: { googleSub: profile.sub } })
+  if (bySub) {
+    if (bySub.disabled) throw new ApiError(403, 'forbidden', 'This account is disabled')
+    return bySub
+  }
+  const settings = await loadSettings(deps.prisma, deps.env.META_REDIRECT_URI)
+  if (!registrationOpen(settings)) throw new ApiError(403, 'forbidden', 'Registration is closed')
+  const organizationName = profile.name.trim() || email.split('@')[0] || 'Workspace'
+  const slug = `${organizationName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'org'}-${newSecret(3).toLowerCase()}`
+  const periodStart = new Date()
+  const periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000)
+  const created = await deps.prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: { email, name: profile.name || organizationName, passwordHash: null, googleSub: profile.sub },
+    })
+    const organization = await tx.organization.create({ data: { name: organizationName, slug } })
+    await tx.membership.create({ data: { organizationId: organization.id, userId: user.id, role: 'OWNER' } })
+    await tx.subscription.create({
+      data: {
+        organizationId: organization.id,
+        packageId: 'starter',
+        status: 'trialing',
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        provider: 'trial',
+      },
+    })
+    await tx.brandProfile.create({
+      data: {
+        organizationId: organization.id,
+        brandName: organizationName,
+        businessDescription: '',
+        targetAudience: '',
+        voiceAndTone: '',
+        productsAndServices: '',
+        approvedFacts: [],
+        topicsToAvoid: '',
+      },
+    })
+    await tx.aiProfile.create({ data: { organizationId: organization.id, extraInstructions: '' } })
+    return user
+  })
+  return created
 }
 
 function setSession(deps: Deps, name: string, raw: string) {
@@ -102,7 +160,7 @@ export function authRoutes(deps: Deps): Router {
       throw new ApiError(429, 'rate_limited', 'Too many login attempts. Try again later.')
     }
     const user = await deps.prisma.user.findUnique({ where: { email } })
-    if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
+    if (!user?.passwordHash || !(await verifyPassword(body.password, user.passwordHash))) {
       throw new ApiError(401, 'unauthorized', 'Email or password is wrong')
     }
     if (user.disabled) throw new ApiError(403, 'forbidden', 'This account is disabled')
@@ -190,7 +248,7 @@ export function authRoutes(deps: Deps): Router {
       user = await deps.prisma.user.create({
         data: { email: invitation.email, name: body.name, passwordHash: await hashPassword(body.password) },
       })
-    } else if (body.password && !(await verifyPassword(body.password, user.passwordHash))) {
+    } else if (body.password && (!user.passwordHash || !(await verifyPassword(body.password, user.passwordHash)))) {
       throw new ApiError(401, 'unauthorized', 'Email or password is wrong')
     }
     const existing = await deps.prisma.membership.findUnique({
@@ -219,6 +277,43 @@ export function authRoutes(deps: Deps): Router {
     const session = await openSession(deps, 'CUSTOMER', { userId: user.id })
     res.append('Set-Cookie', setSession(deps, CUSTOMER_COOKIE, session.raw))
     res.json({ ok: true, organizationId: invitation.organizationId, csrfToken: session.csrfSecret })
+  }))
+
+  router.get('/api/auth/google/start', asyncRoute(async (_req, res) => {
+    const app = await readOauthApp(deps.prisma, deps.env.TOKEN_ENCRYPTION_KEY, 'google')
+    if (!app) {
+      res.redirect(`${deps.env.WEB_ORIGIN}/login?google=missing`)
+      return
+    }
+    const state = newSecret(24)
+    await deps.prisma.loginState.create({
+      data: { state, kind: 'google', expiresAt: new Date(Date.now() + 15 * 60 * 1000) },
+    })
+    const redirectUri = `${deps.env.WEB_ORIGIN}/api/auth/google/callback`
+    res.redirect(deps.google.buildAuthorizeUrl({ clientId: app.clientId, redirectUri, state }))
+  }))
+
+  router.get('/api/auth/google/callback', asyncRoute(async (req, res) => {
+    const code = typeof req.query.code === 'string' ? req.query.code : ''
+    const state = typeof req.query.state === 'string' ? req.query.state : ''
+    const saved = state ? await deps.prisma.loginState.findUnique({ where: { state } }) : null
+    if (!code || !saved || saved.kind !== 'google' || saved.expiresAt.getTime() < Date.now()) {
+      throw new ApiError(400, 'validation', 'The Google login state is invalid')
+    }
+    await deps.prisma.loginState.delete({ where: { state } })
+    const app = await readOauthApp(deps.prisma, deps.env.TOKEN_ENCRYPTION_KEY, 'google')
+    if (!app) throw new ApiError(400, 'validation', 'Add the Google client id and secret in admin settings')
+    const redirectUri = `${deps.env.WEB_ORIGIN}/api/auth/google/callback`
+    const profile = await deps.google.exchange({
+      clientId: app.clientId,
+      clientSecret: app.clientSecret,
+      redirectUri,
+      code,
+    })
+    const user = await findOrCreateGoogleUser(deps, profile)
+    const session = await openSession(deps, 'CUSTOMER', { userId: user.id })
+    res.append('Set-Cookie', setSession(deps, CUSTOMER_COOKIE, session.raw))
+    res.redirect(`${deps.env.WEB_ORIGIN}/app`)
   }))
 
   router.post('/api/admin/auth/login', asyncRoute(async (req, res) => {

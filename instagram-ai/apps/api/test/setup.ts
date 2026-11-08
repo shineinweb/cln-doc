@@ -6,6 +6,15 @@ import { resetRateLimits } from '../src/rate-limit'
 import { seedReference } from '../src/seed'
 
 const TABLES = [
+  'face_consents',
+  'template_assets',
+  'templates',
+  'content_plans',
+  'post_targets',
+  'social_credentials',
+  'social_accounts',
+  'login_states',
+  'ideas',
   'post_media',
   'messages',
   'conversations',
